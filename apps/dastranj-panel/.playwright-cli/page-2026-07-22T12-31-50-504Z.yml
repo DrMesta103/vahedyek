@@ -1,0 +1,82 @@
+- generic [active] [ref=f1e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f1e2] [cursor=pointer]
+  - generic [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - navigation "مسیر صفحه" [ref=f1e9]:
+        - list [ref=f1e10]:
+          - listitem [ref=f1e11]:
+            - button "خانه" [ref=f1e12] [cursor=pointer]
+          - listitem [ref=f1e14]
+          - listitem [ref=f1e18]:
+            - generic [ref=f1e19]: طبقه‌بندی مشاغل
+      - main [ref=f1e21]:
+        - main [ref=f1e384]:
+          - generic [ref=f1e385]:
+            - heading "دریافت طبقه‌بندی‌های شغلی ناموفق بود" [level=1] [ref=f1e386]
+            - button "تلاش دوباره" [ref=f1e387] [cursor=pointer]
+    - complementary [ref=f1e159]:
+      - generic [ref=f1e160]:
+        - generic [ref=f1e161]: P
+        - generic [ref=f1e162]:
+          - generic [ref=f1e163]: Phase3 Owner
+          - generic [ref=f1e312]: phase3.owner@example.com
+      - generic [ref=f1e164]:
+        - generic [ref=f1e165]: DS
+        - generic [ref=f1e166]:
+          - generic [ref=f1e167]: Phase3 Runtime Test Tenant
+          - generic [ref=f1e313]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f1e168] [cursor=pointer]
+      - generic [ref=f1e171]:
+        - button "خروج" [ref=f1e172] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f1e177] [cursor=pointer]:
+          - generic [ref=f1e182]: "1"
+        - button "تنظیمات کلی" [ref=f1e183] [cursor=pointer]
+        - button "داشبورد" [ref=f1e188] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f1e193] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f1e201]:
+        - link "طبقه‌بندی مشاغل" [ref=f1e202] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f1e208] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f1e213] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f1e219] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f1e225] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f1e230] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f1e235] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f1e243] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f1e250] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f1e257] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f1e264] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f1e270] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f1e276] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f1e283] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f1e288] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f1e314] [cursor=pointer]:
+        - paragraph [ref=f1e295]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f1e315]
+      - generic [ref=f1e297]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f1e299] [cursor=pointer]
+        - generic [ref=f1e302]: 0.8.0
+  - generic [ref=f1e307] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f1e308]
+    - generic [ref=f1e388]:
+      - button "Open issues overlay" [ref=f1e389]:
+        - generic [ref=f1e390]:
+          - generic [ref=f1e391]: "0"
+          - generic [ref=f1e392]: "1"
+        - generic [ref=f1e393]: Issue
+      - button "Collapse issues badge" [ref=f1e394]
+  - alert [ref=f1e316]

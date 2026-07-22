@@ -103,7 +103,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
 
   const session = await getSessionContext();
   const tenantId = session?.tenantId ?? null;
-  const [items, workGroups, organizationUnits] = await Promise.all([
+  const [itemsResult, workGroupsResult, organizationUnitsResult] = await Promise.allSettled([
     listEmployees({
       search: query,
       status,
@@ -119,6 +119,12 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
     listWorkGroups(),
     listOrganizationUnits(),
   ]);
+  if (itemsResult.status === 'rejected') throw itemsResult.reason;
+  const items = itemsResult.value;
+  // Employee listing is the primary page flow. Optional filter taxonomies must not
+  // take down the employee profile entry point when their setup is incomplete.
+  const workGroups = workGroupsResult.status === 'fulfilled' ? workGroupsResult.value : [];
+  const organizationUnits = organizationUnitsResult.status === 'fulfilled' ? organizationUnitsResult.value : [];
   const employeeIds = items.map((item) => item.id);
   const [currentContracts, endedEmployeeIds] = await Promise.all([
     getCurrentEmployeeContracts(employeeIds, tenantId),

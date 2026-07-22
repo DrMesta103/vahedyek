@@ -1,0 +1,109 @@
+- generic [active] [ref=f1e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f1e2] [cursor=pointer]
+  - generic [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - navigation "مسیر صفحه" [ref=f1e9]:
+        - list [ref=f1e10]:
+          - listitem [ref=f1e11]:
+            - button "خانه" [ref=f1e12] [cursor=pointer]
+          - listitem [ref=f1e14]
+          - listitem [ref=f1e18]:
+            - button "کارمندان" [ref=f1e19] [cursor=pointer]
+          - listitem [ref=f1e21]
+          - listitem [ref=f1e25]:
+            - button "delta-document-employee" [ref=f1e26] [cursor=pointer]
+          - listitem [ref=f1e28]
+          - listitem [ref=f1e32]:
+            - generic [ref=f1e33]: documents
+      - main [ref=f1e35]:
+        - alert [ref=f1e37]:
+          - generic [ref=f1e38]:
+            - heading "امکان دریافت لیست کارکنان وجود ندارد." [level=2] [ref=f1e39]
+            - paragraph [ref=f1e40]: دوباره تلاش کنید.
+            - button "تلاش دوباره" [ref=f1e41] [cursor=pointer]
+    - complementary [ref=f1e43]:
+      - generic [ref=f1e44]:
+        - generic [ref=f1e45]: ؟
+        - generic [ref=f1e46]: در حال بارگذاری...
+      - generic [ref=f1e48]:
+        - generic [ref=f1e49]: TEN
+        - generic [ref=f1e50]: tenant
+        - button "تغییر کسب و کار" [ref=f1e52] [cursor=pointer]
+      - generic [ref=f1e55]:
+        - button "خروج" [ref=f1e56] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f1e61] [cursor=pointer]:
+          - generic [ref=f1e66]: "1"
+        - button "تنظیمات کلی" [ref=f1e67] [cursor=pointer]
+        - button "داشبورد" [ref=f1e72] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f1e77] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f1e85]:
+        - link "طبقه‌بندی مشاغل" [ref=f1e86] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f1e92] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f1e97] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f1e103] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f1e109] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f1e114] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f1e119] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f1e127] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f1e134] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f1e141] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f1e148] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f1e154] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f1e160] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f1e167] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f1e172] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f1e178] [cursor=pointer]:
+        - paragraph [ref=f1e179]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f1e180]
+      - generic [ref=f1e181]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f1e183] [cursor=pointer]
+        - generic [ref=f1e186]: 0.8.0
+  - alert [ref=f1e187]
+  - dialog [ref=f1e188]:
+    - banner [ref=f1e189]:
+      - generic [ref=f1e190]:
+        - heading "تنظیمات ضروری این کسب‌وکار هنوز کامل نشده است" [level=2] [ref=f1e191]
+        - button "بستن" [ref=f1e192] [cursor=pointer]
+      - paragraph [ref=f1e196]: برای اینکه تردد، درخواست‌ها و مدیریت کارکنان بدون اختلال کار کند، این تنظیمات را تکمیل کنید.
+    - generic [ref=f1e198]:
+      - generic [ref=f1e200]:
+        - generic [ref=f1e201]: اقدام پیشنهادی بعدی
+        - heading "محل کار هنوز ثبت نشده است." [level=3] [ref=f1e202]
+        - paragraph [ref=f1e203]: برای اینکه کارکنان بتوانند ورود و خروج خود را با موبایل ثبت کنند، باید محل کار و محدوده مجاز تردد مشخص شود.
+      - generic [ref=f1e204]:
+        - generic [ref=f1e205]:
+          - strong [ref=f1e206]: این تنظیمات هنوز وارد نشده‌اند
+          - generic [ref=f1e207]: 4 مورد ناقص
+        - list [ref=f1e208]:
+          - listitem [ref=f1e209]:
+            - generic [ref=f1e210]: محل کار
+            - generic [ref=f1e211]: ناقص
+          - listitem [ref=f1e212]:
+            - generic [ref=f1e213]: تقویم کاری
+            - generic [ref=f1e214]: ناقص
+          - listitem [ref=f1e215]:
+            - generic [ref=f1e216]: سیاست کاری
+            - generic [ref=f1e217]: ناقص
+          - listitem [ref=f1e218]:
+            - generic [ref=f1e219]: گروه‌های کاری
+            - generic [ref=f1e220]: ناقص
+    - contentinfo [ref=f1e221]:
+      - generic [ref=f1e222]:
+        - link "ثبت محل کار" [ref=f1e223] [cursor=pointer]:
+          - /url: /locations
+        - button "مجدد یادآوری کن" [ref=f1e224] [cursor=pointer]

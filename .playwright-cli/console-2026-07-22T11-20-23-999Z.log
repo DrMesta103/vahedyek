@@ -1,0 +1,7 @@
+[     806ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:3030/organization/reports?_rsc=5edc1:0
+[     809ms] [ERROR] Failed to fetch RSC payload for http://localhost:3030/organization/reports. Falling back to browser navigation. TypeError: network error @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:3272
+[     834ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:3030/organization/reports?_rsc=5edc1:0
+[     834ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:3030/organization/reports?_rsc=5edc1:0
+[     834ms] [ERROR] Failed to fetch RSC payload for http://localhost:3030/organization/reports. Falling back to browser navigation. TypeError: network error @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:3272
+[     835ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://localhost:3030/organization/reports?_rsc=5edc1:0
+[     844ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2790

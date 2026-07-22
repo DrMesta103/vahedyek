@@ -8,6 +8,7 @@ export type NavigationItem = {
 };
 
 export const APP_MENU_ITEMS: NavigationItem[] = [
+  { id: 'job-classifications', href: '/job-classifications', label: 'طبقه‌بندی مشاغل', icon: 'fa-briefcase' },
   { id: 'home', href: '/', label: 'داشبورد', icon: 'fa-home', toolbarOnly: true },
   { id: 'quick-setup', href: '/quick-setup', label: 'راه‌اندازی سریع', icon: 'fa-bolt' },
   { id: 'business-settings', href: '/business-settings', label: 'تنظیمات کسب و کار', icon: 'fa-briefcase' },

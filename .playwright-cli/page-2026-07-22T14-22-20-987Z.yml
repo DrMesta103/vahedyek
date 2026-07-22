@@ -1,0 +1,284 @@
+- generic [active] [ref=f5e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f5e2] [cursor=pointer]
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - navigation "مسیر صفحه" [ref=f5e9]:
+        - list [ref=f5e10]:
+          - listitem [ref=f5e11]:
+            - button "خانه" [ref=f5e12] [cursor=pointer]
+          - listitem [ref=f5e14]
+          - listitem [ref=f5e18]:
+            - button "کارمندان" [ref=f5e19] [cursor=pointer]
+          - listitem [ref=f5e21]
+          - listitem [ref=f5e25]:
+            - generic [ref=f5e26]: final-delta-employee
+      - main [ref=f5e28]:
+        - generic [ref=f5e30]:
+          - link "جزییات کارمند" [ref=f5e33] [cursor=pointer]:
+            - /url: /employees
+          - generic [ref=f5e36]:
+            - generic [ref=f5e37]:
+              - article [ref=f5e38]:
+                - generic [ref=f5e44]:
+                  - heading "Final Employee" [level=2] [ref=f5e45]
+                  - paragraph [ref=f5e46]: "Personnel code: FINAL-DELTA"
+                  - paragraph [ref=f5e47]: "کد ملی: ثبت نشده"
+                - generic [ref=f5e48]:
+                  - generic "Mobile not registered" [ref=f5e49]: ثبت نشده
+                  - generic "Email not registered" [ref=f5e53]: ثبت نشده
+                  - generic "Organization unit not registered" [ref=f5e58]: ثبت نشده
+                - generic [ref=f5e63]:
+                  - generic [ref=f5e64]: Active
+                  - generic [ref=f5e65]: بدون حساب
+                  - generic [ref=f5e66]: محل کار ثبت نشده است.
+                  - generic [ref=f5e67]: تاریخ شروع همکاری ثبت نشده است.
+                  - generic [ref=f5e68]: 5% profile
+                - generic [ref=f5e69]:
+                  - button "ویرایش" [ref=f5e70] [cursor=pointer]
+                  - button "Disable" [ref=f5e75] [cursor=pointer]
+                  - button "شروع فرآیند خاتمه همکاری" [ref=f5e77] [cursor=pointer]
+                  - link "ضمانت‌ها" [ref=f5e78] [cursor=pointer]:
+                    - /url: /employees/final-delta-employee/guarantee
+              - article [ref=f5e79]:
+                - generic [ref=f5e80]:
+                  - heading "اطلاعات آخرین قرارداد" [level=3] [ref=f5e81]
+                  - link "بازگشت به فهرست" [ref=f5e82] [cursor=pointer]:
+                    - /url: /employees
+                - generic [ref=f5e85]:
+                  - generic [ref=f5e86]:
+                    - generic [ref=f5e87]: شماره قرارداد
+                    - strong [ref=f5e88]: ثبت نشده
+                  - generic [ref=f5e89]:
+                    - generic [ref=f5e90]: مبلغ قرارداد
+                    - strong [ref=f5e91]: ثبت نشده
+                  - generic [ref=f5e92]:
+                    - generic [ref=f5e93]: نوع قرارداد
+                    - strong [ref=f5e94]: ثبت نشده
+                  - generic [ref=f5e95]:
+                    - generic [ref=f5e96]: وضعیت قرارداد
+                    - strong [ref=f5e97]: ثبت نشده
+                  - generic [ref=f5e98]:
+                    - generic [ref=f5e99]: مدت قرارداد
+                    - strong [ref=f5e100]: ثبت نشده
+                  - generic [ref=f5e101]:
+                    - generic [ref=f5e102]: بازه قرارداد
+                    - strong [ref=f5e103]: فاقد قرارداد
+                - generic [ref=f5e104]:
+                  - generic [ref=f5e105]: واحد سازمانی ثبت نشده
+                  - generic [ref=f5e106]: گروه کاری ثبت نشده
+              - article [ref=f5e107]:
+                - strong [ref=f5e112]: ۵%
+                - generic [ref=f5e113]:
+                  - generic [ref=f5e114]: عنوان شغلی ثبت نشده
+                  - generic [ref=f5e115]: فاقد قرارداد
+                - generic [ref=f5e116]:
+                  - paragraph [ref=f5e117]: قرارداد فعال ثبت نشده
+                  - paragraph [ref=f5e119]: برای تکمیل پرونده، قرارداد را نهایی کنید
+            - region "Employee record summary" [ref=f5e121]:
+              - article [ref=f5e122]:
+                - heading "Basic information" [level=3] [ref=f5e123]
+                - generic [ref=f5e124]:
+                  - generic [ref=f5e125]: Mobile
+                  - strong [ref=f5e126]: ثبت نشده
+                - generic [ref=f5e127]:
+                  - generic [ref=f5e128]: Email
+                  - strong [ref=f5e129]: ثبت نشده
+                - generic [ref=f5e130]:
+                  - generic [ref=f5e131]: Marital status
+                  - strong [ref=f5e132]: single
+                - generic [ref=f5e133]:
+                  - generic [ref=f5e134]: Children
+                  - strong [ref=f5e135]: ۰
+              - article [ref=f5e136]:
+                - heading "Organization" [level=3] [ref=f5e137]
+                - generic [ref=f5e138]:
+                  - generic [ref=f5e139]: Unit
+                  - strong [ref=f5e140]: ثبت نشده
+                - generic [ref=f5e141]:
+                  - generic [ref=f5e142]: Position
+                  - strong [ref=f5e143]: ثبت نشده
+                - generic [ref=f5e144]:
+                  - generic [ref=f5e145]: Manager
+                  - strong [ref=f5e146]: Not registered
+                - generic [ref=f5e147]:
+                  - generic [ref=f5e148]: Work group
+                  - strong [ref=f5e149]: Not registered
+              - article [ref=f5e150]:
+                - heading "Account" [level=3] [ref=f5e151]
+                - generic [ref=f5e152]:
+                  - generic [ref=f5e153]: Account status
+                  - strong [ref=f5e154]: No user account
+                - generic [ref=f5e155]:
+                  - generic [ref=f5e156]: User
+                  - strong [ref=f5e157]: Not registered
+                - generic [ref=f5e158]:
+                  - generic [ref=f5e159]: Membership role
+                  - strong [ref=f5e160]: Not registered
+                - generic [ref=f5e161]:
+                  - generic [ref=f5e162]: Profile status
+                  - strong [ref=f5e163]: Incomplete
+            - region "Contract timeline" [ref=f5e164]:
+              - generic [ref=f5e165]:
+                - heading "Contract timeline" [level=3] [ref=f5e166]
+                - generic [ref=f5e167]: No active contract
+              - paragraph [ref=f5e168]: No contract timeline is available.
+            - generic [ref=f5e169]:
+              - heading "گزارشات و درخواست ها" [level=3] [ref=f5e171]
+              - generic [ref=f5e172]:
+                - link [ref=f5e173] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/history
+                  - generic [ref=f5e177]:
+                    - heading "تاریخچه تغییرات" [level=3] [ref=f5e179]
+                    - paragraph [ref=f5e180]: تغییرات مهم پرونده با مقادیر حساس ماسک‌شده ثبت می‌شود.
+                - link [ref=f5e185] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/requests
+                  - generic [ref=f5e189]:
+                    - heading "درخواست ها" [level=3] [ref=f5e191]
+                    - paragraph [ref=f5e192]: همه درخواست های ثبت شده توسط کارمند را در اینجا می بینید.
+                - link [ref=f5e197] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/work-report
+                  - generic [ref=f5e201]:
+                    - heading "گزارش کارکرد" [level=3] [ref=f5e203]
+                    - paragraph [ref=f5e204]: مشاهده گزارش ماهانه، حضور، مرخصی، اضافه کاری و وضعیت تردد کارمند.
+                - article [ref=f5e209]:
+                  - generic [ref=f5e213]:
+                    - generic [ref=f5e214]:
+                      - heading "ارزیابی عملکرد" [level=3] [ref=f5e215]
+                      - generic [ref=f5e216]: در آینده
+                    - paragraph [ref=f5e217]: سوابق ارزیابی، بازخوردها و نتایج دوره ای در این بخش نمایش داده می شود.
+                - article [ref=f5e222]:
+                  - generic [ref=f5e226]:
+                    - generic [ref=f5e227]:
+                      - heading "گزارش حقوق و دستمزد" [level=3] [ref=f5e228]
+                      - generic [ref=f5e229]: در آینده
+                    - paragraph [ref=f5e230]: خلاصه اطلاعات حقوق و تردد کارمند از اینجا قابل مشاهده خواهد بود.
+            - generic [ref=f5e235]:
+              - heading "اطلاعات قرارداد" [level=3] [ref=f5e237]
+              - generic [ref=f5e238]:
+                - link [ref=f5e239] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/profile
+                  - generic [ref=f5e243]:
+                    - heading "مشخصات کارمند" [level=3] [ref=f5e245]
+                    - paragraph [ref=f5e246]: اطلاعات شخصی، تحصیلی، شغلی، نظام وظیفه و آدرس کارمند را مدیریت کنید.
+                - link [ref=f5e251] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/contracts
+                  - generic [ref=f5e255]:
+                    - heading "مدیریت قراردادها" [level=3] [ref=f5e257]
+                    - paragraph [ref=f5e258]: قرارداد فعال، چرخه تأیید، تمدید، اصلاح، خاتمه و تاریخچه نسخه‌ها را مدیریت کنید.
+                - link [ref=f5e263] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/contract-drafts
+                  - generic [ref=f5e267]:
+                    - heading "تنظیم پیش نویس" [level=3] [ref=f5e269]
+                    - paragraph [ref=f5e270]: پیش نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.
+                - link [ref=f5e275] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/documents
+                  - generic [ref=f5e279]:
+                    - heading "مرکز اسناد کارمند" [level=3] [ref=f5e281]
+                    - paragraph [ref=f5e282]: مشاهده، جستجو و مدیریت تمام مدارک و مستندات مرتبط با کارمند.
+              - article [ref=f5e287]:
+                - generic [ref=f5e291]:
+                  - generic [ref=f5e292]:
+                    - heading "تاریخچه چاپ قرارداد" [level=3] [ref=f5e293]
+                    - generic [ref=f5e294]: در آینده
+                  - paragraph [ref=f5e295]: نسخه های چاپ شده قرارداد و سوابق مرتبطه در اینجا ثبت می شود.
+            - generic [ref=f5e301]:
+              - heading "ایجاد متمم" [level=3] [ref=f5e303]
+              - generic [ref=f5e304]:
+                - article [ref=f5e305]:
+                  - generic [ref=f5e309]:
+                    - generic [ref=f5e310]:
+                      - heading "متمم بر مبلغ قرارداد" [level=3] [ref=f5e311]
+                      - generic [ref=f5e312]: در آینده
+                    - paragraph [ref=f5e313]: ثبت تغییرات مالی یا مزایای قرارداد از این بخش انجام می شود.
+                - article [ref=f5e318]:
+                  - generic [ref=f5e322]:
+                    - generic [ref=f5e323]:
+                      - heading "متمم بر تاریخ (تمدید)" [level=3] [ref=f5e324]
+                      - generic [ref=f5e325]: در آینده
+                    - paragraph [ref=f5e326]: مدت قرارداد و تاریخ های تمدید از این مسیر قابل مدیریت است.
+                - article [ref=f5e330]:
+                  - generic [ref=f5e334]:
+                    - generic [ref=f5e335]:
+                      - heading "متمم بر نوع قرارداد" [level=3] [ref=f5e336]
+                      - generic [ref=f5e337]: در آینده
+                    - paragraph [ref=f5e338]: تغییر نوع قرارداد یا ساختار همکاری از اینجا اعمال می شود.
+            - generic [ref=f5e345]:
+              - heading "خاتمه همکاری" [level=3] [ref=f5e347]
+              - generic [ref=f5e348]:
+                - article [ref=f5e349]:
+                  - generic [ref=f5e353]:
+                    - generic [ref=f5e354]:
+                      - heading "درخواست استعفا" [level=3] [ref=f5e355]
+                      - generic [ref=f5e356]: در آینده
+                    - paragraph [ref=f5e357]: فرایند ثبت، بررسی و تایید درخواست استعفا در این بخش انجام می شود.
+                - article [ref=f5e362]:
+                  - generic [ref=f5e366]:
+                    - generic [ref=f5e367]:
+                      - heading "ترک کار" [level=3] [ref=f5e368]
+                      - generic [ref=f5e369]: در آینده
+                    - paragraph [ref=f5e370]: فرایند ترک کار کارمند و ثبت نتیجه نهایی از این مسیر پیگیری می شود.
+                - article [ref=f5e375]:
+                  - generic [ref=f5e379]:
+                    - generic [ref=f5e380]:
+                      - heading "اخراج" [level=3] [ref=f5e381]
+                      - generic [ref=f5e382]: در آینده
+                    - paragraph [ref=f5e383]: ثبت و پیگیری فرایند اخراج کارمند در این بخش انجام می شود.
+                - link [ref=f5e390] [cursor=pointer]:
+                  - /url: /employees/final-delta-employee/bank-accounts
+                  - generic [ref=f5e394]:
+                    - heading "تسویه نهایی" [level=3] [ref=f5e396]
+                    - paragraph [ref=f5e397]: حساب های بانکی، ضمانت ها و تسویه نهایی کارمند از این بخش مدیریت می شود.
+              - paragraph [ref=f5e401]: تنها در صورت خاتمه همکاری، فرایند تسویه فعال خواهد شد.
+    - complementary [ref=f5e403]:
+      - generic [ref=f5e404]:
+        - generic [ref=f5e405]: ؟
+        - generic [ref=f5e406]: در حال بارگذاری...
+      - generic [ref=f5e408]:
+        - generic [ref=f5e409]: TEN
+        - generic [ref=f5e410]: tenant
+        - button "تغییر کسب و کار" [ref=f5e412] [cursor=pointer]
+      - generic [ref=f5e415]:
+        - button "خروج" [ref=f5e416] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f5e421] [cursor=pointer]:
+          - generic [ref=f5e426]: "1"
+        - button "تنظیمات کلی" [ref=f5e427] [cursor=pointer]
+        - button "داشبورد" [ref=f5e432] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f5e437] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f5e445]:
+        - link "طبقه‌بندی مشاغل" [ref=f5e446] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f5e452] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f5e457] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f5e463] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f5e469] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f5e474] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f5e479] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f5e487] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f5e494] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f5e501] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f5e508] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f5e514] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f5e520] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f5e527] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f5e532] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f5e538] [cursor=pointer]:
+        - paragraph [ref=f5e539]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f5e540]
+      - generic [ref=f5e541]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f5e543] [cursor=pointer]
+        - generic [ref=f5e546]: 0.8.0
+  - alert [ref=f5e547]

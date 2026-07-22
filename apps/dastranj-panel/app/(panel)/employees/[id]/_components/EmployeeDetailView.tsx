@@ -138,6 +138,13 @@ function buildSections(employeeId: string, canHistoryView: boolean): Array<{ tit
           icon: User,
         },
         {
+          title: 'مدیریت قراردادها',
+          description: 'قرارداد فعال، چرخه تأیید، تمدید، اصلاح، خاتمه و تاریخچه نسخه‌ها را مدیریت کنید.',
+          href: `/employees/${employeeId}/contracts`,
+          highlighted: true,
+          icon: FileText,
+        },
+        {
           title: 'تنظیم پیش نویس',
           description: 'پیش نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.',
           href: `/employees/${employeeId}/contract-drafts`,
@@ -145,10 +152,10 @@ function buildSections(employeeId: string, canHistoryView: boolean): Array<{ tit
           icon: Pencil,
         },
         {
-          title: 'مرکز اسناد',
-          description: 'پیوست ها، قراردادهای امضا شده و اسناد مرتبط در این بخش نگهداری می شوند.',
-          disabled: true,
-          badge: 'در آینده',
+          title: 'مرکز اسناد کارمند',
+          description: 'مشاهده، جستجو و مدیریت تمام مدارک و مستندات مرتبط با کارمند.',
+          href: `/employees/${employeeId}/documents`,
+          highlighted: true,
           icon: FolderOpen,
         },
         {

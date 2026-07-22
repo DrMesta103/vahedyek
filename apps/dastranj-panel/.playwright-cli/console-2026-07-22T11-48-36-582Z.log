@@ -1,0 +1,73 @@
+[     381ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3030/employees/phase3-runtime-empty/bank-accounts:0
+[     472ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     504ms] [LOG] [HMR] connected @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     523ms] [LOG] %c%s%c prisma:error background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+Invalid `prisma.appUser.findUnique()` invocation:
+
+
+Prisma Client could not locate the Query Engine for runtime "windows".
+
+This is likely caused by tooling that has not copied "query_engine-windows.dll.node" to the deployment folder.
+Ensure that you ran `prisma generate` and that "query_engine-windows.dll.node" has been copied to "node_modules\.prisma\client".
+
+We would appreciate if you could take the time to share some information with us.
+Please help us by answering a few questions: https://pris.ly/engine-not-found-tooling-investigation
+
+The following locations have been searched:
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  C:\ROOT\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  /tmp/prisma-engines
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\prisma @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     526ms] [LOG] %c%s%c prisma:error background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+Invalid `prisma.appUser.findUnique()` invocation:
+
+
+Prisma Client could not locate the Query Engine for runtime "windows".
+
+This is likely caused by tooling that has not copied "query_engine-windows.dll.node" to the deployment folder.
+Ensure that you ran `prisma generate` and that "query_engine-windows.dll.node" has been copied to "node_modules\.prisma\client".
+
+We would appreciate if you could take the time to share some information with us.
+Please help us by answering a few questions: https://pris.ly/engine-not-found-tooling-investigation
+
+The following locations have been searched:
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  C:\ROOT\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  /tmp/prisma-engines
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\prisma @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     570ms] PrismaClientInitializationError: 
+Invalid `prisma.appUser.findUnique()` invocation:
+
+
+Prisma Client could not locate the Query Engine for runtime "windows".
+
+This is likely caused by tooling that has not copied "query_engine-windows.dll.node" to the deployment folder.
+Ensure that you ran `prisma generate` and that "query_engine-windows.dll.node" has been copied to "node_modules\.prisma\client".
+
+We would appreciate if you could take the time to share some information with us.
+Please help us by answering a few questions: https://pris.ly/engine-not-found-tooling-investigation
+
+The following locations have been searched:
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  C:\ROOT\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\node_modules\.prisma\client
+  /tmp/prisma-engines
+  C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel\prisma
+    at  getAuthContextFromPayload (about://React/Server/C:%5CUsers%5CAdministrator%5CDesktop%5Cfirst-unit-next%5Cvahedyek%5Capps%5Cdastranj-panel%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5C%5Broot-of-the-server%5D__0yhe2wo._.js?0:465:18)
+    at  PanelLayout (about://React/Server/C:%5CUsers%5CAdministrator%5CDesktop%5Cfirst-unit-next%5Cvahedyek%5Capps%5Cdastranj-panel%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5C%5Broot-of-the-server%5D__0yhe2wo._.js?1:1080:21)
+    at resolveErrorDev (http://localhost:3030/_next/static/chunks/04m2_next_dist_compiled_react-server-dom-turbopack_0m1uz4p._.js:1919:105)
+    at processFullStringRow (http://localhost:3030/_next/static/chunks/04m2_next_dist_compiled_react-server-dom-turbopack_0m1uz4p._.js:2434:29)
+    at processFullBinaryRow (http://localhost:3030/_next/static/chunks/04m2_next_dist_compiled_react-server-dom-turbopack_0m1uz4p._.js:2393:9)
+    at processBinaryChunk (http://localhost:3030/_next/static/chunks/04m2_next_dist_compiled_react-server-dom-turbopack_0m1uz4p._.js:2502:221)
+    at progress (http://localhost:3030/_next/static/chunks/04m2_next_dist_compiled_react-server-dom-turbopack_0m1uz4p._.js:2689:13)
+[    3904ms] [WARNING] The resource https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3030/employees/phase3-runtime-empty/bank-accounts:0
+[   29620ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   32918ms] [ERROR] WebSocket connection to 'ws://localhost:3030/_next/webpack-hmr?id=5eKHxfTUIHdZGGwGy6t2S' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3030/_next/static/chunks/04m2_next_dist_client_0-mnb_3._.js:13299
+[   36270ms] [ERROR] WebSocket connection to 'ws://localhost:3030/_next/webpack-hmr?id=5eKHxfTUIHdZGGwGy6t2S' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3030/_next/static/chunks/04m2_next_dist_client_0-mnb_3._.js:13299
+[   37675ms] [LOG] [HMR] connected @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   40684ms] [WARNING] The resource https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3030/employees/phase3-runtime-empty/bank-accounts:0
+[   41479ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: http://localhost:3030/fonts/iran.woff2 @ http://localhost:3030/employees/phase3-runtime-empty/bank-accounts:206
+[   41693ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   41756ms] [LOG] [HMR] connected @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   41774ms] [INFO] %c%s%c [setup-health] background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   panel-layout {tenantId: cmrvvipw70000oyyo6123270j, userId: cmrvvipy90009oyyocqnstw83, score: 40, completedCount: 2, totalCriticalCount: 5} @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   42167ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   42212ms] [LOG] [Fast Refresh] done in 146ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431

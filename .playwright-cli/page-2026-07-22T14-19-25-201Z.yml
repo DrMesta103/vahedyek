@@ -1,0 +1,17 @@
+- generic [active]:
+  - alert [ref=f1e29]
+  - generic [ref=f1e31]:
+    - generic [ref=f1e33]:
+      - generic [ref=f1e34]: انتخاب کسب‌وکار
+      - heading "tenant فعلی را انتخاب کنید" [level=1] [ref=f1e35]
+      - paragraph [ref=f1e36]: از بین tenantهای موجود یکی را انتخاب کنید یا ساخت tenant جدید را شروع کنید.
+    - generic [ref=f1e37]:
+      - button "DS Phase3 Runtime Test Tenant phase3-runtime " [ref=f1e40] [cursor=pointer]:
+        - generic [ref=f1e41]: DS
+        - generic [ref=f1e42]:
+          - generic [ref=f1e43]: Phase3 Runtime Test Tenant
+          - generic [ref=f1e44]: phase3-runtime
+        - generic [ref=f1e45]: 
+      - button "+ ساخت کسب‌وکار جدید" [ref=f1e48] [cursor=pointer]:
+        - generic [ref=f1e49]: +
+        - text: ساخت کسب‌وکار جدید

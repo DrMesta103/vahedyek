@@ -32,6 +32,8 @@ function isCompatiblePrismaClient(client: any): client is any {
     'workPolicy',
     'employee',
     'organizationUnit',
+    'organizationEvent',
+    'organizationRoadmap',
     'requestReason',
     'shiftTemplate',
     'workGroup',

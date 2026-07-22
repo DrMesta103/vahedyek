@@ -1,0 +1,18 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=f6e34] [cursor=pointer]
+  - alert [ref=f6e38]: دسترنج
+  - generic [ref=f6e48]:
+    - generic [ref=f6e50]:
+      - generic [ref=f6e51]: انتخاب کسب‌وکار
+      - heading "tenant فعلی را انتخاب کنید" [level=1] [ref=f6e52]
+      - paragraph [ref=f6e53]: از بین tenantهای موجود یکی را انتخاب کنید یا ساخت tenant جدید را شروع کنید.
+    - generic [ref=f6e54]:
+      - button "DS Phase3 Runtime Test Tenant phase3-runtime " [ref=f6e57] [cursor=pointer]:
+        - generic [ref=f6e58]: DS
+        - generic [ref=f6e59]:
+          - generic [ref=f6e60]: Phase3 Runtime Test Tenant
+          - generic [ref=f6e61]: phase3-runtime
+        - generic [ref=f6e62]: 
+      - button "+ ساخت کسب‌وکار جدید" [ref=f6e65] [cursor=pointer]:
+        - generic [ref=f6e66]: +
+        - text: ساخت کسب‌وکار جدید

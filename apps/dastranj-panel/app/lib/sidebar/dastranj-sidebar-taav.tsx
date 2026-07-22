@@ -24,6 +24,7 @@ import type { NavigationItem } from '../navigation';
 const icon = (node: ReactNode) => node;
 
 const NAV_ICON_BY_ID: Record<string, ReactNode> = {
+  'job-classifications': icon(<Briefcase />),
   home: icon(<Home />),
   'quick-setup': icon(<Zap />),
   'business-settings': icon(<Briefcase />),

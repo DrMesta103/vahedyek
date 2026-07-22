@@ -1,0 +1,136 @@
+- generic [active] [ref=f3e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f3e2] [cursor=pointer]
+  - generic [ref=f3e6]:
+    - generic [ref=f3e7]:
+      - navigation "مسیر صفحه" [ref=f3e9]:
+        - list [ref=f3e10]:
+          - listitem [ref=f3e11]:
+            - button "خانه" [ref=f3e12] [cursor=pointer]
+          - listitem [ref=f3e14]
+          - listitem [ref=f3e18]:
+            - generic [ref=f3e19]: طبقه‌بندی مشاغل
+      - main [ref=f3e21]:
+        - main [ref=f3e358]:
+          - generic [ref=f3e359]:
+            - generic [ref=f3e360]:
+              - paragraph [ref=f3e361]: جزئیات طبقه‌بندی
+              - heading "Phase5 Used Position" [level=1] [ref=f3e362]
+              - paragraph [ref=f3e363]: نسخه 2 · بازنگری پروفایل 1
+            - generic [ref=f3e364]:
+              - link "بازگشت" [ref=f3e365] [cursor=pointer]:
+                - /url: /job-classifications
+              - link "ارزیابی شغل" [ref=f3e366] [cursor=pointer]:
+                - /url: /job-classifications/cmrw299x7000loy6gqtkfmfi5/evaluation
+          - generic [ref=f3e367]:
+            - article [ref=f3e368]:
+              - heading "خانواده" [level=2] [ref=f3e369]
+              - strong [ref=f3e370]: فناوری اطلاعات
+            - article [ref=f3e371]:
+              - heading "دسته" [level=2] [ref=f3e372]
+              - strong [ref=f3e373]: توسعه نرم‌افزار
+            - article [ref=f3e374]:
+              - heading "سطح" [level=2] [ref=f3e375]
+              - strong [ref=f3e376]: سطح یک
+            - article [ref=f3e377]:
+              - heading "گرید" [level=2] [ref=f3e378]
+              - strong [ref=f3e379]: تعیین نشده
+            - article [ref=f3e380]:
+              - heading "رتبه" [level=2] [ref=f3e381]
+              - strong [ref=f3e382]: تعیین نشده
+            - article [ref=f3e383]:
+              - heading "اثرگذاری" [level=2] [ref=f3e384]
+              - strong [ref=f3e385]: ۱۴۰۵/۴/۳۱
+          - generic [ref=f3e386]:
+            - heading "نتیجه ارزیابی" [level=2] [ref=f3e387]
+            - paragraph [ref=f3e389]: هنوز ارزیابی‌ای برای این طبقه‌بندی ثبت نشده است.
+          - generic [ref=f3e390]:
+            - heading "بازه پیشنهادی جبران خدمت" [level=2] [ref=f3e391]
+            - paragraph [ref=f3e392]: این بازه حقوق قطعی کارمند نیست.
+            - generic [ref=f3e393]:
+              - generic [ref=f3e394]:
+                - generic [ref=f3e395]: گرید
+                - combobox "گرید" [ref=f3e396]:
+                  - option "انتخاب کنید" [selected]
+              - generic [ref=f3e397]:
+                - generic [ref=f3e398]: کف مبلغ
+                - spinbutton "کف مبلغ" [ref=f3e399]
+              - generic [ref=f3e400]:
+                - generic [ref=f3e401]: سقف مبلغ
+                - spinbutton "سقف مبلغ" [ref=f3e402]
+              - generic [ref=f3e403]:
+                - generic [ref=f3e404]: ارز
+                - textbox "ارز" [ref=f3e405]: IRR
+              - generic [ref=f3e406]:
+                - generic [ref=f3e407]: شروع اعتبار
+                - textbox "شروع اعتبار" [ref=f3e408]
+              - generic [ref=f3e409]:
+                - generic [ref=f3e410]: پایان اعتبار
+                - textbox "پایان اعتبار" [ref=f3e411]
+              - generic [ref=f3e412]:
+                - generic [ref=f3e413]: دلیل
+                - textbox "دلیل" [ref=f3e414]
+              - button "ثبت بازه" [ref=f3e415] [cursor=pointer]
+          - generic [ref=f3e416]:
+            - heading "تاریخچه" [level=2] [ref=f3e417]
+            - list [ref=f3e418]:
+              - listitem [ref=f3e419]:
+                - strong [ref=f3e420]: نسخه 2 طبقه‌بندی ایجاد شد.
+                - text: · ۱۴۰۵/۴/۳۱ · Runtime verification
+    - complementary [ref=f3e27]:
+      - generic [ref=f3e28]:
+        - generic [ref=f3e29]: P
+        - generic [ref=f3e30]:
+          - generic [ref=f3e31]: Phase3 Owner
+          - generic [ref=f3e319]: phase3.owner@example.com
+      - generic [ref=f3e32]:
+        - generic [ref=f3e33]: DS
+        - generic [ref=f3e34]:
+          - generic [ref=f3e35]: Phase3 Runtime Test Tenant
+          - generic [ref=f3e320]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f3e36] [cursor=pointer]
+      - generic [ref=f3e39]:
+        - button "خروج" [ref=f3e40] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f3e45] [cursor=pointer]:
+          - generic [ref=f3e50]: "1"
+        - button "تنظیمات کلی" [ref=f3e51] [cursor=pointer]
+        - button "داشبورد" [ref=f3e56] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f3e61] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f3e69]:
+        - link "طبقه‌بندی مشاغل" [ref=f3e70] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f3e76] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f3e81] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f3e87] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f3e93] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f3e98] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f3e103] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f3e111] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f3e118] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f3e125] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f3e132] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f3e138] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f3e144] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f3e151] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f3e156] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f3e321] [cursor=pointer]:
+        - paragraph [ref=f3e163]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f3e322]
+      - generic [ref=f3e165]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f3e167] [cursor=pointer]
+        - generic [ref=f3e170]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f3e176] [cursor=pointer]
+  - alert [ref=f3e323]

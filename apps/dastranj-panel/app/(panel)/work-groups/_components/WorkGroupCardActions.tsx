@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { History, Pencil, Users, UserRound, Trash2, X } from 'lucide-react';
+import { History, Pencil, Users, UserRound, Power, RotateCcw, X } from 'lucide-react';
 import { CardMenu } from '../../../components/CardMenu';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { MinimalScroll } from '../../../components/MinimalScroll';
-import { deleteWorkGroupAction } from '../../../lib/actions';
+import { deleteWorkGroupAction, restoreWorkGroupAction } from '../../../lib/actions';
 import { formatPersianDate } from '../../../lib/format-date';
 import { workGroupAccessLabels } from '../../../lib/constants';
 
@@ -14,6 +14,7 @@ type WorkGroupMemberRecord = {
   joinedAt: string;
   leftAt: string | null;
   isCurrent: boolean;
+  status: 'ACTIVE' | 'ENDED' | 'FUTURE';
   accessLevel: keyof typeof workGroupAccessLabels;
   employee: {
     id: string;
@@ -30,6 +31,9 @@ type WorkGroupCardActionsProps = {
   id: string;
   title: string;
   members: WorkGroupMemberRecord[];
+  status: 'ACTIVE' | 'INACTIVE';
+  canEdit: boolean;
+  canDisable: boolean;
 };
 
 type MembersDialogState = 'current' | 'former' | null;
@@ -167,7 +171,7 @@ function WorkGroupMembersDialog({
   );
 }
 
-export function WorkGroupCardActions({ id, title, members }: WorkGroupCardActionsProps) {
+export function WorkGroupCardActions({ id, title, members, status, canEdit, canDisable }: WorkGroupCardActionsProps) {
   const [dialog, setDialog] = useState<MembersDialogState>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteFormRef = useRef<HTMLFormElement | null>(null);
@@ -177,12 +181,12 @@ export function WorkGroupCardActions({ id, title, members }: WorkGroupCardAction
       <div className="work-group-card-actions">
         <CardMenu
           items={[
-            {
+            ...(canEdit ? [{
               kind: 'link',
               href: `/work-groups/${id}/edit`,
               label: 'ویرایش',
               icon: <Pencil className="h-4 w-4" strokeWidth={2.2} />,
-            },
+            } as const] : []),
             {
               kind: 'action',
               label: 'اعضای سابق',
@@ -195,13 +199,20 @@ export function WorkGroupCardActions({ id, title, members }: WorkGroupCardAction
               icon: <Users className="h-4 w-4" strokeWidth={2.2} />,
               onClick: () => setDialog('current'),
             },
-            {
+            ...(canDisable && status === 'ACTIVE' ? [{
               kind: 'action',
-              label: 'حذف',
+              label: 'غیرفعال‌سازی گروه کاری',
               tone: 'danger',
-              icon: <Trash2 className="h-4 w-4" strokeWidth={2.2} />,
+              icon: <Power className="h-4 w-4" strokeWidth={2.2} />,
               onClick: () => setDeleteOpen(true),
-            },
+            } as const] : []),
+            ...(canDisable && status === 'INACTIVE' ? [{
+              kind: 'submit' as const,
+              label: 'بازیابی گروه کاری',
+              icon: <RotateCcw className="h-4 w-4" strokeWidth={2.2} />,
+              action: restoreWorkGroupAction,
+              hiddenFields: { id },
+            }] : []),
           ]}
         />
       </div>
@@ -226,9 +237,9 @@ export function WorkGroupCardActions({ id, title, members }: WorkGroupCardAction
 
       <ConfirmDialog
         open={deleteOpen}
-        title="حذف گروه کاری"
-        description={`آیا از حذف «${title}» مطمئن هستید؟ این عملیات همه سابقه عضویت همین گروه را هم حذف می‌کند و قابل بازگشت نیست.`}
-        confirmLabel="بله، حذف شود"
+        title="غیرفعال‌سازی گروه کاری"
+        description={`«${title}» دارای ${members.filter((member) => member.isCurrent).length.toLocaleString('fa-IR')} عضو فعال و ${members.filter((member) => member.status === 'FUTURE').length.toLocaleString('fa-IR')} تخصیص آینده است. سوابق حفظ می‌شوند و تخصیص‌های جدید متوقف خواهند شد.`}
+        confirmLabel="غیرفعال شود"
         cancelLabel="انصراف"
         tone="danger"
         onCancel={() => setDeleteOpen(false)}
@@ -239,6 +250,7 @@ export function WorkGroupCardActions({ id, title, members }: WorkGroupCardAction
       />
       <form ref={deleteFormRef} action={deleteWorkGroupAction} hidden>
         <input type="hidden" name="id" value={id} />
+        <input type="hidden" name="reason" value="غیرفعال‌سازی توسط مدیر گروه کاری" />
       </form>
     </>
   );

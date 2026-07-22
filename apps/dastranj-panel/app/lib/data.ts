@@ -28,9 +28,11 @@ import {
 import { prisma } from './prisma';
 import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
 import { listClientStorageStates } from './client-storage-persistence';
-import { getEmployeeAccess, getPositionAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
+import { getEmployeeAccess, getOrganizationMemoryAccess, getPositionAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
 import { findDefaultNamingPattern, getNamingPatternPreview, getNamingPatternsFromStorage, getNamingPatternsStorageKey } from './naming-patterns';
 import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
+import { requireWorkGroupAccess } from './work-group-access';
+import { completionForWorkGroup } from './work-group-rules';
 import {
   applyPayrollOverrides,
   DEFAULT_PAYROLL_SETTINGS,
@@ -941,13 +943,71 @@ export async function getOrganizationUnitProfile(id: string) {
   };
 }
 
+export async function getOrganizationMemory(id: string, filters?: { from?: string; to?: string; eventType?: string; employeeId?: string }) {
+  const access = await getOrganizationMemoryAccess();
+  if (!access.tenantId) return null;
+  const unit = await prisma.organizationUnit.findFirst({ where: { id, tenantId: access.tenantId }, select: { id: true, title: true, createdAt: true } });
+  if (!unit) return null;
+  const from = filters?.from ? new Date(filters.from) : null;
+  const to = filters?.to ? new Date(`${filters.to}T23:59:59.999`) : null;
+  const occurredAt = from || to ? { ...(from && !Number.isNaN(from.getTime()) ? { gte: from } : {}), ...(to && !Number.isNaN(to.getTime()) ? { lte: to } : {}) } : undefined;
+  const [events, positions, assignments, roadmapItems] = await Promise.all([
+    access.canViewHistory ? prisma.organizationEvent.findMany({ where: { tenantId: access.tenantId, organizationUnitId: id, ...(occurredAt ? { occurredAt } : {}), ...(filters?.eventType ? { eventType: filters.eventType } : {}) }, orderBy: { occurredAt: 'desc' }, take: 250 }) : [],
+    access.canViewReports ? prisma.position.findMany({ where: { organizationUnitId: id }, include: { assignments: { include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true } } } } }, orderBy: { title: 'asc' } }) : [],
+    access.canViewReports || access.canViewRoadmap ? prisma.employeeOrganizationUnit.findMany({ where: { organizationUnitId: id, ...(filters?.employeeId ? { employeeId: filters.employeeId } : {}) }, include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true } }, position: { select: { id: true, title: true } } }, orderBy: [{ employeeId: 'asc' }, { startDate: 'asc' }] }) : [],
+    access.canViewRoadmap ? prisma.organizationRoadmap.findMany({ where: { tenantId: access.tenantId, organizationUnitId: id }, orderBy: { targetDate: 'asc' } }) : [],
+  ]);
+  const now = new Date().toISOString().slice(0, 10);
+  const active = assignments.filter((item) => item.status === 'ACTIVE' && (!item.startDate || item.startDate <= now) && (!item.endDate || item.endDate >= now));
+  const eventTypes = Array.from(new Set<string>(events.map((event) => String(event.eventType))));
+  const employeesById = new Map<string, (typeof assignments)[number]['employee']>();
+  assignments.forEach((item) => employeesById.set(item.employeeId, item.employee));
+  const career = [...employeesById.entries()].map(([employeeId, employee]) => ({ employee, steps: assignments.filter((item) => item.employeeId === employeeId).map((item) => ({ position: item.position?.title ?? 'بدون سمت', startDate: item.startDate, endDate: item.endDate, status: item.status })) }));
+  const managerEvents = events.filter((event) => { const before = event.previousValue as { managerId?: string } | null; const after = event.newValue as { managerId?: string } | null; return event.entityType === 'UNIT' && (event.eventType.includes('MANAGER') || (before?.managerId ?? null) !== (after?.managerId ?? null)); });
+  const managerIds = [...new Set(managerEvents.flatMap((event) => { const before = event.previousValue as { managerId?: string } | null; const after = event.newValue as { managerId?: string } | null; return [before?.managerId, after?.managerId].filter((value): value is string => Boolean(value)); }))];
+  const managers = managerIds.length ? await prisma.employee.findMany({ where: { tenantId: access.tenantId, id: { in: managerIds } }, select: { id: true, firstName: true, lastName: true, personnelCode: true } }) : [];
+  const managerById = new Map(managers.map((manager) => [manager.id, manager]));
+  const managerHistory = managerEvents.map((event, index) => { const next = event.newValue as { managerId?: string } | null; const employee = next?.managerId ? managerById.get(next.managerId) ?? null : null; return { id: event.id, employee, managementType: 'MANAGER' as const, startDate: event.effectiveAt ?? event.occurredAt, endDate: index === 0 ? null : managerEvents[index - 1]?.occurredAt ?? null, current: index === 0 && Boolean(next?.managerId), referenceEventId: event.id }; });
+  return {
+    unit, access, events, eventTypes, assignments, career, managerHistory, roadmapItems,
+    reports: {
+      currentEmployees: new Set(active.map((item) => item.employeeId)).size,
+      formerEmployees: new Set(assignments.filter((item) => !active.some((activeItem) => activeItem.id === item.id)).map((item) => item.employeeId)).size,
+      positions: positions.map((position) => { const currentAssignments = position.assignments.filter((item) => item.status === 'ACTIVE' && (!item.startDate || item.startDate <= now) && (!item.endDate || item.endDate >= now)); return { id: position.id, title: position.title, status: position.status, capacity: position.capacity, activeAssignments: currentAssignments.length, emptyCapacity: Math.max(0, position.capacity - currentAssignments.length), historicalCapacity: events.filter((event) => event.positionId === position.id && event.eventType.includes('CAPACITY')).map((event) => ({ date: event.occurredAt, previousValue: event.previousValue, newValue: event.newValue })) }; }),
+    },
+    blockers: { contractOrder: 'مدل قرارداد snapshot معتبر واحد/سمت و Employment Order در Repository وجود ندارد.', document: 'Document Center فاقد Entity Link معتبر برای واحد سازمانی است.' },
+  };
+}
+
+export async function getOrganizationReports(filters?: { from?: string; to?: string; unitId?: string; positionId?: string; employeeId?: string; eventType?: string }) {
+  const access = await getOrganizationMemoryAccess();
+  if (!access.tenantId || !access.canViewReports) return null;
+  const from = filters?.from ? new Date(filters.from) : null;
+  const to = filters?.to ? new Date(`${filters.to}T23:59:59.999`) : null;
+  if (filters?.from && (!from || Number.isNaN(from.getTime()))) throw new Error('تاریخ شروع گزارش معتبر نیست.');
+  if (filters?.to && (!to || Number.isNaN(to.getTime()))) throw new Error('تاریخ پایان گزارش معتبر نیست.');
+  if (from && to && from > to) throw new Error('تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد.');
+  const eventWhere = { tenantId: access.tenantId, ...(filters?.unitId ? { organizationUnitId: filters.unitId } : {}), ...(filters?.positionId ? { positionId: filters.positionId } : {}), ...(filters?.eventType ? { eventType: filters.eventType } : {}), ...((from || to) ? { occurredAt: { ...(from && !Number.isNaN(from.getTime()) ? { gte: from } : {}), ...(to && !Number.isNaN(to.getTime()) ? { lte: to } : {}) } } : {}) };
+  const [units, positions, assignments, events] = await Promise.all([
+    prisma.organizationUnit.findMany({ where: { tenantId: access.tenantId, ...(filters?.unitId ? { id: filters.unitId } : {}) }, select: { id: true, title: true, parentId: true, status: true }, orderBy: { title: 'asc' } }),
+    prisma.position.findMany({ where: { organizationUnit: { tenantId: access.tenantId }, ...(filters?.unitId ? { organizationUnitId: filters.unitId } : {}), ...(filters?.positionId ? { id: filters.positionId } : {}) }, select: { id: true, title: true, capacity: true, status: true, organizationUnitId: true }, orderBy: { title: 'asc' } }),
+    prisma.employeeOrganizationUnit.findMany({ where: { organizationUnit: { tenantId: access.tenantId }, ...(filters?.unitId ? { organizationUnitId: filters.unitId } : {}), ...(filters?.positionId ? { positionId: filters.positionId } : {}), ...(filters?.employeeId ? { employeeId: filters.employeeId } : {}) }, select: { id: true, employeeId: true, organizationUnitId: true, positionId: true, status: true, startDate: true, endDate: true, employee: { select: { firstName: true, lastName: true } } } }),
+    prisma.organizationEvent.findMany({ where: eventWhere, orderBy: { occurredAt: 'desc' }, take: 1000 }),
+  ]);
+  const today = new Date().toISOString().slice(0, 10);
+  const active = assignments.filter((item) => item.status === 'ACTIVE' && (!item.startDate || item.startDate <= today) && (!item.endDate || item.endDate >= today));
+  const unitById = new Map<string, { id: string; title: string; parentId: string | null; status: string }>(units.map((unit) => [String(unit.id), unit]));
+  const positionRows = positions.map((position) => { const count = active.filter((item) => item.positionId === position.id).length; return { ...position, unitTitle: unitById.get(position.organizationUnitId)?.title ?? '—', activeAssignments: count, vacancy: Math.max(0, position.capacity - count) }; });
+  return { access, filters, units, positions, assignments, events, active, positionRows, summary: { units: units.length, subunits: units.filter((unit) => unit.parentId).length, positions: positions.length, employees: new Set(active.map((item) => item.employeeId)).size, employeesWithoutPosition: new Set(active.filter((item) => !item.positionId).map((item) => item.employeeId)).size, capacity: positions.reduce((sum, item) => sum + item.capacity, 0), vacancy: positionRows.reduce((sum, item) => sum + item.vacancy, 0), changes: events.length }, eventTypes: Array.from(new Set<string>(events.map((event) => String(event.eventType)))) };
+}
+
 export async function getPositionProfile(id: string) {
   const [{ tenantId, access }, employeeAccess] = await Promise.all([requirePositionAccess('view'), getEmployeeAccess()]);
   const canSeePeople = access.canViewAssignments && employeeAccess.canView;
   const position = await prisma.position.findFirst({
     where: { id, organizationUnit: { tenantId } },
     include: {
-      organizationUnit: { select: { id: true, title: true, status: true } }, jobProfile: true,
+      organizationUnit: { select: { id: true, title: true, status: true } }, jobProfile: { include: { classifications: { where: { status: 'ACTIVE' }, include: { family: { select: { name: true } }, category: { select: { name: true } }, level: { select: { name: true } } }, orderBy: { version: 'desc' }, take: 1 } } },
       reportsToPosition: { select: { id: true, title: true, organizationUnit: { select: { id: true, title: true } } } },
       assignments: { include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } } },
     },
@@ -961,6 +1021,15 @@ export async function getPositionProfile(id: string) {
   ]);
   const missingItems = [!position.code && 'کد سمت', !position.jobProfileId && 'پروفایل شغلی', !position.reportsToPositionId && 'سمت بالادست', !position.jobProfile?.purpose && 'هدف شغل', !(Array.isArray(position.jobProfile?.mainTasks) && position.jobProfile.mainTasks.length) && 'وظایف اصلی', !position.jobProfile?.minimumEducation && 'شرایط احراز'].filter(Boolean) as string[];
   return { ...position, assignments: canSeePeople ? position.assignments : [], activeAssignments: canSeePeople ? activeAssignments : [], activeAssignmentCount: activeAssignments.length, remainingCapacity: position.capacity - activeAssignments.length, canSeePeople, access, availablePositions, jobProfiles, completion: { completed: 6 - missingItems.length, total: 6, missingItems } };
+}
+
+export async function getPositionHistory(id: string) {
+  const access = await getOrganizationMemoryAccess();
+  if (!access.tenantId || !access.canViewHistory) return { allowed: false as const, events: [] };
+  const position = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId: access.tenantId } }, select: { id: true } });
+  if (!position) return null;
+  const events = await prisma.organizationEvent.findMany({ where: { tenantId: access.tenantId, positionId: id, entityType: 'POSITION' }, orderBy: { occurredAt: 'desc' }, take: 250 });
+  return { allowed: true as const, events };
 }
 
 export async function getOrganizationUnitFormOptions(excludeId?: string) {
@@ -1179,7 +1248,7 @@ export async function listEmployees(options?: EmployeeListFilters) {
     },
     workGroupMemberships: {
       where: { workGroup: { tenantId }, isCurrent: true },
-      include: { workGroup: { select: { id: true, title: true } } },
+      select: { id: true, workGroupId: true, employeeId: true, isCurrent: true, workGroup: { select: { id: true, title: true } } },
     },
   } as const;
 
@@ -1216,14 +1285,14 @@ export async function getEmployee(id: string) {
           position: { select: { id: true, title: true, code: true, status: true } },
         },
       },
-      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: { include: { location: { select: { id: true, title: true } } } } } },
+      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, select: { id: true, workGroupId: true, employeeId: true, isCurrent: true, workGroup: { include: { location: { select: { id: true, title: true } } } } } },
     },
   });
 }
 
 export async function listWorkGroups() {
-  const tenantId = await requireTenantId();
-  return prisma.workGroup.findMany({
+  const { tenantId } = await requireWorkGroupAccess('view');
+  const rows = await prisma.workGroup.findMany({
     where: { tenantId },
     include: {
       location: { select: locationSummarySelect },
@@ -1236,10 +1305,11 @@ export async function listWorkGroups() {
     },
     orderBy: { updatedAt: 'desc' },
   });
+  return rows.map((item) => ({ ...item, completion: completionForWorkGroup({ title: item.title, locationId: item.locationId, policyId: item.policyId, activeMembers: item.members.filter((member) => member.isCurrent).length }) }));
 }
 
 export async function getWorkGroup(id: string) {
-  const tenantId = await requireTenantId();
+  const { tenantId } = await requireWorkGroupAccess('view');
   return prisma.workGroup.findFirst({
     where: { id, tenantId },
     include: {
@@ -1250,6 +1320,8 @@ export async function getWorkGroup(id: string) {
         include: { employee: true },
         orderBy: { joinedAt: 'desc' },
       },
+      contextHistory: { orderBy: { effectiveDate: 'desc' } },
+      auditLogs: { orderBy: { createdAt: 'desc' }, take: 100 },
     },
   });
 }

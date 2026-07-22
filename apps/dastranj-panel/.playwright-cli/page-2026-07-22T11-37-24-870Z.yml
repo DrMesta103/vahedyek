@@ -1,0 +1,128 @@
+- generic [active] [ref=f9e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f9e2] [cursor=pointer]
+  - generic [ref=f9e6]:
+    - generic [ref=f9e7]:
+      - navigation "مسیر صفحه" [ref=f9e9]:
+        - list [ref=f9e10]:
+          - listitem [ref=f9e11]:
+            - button "خانه" [ref=f9e12] [cursor=pointer]
+          - listitem [ref=f9e14]
+          - listitem [ref=f9e18]:
+            - button "کارمندان" [ref=f9e19] [cursor=pointer]
+          - listitem [ref=f9e21]
+          - listitem [ref=f9e25]:
+            - button "phase3-runtime-empty" [ref=f9e26] [cursor=pointer]
+          - listitem [ref=f9e28]
+          - listitem [ref=f9e32]:
+            - generic [ref=f9e33]: history
+      - main [ref=f9e35]:
+        - main [ref=f9e37]:
+          - link "بازگشت به پرونده" [ref=f9e38] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-empty
+          - generic [ref=f9e39]:
+            - heading "تاریخچه تغییرات Empty Profile" [level=2] [ref=f9e41]
+            - generic [ref=f9e42]:
+              - article [ref=f9e43]:
+                - generic [ref=f9e44]:
+                  - heading "change_request_cancelled" [level=3] [ref=f9e45]
+                  - paragraph [ref=f9e46]: "فیلد: email · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e47]: PE***@ ← CA***@
+              - article [ref=f9e48]:
+                - generic [ref=f9e49]:
+                  - heading "change_request_submitted" [level=3] [ref=f9e50]
+                  - paragraph [ref=f9e51]: "فیلد: email · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e52]: nu***@ ← ca***@local.test
+              - article [ref=f9e53]:
+                - generic [ref=f9e54]:
+                  - heading "change_request_rejected" [level=3] [ref=f9e55]
+                  - paragraph [ref=f9e56]: "فیلد: mobile2 · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e57]: "**** ← ****"
+              - article [ref=f9e58]:
+                - generic [ref=f9e59]:
+                  - heading "change_request_submitted" [level=3] [ref=f9e60]
+                  - paragraph [ref=f9e61]: "فیلد: mobile2 · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e62]: "**** ← 091***03"
+              - article [ref=f9e63]:
+                - generic [ref=f9e64]:
+                  - heading "change_request_applied" [level=3] [ref=f9e65]
+                  - paragraph [ref=f9e66]: "فیلد: mobile1 · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e67]: 091***01 ← 091***02
+              - article [ref=f9e68]:
+                - generic [ref=f9e69]:
+                  - heading "change_request_approved" [level=3] [ref=f9e70]
+                  - paragraph [ref=f9e71]: "فیلد: mobile1 · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e72]: "**** ← ****"
+              - article [ref=f9e73]:
+                - generic [ref=f9e74]:
+                  - heading "change_request_submitted" [level=3] [ref=f9e75]
+                  - paragraph [ref=f9e76]: "فیلد: mobile1 · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f9e77]: 091***01 ← 091***02
+          - generic [ref=f9e78]:
+            - heading "درخواست‌های تغییر اطلاعات" [level=3] [ref=f9e80]
+            - generic [ref=f9e81]:
+              - article [ref=f9e82]:
+                - generic [ref=f9e83]:
+                  - heading "email · CANCELLED" [level=3] [ref=f9e84]
+                  - paragraph [ref=f9e85]: "دلیل: INITIAL_DATA_CORRECTION · تاریخ اثرگذاری: ثبت نشده"
+                  - paragraph [ref=f9e86]: "درخواست: ۱۴۰۵/۰۴/۳۱"
+              - article [ref=f9e87]:
+                - generic [ref=f9e88]:
+                  - heading "mobile2 · REJECTED" [level=3] [ref=f9e89]
+                  - paragraph [ref=f9e90]: "دلیل: INITIAL_DATA_CORRECTION · تاریخ اثرگذاری: ثبت نشده"
+                  - paragraph [ref=f9e91]: "درخواست: ۱۴۰۵/۰۴/۳۱"
+              - article [ref=f9e92]:
+                - generic [ref=f9e93]:
+                  - heading "mobile1 · APPLIED" [level=3] [ref=f9e94]
+                  - paragraph [ref=f9e95]: "دلیل: INITIAL_DATA_CORRECTION · تاریخ اثرگذاری: ثبت نشده"
+                  - paragraph [ref=f9e96]: "درخواست: ۱۴۰۵/۰۴/۳۱"
+    - complementary [ref=f9e98]:
+      - generic [ref=f9e99]:
+        - generic [ref=f9e100]: ؟
+        - generic [ref=f9e101]: در حال بارگذاری...
+      - generic [ref=f9e103]:
+        - generic [ref=f9e104]: TEN
+        - generic [ref=f9e105]: tenant
+        - button "تغییر کسب و کار" [ref=f9e107] [cursor=pointer]
+      - generic [ref=f9e110]:
+        - button "خروج" [ref=f9e111] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f9e116] [cursor=pointer]:
+          - generic [ref=f9e121]: "1"
+        - button "تنظیمات کلی" [ref=f9e122] [cursor=pointer]
+        - button "داشبورد" [ref=f9e127] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f9e132] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f9e140]:
+        - link "راه‌اندازی سریع" [ref=f9e141] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f9e146] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f9e152] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f9e158] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f9e163] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f9e168] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f9e176] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f9e183] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f9e190] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f9e197] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f9e203] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f9e209] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f9e216] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f9e221] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f9e227] [cursor=pointer]:
+        - paragraph [ref=f9e228]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f9e229]
+      - generic [ref=f9e230]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f9e232] [cursor=pointer]
+        - generic [ref=f9e235]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f9e241] [cursor=pointer]

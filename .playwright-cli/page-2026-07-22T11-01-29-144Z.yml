@@ -1,0 +1,117 @@
+- generic [active] [ref=f54e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f54e2] [cursor=pointer]
+  - generic [ref=f54e6]:
+    - generic [ref=f54e7]:
+      - navigation "مسیر صفحه" [ref=f54e9]:
+        - list [ref=f54e10]:
+          - listitem [ref=f54e11]:
+            - button "خانه" [ref=f54e12] [cursor=pointer]
+          - listitem [ref=f54e14]
+          - listitem [ref=f54e18]:
+            - button "organization" [ref=f54e19] [cursor=pointer]
+          - listitem [ref=f54e21]
+          - listitem [ref=f54e25]:
+            - generic [ref=f54e26]: dashboard
+      - main [ref=f54e28]:
+        - main [ref=f54e30]:
+          - generic [ref=f54e31]:
+            - generic [ref=f54e32]:
+              - paragraph [ref=f54e33]: Dashboard خواندنی
+              - heading "داشبورد سازمانی" [level=1] [ref=f54e34]
+              - paragraph [ref=f54e35]: همه شاخص‌ها از داده واقعی کسب‌وکار جاری محاسبه شده‌اند.
+            - link "گزارش‌های تفصیلی" [ref=f54e36] [cursor=pointer]:
+              - /url: /organization/reports
+          - generic [ref=f54e37]:
+            - generic [ref=f54e38]:
+              - text: از
+              - textbox "از" [ref=f54e39]
+            - generic [ref=f54e40]:
+              - text: تا
+              - textbox "تا" [ref=f54e41]
+            - button "به‌روزرسانی" [ref=f54e42] [cursor=pointer]
+          - generic [ref=f54e43]:
+            - article [ref=f54e44]:
+              - generic [ref=f54e45]: واحد
+              - strong [ref=f54e46]: "1"
+            - article [ref=f54e47]:
+              - generic [ref=f54e48]: زیرواحد
+              - strong [ref=f54e49]: "0"
+            - article [ref=f54e50]:
+              - generic [ref=f54e51]: عمق سازمان
+              - strong [ref=f54e52]: "0"
+            - article [ref=f54e53]:
+              - generic [ref=f54e54]: سمت
+              - strong [ref=f54e55]: "0"
+            - article [ref=f54e56]:
+              - generic [ref=f54e57]: ظرفیت کل
+              - strong [ref=f54e58]: "0"
+            - article [ref=f54e59]:
+              - generic [ref=f54e60]: ظرفیت خالی
+              - strong [ref=f54e61]: "0"
+            - article [ref=f54e62]:
+              - generic [ref=f54e63]: کارکنان فعال
+              - strong [ref=f54e64]: "2"
+            - article [ref=f54e65]:
+              - generic [ref=f54e66]: کارکنان بدون سمت
+              - strong [ref=f54e67]: "2"
+            - article [ref=f54e68]:
+              - generic [ref=f54e69]: تغییرات بازه
+              - strong [ref=f54e70]: "0"
+          - generic [ref=f54e71]:
+            - article [ref=f54e72]:
+              - heading "روند رشد سازمان" [level=2] [ref=f54e73]
+            - article [ref=f54e74]:
+              - heading "نمودار ظرفیت سمت" [level=2] [ref=f54e75]
+            - article [ref=f54e76]:
+              - heading "Timeline تغییرات" [level=2] [ref=f54e77]
+    - complementary [ref=f54e79]:
+      - generic [ref=f54e80]:
+        - generic [ref=f54e81]: ؟
+        - generic [ref=f54e82]: در حال بارگذاری...
+      - generic [ref=f54e84]:
+        - generic [ref=f54e85]: TEN
+        - generic [ref=f54e86]: tenant
+        - button "تغییر کسب و کار" [ref=f54e88] [cursor=pointer]
+      - generic [ref=f54e91]:
+        - button "خروج" [ref=f54e92] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f54e97] [cursor=pointer]:
+          - generic [ref=f54e102]: "1"
+        - button "تنظیمات کلی" [ref=f54e103] [cursor=pointer]
+        - button "داشبورد" [ref=f54e108] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f54e113] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f54e121]:
+        - link "راه‌اندازی سریع" [ref=f54e122] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f54e127] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f54e133] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f54e139] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f54e144] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f54e149] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f54e157] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f54e164] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f54e171] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f54e178] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f54e184] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f54e190] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f54e197] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f54e202] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f54e208] [cursor=pointer]:
+        - paragraph [ref=f54e209]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f54e210]
+      - generic [ref=f54e211]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f54e213] [cursor=pointer]
+        - generic [ref=f54e216]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f54e222] [cursor=pointer]

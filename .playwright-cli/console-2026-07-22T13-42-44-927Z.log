@@ -1,0 +1,1 @@
+[     215ms] [ERROR] Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error. @ http://127.0.0.1:3030/_next/static/chunks/0muuxmcg6v1x2.js:0

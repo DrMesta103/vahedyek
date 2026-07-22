@@ -1,0 +1,179 @@
+- generic [active] [ref=f4e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f4e2] [cursor=pointer]
+  - generic [ref=f4e6]:
+    - generic [ref=f4e7]:
+      - navigation "مسیر صفحه" [ref=f4e9]:
+        - list [ref=f4e10]:
+          - listitem [ref=f4e11]:
+            - button "خانه" [ref=f4e12] [cursor=pointer]
+          - listitem [ref=f4e14]
+          - listitem [ref=f4e18]:
+            - button "کارمندان" [ref=f4e19] [cursor=pointer]
+          - listitem [ref=f4e21]
+          - listitem [ref=f4e25]:
+            - button "delta-document-employee" [ref=f4e26] [cursor=pointer]
+          - listitem [ref=f4e28]
+          - listitem [ref=f4e32]:
+            - generic [ref=f4e33]: documents
+      - main [ref=f4e35]:
+        - main [ref=f4e222]:
+          - navigation [ref=f4e223]:
+            - link "مرکز اسناد" [ref=f4e224] [cursor=pointer]:
+              - /url: /employees/delta-document-employee/documents
+            - text: / ??? ????
+          - generic [ref=f4e225]:
+            - generic [ref=f4e226]:
+              - heading "??? ????" [level=1] [ref=f4e231]
+              - paragraph [ref=f4e232]: "???? ??? · نسخه ۱ · نهایی"
+            - link "دانلود" [ref=f4e234] [cursor=pointer]:
+              - /url: /api/employees/delta-document-employee/documents/cmrw4rjpb0006oy5s67wnd7bf/download
+          - generic [ref=f4e238]:
+            - article [ref=f4e239]:
+              - heading "مشخصات سند" [level=2] [ref=f4e240]
+              - generic [ref=f4e241]:
+                - generic [ref=f4e242]:
+                  - term [ref=f4e243]: دسته
+                  - definition [ref=f4e244]: IDENTITY
+                - generic [ref=f4e245]:
+                  - term [ref=f4e246]: زیرگروه
+                  - definition [ref=f4e247]: —
+                - generic [ref=f4e248]:
+                  - term [ref=f4e249]: شماره سند
+                  - definition [ref=f4e250]: —
+                - generic [ref=f4e251]:
+                  - term [ref=f4e252]: تاریخ سند
+                  - definition [ref=f4e253]: 2026-07-22
+                - generic [ref=f4e254]:
+                  - term [ref=f4e255]: انقضا
+                  - definition [ref=f4e256]: ندارد
+                - generic [ref=f4e257]:
+                  - term [ref=f4e258]: سطح دسترسی
+                  - definition [ref=f4e259]: HR
+                - generic [ref=f4e263]:
+                  - term [ref=f4e264]: توضیحات
+                  - definition [ref=f4e265]: —
+            - complementary [ref=f4e266]:
+              - heading "منبع" [level=2] [ref=f4e267]
+              - paragraph [ref=f4e268]: "نوع: ثبت مستقیم"
+              - paragraph [ref=f4e269]: "ماژول: سایر"
+              - paragraph [ref=f4e270]: "شناسه مرجع: —"
+              - button "آرشیو سند" [ref=f4e272] [cursor=pointer]
+          - generic [ref=f4e276]:
+            - heading "پیش‌نمایش فایل" [level=2] [ref=f4e277]
+            - iframe [ref=f4e278]:
+              - generic: This page has been blocked by Chrome
+          - generic [ref=f4e279]:
+            - article [ref=f4e280]:
+              - heading "تاریخچه نسخه‌ها" [level=2] [ref=f4e286]
+              - paragraph [ref=f4e288]: این سند هنوز نسخه دیگری ندارد.
+            - article [ref=f4e289]:
+              - heading "خلاصه Audit" [level=2] [ref=f4e290]
+              - generic [ref=f4e292]:
+                - strong [ref=f4e293]: CREATE
+                - generic [ref=f4e294]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۷:۱۰:۵۴"
+          - generic [ref=f4e295]:
+            - heading "ویرایش متادیتا" [level=2] [ref=f4e296]
+            - paragraph [ref=f4e297]: فایل اصلی تغییر نمی‌کند و تغییرات در Audit ثبت می‌شوند.
+            - generic [ref=f4e298]:
+              - generic [ref=f4e299]:
+                - text: عنوان
+                - textbox "عنوان" [ref=f4e300]: سند دلتا ویرایش‌شده
+              - generic [ref=f4e301]:
+                - text: دسته
+                - combobox "دسته" [ref=f4e302]:
+                  - option "IDENTITY" [selected]
+                  - option "EDUCATION"
+                  - option "EMPLOYMENT"
+                  - option "REQUESTS"
+                  - option "FINANCIAL"
+                  - option "HEALTH"
+                  - option "ORGANIZATION"
+                  - option "OTHER"
+              - generic [ref=f4e303]:
+                - text: زیرگروه
+                - textbox "زیرگروه" [ref=f4e304]
+              - generic [ref=f4e305]:
+                - text: نوع سند
+                - textbox "نوع سند" [ref=f4e306]: "???? ???"
+              - generic [ref=f4e307]:
+                - text: تاریخ سند
+                - textbox "تاریخ سند" [ref=f4e308]: 2026-07-22
+              - generic [ref=f4e309]:
+                - text: شماره سند
+                - textbox "شماره سند" [ref=f4e310]
+              - generic [ref=f4e311]:
+                - text: برچسب‌ها
+                - textbox "برچسب‌ها" [ref=f4e312]
+              - generic [ref=f4e313]:
+                - text: توضیحات
+                - textbox "توضیحات" [ref=f4e314]
+              - button "ذخیره متادیتا" [ref=f4e315] [cursor=pointer]
+          - generic [ref=f4e316]:
+            - heading "تغییر سطح دسترسی" [level=2] [ref=f4e317]
+            - generic [ref=f4e318]:
+              - generic [ref=f4e319]:
+                - text: سطح دسترسی
+                - combobox "سطح دسترسی" [ref=f4e320]:
+                  - option "فقط مدیر پرونده" [selected]
+                  - option "کارمند"
+                  - option "مدیر مستقیم"
+                  - option "منابع انسانی"
+                  - option "مالی"
+              - button "اعمال دسترسی" [ref=f4e321] [cursor=pointer]
+    - complementary [ref=f4e41]:
+      - generic [ref=f4e42]:
+        - generic [ref=f4e43]: D
+        - generic [ref=f4e44]:
+          - generic [ref=f4e45]: Delta Documents
+          - generic [ref=f4e46]: delta.documents@local.test
+      - generic [ref=f4e47]:
+        - generic [ref=f4e48]: DS
+        - generic [ref=f4e49]:
+          - generic [ref=f4e50]: Phase3 Runtime Test Tenant
+          - generic [ref=f4e51]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f4e52] [cursor=pointer]
+      - generic [ref=f4e55]:
+        - button "خروج" [ref=f4e56] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f4e61] [cursor=pointer]:
+          - generic [ref=f4e66]: "1"
+        - button "تنظیمات کلی" [ref=f4e67] [cursor=pointer]
+        - button "داشبورد" [ref=f4e72] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f4e77] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f4e85]:
+        - link "طبقه‌بندی مشاغل" [ref=f4e86] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f4e92] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f4e97] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f4e103] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f4e109] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f4e114] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f4e119] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f4e127] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f4e134] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f4e141] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f4e148] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f4e154] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f4e160] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f4e167] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f4e172] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f4e178] [cursor=pointer]:
+        - paragraph [ref=f4e179]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f4e180]
+      - generic [ref=f4e181]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f4e183] [cursor=pointer]
+        - generic [ref=f4e186]: 0.8.0
+  - alert [ref=f4e187]
