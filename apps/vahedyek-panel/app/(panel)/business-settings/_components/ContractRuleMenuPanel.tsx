@@ -1,9 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { Landmark, ChevronLeft } from 'lucide-react';
 import { CONTRACT_RULE_ITEMS } from '../../../lib/businessContractRules';
-import { RuleStatusTag } from './RuleStatusTag';
+import { BusinessSettingsCard } from './BusinessSettingsCard';
 
 const RULE_DISPLAY_ORDER: Record<string, number> = {
   prepayment: 0,
@@ -20,71 +18,33 @@ const RULE_DISPLAY_ORDER: Record<string, number> = {
   'loan-settings': 11,
 };
 
-function MenuCard({ title, description, href }: { title: string; description: string; href: string }) {
-  return (
-    <Link
-      href={href}
-      className="group flex min-h-[136px] flex-col justify-between rounded-[8px] border border-[color:var(--theme-accent-border)] bg-[color:var(--surface)] p-4 transition duration-200 hover:border-[color:var(--theme-action-border)]"
-    >
-      <div className="flex flex-row-reverse items-start gap-3">
-        <ChevronLeft className="mt-1 h-4 w-4 shrink-0 text-[color:var(--text-faint)] transition group-hover:text-[color:var(--theme-action-text)]" />
-        <div className="flex-1 space-y-1.5 text-right">
-          <h3 className="text-base font-black text-[color:var(--text-strong)]">{title}</h3>
-          <p className="text-sm leading-6 text-[color:var(--text-muted)]">{description}</p>
-        </div>
-      </div>
-      <div className="flex justify-start [direction:ltr]">
-        <RuleStatusTag label="انجام شده" />
-      </div>
-    </Link>
-  );
-}
+const LOAN_CARD = {
+  title: 'تنظیمات وام',
+  description: 'در این بخش می‌توانید تنظیمات مربوط به وام را انجام دهید.',
+  href: '/business-settings/contract-rules/loan-settings',
+} as const;
 
 export function ContractRuleMenuPanel() {
   const orderedItems = [...CONTRACT_RULE_ITEMS].sort(
     (a, b) => (RULE_DISPLAY_ORDER[a.id] ?? Number.MAX_SAFE_INTEGER) - (RULE_DISPLAY_ORDER[b.id] ?? Number.MAX_SAFE_INTEGER),
   );
 
+  const cards = [
+    ...orderedItems.map((item) => ({
+      title: item.title,
+      description: item.description,
+      href: `/business-settings/contract-rules/${item.id}`,
+    })),
+    LOAN_CARD,
+  ];
+
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="rounded-[8px] border border-[color:var(--border-color)] bg-[color:var(--surface-overlay)] p-5 shadow-[0_18px_45px_var(--shadow-soft)] backdrop-blur sm:p-6">
-        <div className="flex flex-col gap-4 border-b border-[color:var(--border-soft)] pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2 text-right">
-            <p className="text-sm text-[color:var(--text-muted)]">تنظیمات کسب و کار / تنظیمات جریمه خریدار</p>
-            <h1 className="text-2xl font-black text-[color:var(--text-strong)] sm:text-3xl">تنظیمات جریمه خریدار</h1>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center self-end rounded-[8px] border border-[color:var(--theme-action-border)] bg-[color:var(--theme-action-bg)] text-[color:var(--theme-action-text)] sm:self-auto">
-            <Landmark className="h-5 w-5" />
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-3xl border border-[color:var(--theme-accent-border)] bg-[color:var(--surface-soft)] p-5 sm:p-6">
-          <div className="mb-5 space-y-2 text-right">
-            <h2 className="text-xl font-black text-[color:var(--text-strong)]">فلو تنظیمات جریمه خریدار</h2>
-            <p className="text-sm leading-7 text-[color:var(--text-muted)]">
-              آیتم‌های این صفحه به صورت next page عمل می‌کنند و وارد جزئیات هر تنظیم می‌شوید.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 [direction:rtl] xl:grid-cols-2">
-            {orderedItems.map((item) => (
-              <MenuCard
-                key={item.id}
-                title={item.title}
-                description={item.description}
-                href={`/business-settings/contract-rules/${item.id}`}
-              />
-            ))}
-            <MenuCard
-              title="تنظیمات وام"
-              description="در این بخش می‌توانید تنظیمات مربوط به وام را انجام دهید."
-              href="/business-settings/contract-rules/loan-settings"
-            />
-          </div>
-        </div>
+    <section className="business-settings-page">
+      <div className="business-settings-grid">
+        {cards.map((card) => (
+          <BusinessSettingsCard key={card.href} title={card.title} description={card.description} href={card.href} />
+        ))}
       </div>
     </section>
   );
 }
-
-
