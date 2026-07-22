@@ -91,7 +91,7 @@ const BUSINESS_COPY: Record<string, { label: string; description: string }> = {
 
 export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های کسب‌وکار', sectionLabel = 'کسب‌وکار', sectionMode = 'business' }: { sectionTitle?: string; sectionLabel?: string; sectionMode?: 'business' | 'components' }) {
   const items = sectionMode === 'components'
-    ? [...BUSINESS_ITEMS.filter((item) => item.href !== '/business/section-toolbar-card'), { href: '/business-components/choice-chip', label: 'chips', badge: 'TaavChoiceChipGroup', description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده' }]
+    ? [...BUSINESS_ITEMS.filter((item) => item.href !== '/business/section-toolbar-card' && item.href !== '/business/communication-channels'), { href: '/business-components/choice-chip', label: 'chips', badge: 'TaavChoiceChipGroup', description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده' }, { href: '/business-components/switch', label: 'switch', badge: 'TaavActivationSwitch', description: 'کنترل دوحالته برای فعال‌سازی و غیرفعال‌سازی تنظیمات' }, { href: '/business-components/link', label: 'link', badge: 'TaavDetailsLink', description: 'لینک جزئیات برای هدایت کاربر به اطلاعات یا تنظیمات مرتبط' }, { href: '/business-components/expanded', label: 'expanded', badge: 'TaavExpanded', description: 'ردیف بازشونده برای نمایش یا پنهان‌کردن جزئیات' }]
     : BUSINESS_ITEMS;
 
   return (
@@ -117,10 +117,30 @@ export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های
             if (item.href === '/business/toggle-card') return null;
             const displayItem = sectionMode === 'components' && item.href === '/business/choice-chip'
               ? { ...item, href: '/business-components/badges', label: 'badges', badge: 'TaavBadge' }
-              : item;
+              : sectionMode === 'components' && item.href === '/business/field-block'
+                ? { ...item, href: '/business-components/field-block', label: 'field', badge: 'TaavFieldBlock' }
+              : sectionMode === 'components' && item.href === '/business/form-step-indicator'
+                  ? { ...item, label: 'stepper' }
+              : sectionMode === 'components' && item.href === '/business/module-link-grid'
+                  ? { ...item, label: 'nextpage' }
+              : sectionMode === 'components' && item.href === '/business/icon-option-selector'
+                  ? { ...item, label: 'tabbar' }
+                : sectionMode === 'components' && item.href === '/business/module-card'
+                  ? { ...item, href: '/business-components/card', label: 'card' }
+                : item;
             const copy = sectionMode === 'components' && item.href === '/business/choice-chip'
               ? { label: 'badges', description: 'Badgeهای نمایشی برای وضعیت، نوع کاربری، ویژگی‌های واحد و وضعیت معامله' }
-              : BUSINESS_COPY[item.href] ?? { label: displayItem.label, description: 'مستندات، ویژگی‌ها، جدول props و پیش‌نمایش راست‌چین' };
+              : sectionMode === 'components' && item.href === '/business/field-block'
+                ? { label: 'field', description: 'کامپوننت اصلی فیلد با برچسب، کنترل و متن راهنما' }
+                : sectionMode === 'components' && item.href === '/business/form-step-indicator'
+                  ? { label: 'stepper', description: 'نمایش مرحله‌های فرم با مشخص‌کردن مرحله فعال و مراحل تکمیل‌شده' }
+                : sectionMode === 'components' && item.href === '/business/module-link-grid'
+                  ? { label: 'nextpage', description: 'نمایش مسیرهای اطلاعاتی و عملیاتی مجتمع با آیکن و فلش ورود' }
+                : sectionMode === 'components' && item.href === '/business/icon-option-selector'
+                  ? { label: 'tabbar', description: 'انتخاب یک گزینه از میان گزینه‌های آیکون‌دار' }
+                : sectionMode === 'components' && item.href === '/business/module-card'
+                  ? { label: 'card', description: 'کارت ناوبری برای ماژول‌ها و مراحل راه‌اندازی' }
+                : BUSINESS_COPY[item.href] ?? { label: displayItem.label, description: 'مستندات، ویژگی‌ها، جدول props و پیش‌نمایش راست‌چین' };
             return (
               <Link key={displayItem.href} href={displayItem.href} className="h-full">
                 <TaavCard variant="outlined" padding="md" radius="lg" interactive wrapperClassName="h-full">

@@ -45,7 +45,7 @@ export const LAB_FORM_NAV: LabNavItem[] = [
   { href: '/forms/segmented-control', label: 'سگمنت', badge: 'TaavSegmentedControl' },
   { href: '/forms/option-card', label: 'کارت گزینه', badge: 'TaavOptionCard' },
   { href: '/forms/form-field', label: 'فیلد فرم', badge: 'TaavFormField' },
-  { href: '/forms/field-block', label: 'بلوک فیلد', badge: 'TaavFieldBlock' },
+  { href: '/forms/field-block', label: 'field', badge: 'TaavFieldBlock' },
   { href: '/forms/field-grid', label: 'گرید فیلد', badge: 'TaavFieldGrid' },
   { href: '/forms/choice-chip', label: 'چیپ انتخابی', badge: 'TaavChoiceChipGroup' },
 ];
@@ -144,7 +144,7 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = ([
   },
   {
     href: '/business/field-block',
-    label: 'بلوک فیلد',
+    label: 'field',
     badge: 'TaavFieldBlock',
     description: 'الگوی فیلد کسب‌وکاری با label، tooltip ثابت و پیام وضعیت',
     keywords: ['field block', 'business form', 'label', 'tooltip', 'validation'],

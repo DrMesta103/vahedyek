@@ -46,12 +46,13 @@ function ChipCheckIcon() {
   return <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0"><path d="M1.75 8.25 5.7 12 14.25 3.75" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-function VisualChip({ title, number, selected, showCheck = false, size = 'md', onClick }: { title: string; number?: string; selected: boolean; showCheck?: boolean; size?: keyof typeof CHIP_SIZE_CLASS; onClick: () => void }) {
+function VisualChip({ title, number, selected, showCheck = false, size = 'md', role, onClick }: { title: string; number?: string; selected: boolean; showCheck?: boolean; size?: keyof typeof CHIP_SIZE_CLASS; role: 'radio' | 'checkbox'; onClick: () => void }) {
   return (
     <button
       type="button"
       dir="rtl"
-      aria-pressed={selected}
+      role={role}
+      aria-checked={selected}
       onClick={onClick}
       style={{ paddingInline: size === 'sm' ? '12px' : size === 'lg' ? '16px' : '14px', fontWeight: 500 }}
       className={`inline-flex ${CHIP_SIZE_CLASS[size]} box-border flex-row items-center justify-center gap-1.5 rounded-full border font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80cbd3] ${selected ? 'border-[#b2dfe5] bg-[#b2dfe5] text-[#41565a]' : 'border-[#505050] bg-[#fafafa] text-[#4b4b4b]'}`}
@@ -66,12 +67,12 @@ function VisualChip({ title, number, selected, showCheck = false, size = 'md', o
 function ReferenceChipRow({ selected = [], mode = 'multi', size = 'md' }: { selected?: string[]; mode?: 'single' | 'multi'; size?: keyof typeof CHIP_SIZE_CLASS }) {
   const [active, setActive] = useState(selected);
   return (
-    <div dir="rtl" className="flex w-full flex-row flex-wrap justify-start gap-2 bg-[#f5f7f8] px-5 py-3">
+    <div dir="rtl" role={mode === 'single' ? 'radiogroup' : 'group'} aria-label="انتخاب گزینه‌ها" className="flex w-full flex-row flex-wrap justify-start gap-2 bg-[#f5f7f8] px-5 py-3">
       {REFERENCE_OPTIONS.map((option) => {
         const isSelected = active.includes(option.value);
         const title = option.label.replace(/ [۰-۹]+$/, '');
         const number = option.label.match(/[۰-۹]+$/)?.[0] ?? '۰';
-        return <VisualChip key={option.value} title={title} number={mode === 'single' ? undefined : number} showCheck={mode === 'multi' && isSelected} selected={isSelected} size={size} onClick={() => setActive((current) => mode === 'single' ? [option.value] : isSelected ? current.filter((value) => value !== option.value) : [...current, option.value])} />;
+        return <VisualChip key={option.value} title={title} number={mode === 'single' ? undefined : number} showCheck={mode === 'multi' && isSelected} selected={isSelected} size={size} role={mode === 'single' ? 'radio' : 'checkbox'} onClick={() => setActive((current) => mode === 'single' ? [option.value] : isSelected ? current.filter((value) => value !== option.value) : [...current, option.value])} />;
       })}
     </div>
   );
