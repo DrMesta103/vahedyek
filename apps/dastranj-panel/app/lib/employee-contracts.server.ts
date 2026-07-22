@@ -82,6 +82,25 @@ async function queryCurrentEmployeeContractRows(employeeIds: string[], tenantId?
   });
 }
 
+export async function getEndedEmployeeIds(employeeIds: string[], tenantId?: string | null) {
+  if (!employeeIds.length) return new Set<string>();
+  try {
+    const rows = await prisma.employeeContract.findMany({
+      where: {
+        employeeId: { in: employeeIds },
+        status: 'ended',
+        ...employeeContractTenantFilter(tenantId),
+      },
+      select: { employeeId: true },
+      distinct: ['employeeId'],
+    });
+    return new Set(rows.map((row) => row.employeeId));
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return new Set<string>();
+    throw error;
+  }
+}
+
 async function queryEmployeeContractRowsByDate(employeeIds: string[], dateIso: string, tenantId?: string | null) {
   if (!employeeIds.length) return [] as ContractRow[];
 

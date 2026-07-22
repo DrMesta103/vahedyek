@@ -56,9 +56,37 @@ export async function ensureDemoCalendars(prisma: PrismaClient, tenantId: string
   }
 }
 
+const organizationTemplateSeeds = [
+  { name: 'ساختار پایه شرکت خدماتی', root: 'عملیات خدمات', child: 'پشتیبانی مشتریان', positions: ['مدیر عملیات', 'کارشناس پشتیبانی'] },
+  { name: 'ساختار پایه شرکت ساختمانی', root: 'مدیریت پروژه', child: 'کارگاه و اجرا', positions: ['مدیر پروژه', 'سرپرست کارگاه'] },
+  { name: 'ساختار پایه شرکت فروشگاهی', root: 'عملیات فروشگاه', child: 'فروش و صندوق', positions: ['مدیر فروشگاه', 'کارشناس فروش'] },
+  { name: 'ساختار پایه شرکت تولیدی', root: 'مدیریت تولید', child: 'کنترل کیفیت', positions: ['مدیر تولید', 'کارشناس کنترل کیفیت'] },
+  { name: 'ساختار پایه شرکت فناوری', root: 'فناوری و محصول', child: 'توسعه نرم‌افزار', positions: ['مدیر فناوری', 'توسعه‌دهنده نرم‌افزار'] },
+  { name: 'ساختار پایه سازمان عمومی', root: 'مدیریت اداری', child: 'منابع انسانی', positions: ['مدیر اداری', 'کارشناس منابع انسانی'] },
+];
+
+export async function ensureTenantOrganizationTemplates(prisma: PrismaClient, tenantId: string) {
+  for (const seed of organizationTemplateSeeds) {
+    const template = await prisma.organizationStructureTemplate.upsert({
+      where: { tenantId_name: { tenantId, name: seed.name } },
+      create: { tenantId, name: seed.name, description: `قالب پیشنهادی قابل سفارشی‌سازی برای ${seed.name.replace('ساختار پایه ', '')}`, status: 'ACTIVE' },
+      update: {},
+      include: { units: { select: { id: true } } },
+    });
+    if (template.units.length) continue;
+    const root = await prisma.organizationStructureTemplateUnit.create({ data: { templateId: template.id, name: seed.root, type: 'DIVISION', displayOrder: 0, status: 'ACTIVE' } });
+    const child = await prisma.organizationStructureTemplateUnit.create({ data: { templateId: template.id, parentTemplateUnitId: root.id, name: seed.child, type: 'DEPARTMENT', displayOrder: 1, status: 'ACTIVE' } });
+    await prisma.organizationStructureTemplatePosition.createMany({ data: [
+      { templateUnitId: root.id, title: seed.positions[0], capacity: 1, status: 'ACTIVE', displayOrder: 0 },
+      { templateUnitId: child.id, title: seed.positions[1], capacity: 2, status: 'ACTIVE', displayOrder: 0 },
+    ] });
+  }
+}
+
 export async function seedSampleData(prisma: PrismaClient, tenantId: string) {
   await ensureDemoCalendars(prisma, tenantId);
   await ensureTenantDefaultRequestReasons(prisma, tenantId);
+  await ensureTenantOrganizationTemplates(prisma, tenantId);
 
   const businessProfileCount = await prisma.businessProfile.count({ where: { tenantId } });
   if (businessProfileCount > 0) return;

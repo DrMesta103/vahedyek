@@ -1,3 +1,5 @@
+import { isValidIranMobile, sanitizeIranMobileInput } from './contact';
+
 export function parseContactInput(value: string): {
   isValid: boolean;
   type?: 'phone' | 'email';
@@ -13,9 +15,8 @@ export function parseContactInput(value: string): {
       : { isValid: false, error: 'ایمیل معتبر نیست.' };
   }
 
-  const digits = trimmed.replace(/\D/g, '');
-  return digits.length >= 10
-    ? { isValid: true, type: 'phone', normalizedValue: trimmed }
+  return isValidIranMobile(trimmed)
+    ? { isValid: true, type: 'phone', normalizedValue: sanitizeIranMobileInput(trimmed) }
     : { isValid: false, error: 'شماره موبایل معتبر نیست.' };
 }
 

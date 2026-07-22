@@ -74,6 +74,9 @@ export type EditEmployeeData = {
   maritalStatus: string;
   childrenCount: number;
   canEditIdentityPhoto: boolean;
+  canSensitiveUpdate?: boolean;
+  canIdentityPhotoUpdate?: boolean;
+  updatedAt?: string;
 };
 
 export function EditEmployeeFlow({
@@ -167,14 +170,14 @@ export function EditEmployeeFlow({
                   </span>
                   <input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                 </label>
-                <label className="employee-add-field employee-add-field-full">
+                {employee.canSensitiveUpdate ? <label className="employee-add-field employee-add-field-full">
                   <span className="employee-add-field-label">کد ملی</span>
                   <input value={nationalId} onChange={(e) => setNationalId(e.target.value)} inputMode="numeric" />
                   {nationalIdError ? <span className="employee-add-field-error">{nationalIdError}</span> : null}
-                </label>
+                </label> : null}
               </div>
 
-              <div className="employee-add-fields-grid">
+              {employee.canSensitiveUpdate ? <div className="employee-add-fields-grid">
                 <label className="employee-add-field">
                   <span className="employee-add-field-label">موبایل ۱</span>
                   <input value={mobile1} onChange={(e) => setMobile1(e.target.value)} inputMode="tel" />
@@ -187,7 +190,7 @@ export function EditEmployeeFlow({
                   <span className="employee-add-field-label">ایمیل</span>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </label>
-              </div>
+              </div> : null}
 
               <div className="employee-add-wizard-actions">
                 <button
@@ -203,12 +206,12 @@ export function EditEmployeeFlow({
             </div>
           ) : (
             <div className="employee-add-form-body">
-              <PhotoUploadCircle
+              {employee.canIdentityPhotoUpdate ? <PhotoUploadCircle
                 label="عکس احراز هویت"
                 imageUrl={identityPhotoUrl}
                 onPick={uploadIdentityPhoto}
                 inputId="edit-identity-photo"
-              />
+              /> : null}
 
               <div className="employee-add-fields-grid">
                 <label className="employee-add-field employee-add-field-full">
@@ -277,15 +280,13 @@ export function EditEmployeeFlow({
 
         <form ref={formRef} action={updateEmployeeAction} hidden>
           <input name="id" value={employee.id} readOnly />
+          <input name="expectedUpdatedAt" value={employee.updatedAt ?? ''} readOnly />
           <input name="firstName" value={firstName} readOnly />
           <input name="lastName" value={lastName} readOnly />
-          <input name="nationalId" value={nationalId} readOnly />
-          <input name="mobile1" value={mobile1} readOnly />
-          <input name="mobile2" value={mobile2} readOnly />
-          <input name="email" value={email} readOnly />
+          {employee.canSensitiveUpdate ? <><input name="nationalId" value={nationalId} readOnly /><input name="mobile1" value={mobile1} readOnly /><input name="mobile2" value={mobile2} readOnly /><input name="email" value={email} readOnly /></> : null}
           <input name="personnelCode" value={personnelCode} readOnly />
           <input name="avatarUrl" value={avatarUrl} readOnly />
-          <input name="identityPhotoUrl" value={identityPhotoUrl} readOnly />
+          {employee.canIdentityPhotoUpdate ? <input name="identityPhotoUrl" value={identityPhotoUrl} readOnly /> : null}
           <input name="maritalStatus" value={maritalStatus || 'single'} readOnly />
           <input name="childrenCount" value={childrenCount} readOnly />
           {canEditIdentityPhoto ? <input name="canEditIdentityPhoto" value="on" readOnly /> : null}

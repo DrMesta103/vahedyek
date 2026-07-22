@@ -3,7 +3,8 @@ import { getActiveTenantStorageId } from './payroll-business-settings';
 export type NamingPatternUsageType =
   | 'contract_number'
   | 'draft_template_name'
-  | 'employee_number';
+  | 'employee_number'
+  | 'organization_unit';
 
 export type NamingPatternPartType =
   | 'year'
@@ -112,6 +113,7 @@ export const NAMING_PATTERN_USAGE_OPTIONS: Array<{ value: NamingPatternUsageType
   { value: 'draft_template_name', label: 'نام قالب پیش‌نویس قرارداد' },
   { value: 'contract_number', label: 'شماره قرارداد' },
   { value: 'employee_number', label: 'شماره پرسنلی' },
+  { value: 'organization_unit', label: 'کد واحد سازمانی' },
 ];
 
 export const NAMING_PATTERN_PART_OPTIONS: Array<{ value: NamingPatternPartType; label: string; group: string }> = [

@@ -1,90 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
-import { createOrganizationUnitFromDialogAction } from '../../../lib/actions';
+import { Check, FileStack, Plus, Settings2, Trash2 } from 'lucide-react';
+import { PanelFormModal } from '../../../components/PanelFormModal';
+import { createOrganizationUnitFromDialogAction, type OrganizationUnitCreatePayload } from '../../../lib/actions';
 
-type CreateOrganizationUnitDialogProps = {
-  open: boolean;
-  onClose: () => void;
-};
+type Template = { id:string; name:string; description:string|null; version:number; units:Array<{ id:string; parentTemplateUnitId:string|null; name:string; type:string; description:string|null; status:string; positions:Array<{ id:string; title:string; code:string|null; capacity:number; status:string }> }> };
+type DraftUnit = OrganizationUnitCreatePayload['units'][number];
+type Props={open:boolean;onClose:()=>void;defaultParentId?:string;units:Array<{id:string;title:string;code:string|null;parentId:string|null}>;employees:Array<{id:string;firstName:string;lastName:string;personnelCode:string|null}>;templates:Template[];autoCode:{available:boolean;patternName:string|null;preview:string|null}};
+const steps=['روش ایجاد','انتخاب و اطلاعات','ساختار واحدها','سمت‌های اولیه','پیش‌نمایش'];
+const typeOptions=[{value:'DEPARTMENT',label:'واحد'},{value:'DIVISION',label:'مدیریت'},{value:'TEAM',label:'تیم'},{value:'BRANCH',label:'شعبه'}];
+const newPosition=()=>({title:'',code:'',capacity:1,status:'ACTIVE' as const});
+const customDraft=(parentId?:string):DraftUnit=>({clientId:crypto.randomUUID(),title:'',description:'',codeMode:'MANUAL',code:'',type:'DEPARTMENT',status:'ACTIVE',parent:parentId?{kind:'existing',id:parentId}:{kind:'root'},managerId:'',positions:[]});
 
-export function CreateOrganizationUnitDialog({ open, onClose }: CreateOrganizationUnitDialogProps) {
-  const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function CreateOrganizationUnitDialog({open,onClose,defaultParentId,units,employees,templates,autoCode}:Props){
+ const router=useRouter(); const [step,setStep]=useState(0); const [method,setMethod]=useState<'custom'|'template'|null>(null); const [selectedTemplates,setSelectedTemplates]=useState<string[]>([]); const [drafts,setDrafts]=useState<DraftUnit[]>([]); const [saving,setSaving]=useState(false); const [error,setError]=useState<string|null>(null); const [success,setSuccess]=useState<{units:number;positions:number}|null>(null);
+ const reset=()=>{setStep(0);setMethod(null);setSelectedTemplates([]);setDrafts([customDraft(defaultParentId)]);setSaving(false);setError(null);setSuccess(null)};
+ useEffect(()=>{if(open)reset()},[open,defaultParentId]);
+ const selected=templates.filter(t=>selectedTemplates.includes(t.id));
+ const buildTemplateDrafts=(ids:string[])=>{const chosen=templates.filter(t=>ids.includes(t.id));return chosen.flatMap(template=>template.units.filter(u=>u.status!=='ARCHIVED').map(unit=>({clientId:`${template.id}:${unit.id}`,templateUnitId:unit.id,title:unit.name,description:unit.description??'',codeMode:'MANUAL' as const,code:'',type:unit.type,status:unit.status==='INACTIVE'?'INACTIVE' as const:'ACTIVE' as const,parent:unit.parentTemplateUnitId?{kind:'internal' as const,clientId:`${template.id}:${unit.parentTemplateUnitId}`}:{kind:'root' as const},managerId:'',positions:unit.positions.filter(p=>p.status!=='ARCHIVED').map(p=>({title:p.title,code:p.code??'',capacity:p.capacity,status:p.status==='INACTIVE'?'INACTIVE' as const:'ACTIVE' as const}))})));};
+ const toggleTemplate=(id:string)=>{const next=selectedTemplates.includes(id)?selectedTemplates.filter(x=>x!==id):[...selectedTemplates,id];setSelectedTemplates(next);setDrafts(buildTemplateDrafts(next))};
+ const updateDraft=(clientId:string,patch:Partial<DraftUnit>)=>setDrafts(items=>items.map(item=>item.clientId===clientId?{...item,...patch}:item));
+ const validate=()=>{if(step===0&&!method)return'روش ایجاد را انتخاب کنید.';if(step===1&&method==='template'&&!selectedTemplates.length)return'حداقل یک قالب فعال انتخاب کنید.';if((step===1&&method==='custom')||step>=2){if(!drafts.length)return'حداقل یک واحد برای ایجاد باقی بگذارید.';const names=new Set<string>();const codes=new Set(units.flatMap(x=>x.code?[x.code.toLocaleLowerCase('en-US')]:[]));for(const unit of drafts){if(!unit.title.trim())return'نام همه واحدهای سازمانی را وارد کنید.';if(unit.parent.kind==='internal'){const parentClientId=unit.parent.clientId;if(!drafts.some(x=>x.clientId===parentClientId))return`والد واحد «${unit.title}» حذف شده است.`}if(unit.codeMode==='AUTO'&&!autoCode.available)return'الگوی فعال برای تولید خودکار کد وجود ندارد.';const parentKey=unit.parent.kind==='root'?'root':unit.parent.kind==='existing'?`existing:${unit.parent.id}`:`internal:${unit.parent.clientId}`;const nameKey=`${parentKey}:${unit.title.trim().toLocaleLowerCase('fa')}`;if(names.has(nameKey))return`نام واحد «${unit.title}» در همان سطح تکراری است.`;names.add(nameKey);const existingLevelParentId=unit.parent.kind==='existing'?unit.parent.id:null;if(unit.parent.kind!=='internal'&&units.some(x=>x.parentId===existingLevelParentId&&x.title.trim().toLocaleLowerCase('fa')===unit.title.trim().toLocaleLowerCase('fa')))return`واحد «${unit.title}» در همین سطح وجود دارد.`;if(unit.codeMode==='MANUAL'&&unit.code?.trim()){const code=unit.code.trim().toLocaleLowerCase('en-US');if(codes.has(code))return`کد واحد «${unit.code.trim()}» تکراری است.`;codes.add(code)}const positionTitles=new Set<string>();const positionCodes=new Set<string>();for(const p of unit.positions){if(!p.title.trim())return`عنوان سمت‌های واحد «${unit.title}» را وارد کنید.`;if(!Number.isInteger(p.capacity)||p.capacity<0)return`ظرفیت سمت در واحد «${unit.title}» صحیح نیست.`;const title=p.title.trim().toLocaleLowerCase('fa');const code=p.code?.trim().toLocaleLowerCase('en-US')||'';if(positionTitles.has(title)||(code&&positionCodes.has(code)))return`سمت تکراری در واحد «${unit.title}» وجود دارد.`;positionTitles.add(title);if(code)positionCodes.add(code)}}}return null};
+ const next=()=>{const problem=validate();if(problem){setError(problem);return}setError(null);setStep(s=>Math.min(4,s+1))};
+ const submit=async()=>{const problem=validate();if(problem){setError(problem);return}setSaving(true);setError(null);try{const result=await createOrganizationUnitFromDialogAction({source:method!,templateIds:method==='template'?selectedTemplates:undefined,units:drafts});setSuccess({units:result.unitCount,positions:result.positionCount});router.refresh()}catch(e){setError(e instanceof Error?e.message:'ایجاد ساختار سازمانی انجام نشد.')}finally{setSaving(false)}};
+ const setParent=(unit:DraftUnit,value:string)=>updateDraft(unit.clientId,{parent:value==='root'?{kind:'root'}:value.startsWith('existing:')?{kind:'existing',id:value.slice(9)}:{kind:'internal',clientId:value.slice(9)}});
+ const getParentLabel=(unit:DraftUnit)=>{const parent=unit.parent;if(parent.kind==='root')return'ریشه سازمان';if(parent.kind==='existing')return units.find(x=>x.id===parent.id)?.title??'والد نامعتبر';return drafts.find(x=>x.clientId===parent.clientId)?.title??'والد نامعتبر'};
+ if(success)return <PanelFormModal open={open} title="ساختار سازمانی ایجاد شد" lead={`${success.units.toLocaleString('fa-IR')} واحد سازمانی و ${success.positions.toLocaleString('fa-IR')} سمت اولیه با موفقیت ایجاد شد.`} onClose={onClose} footer={<><button className="calendar-create-submit" onClick={reset}>افزودن واحد دیگر</button><button className="calendar-create-cancel" onClick={onClose}>بازگشت به فهرست</button></>}><div className="org-wizard-success" role="status"><Check/><strong>اطلاعات List، Tree و شمارنده‌های فاز ۱ به‌روزرسانی شدند.</strong></div></PanelFormModal>;
+ return <PanelFormModal open={open} title="افزودن واحد سازمانی" lead={`مرحله ${step+1} از ۵ — ${steps[step]}`} onClose={onClose} error={error} footer={<div className="org-wizard-footer">{step>0&&<button className="calendar-create-cancel" disabled={saving} onClick={()=>{setError(null);setStep(s=>s-1)}}>مرحله قبل</button>}<button className="calendar-create-submit" disabled={saving} onClick={step===4?()=>void submit():next}>{saving?'در حال ایجاد...':step===4?'ایجاد ساختار سازمانی':'ادامه'}</button><button className="calendar-create-cancel" disabled={saving} onClick={onClose}>انصراف</button></div>}><div className="org-unit-wizard">
+ <ol className="org-wizard-steps" aria-label="مراحل ایجاد واحد">{steps.map((label,i)=><li key={label} className={i===step?'is-current':i<step?'is-done':''}><span>{i<step?<Check/>:i+1}</span><small>{label}</small></li>)}</ol>
+ {step===0&&<section className="org-wizard-methods"><button className={`org-method-card${method==='template'?' is-selected':''}`} onClick={()=>{setMethod('template');setDrafts(buildTemplateDrafts(selectedTemplates))}}><FileStack/><strong>استفاده از الگوی پیشنهادی</strong><span>از قالب‌های آماده برای ایجاد سریع واحدها، زیرواحدها و سمت‌های اولیه استفاده کنید.</span></button><button className={`org-method-card${method==='custom'?' is-selected':''}`} onClick={()=>{setMethod('custom');setSelectedTemplates([]);setDrafts([customDraft(defaultParentId)])}}><Settings2/><strong>ایجاد واحد سفارشی</strong><span>واحد سازمانی موردنظر خود را به‌صورت دستی تعریف کنید.</span></button></section>}
+ {step===1&&method==='template'&&<section className="org-template-picker">{templates.length?templates.map(t=><button key={t.id} className={selectedTemplates.includes(t.id)?'is-selected':''} onClick={()=>toggleTemplate(t.id)} aria-pressed={selectedTemplates.includes(t.id)}><span>{selectedTemplates.includes(t.id)?<Check/>:<FileStack/>}</span><strong>{t.name}</strong><small>{t.description||'بدون توضیح'}</small><b>{t.units.length.toLocaleString('fa-IR')} واحد · {t.units.reduce((n,u)=>n+u.positions.length,0).toLocaleString('fa-IR')} سمت</b><em>{t.units.map(u=>u.name).join(' ← ')}</em></button>):<div className="org-wizard-empty"><p>الگوی پیشنهادی فعالی در دسترس نیست.</p><button onClick={()=>{setMethod('custom');setDrafts([customDraft(defaultParentId)])}}>ایجاد واحد سفارشی</button><Link href="/business-settings/organization-templates">مدیریت قالب‌های ساختار سازمانی</Link></div>}</section>}
+ {step===1&&method==='custom'&&<UnitEditor unit={drafts[0]} drafts={drafts} units={units} employees={employees} autoCode={autoCode} update={updateDraft} setParent={setParent}/>}
+ {step===2&&<section className="org-template-draft-list"><header><div><h3>{method==='template'?'ساختار پیشنهادی قالب':'جایگاه در چارت'}</h3><p>نام، نوع و Parent هر واحد را پیش از ایجاد بازبینی کنید.</p></div></header>{drafts.map(unit=><UnitEditor key={unit.clientId} unit={unit} drafts={drafts} units={units} employees={employees} autoCode={autoCode} update={updateDraft} setParent={setParent} removable={method==='template'} remove={()=>setDrafts(items=>items.filter(x=>x.clientId!==unit.clientId).map(x=>{const parent=x.parent;return parent.kind==='internal'&&parent.clientId===unit.clientId?{...x,parent:{kind:'root'}}:x}))}/>)}</section>}
+ {step===3&&<section className="org-template-draft-list">{drafts.map(unit=><article className="org-draft-unit" key={unit.clientId}><header><div><h3>{unit.title}</h3><p>{unit.positions.length?`${unit.positions.length.toLocaleString('fa-IR')} سمت اولیه`:'برای این واحد سمت پیشنهادی وجود ندارد. می‌توانید سمت سفارشی اضافه کنید.'}</p></div><button onClick={()=>updateDraft(unit.clientId,{positions:[...unit.positions,newPosition()]})}><Plus/>افزودن سمت</button></header><div className="org-draft-positions">{unit.positions.map((p,i)=><div key={i}><label>عنوان<input value={p.title} onChange={e=>updateDraft(unit.clientId,{positions:unit.positions.map((x,j)=>j===i?{...x,title:e.target.value}:x)})}/></label><label>کد<input value={p.code} onChange={e=>updateDraft(unit.clientId,{positions:unit.positions.map((x,j)=>j===i?{...x,code:e.target.value}:x)})}/></label><label>ظرفیت<input type="number" min="0" value={p.capacity} onChange={e=>updateDraft(unit.clientId,{positions:unit.positions.map((x,j)=>j===i?{...x,capacity:Number(e.target.value)}:x)})}/></label><label>وضعیت<select value={p.status} onChange={e=>updateDraft(unit.clientId,{positions:unit.positions.map((x,j)=>j===i?{...x,status:e.target.value as 'ACTIVE'|'INACTIVE'}:x)})}><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option></select></label><button aria-label={`حذف سمت ${p.title}`} onClick={()=>updateDraft(unit.clientId,{positions:unit.positions.filter((_,j)=>j!==i)})}><Trash2/></button></div>)}</div></article>)}</section>}
+ {step===4&&<section className="org-final-preview"><header><strong>روش ایجاد: {method==='template'?`قالب (${selected.map(t=>t.name).join('، ')})`:'سفارشی'}</strong><span>{drafts.length.toLocaleString('fa-IR')} واحد · {drafts.reduce((n,u)=>n+u.positions.length,0).toLocaleString('fa-IR')} سمت</span></header>{drafts.map(unit=><article key={unit.clientId}><h3>{unit.title}</h3><div><span>کد: {unit.codeMode==='AUTO'?`${autoCode.preview??'تولید هنگام ذخیره'} (خودکار)`:unit.code||'بدون کد'}</span><span>نوع: {typeOptions.find(x=>x.value===unit.type)?.label}</span><span>وضعیت: {unit.status==='ACTIVE'?'فعال':'غیرفعال'}</span><span>Parent: {getParentLabel(unit)}</span><span>مدیر: {employees.find(x=>x.id===unit.managerId)?`${employees.find(x=>x.id===unit.managerId)!.firstName} ${employees.find(x=>x.id===unit.managerId)!.lastName}`:'بدون مدیر'}</span></div>{unit.description&&<p>{unit.description}</p>}<section>{unit.positions.map((p,i)=><small key={i}>{p.title} · {p.code||'بدون کد'} · ظرفیت {p.capacity.toLocaleString('fa-IR')} · {p.status==='ACTIVE'?'فعال':'غیرفعال'}</small>)}</section></article>)}</section>}
+ </div></PanelFormModal>;
+}
 
-  useEffect(() => {
-    if (!open) return;
-    setTitle('');
-    setDescription('');
-    setError(null);
-  }, [open]);
-
-  const canSubmit = Boolean(title.trim());
-
-  const handleSubmit = async () => {
-    if (!canSubmit || saving) return;
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      await createOrganizationUnitFromDialogAction({
-        title: title.trim(),
-        description: description.trim() || undefined,
-      });
-      onClose();
-      router.refresh();
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'ثبت واحد انجام نشد.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <PanelFormModal
-      open={open}
-      title="واحد سازمانی جدید"
-      lead="واحدهای منابع انسانی، مالی، عملیات و ... را اینجا تعریف کنید."
-      onClose={onClose}
-      error={error}
-      footer={
-        <PanelFormModalActions
-          submitLabel="تایید"
-          saving={saving}
-          disabled={!canSubmit}
-          onSubmit={() => void handleSubmit()}
-          onCancel={onClose}
-        />
-      }
-    >
-      <label className="calendar-create-field">
-        <span>
-          عنوان <em>*</em>
-        </span>
-        <input
-          type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="عنوان واحد سازمانی"
-          autoFocus
-        />
-      </label>
-
-      <label className="calendar-create-field">
-        <span>توضیحات</span>
-        <textarea
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="توضیحات (اختیاری)"
-          rows={3}
-        />
-      </label>
-    </PanelFormModal>
-  );
+function UnitEditor({unit,drafts,units,employees,autoCode,update,setParent,removable,remove}:{unit:DraftUnit;drafts:DraftUnit[];units:Props['units'];employees:Props['employees'];autoCode:Props['autoCode'];update:(id:string,p:Partial<DraftUnit>)=>void;setParent:(u:DraftUnit,v:string)=>void;removable?:boolean;remove?:()=>void}){
+ return <article className="org-draft-unit"><header><strong>{unit.title||'واحد بدون نام'}</strong>{removable&&<button className="is-danger" onClick={remove}><Trash2/>حذف واحد پیشنهادی</button>}</header><div className="org-wizard-fields"><label className="calendar-create-field"><span>نام واحد *</span><input value={unit.title} onChange={e=>update(unit.clientId,{title:e.target.value})}/></label><label className="calendar-create-field"><span>نوع واحد</span><select value={unit.type} onChange={e=>update(unit.clientId,{type:e.target.value})}>{typeOptions.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label><label className="calendar-create-field"><span>وضعیت اولیه</span><select value={unit.status} onChange={e=>update(unit.clientId,{status:e.target.value as 'ACTIVE'|'INACTIVE'})}><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option></select></label><label className="calendar-create-field"><span>واحد بالادست</span><select value={unit.parent.kind==='root'?'root':unit.parent.kind==='existing'?`existing:${unit.parent.id}`:`internal:${unit.parent.clientId}`} onChange={e=>setParent(unit,e.target.value)}><option value="root">ریشه سازمان</option>{units.map(x=><option key={x.id} value={`existing:${x.id}`}>{x.title}</option>)}{drafts.filter(x=>x.clientId!==unit.clientId).map(x=><option key={x.clientId} value={`internal:${x.clientId}`}>{x.title||'واحد پیشنهادی بدون نام'}</option>)}</select>{!units.length&&<small>هنوز واحد دیگری ایجاد نشده است. این واحد در سطح اول چارت ثبت می‌شود.</small>}</label><label className="calendar-create-field"><span>مدیر</span><select value={unit.managerId} onChange={e=>update(unit.clientId,{managerId:e.target.value})}><option value="">بدون مدیر</option>{employees.map(x=><option key={x.id} value={x.id}>{x.firstName} {x.lastName}{x.personnelCode?` — ${x.personnelCode}`:''}</option>)}</select>{!employees.length&&<small>هنوز کارمند فعالی برای انتخاب مدیر واحد ثبت نشده است.</small>}</label><div className="org-code-mode"><strong>کد واحد</strong><button className={unit.codeMode==='MANUAL'?'is-selected':''} onClick={()=>update(unit.clientId,{codeMode:'MANUAL'})}>ورود دستی</button><button disabled={!autoCode.available} className={unit.codeMode==='AUTO'?'is-selected':''} onClick={()=>update(unit.clientId,{codeMode:'AUTO'})}>تولید خودکار</button>{unit.codeMode==='MANUAL'?<input value={unit.code} onChange={e=>update(unit.clientId,{code:e.target.value})} placeholder="کد اختیاری"/>:<small>نمونه بر اساس «{autoCode.patternName}»: {autoCode.preview} — Sequence واقعی و کد نهایی داخل ذخیره تراکنشی تولید می‌شود.</small>}{!autoCode.available&&<small>الگوی فعال کد واحد تعریف نشده است؛ حالت دستی در دسترس است.</small>}</div><label className="calendar-create-field full-span"><span>توضیحات</span><textarea rows={2} value={unit.description} onChange={e=>update(unit.clientId,{description:e.target.value})}/></label></div></article>;
 }

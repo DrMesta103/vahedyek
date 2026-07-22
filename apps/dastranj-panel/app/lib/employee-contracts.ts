@@ -50,6 +50,47 @@ export type EmployeeContractProfileProgress = {
   daysSinceContractStart: number;
 };
 
+export type EmployeeContractTimelineProgress = {
+  hasTimeline: boolean;
+  totalDays: number;
+  elapsedPercent: number;
+  remainingPercent: number;
+  elapsedDays: number;
+  remainingDays: number;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export function getEmployeeContractTimelineProgress(contract: EmployeeCurrentContractSummary | null): EmployeeContractTimelineProgress {
+  const startDate = contract?.startDate ?? null;
+  const endDate = contract?.endDate ?? null;
+  if (!contract || !startDate || !endDate) {
+    return { hasTimeline: false, totalDays: 0, elapsedPercent: 0, remainingPercent: 0, elapsedDays: 0, remainingDays: 0, startDate, endDate };
+  }
+
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    return { hasTimeline: false, totalDays: 0, elapsedPercent: 0, remainingPercent: 0, elapsedDays: 0, remainingDays: 0, startDate, endDate };
+  }
+
+  const day = 1000 * 60 * 60 * 24;
+  const totalDays = Math.max(1, Math.ceil((end - start) / day));
+  const elapsedDays = Math.min(totalDays, Math.max(0, Math.floor((Date.now() - start) / day)));
+  const remainingDays = Math.max(0, totalDays - elapsedDays);
+  const elapsedPercent = Math.round((elapsedDays / totalDays) * 100);
+  return {
+    hasTimeline: true,
+    totalDays,
+    elapsedPercent,
+    remainingPercent: 100 - elapsedPercent,
+    elapsedDays,
+    remainingDays,
+    startDate,
+    endDate,
+  };
+}
+
 function daysSinceDate(value: string | null | undefined) {
   if (!value?.trim()) return 0;
   const anchor = new Date(value);

@@ -28,6 +28,8 @@ import {
 import { prisma } from './prisma';
 import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
 import { listClientStorageStates } from './client-storage-persistence';
+import { requireOrganizationUnitAccess } from './organization-unit-access';
+import { findDefaultNamingPattern, getNamingPatternPreview, getNamingPatternsFromStorage, getNamingPatternsStorageKey } from './naming-patterns';
 import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
 import {
   applyPayrollOverrides,
@@ -506,16 +508,67 @@ export async function getRequestReason(id: string) {
   return prisma.requestReason.findFirst({ where: { id, tenantId } });
 }
 
-export async function listOrganizationUnits() {
-  const tenantId = await requireTenantId();
+export async function getOrganizationStructureOverview() {
+  const { tenantId, access } = await requireOrganizationUnitAccess('view');
+  const today = new Date().toISOString().slice(0, 10);
+  const isCurrentAssignment = (assignment: { status: string; startDate: string | null; endDate: string | null; employee: { isActive: boolean } }) =>
+    assignment.status === 'ACTIVE' && assignment.employee.isActive && (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today);
   return prisma.organizationUnit.findMany({
     where: { tenantId },
+    include: {
+      parent: { select: { id: true, title: true } },
+      manager: { select: { id: true, firstName: true, lastName: true, personnelCode: true } },
+      children: { where: { tenantId }, select: { id: true } },
+      positions: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          assignments: {
+            where: { organizationUnit: { tenantId } },
+            include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } },
+          },
+        },
+      },
+      employees: {
+        where: { organizationUnit: { tenantId } },
+        include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } },
+      },
+    },
     orderBy: { createdAt: 'asc' },
-  });
+  }).then((units) => ({
+    access,
+    items: units.map((unit) => {
+      const activeAssignments = unit.employees.filter(isCurrentAssignment);
+      const positions = unit.positions.map((position) => {
+        const assignments = position.assignments.filter(isCurrentAssignment);
+        const remainingCapacity = position.capacity - assignments.length;
+        const capacityStatus = position.status !== 'ACTIVE'
+          ? position.status === 'ARCHIVED' ? 'ARCHIVED' : 'DISABLED'
+          : assignments.length === 0 ? 'WITHOUT_ASSIGNEE'
+          : remainingCapacity < 0 ? 'OVER_CAPACITY'
+          : remainingCapacity === 0 ? 'FULL'
+          : 'HAS_AVAILABLE_CAPACITY';
+        return { ...position, assignments, assignedCount: assignments.length, remainingCapacity, capacityStatus };
+      });
+      return {
+        ...unit,
+        employees: activeAssignments,
+        positions,
+        employeeCount: activeAssignments.length,
+        positionCount: positions.length,
+        vacantPositionCount: positions.filter((position) => position.status === 'ACTIVE' && position.remainingCapacity > 0).length,
+        childCount: unit.children.length,
+      };
+    }),
+  }));
+}
+
+export async function listOrganizationUnits() {
+  const tenantId = await requireTenantId();
+  return prisma.organizationUnit.findMany({ where: { tenantId }, orderBy: { createdAt: 'asc' } });
 }
 
 export async function getOrganizationUnit(id: string) {
-  const tenantId = await requireTenantId();
+  const { tenantId } = await requireOrganizationUnitAccess('view');
   return prisma.organizationUnit.findFirst({
     where: { id, tenantId },
   });
@@ -799,9 +852,14 @@ export async function listDefaultPolicies() {
 type EmployeeListFilters = {
   search?: string;
   status?: 'all' | 'active' | 'inactive';
+  profileStatus?: 'all' | 'complete' | 'incomplete';
+  workGroupId?: string;
+  organizationUnitId?: string;
   assignment?: 'all' | 'assigned' | 'unassigned';
+  dateType?: 'all' | 'employment_start' | 'contract_start';
   createdFrom?: string;
   createdTo?: string;
+  contractStatus?: 'all' | 'active' | 'none' | 'expiring' | 'expired';
 };
 
 function normalizeSearchTerm(value: string) {
@@ -817,6 +875,89 @@ function parseDateInput(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+export async function getOrganizationUnitFormOptions(excludeId?: string) {
+  const { tenantId } = await requireOrganizationUnitAccess('update');
+  const [units, employees] = await Promise.all([
+    prisma.organizationUnit.findMany({ where: { tenantId, status: { not: 'ARCHIVED' }, ...(excludeId ? { id: { not: excludeId } } : {}) }, select: { id: true, title: true, parentId: true }, orderBy: { title: 'asc' } }),
+    prisma.employee.findMany({ where: { tenantId, isActive: true }, select: { id: true, firstName: true, lastName: true, personnelCode: true }, orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }] }),
+  ]);
+  return { units, employees };
+}
+
+export async function getOrganizationUnitCreateOptions() {
+  const { tenantId } = await requireOrganizationUnitAccess('create');
+  const [units, employees, templates, storageStates] = await Promise.all([
+    prisma.organizationUnit.findMany({ where: { tenantId, status: 'ACTIVE' }, select: { id: true, title: true, code: true, parentId: true }, orderBy: { title: 'asc' } }),
+    prisma.employee.findMany({ where: { tenantId, isActive: true }, select: { id: true, firstName: true, lastName: true, personnelCode: true }, orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }] }),
+    prisma.organizationStructureTemplate.findMany({
+      where: { tenantId, status: 'ACTIVE' },
+      orderBy: { name: 'asc' },
+      include: { units: { orderBy: { displayOrder: 'asc' }, include: { positions: { orderBy: { displayOrder: 'asc' } } } } },
+    }),
+    listClientStorageStates(tenantId),
+  ]);
+  const namingRaw = storageStates.find((item) => item.storageKey === getNamingPatternsStorageKey(tenantId))?.value;
+  const namingPattern = findDefaultNamingPattern(getNamingPatternsFromStorage(namingRaw), 'organization_unit');
+  return {
+    units,
+    employees,
+    templates: templates.map((template) => ({
+      id: template.id, name: template.name, description: template.description, version: template.version,
+      units: template.units.map((unit) => ({ id: unit.id, parentTemplateUnitId: unit.parentTemplateUnitId, name: unit.name, type: unit.type, description: unit.description, status: unit.status, positions: unit.positions.map((position) => ({ id: position.id, title: position.title, code: position.code, capacity: position.capacity, status: position.status })) })),
+    })),
+    autoCode: namingPattern ? { available: true as const, patternName: namingPattern.name, preview: getNamingPatternPreview(namingPattern, { date: new Date() }).current } : { available: false as const, patternName: null, preview: null },
+  };
+}
+
+export async function getOrganizationStructureTemplatesForManagement() {
+  const { tenantId, access } = await requireOrganizationUnitAccess('view');
+  const templates = await prisma.organizationStructureTemplate.findMany({
+    where: { tenantId }, orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
+    include: { units: { orderBy: { displayOrder: 'asc' }, include: { positions: { orderBy: { displayOrder: 'asc' } } } } },
+  });
+  return { access, templates: templates.map((template) => ({
+    id: template.id, name: template.name, description: template.description, status: template.status, version: template.version,
+    createdAt: template.createdAt.toISOString(), updatedAt: template.updatedAt.toISOString(),
+    units: template.units.map((unit) => ({
+      id: unit.id, parentTemplateUnitId: unit.parentTemplateUnitId, name: unit.name, type: unit.type, description: unit.description, status: unit.status,
+      positions: unit.positions.map((position) => ({ id: position.id, title: position.title, code: position.code, capacity: position.capacity, status: position.status })),
+    })),
+  })) };
+}
+
+function deriveEmployeeProfileStatus(item: {
+  nationalId: string | null;
+  personnelCode: string | null;
+  mobile1: string | null;
+  mobile2: string | null;
+  email: string | null;
+  organizationUnits: unknown[];
+  workGroupMemberships: unknown[];
+}) {
+  const complete = Boolean(
+    item.nationalId?.trim() &&
+      item.personnelCode?.trim() &&
+      (item.mobile1?.trim() || item.mobile2?.trim() || item.email?.trim()) &&
+      item.organizationUnits.length &&
+      item.workGroupMemberships.length,
+  );
+  return complete ? 'complete' as const : 'incomplete' as const;
+}
+
+export type EmployeeLifecycleStatus = 'invited' | 'incomplete' | 'active' | 'inactive' | 'ended';
+
+export function resolveEmployeeLifecycleStatus(item: {
+  isActive: boolean;
+  quickSetupStatus: string | null;
+  quickSetupInvitationStatus: string | null;
+  hasEndedContract: boolean;
+}): EmployeeLifecycleStatus {
+  if (item.hasEndedContract) return 'ended';
+  if (item.quickSetupStatus === 'invite_sent' || item.quickSetupInvitationStatus === 'sent') return 'invited';
+  if (item.quickSetupStatus === 'pending_completion' || item.quickSetupStatus === 'in_progress') return 'incomplete';
+  return item.isActive ? 'active' : 'inactive';
+}
+
 export async function listEmployees(options?: EmployeeListFilters) {
   const tenantId = await requireTenantId();
   const search = options?.search ? normalizeSearchTerm(options.search) : '';
@@ -830,13 +971,72 @@ export async function listEmployees(options?: EmployeeListFilters) {
     andConditions.push({ isActive: false });
   }
 
-  if (createdFrom || createdTo) {
+  if (options?.profileStatus === 'complete') {
+    andConditions.push({
+      nationalId: { not: null },
+      personnelCode: { not: null },
+      OR: [{ mobile1: { not: null } }, { mobile2: { not: null } }, { email: { not: null } }],
+      organizationUnits: { some: { organizationUnit: { tenantId } } },
+      workGroupMemberships: { some: { isCurrent: true, workGroup: { tenantId } } },
+    });
+  } else if (options?.profileStatus === 'incomplete') {
+    andConditions.push({
+      OR: [
+        { nationalId: null },
+        { personnelCode: null },
+        { mobile1: null, mobile2: null, email: null },
+        { organizationUnits: { none: { organizationUnit: { tenantId } } } },
+        { workGroupMemberships: { none: { isCurrent: true, workGroup: { tenantId } } } },
+      ],
+    });
+  }
+
+  if (options?.workGroupId) {
+    andConditions.push({
+      workGroupMemberships: { some: { workGroupId: options.workGroupId, isCurrent: true, workGroup: { tenantId } } },
+    });
+  }
+
+  if (options?.organizationUnitId) {
+    andConditions.push({
+      organizationUnits: { some: { organizationUnitId: options.organizationUnitId, organizationUnit: { tenantId } } },
+    });
+  }
+
+  if ((options?.dateType ?? 'employment_start') === 'employment_start' && (createdFrom || createdTo)) {
     andConditions.push({
       createdAt: {
         ...(createdFrom ? { gte: createdFrom } : {}),
         ...(createdTo ? { lte: createdTo } : {}),
       },
     });
+  }
+
+  if ((options?.dateType ?? 'employment_start') === 'contract_start' && (createdFrom || createdTo)) {
+    andConditions.push({
+      contracts: {
+        some: {
+          tenantId,
+          status: 'active',
+          isCurrent: true,
+          ...(createdFrom || createdTo
+            ? { startDate: { ...(createdFrom ? { gte: options?.createdFrom } : {}), ...(createdTo ? { lte: options?.createdTo } : {}) } }
+            : {}),
+        },
+      },
+    });
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const expiringUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  if (options?.contractStatus === 'active') {
+    andConditions.push({ contracts: { some: { tenantId, status: 'active', isCurrent: true } } });
+  } else if (options?.contractStatus === 'none') {
+    andConditions.push({ contracts: { none: { tenantId, status: 'active', isCurrent: true } } });
+  } else if (options?.contractStatus === 'expiring') {
+    andConditions.push({ contracts: { some: { tenantId, status: 'active', isCurrent: true, endDate: { gte: today, lte: expiringUntil } } } });
+  } else if (options?.contractStatus === 'expired') {
+    andConditions.push({ contracts: { some: { tenantId, endDate: { lt: today } } } });
   }
 
   if (options?.assignment === 'assigned') {
@@ -879,6 +1079,9 @@ export async function listEmployees(options?: EmployeeListFilters) {
     mobile1: true,
     mobile2: true,
     avatarUrl: true,
+    nationalId: true,
+    quickSetupStatus: true,
+    quickSetupInvitationStatus: true,
     isActive: true,
     createdAt: true,
     updatedAt: true,
@@ -892,11 +1095,24 @@ export async function listEmployees(options?: EmployeeListFilters) {
     },
   } as const;
 
-  return prisma.employee.findMany({
+  const rows = await prisma.employee.findMany({
     where,
     select: employeeListSelect as any,
     orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
+
+  return rows.map((item) => ({
+    ...item,
+    profileStatus: deriveEmployeeProfileStatus(item as typeof item & {
+      nationalId: string | null;
+      personnelCode: string | null;
+      mobile1: string | null;
+      mobile2: string | null;
+      email: string | null;
+      organizationUnits: unknown[];
+      workGroupMemberships: unknown[];
+    }),
+  }));
 }
 
 export async function getEmployee(id: string) {
@@ -904,7 +1120,14 @@ export async function getEmployee(id: string) {
   return prisma.employee.findFirst({
     where: { id, tenantId },
     include: {
-      organizationUnits: { where: { organizationUnit: { tenantId } }, include: { organizationUnit: true } },
+      userTenantMembership: { include: { user: { select: { id: true, firstName: true, lastName: true, email: true, mobile: true } }, roles: { include: { role: { select: { key: true, label: true } } } } } },
+      organizationUnits: {
+        where: { organizationUnit: { tenantId } },
+        include: {
+          organizationUnit: { include: { manager: { select: { id: true, firstName: true, lastName: true } } } },
+          position: { select: { id: true, title: true, code: true, status: true } },
+        },
+      },
       workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
     },
   });

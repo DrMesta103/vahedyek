@@ -27,8 +27,12 @@ import { useMemo, useState } from 'react';
 import { formatPersianDate } from '../../../../lib/format-date';
 import { formatFaNumber } from '../../../../lib/format-fa';
 import { getEmployeeContractProfileProgress } from '../../../../lib/employee-contracts';
+import { getEmployeeContractTimelineProgress } from '../../../../lib/employee-contracts';
+import { computeSupplementalCompleteness } from '../../../../lib/employee-supplemental-fields';
 import type { EmployeeCurrentContractSummary } from '../../../../lib/employee-contracts';
+import type { EmployeeSupplementalProfile } from '../../../../lib/employee-contract-drafts';
 import { EditEmployeeFlow, type EditEmployeeData } from './EditEmployeeFlow';
+import { toggleEmployeeActiveAction } from '../../../../lib/actions';
 
 type EmployeeDetailSection = {
   title: string;
@@ -42,8 +46,30 @@ type EmployeeDetailSection = {
 
 type EmployeeDetailData = EditEmployeeData & {
   createdAt: string;
+  isActive: boolean;
+  quickSetupStatus: string | null;
+  quickSetupInvitationStatus: string | null;
+  hasEndedContract: boolean;
+  permissions: {
+    canUpdate: boolean; canDisable: boolean; canSensitiveView: boolean; canSensitiveUpdate: boolean;
+    canIdentityPhotoView: boolean; canIdentityPhotoUpdate: boolean; canHistoryView: boolean;
+  };
+  updatedAt: string;
+  supplemental: EmployeeSupplementalProfile;
+  userTenantMembership: {
+    id: string;
+    role: string;
+    user: { id: string; firstName: string; lastName: string; email: string | null; mobile: string | null };
+    roles: Array<{ key: string; label: string }>;
+  } | null;
   workGroups?: Array<{ id: string; title: string }>;
-  organizationUnits?: Array<{ id: string; title: string }>;
+  organizationUnits?: Array<{
+    id: string;
+    title: string;
+    position?: { id: string; title: string; code: string | null; status: string } | null;
+    startDate?: string | null;
+    manager?: { id: string; firstName: string; lastName: string } | null;
+  }>;
   bankAccountsCount?: number;
   guaranteeCount?: number;
   currentContract?: EmployeeCurrentContractSummary | null;
@@ -54,11 +80,19 @@ function normalizeDisplay(value: string | null | undefined) {
   return trimmed ? trimmed : 'ثبت نشده';
 }
 
-function buildSections(employeeId: string): Array<{ title: string; cards: EmployeeDetailSection[]; layout?: 'default' | 'contract' }> {
+function resolveLifecycleStatus(employee: Pick<EmployeeDetailData, 'isActive' | 'quickSetupStatus' | 'quickSetupInvitationStatus'>, hasEndedContract: boolean) {
+  if (hasEndedContract) return 'Ended employment';
+  if (employee.quickSetupStatus === 'invite_sent' || employee.quickSetupInvitationStatus === 'sent') return 'Invited';
+  if (employee.quickSetupStatus === 'pending_completion' || employee.quickSetupStatus === 'in_progress') return 'Incomplete';
+  return employee.isActive ? 'Active' : 'Inactive';
+}
+
+function buildSections(employeeId: string, canHistoryView: boolean): Array<{ title: string; cards: EmployeeDetailSection[]; layout?: 'default' | 'contract' }> {
   return [
     {
       title: 'گزارشات و درخواست ها',
       cards: [
+        ...(canHistoryView ? [{ title: 'تاریخچه تغییرات', description: 'تغییرات مهم پرونده با مقادیر حساس ماسک‌شده ثبت می‌شود.', href: `/employees/${employeeId}/history`, highlighted: true, icon: ClipboardList }] : []),
         {
           title: 'درخواست ها',
           description: 'همه درخواست های ثبت شده توسط کارمند را در اینجا می بینید.',
@@ -241,7 +275,11 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
   const workGroups = employee.workGroups ?? [];
   const currentContract = employee.currentContract ?? null;
   const contractProgress = getEmployeeContractProfileProgress(currentContract);
-  const sections = useMemo(() => buildSections(employee.id), [employee.id]);
+  const contractTimeline = getEmployeeContractTimelineProgress(currentContract);
+  const profileCompletion = computeSupplementalCompleteness(employee.supplemental, employee);
+  const lifecycleStatus = resolveLifecycleStatus(employee, employee.hasEndedContract);
+  const primaryAssignment = organizationUnits[0] ?? null;
+  const sections = useMemo(() => buildSections(employee.id, employee.permissions.canHistoryView), [employee.id, employee.permissions.canHistoryView]);
 
   return (
     <>
@@ -259,25 +297,47 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               </div>
               <div className="employee-detail-hero-profile-copy">
                 <h2>{fullName || 'بدون نام'}</h2>
+                <p>Personnel code: {normalizeDisplay(employee.personnelCode)}</p>
                 <p>کد ملی: {normalizeDisplay(employee.nationalId)}</p>
               </div>
             </div>
             <div className="employee-detail-hero-contact-icons">
-              <span title="موبایل">
+              <span title={employee.mobile1 ?? 'Mobile not registered'}>
                 <Phone className="h-4 w-4" aria-hidden />
+                <small>{normalizeDisplay(employee.mobile1)}</small>
               </span>
-              <span title="ایمیل">
+              <span title={employee.email ?? 'Email not registered'}>
                 <Mail className="h-4 w-4" aria-hidden />
+                <small>{normalizeDisplay(employee.email)}</small>
               </span>
-              <span title="واحد سازمانی">
+              <span title={primaryAssignment?.title ?? 'Organization unit not registered'}>
                 <MapPin className="h-4 w-4" aria-hidden />
+                <small>{normalizeDisplay(primaryAssignment?.title)}</small>
               </span>
             </div>
+            <div className="employee-detail-status-badges employee-detail-status-badges--summary">
+              <span className="employee-detail-status-badge is-solid">{lifecycleStatus}</span>
+              <span className="employee-detail-status-badge is-outline">{employee.userTenantMembership ? 'User connected' : 'No user account'}</span>
+              <span className="employee-detail-status-badge is-outline">{profileCompletion}% profile</span>
+            </div>
             <div className="employee-detail-hero-profile-actions">
-              <button type="button" className="employee-detail-action-btn is-primary" onClick={() => setEditing(true)}>
-                <Pencil className="h-4 w-4" />
-                ویرایش
-              </button>
+              {employee.permissions.canUpdate ? (
+                <button type="button" className="employee-detail-action-btn is-primary" onClick={() => setEditing(true)}>
+                  <Pencil className="h-4 w-4" />
+                  ویرایش
+                </button>
+              ) : null}
+              {employee.permissions.canDisable ? (
+                <form action={toggleEmployeeActiveAction} onSubmit={(event) => {
+                  if (!window.confirm(employee.isActive ? 'Disable this employee account?' : 'Reactivate this employee account?')) event.preventDefault();
+                }}>
+                  <input type="hidden" name="id" value={employee.id} />
+                  <input type="hidden" name="isActive" value={employee.isActive ? 'false' : 'true'} />
+                  <button type="submit" className="employee-detail-action-btn">
+                    {employee.isActive ? 'Disable' : 'Reactivate'}
+                  </button>
+                </form>
+              ) : null}
               <Link href={`/employees/${employee.id}/guarantee`} className="employee-detail-action-btn">
                 ضمانت‌ها
               </Link>
@@ -319,15 +379,15 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
           </article>
 
           <article className="employee-detail-hero-card employee-detail-hero-status">
-            <div className="employee-detail-arc-gauge" style={{ ['--progress' as never]: `${contractProgress.completionPercent}%` }} aria-hidden>
+            <div className="employee-detail-arc-gauge" style={{ ['--progress' as never]: `${profileCompletion}%` }} aria-hidden>
               <div className="employee-detail-arc-gauge-track" />
               <div className="employee-detail-arc-gauge-fill" />
               <div className="employee-detail-arc-gauge-value">
-                <strong>{formatFaNumber(contractProgress.completionPercent, { useGrouping: false })}%</strong>
+                <strong>{formatFaNumber(profileCompletion, { useGrouping: false })}%</strong>
               </div>
             </div>
             <div className="employee-detail-status-badges">
-              <span className="employee-detail-status-badge is-outline">{currentContract?.jobTitle || 'عنوان شغلی ثبت نشده'}</span>
+              <span className="employee-detail-status-badge is-outline">{primaryAssignment?.position?.title || currentContract?.jobTitle || 'عنوان شغلی ثبت نشده'}</span>
               <span className="employee-detail-status-badge is-solid">{currentContract ? 'قرارداد فعال' : 'فاقد قرارداد'}</span>
             </div>
             <div className="employee-detail-status-stats">
@@ -347,6 +407,48 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               </p>
             </div>
           </article>
+        </section>
+
+        <section className="employee-detail-summary-grid" aria-label="Employee record summary">
+          <article className="employee-detail-summary-card">
+            <h3>Basic information</h3>
+            <div><span>Mobile</span><strong>{normalizeDisplay(employee.mobile1)}</strong></div>
+            <div><span>Email</span><strong>{normalizeDisplay(employee.email)}</strong></div>
+            <div><span>Marital status</span><strong>{normalizeDisplay(employee.maritalStatus)}</strong></div>
+            <div><span>Children</span><strong>{formatFaNumber(employee.childrenCount, { useGrouping: false })}</strong></div>
+          </article>
+          <article className="employee-detail-summary-card">
+            <h3>Organization</h3>
+            <div><span>Unit</span><strong>{normalizeDisplay(primaryAssignment?.title)}</strong></div>
+            <div><span>Position</span><strong>{normalizeDisplay(primaryAssignment?.position?.title)}</strong></div>
+            <div><span>Manager</span><strong>{primaryAssignment?.manager ? `${primaryAssignment.manager.firstName} ${primaryAssignment.manager.lastName}` : 'Not registered'}</strong></div>
+            <div><span>Work group</span><strong>{workGroups.length ? workGroups.map((item) => item.title).join('، ') : 'Not registered'}</strong></div>
+          </article>
+          <article className="employee-detail-summary-card">
+            <h3>Account</h3>
+            <div><span>Account status</span><strong>{employee.userTenantMembership ? 'Connected' : 'No user account'}</strong></div>
+            <div><span>User</span><strong>{employee.userTenantMembership ? `${employee.userTenantMembership.user.firstName} ${employee.userTenantMembership.user.lastName}` : 'Not registered'}</strong></div>
+            <div><span>Membership role</span><strong>{employee.userTenantMembership?.role ?? 'Not registered'}</strong></div>
+            <div><span>Profile status</span><strong>{profileCompletion >= 70 ? 'Complete' : 'Incomplete'}</strong></div>
+          </article>
+        </section>
+
+        <section className="employee-detail-contract-timeline" aria-label="Contract timeline">
+          <div className="employee-detail-section-head">
+            <h3>Contract timeline</h3>
+            <span className="employee-detail-status-badge is-outline">{currentContract ? 'Active contract' : 'No active contract'}</span>
+          </div>
+          {contractTimeline.hasTimeline ? (
+            <div className="employee-detail-timeline-grid">
+              <div><span>Start</span><strong>{normalizeDisplay(contractTimeline.startDate)}</strong></div>
+              <div><span>End</span><strong>{normalizeDisplay(contractTimeline.endDate)}</strong></div>
+              <div><span>Total days</span><strong>{formatFaNumber(contractTimeline.totalDays, { useGrouping: false })}</strong></div>
+              <div><span>Elapsed</span><strong>{formatFaNumber(contractTimeline.elapsedDays, { useGrouping: false })} ({contractTimeline.elapsedPercent}%)</strong></div>
+              <div><span>Remaining</span><strong>{formatFaNumber(contractTimeline.remainingDays, { useGrouping: false })} ({contractTimeline.remainingPercent}%)</strong></div>
+            </div>
+          ) : (
+            <p className="employee-detail-empty-note">No active contract timeline is available.</p>
+          )}
         </section>
 
         {sections.map((section) => (
@@ -381,7 +483,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
         ))}
       </div>
 
-      {editing ? <EditEmployeeFlow employee={employee} onClose={() => setEditing(false)} /> : null}
+      {editing ? <EditEmployeeFlow employee={{ ...employee, canSensitiveUpdate: employee.permissions.canSensitiveUpdate, canIdentityPhotoUpdate: employee.permissions.canIdentityPhotoUpdate }} onClose={() => setEditing(false)} /> : null}
     </>
   );
 }

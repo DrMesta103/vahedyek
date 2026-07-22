@@ -112,6 +112,12 @@ export const BUSINESS_SETTINGS_CATEGORIES: BusinessSettingsCategory[] = [
         badges: [{ label: 'نیمه‌حیاتی', tone: 'important' }],
       },
       {
+        title: 'قالب‌های ساختار سازمانی',
+        description: 'قالب‌های واحدها، زیرواحدها و سمت‌های اولیه را برای ایجاد سریع ساختار سازمان مدیریت کنید.',
+        href: '/business-settings/organization-templates',
+        icon: 'org-unit',
+      },
+      {
         title: 'گروه‌های کاری',
         description: 'کارکنان را به محل کار، سیاست کاری و قواعد عملیاتی مرتبط کنید.',
         href: '/work-groups',
