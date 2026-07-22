@@ -1,0 +1,861 @@
+
+> @apps/dastranj-panel@0.1.0 predev
+> npm --workspace @repo/ui run build
+
+
+> @repo/ui@0.1.0 build
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts, src/server.ts, src/taav-business.ts, src/taav-data-display-interactive.ts, src/taav-data-display.ts, src/taav-forms.ts, src/taav-layout-interactive.ts, src/taav-layout.ts, src/taav-navigation.ts, src/taav-overlays.ts, src/taav-primitives.ts, src/taav.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\Administrator\Desktop\first-unit-next\vahedyek\packages\ui\tsup.config.ts
+[34mCLI[39m Target: es2020
+[34mESM[39m Build start
+[34mCJS[39m Build start
+[34mDTS[39m Build start
+[32mCJS[39m [1mdist\server.js                            [22m[32m4.00 KB[39m
+[32mCJS[39m [1mdist\taav-data-display.js                 [22m[32m71.00 KB[39m
+[32mCJS[39m [1mdist\taav-data-display-interactive.js     [22m[32m94.16 KB[39m
+[32mCJS[39m [1mdist\taav-business.js                     [22m[32m131.02 KB[39m
+[32mCJS[39m [1mdist\taav-layout-interactive.js           [22m[32m64.50 KB[39m
+[32mCJS[39m [1mdist\taav-navigation.js                   [22m[32m56.08 KB[39m
+[32mCJS[39m [1mdist\taav-layout.js                       [22m[32m82.49 KB[39m
+[32mCJS[39m [1mdist\taav-overlays.js                     [22m[32m62.88 KB[39m
+[32mCJS[39m [1mdist\taav-forms.js                        [22m[32m110.20 KB[39m
+[32mCJS[39m [1mdist\taav-primitives.js                   [22m[32m67.40 KB[39m
+[32mCJS[39m [1mdist\index.js                             [22m[32m375.82 KB[39m
+[32mCJS[39m [1mdist\taav.js                              [22m[32m304.74 KB[39m
+[32mCJS[39m [1mdist\server.js.map                        [22m[32m6.50 KB[39m
+[32mCJS[39m [1mdist\taav-data-display.js.map             [22m[32m113.42 KB[39m
+[32mCJS[39m [1mdist\taav-business.js.map                 [22m[32m223.68 KB[39m
+[32mCJS[39m [1mdist\taav-data-display-interactive.js.map [22m[32m157.67 KB[39m
+[32mCJS[39m [1mdist\taav-layout-interactive.js.map       [22m[32m101.25 KB[39m
+[32mCJS[39m [1mdist\taav-navigation.js.map               [22m[32m82.27 KB[39m
+[32mCJS[39m [1mdist\taav-layout.js.map                   [22m[32m136.40 KB[39m
+[32mCJS[39m [1mdist\taav-primitives.js.map               [22m[32m101.98 KB[39m
+[32mCJS[39m [1mdist\taav-overlays.js.map                 [22m[32m95.06 KB[39m
+[32mCJS[39m [1mdist\taav-forms.js.map                    [22m[32m199.89 KB[39m
+[32mCJS[39m [1mdist\taav.js.map                          [22m[32m569.08 KB[39m
+[32mCJS[39m [1mdist\index.js.map                         [22m[32m698.49 KB[39m
+[32mCJS[39m ⚡️ Build success in 1771ms
+[32mESM[39m [1mdist\server.mjs                            [22m[32m3.40 KB[39m
+[32mESM[39m [1mdist\taav-data-display-interactive.mjs     [22m[32m92.51 KB[39m
+[32mESM[39m [1mdist\taav-data-display.mjs                 [22m[32m69.88 KB[39m
+[32mESM[39m [1mdist\taav-business.mjs                     [22m[32m126.34 KB[39m
+[32mESM[39m [1mdist\taav-layout.mjs                       [22m[32m80.72 KB[39m
+[32mESM[39m [1mdist\taav-layout-interactive.mjs           [22m[32m63.70 KB[39m
+[32mESM[39m [1mdist\taav-forms.mjs                        [22m[32m108.00 KB[39m
+[32mESM[39m [1mdist\taav-navigation.mjs                   [22m[32m54.95 KB[39m
+[32mESM[39m [1mdist\taav-overlays.mjs                     [22m[32m60.25 KB[39m
+[32mESM[39m [1mdist\taav-primitives.mjs                   [22m[32m66.07 KB[39m
+[32mESM[39m [1mdist\taav.mjs                              [22m[32m292.38 KB[39m
+[32mESM[39m [1mdist\index.mjs                             [22m[32m359.60 KB[39m
+[32mESM[39m [1mdist\server.mjs.map                        [22m[32m6.45 KB[39m
+[32mESM[39m [1mdist\taav-data-display-interactive.mjs.map [22m[32m157.61 KB[39m
+[32mESM[39m [1mdist\taav-data-display.mjs.map             [22m[32m113.37 KB[39m
+[32mESM[39m [1mdist\taav-layout.mjs.map                   [22m[32m136.36 KB[39m
+[32mESM[39m [1mdist\taav-business.mjs.map                 [22m[32m223.54 KB[39m
+[32mESM[39m [1mdist\taav-layout-interactive.mjs.map       [22m[32m101.21 KB[39m
+[32mESM[39m [1mdist\taav-forms.mjs.map                    [22m[32m199.76 KB[39m
+[32mESM[39m [1mdist\taav-overlays.mjs.map                 [22m[32m94.90 KB[39m
+[32mESM[39m [1mdist\taav-primitives.mjs.map               [22m[32m101.90 KB[39m
+[32mESM[39m [1mdist\taav-navigation.mjs.map               [22m[32m82.18 KB[39m
+[32mESM[39m [1mdist\taav.mjs.map                          [22m[32m568.59 KB[39m
+[32mESM[39m [1mdist\index.mjs.map                         [22m[32m697.92 KB[39m
+[32mESM[39m ⚡️ Build success in 1772ms
+[32mDTS[39m ⚡️ Build success in 5106ms
+[32mDTS[39m [1mdist\taav.d.mts                          [22m[32m7.18 KB[39m
+[32mDTS[39m [1mdist\index.d.mts                         [22m[32m17.63 KB[39m
+[32mDTS[39m [1mdist\server.d.mts                        [22m[32m1.12 KB[39m
+[32mDTS[39m [1mdist\taav-business.d.mts                 [22m[32m13.17 KB[39m
+[32mDTS[39m [1mdist\taav-data-display-interactive.d.mts [22m[32m4.13 KB[39m
+[32mDTS[39m [1mdist\taav-data-display.d.mts             [22m[32m6.38 KB[39m
+[32mDTS[39m [1mdist\taav-forms.d.mts                    [22m[32m15.90 KB[39m
+[32mDTS[39m [1mdist\taav-layout-interactive.d.mts       [22m[32m2.67 KB[39m
+[32mDTS[39m [1mdist\taav-layout.d.mts                   [22m[32m7.75 KB[39m
+[32mDTS[39m [1mdist\taav-navigation.d.mts               [22m[32m2.94 KB[39m
+[32mDTS[39m [1mdist\taav-overlays.d.mts                 [22m[32m7.78 KB[39m
+[32mDTS[39m [1mdist\taav-primitives.d.mts               [22m[32m4.21 KB[39m
+[32mDTS[39m [1mdist\layout.variants-CvMtAmDy.d.mts      [22m[32m303.00 B[39m
+[32mDTS[39m [1mdist\TaavStatusBadge-Bkr6L0VQ.d.mts      [22m[32m992.00 B[39m
+[32mDTS[39m [1mdist\taav-badge.variants-DM1buIc6.d.mts  [22m[32m427.00 B[39m
+[32mDTS[39m [1mdist\index-DNbuF2UL.d.mts                [22m[32m2.48 KB[39m
+[32mDTS[39m [1mdist\taav.d.ts                           [22m[32m7.17 KB[39m
+[32mDTS[39m [1mdist\index.d.ts                          [22m[32m17.61 KB[39m
+[32mDTS[39m [1mdist\server.d.ts                         [22m[32m1.12 KB[39m
+[32mDTS[39m [1mdist\taav-business.d.ts                  [22m[32m13.16 KB[39m
+[32mDTS[39m [1mdist\taav-data-display-interactive.d.ts  [22m[32m4.13 KB[39m
+[32mDTS[39m [1mdist\taav-data-display.d.ts              [22m[32m6.37 KB[39m
+[32mDTS[39m [1mdist\taav-forms.d.ts                     [22m[32m15.90 KB[39m
+[32mDTS[39m [1mdist\taav-layout-interactive.d.ts        [22m[32m2.66 KB[39m
+[32mDTS[39m [1mdist\taav-layout.d.ts                    [22m[32m7.74 KB[39m
+[32mDTS[39m [1mdist\taav-navigation.d.ts                [22m[32m2.94 KB[39m
+[32mDTS[39m [1mdist\taav-overlays.d.ts                  [22m[32m7.78 KB[39m
+[32mDTS[39m [1mdist\taav-primitives.d.ts                [22m[32m4.21 KB[39m
+[32mDTS[39m [1mdist\layout.variants-CvMtAmDy.d.ts       [22m[32m303.00 B[39m
+[32mDTS[39m [1mdist\TaavStatusBadge-D6Hiep5s.d.ts       [22m[32m991.00 B[39m
+[32mDTS[39m [1mdist\taav-badge.variants-DM1buIc6.d.ts   [22m[32m427.00 B[39m
+[32mDTS[39m [1mdist\index-DNbuF2UL.d.ts                 [22m[32m2.48 KB[39m
+
+> @apps/dastranj-panel@0.1.0 dev
+> next dev -p 3030
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3030
+- Network:       http://192.168.7.169:3030
+- Environments: .env
+✓ Ready in 370ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Administrator\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Administrator\Desktop\first-unit-next\vahedyek\package-lock.json
+
+Creating turbopack project {
+  dir: 'C:\\Users\\Administrator\\Desktop\\first-unit-next\\vahedyek\\apps\\dastranj-panel',
+  testMode: true
+}
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET /login 200 in 516ms (next.js: 235ms, proxy.ts: 72ms, application-code: 209ms)
+ GET /login 200 in 675ms (next.js: 369ms, proxy.ts: 91ms, application-code: 215ms)
+ GET /login 200 in 217ms (next.js: 49ms, proxy.ts: 14ms, application-code: 154ms)
+ GET /login 200 in 118ms (next.js: 7ms, proxy.ts: 7ms, application-code: 104ms)
+ GET /login 200 in 100ms (next.js: 8ms, proxy.ts: 5ms, application-code: 87ms)
+ GET /login 200 in 91ms (next.js: 4ms, proxy.ts: 4ms, application-code: 83ms)
+ GET /login 200 in 106ms (next.js: 3ms, proxy.ts: 7ms, application-code: 96ms)
+ GET /login 200 in 120ms (next.js: 4ms, proxy.ts: 4ms, application-code: 113ms)
+ GET /login 200 in 124ms (next.js: 5ms, proxy.ts: 3ms, application-code: 116ms)
+ GET /login 200 in 88ms (next.js: 6ms, proxy.ts: 6ms, application-code: 76ms)
+ GET /login 200 in 87ms (next.js: 5ms, proxy.ts: 5ms, application-code: 77ms)
+ GET /login 200 in 82ms (next.js: 6ms, proxy.ts: 6ms, application-code: 70ms)
+ GET /login 200 in 71ms (next.js: 2ms, proxy.ts: 3ms, application-code: 66ms)
+ GET /login 200 in 73ms (next.js: 3ms, proxy.ts: 3ms, application-code: 68ms)
+ GET /login 200 in 113ms (next.js: 3ms, proxy.ts: 5ms, application-code: 106ms)
+ GET /login 200 in 101ms (next.js: 3ms, proxy.ts: 3ms, application-code: 95ms)
+ GET /login 200 in 147ms (next.js: 11ms, proxy.ts: 6ms, application-code: 130ms)
+ GET /login 200 in 112ms (next.js: 9ms, proxy.ts: 4ms, application-code: 99ms)
+ GET /login 200 in 84ms (next.js: 6ms, proxy.ts: 7ms, application-code: 71ms)
+ GET /login 200 in 60ms (next.js: 3ms, proxy.ts: 3ms, application-code: 54ms)
+ GET /login 200 in 58ms (next.js: 9ms, proxy.ts: 9ms, application-code: 40ms)
+ GET /login 200 in 49ms (next.js: 4ms, proxy.ts: 2ms, application-code: 43ms)
+ GET /login 200 in 53ms (next.js: 3ms, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 74ms (next.js: 9ms, proxy.ts: 2ms, application-code: 63ms)
+ GET /login 200 in 77ms (next.js: 5ms, proxy.ts: 3ms, application-code: 70ms)
+ GET /login 200 in 73ms (next.js: 3ms, proxy.ts: 2ms, application-code: 67ms)
+ GET /login 200 in 51ms (next.js: 4ms, proxy.ts: 3ms, application-code: 44ms)
+ GET /login 200 in 25ms (next.js: 3ms, proxy.ts: 3ms, application-code: 18ms)
+ GET /login 200 in 199ms (next.js: 146ms, proxy.ts: 3ms, application-code: 50ms)
+ GET /login 200 in 60ms (next.js: 2ms, proxy.ts: 3ms, application-code: 55ms)
+ GET /login 200 in 43ms (next.js: 2ms, proxy.ts: 2ms, application-code: 39ms)
+ GET /login 200 in 80ms (next.js: 2ms, proxy.ts: 2ms, application-code: 76ms)
+ GET /login 200 in 63ms (next.js: 3ms, proxy.ts: 1968µs, application-code: 58ms)
+ GET /login 200 in 80ms (next.js: 7ms, proxy.ts: 3ms, application-code: 70ms)
+ GET /login 200 in 64ms (next.js: 5ms, proxy.ts: 4ms, application-code: 55ms)
+ GET /login 200 in 63ms (next.js: 1913µs, proxy.ts: 2ms, application-code: 58ms)
+ GET /login 200 in 61ms (next.js: 3ms, proxy.ts: 4ms, application-code: 54ms)
+ GET /login 200 in 43ms (next.js: 3ms, proxy.ts: 2ms, application-code: 38ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 4ms, application-code: 34ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1897µs, application-code: 33ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1781µs, application-code: 35ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 1779µs, application-code: 49ms)
+ GET /login 200 in 58ms (next.js: 3ms, proxy.ts: 1883µs, application-code: 53ms)
+ GET /login 200 in 62ms (next.js: 2ms, proxy.ts: 1936µs, application-code: 58ms)
+ GET /login 200 in 62ms (next.js: 2ms, proxy.ts: 4ms, application-code: 56ms)
+ GET /login 200 in 57ms (next.js: 3ms, proxy.ts: 6ms, application-code: 48ms)
+ GET /login 200 in 38ms (next.js: 1858µs, proxy.ts: 3ms, application-code: 34ms)
+ GET /login 200 in 57ms (next.js: 1837µs, proxy.ts: 2ms, application-code: 53ms)
+ GET /login 200 in 57ms (next.js: 4ms, proxy.ts: 1824µs, application-code: 51ms)
+ GET /login 200 in 52ms (next.js: 4ms, proxy.ts: 2ms, application-code: 46ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 62ms (next.js: 1737µs, proxy.ts: 2ms, application-code: 58ms)
+ GET /login 200 in 69ms (next.js: 2ms, proxy.ts: 1926µs, application-code: 65ms)
+ GET /login 200 in 72ms (next.js: 4ms, proxy.ts: 4ms, application-code: 64ms)
+ GET /login 200 in 49ms (next.js: 3ms, proxy.ts: 5ms, application-code: 42ms)
+ GET /login 200 in 43ms (next.js: 7ms, proxy.ts: 3ms, application-code: 33ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 1801µs, application-code: 51ms)
+ GET /login 200 in 79ms (next.js: 3ms, proxy.ts: 1740µs, application-code: 74ms)
+ GET /login 200 in 74ms (next.js: 1870µs, proxy.ts: 2ms, application-code: 70ms)
+ GET /login 200 in 56ms (next.js: 3ms, proxy.ts: 4ms, application-code: 49ms)
+ GET /login 200 in 35ms (next.js: 1639µs, proxy.ts: 2ms, application-code: 31ms)
+ GET /login 200 in 36ms (next.js: 4ms, proxy.ts: 1896µs, application-code: 30ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1859µs, application-code: 35ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 1772µs, application-code: 36ms)
+ GET /login 200 in 49ms (next.js: 4ms, proxy.ts: 1942µs, application-code: 43ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 39ms (next.js: 1628µs, proxy.ts: 1658µs, application-code: 36ms)
+ GET /login 200 in 39ms (next.js: 6ms, proxy.ts: 1952µs, application-code: 31ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 3ms, application-code: 30ms)
+ GET /login 200 in 36ms (next.js: 3ms, proxy.ts: 1683µs, application-code: 32ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 1698µs, application-code: 34ms)
+ GET /login 200 in 49ms (next.js: 3ms, proxy.ts: 1792µs, application-code: 44ms)
+ GET /login 200 in 52ms (next.js: 3ms, proxy.ts: 3ms, application-code: 47ms)
+ GET /login 200 in 52ms (next.js: 1739µs, proxy.ts: 1860µs, application-code: 49ms)
+ GET /login 200 in 52ms (next.js: 2ms, proxy.ts: 4ms, application-code: 46ms)
+ GET /login 200 in 36ms (next.js: 1899µs, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 1750µs, proxy.ts: 1800µs, application-code: 33ms)
+ GET /login 200 in 50ms (next.js: 2ms, proxy.ts: 1655µs, application-code: 46ms)
+ GET /login 200 in 49ms (next.js: 4ms, proxy.ts: 2ms, application-code: 42ms)
+ GET /login 200 in 51ms (next.js: 1789µs, proxy.ts: 3ms, application-code: 47ms)
+ GET /login 200 in 41ms (next.js: 1723µs, proxy.ts: 1764µs, application-code: 37ms)
+ GET /login 200 in 42ms (next.js: 1961µs, proxy.ts: 2ms, application-code: 37ms)
+ GET /login 200 in 38ms (next.js: 3ms, proxy.ts: 3ms, application-code: 32ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1749µs, application-code: 37ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 1734µs, application-code: 50ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 6ms, application-code: 47ms)
+ GET /login 200 in 51ms (next.js: 1709µs, proxy.ts: 1802µs, application-code: 47ms)
+ GET /login 200 in 41ms (next.js: 1643µs, proxy.ts: 2ms, application-code: 37ms)
+ GET /login 200 in 49ms (next.js: 1632µs, proxy.ts: 1826µs, application-code: 45ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 1804µs, application-code: 31ms)
+ GET /login 200 in 48ms (next.js: 1644µs, proxy.ts: 1662µs, application-code: 45ms)
+ GET /login 200 in 72ms (next.js: 3ms, proxy.ts: 1685µs, application-code: 67ms)
+ GET /login 200 in 61ms (next.js: 4ms, proxy.ts: 3ms, application-code: 55ms)
+ GET /login 200 in 58ms (next.js: 3ms, proxy.ts: 1793µs, application-code: 54ms)
+ GET /login 200 in 48ms (next.js: 2ms, proxy.ts: 2ms, application-code: 43ms)
+ GET /login 200 in 49ms (next.js: 2ms, proxy.ts: 1842µs, application-code: 45ms)
+ GET /login 200 in 49ms (next.js: 1857µs, proxy.ts: 1711µs, application-code: 45ms)
+ GET /login 200 in 50ms (next.js: 1921µs, proxy.ts: 3ms, application-code: 45ms)
+ GET /login 200 in 49ms (next.js: 1648µs, proxy.ts: 5ms, application-code: 43ms)
+ GET /login 200 in 51ms (next.js: 1608µs, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 53ms (next.js: 1820µs, proxy.ts: 2ms, application-code: 48ms)
+ GET /login 200 in 53ms (next.js: 6ms, proxy.ts: 1630µs, application-code: 46ms)
+ GET /login 200 in 55ms (next.js: 1698µs, proxy.ts: 1641µs, application-code: 52ms)
+ GET /login 200 in 56ms (next.js: 2ms, proxy.ts: 3ms, application-code: 51ms)
+ GET /login 200 in 54ms (next.js: 1653µs, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 47ms (next.js: 1836µs, proxy.ts: 2ms, application-code: 43ms)
+ GET /login 200 in 52ms (next.js: 1754µs, proxy.ts: 2ms, application-code: 48ms)
+ GET /login 200 in 52ms (next.js: 1656µs, proxy.ts: 2ms, application-code: 48ms)
+ GET /login 200 in 52ms (next.js: 6ms, proxy.ts: 2ms, application-code: 44ms)
+ GET /login 200 in 53ms (next.js: 1669µs, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 53ms (next.js: 1666µs, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 39ms (next.js: 1703µs, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 34ms (next.js: 1876µs, proxy.ts: 2ms, application-code: 30ms)
+ GET /login 200 in 47ms (next.js: 2ms, proxy.ts: 2ms, application-code: 43ms)
+ GET /login 200 in 50ms (next.js: 2ms, proxy.ts: 1693µs, application-code: 46ms)
+ GET /login 200 in 51ms (next.js: 3ms, proxy.ts: 4ms, application-code: 44ms)
+ GET /login 200 in 51ms (next.js: 1697µs, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 53ms (next.js: 1829µs, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 39ms (next.js: 1737µs, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 3ms, application-code: 34ms)
+ GET /login 200 in 59ms (next.js: 2ms, proxy.ts: 2ms, application-code: 54ms)
+ GET /login 200 in 56ms (next.js: 3ms, proxy.ts: 3ms, application-code: 50ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 3ms, application-code: 48ms)
+ GET /login 200 in 36ms (next.js: 1704µs, proxy.ts: 1828µs, application-code: 33ms)
+ GET /login 200 in 51ms (next.js: 3ms, proxy.ts: 1936µs, application-code: 46ms)
+ GET /login 200 in 50ms (next.js: 2ms, proxy.ts: 2ms, application-code: 45ms)
+ GET /login 200 in 46ms (next.js: 1729µs, proxy.ts: 1727µs, application-code: 43ms)
+ GET /login 200 in 48ms (next.js: 1571µs, proxy.ts: 1618µs, application-code: 45ms)
+ GET /login 200 in 58ms (next.js: 3ms, proxy.ts: 1640µs, application-code: 54ms)
+ GET /login 200 in 59ms (next.js: 1597µs, proxy.ts: 2ms, application-code: 55ms)
+ GET /login 200 in 54ms (next.js: 1702µs, proxy.ts: 1863µs, application-code: 51ms)
+ GET /login 200 in 57ms (next.js: 4ms, proxy.ts: 4ms, application-code: 49ms)
+ GET /login 200 in 38ms (next.js: 1676µs, proxy.ts: 1670µs, application-code: 35ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 5ms, application-code: 30ms)
+ GET /login 200 in 33ms (next.js: 2ms, proxy.ts: 1832µs, application-code: 29ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 1617µs, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1589µs, application-code: 34ms)
+ GET /login 200 in 52ms (next.js: 4ms, proxy.ts: 1750µs, application-code: 46ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 54ms (next.js: 1703µs, proxy.ts: 1724µs, application-code: 50ms)
+ GET /login 200 in 52ms (next.js: 6ms, proxy.ts: 1722µs, application-code: 44ms)
+ GET /login 200 in 48ms (next.js: 1611µs, proxy.ts: 1704µs, application-code: 44ms)
+ GET /login 200 in 39ms (next.js: 1791µs, proxy.ts: 1741µs, application-code: 36ms)
+ GET /login 200 in 40ms (next.js: 1853µs, proxy.ts: 1759µs, application-code: 36ms)
+ GET /login 200 in 50ms (next.js: 2ms, proxy.ts: 2ms, application-code: 45ms)
+ GET /login 200 in 53ms (next.js: 2ms, proxy.ts: 1619µs, application-code: 50ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 2ms, application-code: 36ms)
+ GET /login 200 in 38ms (next.js: 4ms, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1616µs, application-code: 34ms)
+ GET /login 200 in 44ms (next.js: 1974µs, proxy.ts: 1780µs, application-code: 40ms)
+ GET /login 200 in 67ms (next.js: 2ms, proxy.ts: 5ms, application-code: 60ms)
+ GET /login 200 in 48ms (next.js: 4ms, proxy.ts: 1915µs, application-code: 42ms)
+ GET /login 200 in 70ms (next.js: 2ms, proxy.ts: 2ms, application-code: 66ms)
+ GET /login 200 in 67ms (next.js: 4ms, proxy.ts: 4ms, application-code: 59ms)
+ GET /login 200 in 63ms (next.js: 6ms, proxy.ts: 2ms, application-code: 55ms)
+ GET /login 200 in 62ms (next.js: 2ms, proxy.ts: 1693µs, application-code: 58ms)
+ GET /login 200 in 62ms (next.js: 1903µs, proxy.ts: 2ms, application-code: 57ms)
+ GET /login 200 in 60ms (next.js: 2ms, proxy.ts: 3ms, application-code: 55ms)
+ GET /login 200 in 55ms (next.js: 1833µs, proxy.ts: 3ms, application-code: 50ms)
+ GET /login 200 in 56ms (next.js: 1673µs, proxy.ts: 3ms, application-code: 52ms)
+ GET /login 200 in 41ms (next.js: 1691µs, proxy.ts: 3ms, application-code: 36ms)
+ GET /login 200 in 41ms (next.js: 4ms, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 37ms (next.js: 3ms, proxy.ts: 2ms, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1978µs, application-code: 33ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 1597µs, application-code: 35ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1733µs, application-code: 33ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 3ms, application-code: 30ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1671µs, application-code: 37ms)
+ GET /login 200 in 42ms (next.js: 3ms, proxy.ts: 1677µs, application-code: 37ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 2ms, application-code: 30ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1629µs, application-code: 33ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 1621µs, application-code: 47ms)
+ GET /login 200 in 36ms (next.js: 3ms, proxy.ts: 1685µs, application-code: 31ms)
+ GET /login 200 in 35ms (next.js: 1554µs, proxy.ts: 1832µs, application-code: 32ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 1627µs, application-code: 47ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 1634µs, application-code: 47ms)
+ GET /login 200 in 36ms (next.js: 1887µs, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 50ms (next.js: 1788µs, proxy.ts: 1669µs, application-code: 46ms)
+ GET /login 200 in 51ms (next.js: 1994µs, proxy.ts: 1791µs, application-code: 48ms)
+ GET /login 200 in 52ms (next.js: 5ms, proxy.ts: 1610µs, application-code: 45ms)
+ GET /login 200 in 36ms (next.js: 1606µs, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 1629µs, proxy.ts: 1548µs, application-code: 34ms)
+ GET /login 200 in 38ms (next.js: 1922µs, proxy.ts: 2ms, application-code: 34ms)
+ GET /login 200 in 36ms (next.js: 3ms, proxy.ts: 1692µs, application-code: 31ms)
+ GET /login 200 in 36ms (next.js: 2ms, proxy.ts: 2ms, application-code: 32ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 1669µs, application-code: 36ms)
+ GET /login 200 in 53ms (next.js: 2ms, proxy.ts: 1721µs, application-code: 49ms)
+ GET /login 200 in 49ms (next.js: 2ms, proxy.ts: 3ms, application-code: 44ms)
+ GET /login 200 in 39ms (next.js: 1577µs, proxy.ts: 1785µs, application-code: 36ms)
+ GET /login 200 in 39ms (next.js: 1601µs, proxy.ts: 1650µs, application-code: 36ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 6ms, application-code: 29ms)
+ GET /login 200 in 32ms (next.js: 1881µs, proxy.ts: 1586µs, application-code: 28ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 1684µs, application-code: 50ms)
+ GET /login 200 in 55ms (next.js: 1715µs, proxy.ts: 2ms, application-code: 51ms)
+ GET /login 200 in 53ms (next.js: 1595µs, proxy.ts: 1804µs, application-code: 50ms)
+ GET /login 200 in 41ms (next.js: 1883µs, proxy.ts: 1601µs, application-code: 37ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 1716µs, application-code: 35ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 4ms, application-code: 31ms)
+ GET /login 200 in 35ms (next.js: 2ms, proxy.ts: 1542µs, application-code: 32ms)
+ GET /login 200 in 52ms (next.js: 4ms, proxy.ts: 1537µs, application-code: 47ms)
+ GET /login 200 in 38ms (next.js: 1988µs, proxy.ts: 1707µs, application-code: 34ms)
+ GET /login 200 in 48ms (next.js: 1657µs, proxy.ts: 1675µs, application-code: 44ms)
+ GET /login 200 in 50ms (next.js: 3ms, proxy.ts: 1643µs, application-code: 45ms)
+ GET /login 200 in 37ms (next.js: 1636µs, proxy.ts: 2ms, application-code: 33ms)
+ GET /login 200 in 37ms (next.js: 4ms, proxy.ts: 1572µs, application-code: 31ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1650µs, application-code: 33ms)
+ GET /login 200 in 45ms (next.js: 3ms, proxy.ts: 1626µs, application-code: 40ms)
+ GET /login 200 in 44ms (next.js: 2ms, proxy.ts: 3ms, application-code: 39ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 24ms (next.js: 2ms, proxy.ts: 1659µs, application-code: 20ms)
+ GET /login 200 in 501ms (next.js: 319ms, proxy.ts: 79ms, application-code: 103ms)
+ GET /login 200 in 73ms (next.js: 3ms, proxy.ts: 5ms, application-code: 65ms)
+ GET /login 200 in 51ms (next.js: 4ms, proxy.ts: 2ms, application-code: 45ms)
+ GET /login 200 in 46ms (next.js: 2ms, proxy.ts: 2ms, application-code: 41ms)
+ GET /login 200 in 56ms (next.js: 2ms, proxy.ts: 1826µs, application-code: 52ms)
+ GET /login 200 in 64ms (next.js: 3ms, proxy.ts: 1664µs, application-code: 59ms)
+ GET /login 200 in 62ms (next.js: 1817µs, proxy.ts: 1861µs, application-code: 58ms)
+ GET /login 200 in 64ms (next.js: 3ms, proxy.ts: 5ms, application-code: 55ms)
+ GET /login 200 in 60ms (next.js: 1837µs, proxy.ts: 2ms, application-code: 56ms)
+ GET /login 200 in 61ms (next.js: 4ms, proxy.ts: 3ms, application-code: 54ms)
+ GET /login 200 in 60ms (next.js: 1945µs, proxy.ts: 2ms, application-code: 56ms)
+ GET /login 200 in 57ms (next.js: 1802µs, proxy.ts: 3ms, application-code: 52ms)
+ GET /login 200 in 59ms (next.js: 1635µs, proxy.ts: 1644µs, application-code: 55ms)
+ GET /login 200 in 43ms (next.js: 1969µs, proxy.ts: 4ms, application-code: 37ms)
+ GET /login 200 in 52ms (next.js: 2ms, proxy.ts: 5ms, application-code: 46ms)
+ GET /login 200 in 52ms (next.js: 3ms, proxy.ts: 3ms, application-code: 46ms)
+ GET /login 200 in 83ms (next.js: 1624µs, proxy.ts: 1927µs, application-code: 79ms)
+ GET /login 200 in 93ms (next.js: 1657µs, proxy.ts: 1753µs, application-code: 89ms)
+ GET /login 200 in 97ms (next.js: 3ms, proxy.ts: 5ms, application-code: 89ms)
+ GET /login 200 in 74ms (next.js: 3ms, proxy.ts: 3ms, application-code: 69ms)
+ GET /login 200 in 79ms (next.js: 2ms, proxy.ts: 2ms, application-code: 75ms)
+ GET /login 200 in 82ms (next.js: 3ms, proxy.ts: 2ms, application-code: 76ms)
+ GET /login 200 in 87ms (next.js: 3ms, proxy.ts: 5ms, application-code: 79ms)
+ GET /login 200 in 77ms (next.js: 3ms, proxy.ts: 5ms, application-code: 69ms)
+ GET /login 200 in 59ms (next.js: 3ms, proxy.ts: 3ms, application-code: 52ms)
+ GET /login 200 in 67ms (next.js: 1741µs, proxy.ts: 1957µs, application-code: 63ms)
+ GET /login 200 in 62ms (next.js: 3ms, proxy.ts: 6ms, application-code: 52ms)
+ GET /login 200 in 40ms (next.js: 1877µs, proxy.ts: 2ms, application-code: 36ms)
+ GET /login 200 in 43ms (next.js: 1715µs, proxy.ts: 1912µs, application-code: 39ms)
+ GET /login 200 in 45ms (next.js: 4ms, proxy.ts: 2ms, application-code: 39ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1867µs, application-code: 35ms)
+ GET /login 200 in 41ms (next.js: 4ms, proxy.ts: 3ms, application-code: 35ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1711µs, application-code: 37ms)
+ GET /login 200 in 42ms (next.js: 4ms, proxy.ts: 4ms, application-code: 34ms)
+ GET /login 200 in 38ms (next.js: 3ms, proxy.ts: 2ms, application-code: 33ms)
+ GET /login 200 in 44ms (next.js: 2ms, proxy.ts: 1718µs, application-code: 39ms)
+ GET /login 200 in 44ms (next.js: 4ms, proxy.ts: 1802µs, application-code: 38ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1937µs, application-code: 33ms)
+ GET /login 200 in 54ms (next.js: 4ms, proxy.ts: 1599µs, application-code: 48ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 54ms (next.js: 1727µs, proxy.ts: 4ms, application-code: 48ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 54ms (next.js: 1797µs, proxy.ts: 4ms, application-code: 48ms)
+ GET /login 200 in 54ms (next.js: 1602µs, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 55ms (next.js: 3ms, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 60ms (next.js: 2ms, proxy.ts: 4ms, application-code: 54ms)
+ GET /login 200 in 70ms (next.js: 1712µs, proxy.ts: 3ms, application-code: 66ms)
+ GET /login 200 in 73ms (next.js: 4ms, proxy.ts: 5ms, application-code: 65ms)
+ GET /login 200 in 53ms (next.js: 3ms, proxy.ts: 3ms, application-code: 48ms)
+ GET /login 200 in 45ms (next.js: 2ms, proxy.ts: 3ms, application-code: 40ms)
+ GET /login 200 in 56ms (next.js: 3ms, proxy.ts: 4ms, application-code: 50ms)
+ GET /login 200 in 51ms (next.js: 3ms, proxy.ts: 1807µs, application-code: 46ms)
+ GET /login 200 in 89ms (next.js: 3ms, proxy.ts: 3ms, application-code: 83ms)
+ GET /login 200 in 87ms (next.js: 1733µs, proxy.ts: 1863µs, application-code: 84ms)
+ GET /login 200 in 76ms (next.js: 5ms, proxy.ts: 4ms, application-code: 67ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 3ms, application-code: 35ms)
+ GET /login 200 in 37ms (next.js: 3ms, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 57ms (next.js: 2ms, proxy.ts: 1740µs, application-code: 53ms)
+ GET /login 200 in 79ms (next.js: 4ms, proxy.ts: 1929µs, application-code: 73ms)
+ GET /login 200 in 90ms (next.js: 1922µs, proxy.ts: 1949µs, application-code: 86ms)
+ GET /login 200 in 89ms (next.js: 9ms, proxy.ts: 2ms, application-code: 78ms)
+ GET /login 200 in 71ms (next.js: 5ms, proxy.ts: 9ms, application-code: 58ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 54ms (next.js: 1723µs, proxy.ts: 1809µs, application-code: 50ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 3ms, application-code: 49ms)
+ GET /login 200 in 36ms (next.js: 1761µs, proxy.ts: 3ms, application-code: 32ms)
+ GET /login 200 in 54ms (next.js: 1740µs, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 53ms (next.js: 3ms, proxy.ts: 1657µs, application-code: 48ms)
+ GET /login 200 in 52ms (next.js: 1668µs, proxy.ts: 6ms, application-code: 44ms)
+ GET /login 200 in 54ms (next.js: 1642µs, proxy.ts: 1748µs, application-code: 51ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 1874µs, application-code: 51ms)
+ GET /login 200 in 57ms (next.js: 1809µs, proxy.ts: 4ms, application-code: 51ms)
+ GET /login 200 in 56ms (next.js: 1627µs, proxy.ts: 2ms, application-code: 52ms)
+ GET /login 200 in 66ms (next.js: 3ms, proxy.ts: 3ms, application-code: 60ms)
+ GET /login 200 in 71ms (next.js: 1682µs, proxy.ts: 3ms, application-code: 66ms)
+ GET /login 200 in 68ms (next.js: 3ms, proxy.ts: 2ms, application-code: 62ms)
+ GET /login 200 in 63ms (next.js: 3ms, proxy.ts: 3ms, application-code: 57ms)
+ GET /login 200 in 43ms (next.js: 1813µs, proxy.ts: 3ms, application-code: 38ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 2ms, application-code: 36ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 2ms, application-code: 33ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1613µs, application-code: 33ms)
+ GET /login 200 in 40ms (next.js: 4ms, proxy.ts: 2ms, application-code: 34ms)
+ GET /login 200 in 40ms (next.js: 5ms, proxy.ts: 2ms, application-code: 34ms)
+ GET /login 200 in 42ms (next.js: 2ms, proxy.ts: 1748µs, application-code: 38ms)
+ GET /login 200 in 65ms (next.js: 4ms, proxy.ts: 2ms, application-code: 59ms)
+ GET /login 200 in 60ms (next.js: 3ms, proxy.ts: 3ms, application-code: 54ms)
+ GET /login 200 in 52ms (next.js: 1600µs, proxy.ts: 1746µs, application-code: 48ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 1647µs, application-code: 50ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 3ms, application-code: 50ms)
+ GET /login 200 in 53ms (next.js: 4ms, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 2ms, application-code: 33ms)
+ GET /login 200 in 45ms (next.js: 1798µs, proxy.ts: 3ms, application-code: 40ms)
+ GET /login 200 in 44ms (next.js: 2ms, proxy.ts: 1703µs, application-code: 40ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 4ms, application-code: 33ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1778µs, application-code: 37ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 1628µs, application-code: 36ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 5ms, application-code: 33ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 1641µs, application-code: 33ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 1822µs, application-code: 35ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 1875µs, application-code: 50ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 1787µs, application-code: 47ms)
+ GET /login 200 in 52ms (next.js: 1919µs, proxy.ts: 3ms, application-code: 47ms)
+ GET /login 200 in 39ms (next.js: 1673µs, proxy.ts: 1681µs, application-code: 36ms)
+ GET /login 200 in 40ms (next.js: 4ms, proxy.ts: 1671µs, application-code: 34ms)
+ GET /login 200 in 37ms (next.js: 3ms, proxy.ts: 3ms, application-code: 31ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 1713µs, application-code: 51ms)
+ GET /login 200 in 42ms (next.js: 1999µs, proxy.ts: 1601µs, application-code: 38ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 4ms, application-code: 33ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1981µs, application-code: 35ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 1740µs, application-code: 36ms)
+ GET /login 200 in 39ms (next.js: 7µs, proxy.ts: 5ms, application-code: 34ms)
+ GET /login 200 in 50ms (next.js: 2ms, proxy.ts: 1676µs, application-code: 46ms)
+ GET /login 200 in 40ms (next.js: 4ms, proxy.ts: 1638µs, application-code: 35ms)
+ GET /login 200 in 38ms (next.js: 1666µs, proxy.ts: 1928µs, application-code: 35ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 1756µs, application-code: 34ms)
+ GET /login 200 in 39ms (next.js: 4ms, proxy.ts: 1830µs, application-code: 33ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1640µs, application-code: 37ms)
+ GET /login 200 in 37ms (next.js: 2ms, proxy.ts: 3ms, application-code: 32ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1753µs, application-code: 35ms)
+ GET /login 200 in 39ms (next.js: 1998µs, proxy.ts: 1705µs, application-code: 36ms)
+ GET /login 200 in 39ms (next.js: 7ms, proxy.ts: 1653µs, application-code: 31ms)
+ GET /login 200 in 34ms (next.js: 1982µs, proxy.ts: 1584µs, application-code: 31ms)
+ GET /login 200 in 53ms (next.js: 2ms, proxy.ts: 1613µs, application-code: 49ms)
+ GET /login 200 in 54ms (next.js: 2ms, proxy.ts: 1613µs, application-code: 51ms)
+ GET /login 200 in 51ms (next.js: 1703µs, proxy.ts: 2ms, application-code: 47ms)
+ GET /login 200 in 41ms (next.js: 1522µs, proxy.ts: 1596µs, application-code: 38ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 1653µs, application-code: 36ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 5ms, application-code: 34ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 1637µs, application-code: 34ms)
+ GET /login 200 in 40ms (next.js: 3ms, proxy.ts: 3ms, application-code: 34ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1858µs, application-code: 37ms)
+ GET /login 200 in 38ms (next.js: 3ms, proxy.ts: 1831µs, application-code: 33ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 2ms, application-code: 33ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1614µs, application-code: 36ms)
+ GET /login 200 in 53ms (next.js: 6ms, proxy.ts: 1659µs, application-code: 46ms)
+ GET /login 200 in 48ms (next.js: 2ms, proxy.ts: 2ms, application-code: 44ms)
+ GET /login 200 in 38ms (next.js: 1601µs, proxy.ts: 1686µs, application-code: 35ms)
+ GET /login 200 in 40ms (next.js: 1675µs, proxy.ts: 2ms, application-code: 37ms)
+ GET /login 200 in 39ms (next.js: 3ms, proxy.ts: 3ms, application-code: 33ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 1608µs, application-code: 51ms)
+ GET /login 200 in 53ms (next.js: 3ms, proxy.ts: 1574µs, application-code: 49ms)
+ GET /login 200 in 40ms (next.js: 1733µs, proxy.ts: 6ms, application-code: 32ms)
+ GET /login 200 in 37ms (next.js: 1722µs, proxy.ts: 1652µs, application-code: 34ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 1606µs, application-code: 50ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 2ms, application-code: 35ms)
+ GET /login 200 in 38ms (next.js: 1578µs, proxy.ts: 1697µs, application-code: 34ms)
+ GET /login 200 in 55ms (next.js: 3ms, proxy.ts: 2ms, application-code: 49ms)
+ GET /login 200 in 56ms (next.js: 2ms, proxy.ts: 2ms, application-code: 52ms)
+ GET /login 200 in 42ms (next.js: 1725µs, proxy.ts: 4ms, application-code: 36ms)
+ GET /login 200 in 43ms (next.js: 3ms, proxy.ts: 3ms, application-code: 38ms)
+ GET /login 200 in 44ms (next.js: 2ms, proxy.ts: 1826µs, application-code: 40ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 2ms, application-code: 36ms)
+ GET /login 200 in 51ms (next.js: 2ms, proxy.ts: 1714µs, application-code: 48ms)
+ GET /login 200 in 54ms (next.js: 3ms, proxy.ts: 1664µs, application-code: 49ms)
+ GET /login 200 in 43ms (next.js: 1834µs, proxy.ts: 3ms, application-code: 38ms)
+ GET /login 200 in 41ms (next.js: 1780µs, proxy.ts: 4ms, application-code: 35ms)
+ GET /login 200 in 38ms (next.js: 4ms, proxy.ts: 2ms, application-code: 32ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 1690µs, application-code: 52ms)
+ GET /login 200 in 55ms (next.js: 2ms, proxy.ts: 1717µs, application-code: 52ms)
+ GET /login 200 in 37ms (next.js: 1667µs, proxy.ts: 3ms, application-code: 33ms)
+ GET /login 200 in 41ms (next.js: 1736µs, proxy.ts: 1606µs, application-code: 37ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 1693µs, application-code: 36ms)
+ GET /login 200 in 40ms (next.js: 2ms, proxy.ts: 5ms, application-code: 33ms)
+ GET /login 200 in 38ms (next.js: 2ms, proxy.ts: 1663µs, application-code: 35ms)
+ GET /login 200 in 42ms (next.js: 4ms, proxy.ts: 1982µs, application-code: 36ms)
+ GET /login 200 in 45ms (next.js: 2ms, proxy.ts: 1634µs, application-code: 41ms)
+ GET /login 200 in 41ms (next.js: 4ms, proxy.ts: 1763µs, application-code: 36ms)
+ GET /login 200 in 52ms (next.js: 2ms, proxy.ts: 1552µs, application-code: 48ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1703µs, application-code: 35ms)
+ GET /login 200 in 39ms (next.js: 1755µs, proxy.ts: 6ms, application-code: 31ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1627µs, application-code: 36ms)
+ GET /login 200 in 44ms (next.js: 2ms, proxy.ts: 1611µs, application-code: 41ms)
+ GET /login 200 in 48ms (next.js: 4ms, proxy.ts: 4ms, application-code: 40ms)
+ GET /login 200 in 40ms (next.js: 4ms, proxy.ts: 2ms, application-code: 34ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1646µs, application-code: 36ms)
+ GET /login 200 in 40ms (next.js: 1968µs, proxy.ts: 1593µs, application-code: 36ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 5ms, application-code: 33ms)
+ GET /login 200 in 38ms (next.js: 1979µs, proxy.ts: 1594µs, application-code: 35ms)
+ GET /login 200 in 41ms (next.js: 2ms, proxy.ts: 1639µs, application-code: 38ms)
+ GET /login 200 in 42ms (next.js: 3ms, proxy.ts: 3ms, application-code: 37ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1670µs, application-code: 35ms)
+ GET /login 200 in 36ms (next.js: 4ms, proxy.ts: 1767µs, application-code: 31ms)
+ GET /login 200 in 18ms (next.js: 2ms, proxy.ts: 1808µs, application-code: 14ms)
+ GET /login 200 in 150ms (next.js: 51ms, proxy.ts: 36ms, application-code: 62ms)
+ GET /login 200 in 150ms (next.js: 47ms, proxy.ts: 14ms, application-code: 90ms)
+ GET /login 200 in 61ms (next.js: 4ms, proxy.ts: 3ms, application-code: 54ms)
+ GET /login 200 in 41ms (next.js: 3ms, proxy.ts: 3ms, application-code: 35ms)
+ GET /login 200 in 21ms (next.js: 4ms, proxy.ts: 3ms, application-code: 15ms)
+ GET /login 200 in 129ms (next.js: 47ms, proxy.ts: 12ms, application-code: 70ms)
+ GET /login 200 in 130ms (next.js: 42ms, proxy.ts: 12ms, application-code: 76ms)
+ GET /login 200 in 60ms (next.js: 2ms, proxy.ts: 6ms, application-code: 52ms)
+ GET /login 200 in 57ms (next.js: 3ms, proxy.ts: 2ms, application-code: 52ms)
+ GET /login 200 in 80ms (next.js: 1895µs, proxy.ts: 1926µs, application-code: 76ms)
+ GET /login 200 in 78ms (next.js: 3ms, proxy.ts: 1966µs, application-code: 74ms)
+ GET /login 200 in 61ms (next.js: 4ms, proxy.ts: 3ms, application-code: 54ms)
+ GET /login 200 in 44ms (next.js: 4ms, proxy.ts: 4ms, application-code: 36ms)
+ GET /login 200 in 59ms (next.js: 2ms, proxy.ts: 2ms, application-code: 54ms)
+ GET /login 200 in 59ms (next.js: 6ms, proxy.ts: 1835µs, application-code: 51ms)
+ GET /login 200 in 57ms (next.js: 1816µs, proxy.ts: 1870µs, application-code: 53ms)
+ GET /login 200 in 54ms (next.js: 1827µs, proxy.ts: 3ms, application-code: 49ms)
+ GET /login 200 in 56ms (next.js: 2ms, proxy.ts: 1985µs, application-code: 52ms)
+ GET /login 200 in 39ms (next.js: 2ms, proxy.ts: 1870µs, application-code: 35ms)
+ GET /login 200 in 59ms (next.js: 2ms, proxy.ts: 4ms, application-code: 53ms)
+ GET /login 200 in 61ms (next.js: 3ms, proxy.ts: 1806µs, application-code: 56ms)
+ GET /login 200 in 58ms (next.js: 1936µs, proxy.ts: 2ms, application-code: 53ms)
+ GET /login 200 in 44ms (next.js: 1871µs, proxy.ts: 3ms, application-code: 39ms)
+ GET /login 200 in 47ms (next.js: 2ms, proxy.ts: 4ms, application-code: 40ms)
+ GET /login 200 in 61ms (next.js: 3ms, proxy.ts: 1832µs, application-code: 57ms)
+ GET /login 200 in 62ms (next.js: 3ms, proxy.ts: 2ms, application-code: 57ms)
+ GET /login 200 in 94ms (next.js: 3ms, proxy.ts: 5ms, application-code: 86ms)
+ GET /login 200 in 92ms (next.js: 3ms, proxy.ts: 3ms, application-code: 86ms)
+ GET /login 200 in 84ms (next.js: 5ms, proxy.ts: 4ms, application-code: 75ms)
+ GET /login 200 in 63ms (next.js: 3ms, proxy.ts: 2ms, application-code: 58ms)
+ GET /login 200 in 70ms (next.js: 2ms, proxy.ts: 3ms, application-code: 65ms)
+ GET /login 200 in 50ms (next.js: 5ms, proxy.ts: 2ms, application-code: 43ms)
+ GET /login 200 in 31ms (next.js: 3ms, proxy.ts: 4ms, application-code: 24ms)
+ GET /login 200 in 184ms (next.js: 58ms, proxy.ts: 43ms, application-code: 83ms)
+ GET /login 200 in 58ms (next.js: 6ms, proxy.ts: 3ms, application-code: 49ms)
+ GET /login 200 in 45ms (next.js: 3ms, proxy.ts: 3ms, application-code: 40ms)
+ GET /login 200 in 65ms (next.js: 4ms, proxy.ts: 1794µs, application-code: 59ms)
+ GET /login 200 in 48ms (next.js: 4ms, proxy.ts: 2ms, application-code: 42ms)
+ GET /login 200 in 69ms (next.js: 2ms, proxy.ts: 4ms, application-code: 63ms)
+ GET /login 200 in 64ms (next.js: 6ms, proxy.ts: 1884µs, application-code: 57ms)
+ GET /login 200 in 61ms (next.js: 2ms, proxy.ts: 1805µs, application-code: 57ms)
+ GET /login 200 in 61ms (next.js: 4ms, proxy.ts: 2ms, application-code: 55ms)
+ GET /login 200 in 65ms (next.js: 1927µs, proxy.ts: 5ms, application-code: 58ms)
+ GET /login 200 in 67ms (next.js: 6ms, proxy.ts: 2ms, application-code: 59ms)
+ GET /login 200 in 61ms (next.js: 2ms, proxy.ts: 1910µs, application-code: 56ms)
+ GET /login 200 in 61ms (next.js: 1943µs, proxy.ts: 3ms, application-code: 56ms)
+ GET /login 200 in 60ms (next.js: 4ms, proxy.ts: 2ms, application-code: 54ms)
+ GET /login 200 in 58ms (next.js: 4ms, proxy.ts: 2ms, application-code: 52ms)
+ GET /login 200 in 63ms (next.js: 1830µs, proxy.ts: 2ms, application-code: 59ms)
+ GET /login 200 in 84ms (next.js: 1940µs, proxy.ts: 3ms, application-code: 79ms)
+ GET /login 200 in 82ms (next.js: 1757µs, proxy.ts: 2ms, application-code: 78ms)
+ GET /login 200 in 64ms (next.js: 4ms, proxy.ts: 5ms, application-code: 54ms)
+ GET /login 200 in 55ms (next.js: 1944µs, proxy.ts: 2ms, application-code: 50ms)
+ GET /login 200 in 62ms (next.js: 3ms, proxy.ts: 1793µs, application-code: 57ms)
+ GET /login 200 in 61ms (next.js: 1960µs, proxy.ts: 3ms, application-code: 56ms)
+ GET /login 200 in 41ms (next.js: 1807µs, proxy.ts: 1847µs, application-code: 37ms)
+ GET /login 200 in 19ms (next.js: 1824µs, proxy.ts: 3ms, application-code: 14ms)
+✓ Compiled in 1068ms
+✓ Compiled in 1089ms
+ GET /login 200 in 147ms (next.js: 3ms, proxy.ts: 3ms, application-code: 141ms)
+ GET /login 200 in 284ms (next.js: 114ms, proxy.ts: 7ms, application-code: 162ms)
+ GET /login 200 in 198ms (next.js: 15ms, proxy.ts: 13ms, application-code: 170ms)
+ POST /api/auth/login 400 in 198ms (next.js: 117ms, proxy.ts: 9ms, application-code: 72ms)
+ POST /api/auth/login 400 in 14ms (next.js: 3ms, proxy.ts: 7ms, application-code: 4ms)
+ POST /api/auth/login 400 in 12ms (next.js: 3ms, proxy.ts: 4ms, application-code: 5ms)
+ GET /login 200 in 238ms (next.js: 55ms, proxy.ts: 25ms, application-code: 158ms)
+ GET /login 200 in 253ms (next.js: 94ms, proxy.ts: 25ms, application-code: 134ms)
+ GET /login 200 in 135ms (next.js: 16ms, proxy.ts: 6ms, application-code: 113ms)
+ GET /login 200 in 144ms (next.js: 41ms, proxy.ts: 6ms, application-code: 97ms)
+ GET /login 200 in 110ms (next.js: 22ms, proxy.ts: 3ms, application-code: 86ms)
+ GET /login 200 in 133ms (next.js: 23ms, proxy.ts: 3ms, application-code: 107ms)
+ GET /login 200 in 149ms (next.js: 11ms, proxy.ts: 17ms, application-code: 121ms)
+ GET /login 200 in 137ms (next.js: 18ms, proxy.ts: 7ms, application-code: 111ms)
+ GET /login 200 in 153ms (next.js: 12ms, proxy.ts: 16ms, application-code: 124ms)
+ GET /login 200 in 133ms (next.js: 21ms, proxy.ts: 2ms, application-code: 109ms)
+ GET /login 200 in 133ms (next.js: 8ms, proxy.ts: 3ms, application-code: 122ms)
+ GET /login 200 in 132ms (next.js: 22ms, proxy.ts: 1961µs, application-code: 108ms)
+ GET /login 200 in 131ms (next.js: 8ms, proxy.ts: 3ms, application-code: 120ms)
+ GET /login 200 in 130ms (next.js: 20ms, proxy.ts: 4ms, application-code: 107ms)
+ GET /login 200 in 129ms (next.js: 7ms, proxy.ts: 3ms, application-code: 119ms)
+ GET /login 200 in 128ms (next.js: 18ms, proxy.ts: 3ms, application-code: 107ms)
+ GET /login 200 in 128ms (next.js: 6ms, proxy.ts: 4ms, application-code: 118ms)
+ GET /login 200 in 134ms (next.js: 24ms, proxy.ts: 3ms, application-code: 107ms)
+ GET /login 200 in 153ms (next.js: 8ms, proxy.ts: 18ms, application-code: 127ms)
+ GET /login 200 in 136ms (next.js: 22ms, proxy.ts: 3ms, application-code: 111ms)
+ GET /login 200 in 137ms (next.js: 7ms, proxy.ts: 3ms, application-code: 127ms)
+ GET /login 200 in 137ms (next.js: 22ms, proxy.ts: 3ms, application-code: 112ms)
+ GET /login 200 in 137ms (next.js: 12ms, proxy.ts: 4ms, application-code: 121ms)
+ GET /login 200 in 136ms (next.js: 25ms, proxy.ts: 3ms, application-code: 108ms)
+ GET /login 200 in 137ms (next.js: 10ms, proxy.ts: 4ms, application-code: 123ms)
+ GET /login 200 in 134ms (next.js: 20ms, proxy.ts: 6ms, application-code: 108ms)
+ GET /login 200 in 129ms (next.js: 6ms, proxy.ts: 5ms, application-code: 118ms)
+ GET /login 200 in 128ms (next.js: 19ms, proxy.ts: 4ms, application-code: 105ms)
+ GET /login 200 in 128ms (next.js: 20ms, proxy.ts: 4ms, application-code: 103ms)
+ GET /login 200 in 129ms (next.js: 7ms, proxy.ts: 4ms, application-code: 118ms)
+ GET /login 200 in 130ms (next.js: 6ms, proxy.ts: 5ms, application-code: 120ms)
+ GET /login 200 in 129ms (next.js: 19ms, proxy.ts: 5ms, application-code: 105ms)
+ GET /login 200 in 133ms (next.js: 5ms, proxy.ts: 6ms, application-code: 122ms)
+ GET /login 200 in 132ms (next.js: 17ms, proxy.ts: 5ms, application-code: 109ms)
+ GET /login 200 in 138ms (next.js: 4ms, proxy.ts: 5ms, application-code: 129ms)
+ GET /login 200 in 137ms (next.js: 21ms, proxy.ts: 4ms, application-code: 111ms)
+ GET /login 200 in 143ms (next.js: 5ms, proxy.ts: 4ms, application-code: 135ms)
+ GET /login 200 in 142ms (next.js: 26ms, proxy.ts: 3ms, application-code: 113ms)
+ GET /login 200 in 150ms (next.js: 11ms, proxy.ts: 3ms, application-code: 136ms)
+ GET /login 200 in 149ms (next.js: 24ms, proxy.ts: 3ms, application-code: 122ms)
+ GET /login 200 in 150ms (next.js: 6ms, proxy.ts: 8ms, application-code: 136ms)
+ GET /login 200 in 149ms (next.js: 20ms, proxy.ts: 8ms, application-code: 121ms)
+ GET /login 200 in 148ms (next.js: 7ms, proxy.ts: 10ms, application-code: 130ms)
+ GET /login 200 in 141ms (next.js: 25ms, proxy.ts: 4ms, application-code: 112ms)
+ GET /login 200 in 131ms (next.js: 6ms, proxy.ts: 3ms, application-code: 122ms)
+ GET /login 200 in 131ms (next.js: 21ms, proxy.ts: 3ms, application-code: 107ms)
+ GET /login 200 in 127ms (next.js: 7ms, proxy.ts: 4ms, application-code: 117ms)
+ GET /login 200 in 127ms (next.js: 20ms, proxy.ts: 3ms, application-code: 104ms)
+ GET /login 200 in 125ms (next.js: 7ms, proxy.ts: 3ms, application-code: 115ms)
+ GET /login 200 in 125ms (next.js: 23ms, proxy.ts: 4ms, application-code: 98ms)
+ GET /login 200 in 85ms (next.js: 5ms, proxy.ts: 4ms, application-code: 76ms)
+ GET /login 200 in 85ms (next.js: 21ms, proxy.ts: 4ms, application-code: 59ms)
+ GET /login 200 in 46ms (next.js: 4ms, proxy.ts: 6ms, application-code: 35ms)
+ GET /login 200 in 45ms (next.js: 21ms, proxy.ts: 7ms, application-code: 18ms)
+ POST /api/auth/login 200 in 183ms (next.js: 38ms, proxy.ts: 7ms, application-code: 137ms)
+ GET /select-tenant?userId=cmrvvipy90009oyyocqnstw83&next=%2F 200 in 71ms (next.js: 33ms, proxy.ts: 8ms, application-code: 30ms)
+ GET /api/auth/me 200 in 112ms (next.js: 76ms, proxy.ts: 3ms, application-code: 34ms)
+ GET /api/auth/tenants 200 in 128ms (next.js: 40ms, proxy.ts: 8ms, application-code: 80ms)
+ GET /api/auth/tenants 200 in 138ms (next.js: 38ms, proxy.ts: 6ms, application-code: 94ms)
+ GET /api/auth/me 200 in 138ms (next.js: 75ms, proxy.ts: 7ms, application-code: 56ms)
+ POST /api/auth/select-tenant 200 in 407ms (next.js: 380ms, proxy.ts: 3ms, application-code: 24ms)
+ GET / 200 in 88ms (next.js: 56ms, proxy.ts: 4ms, application-code: 27ms)
+ GET / 200 in 37ms (next.js: 5ms, proxy.ts: 5ms, application-code: 27ms)
+ GET /api/auth/me 200 in 47ms (next.js: 14ms, proxy.ts: 6ms, application-code: 27ms)
+ GET /api/auth/me 200 in 47ms (next.js: 16ms, proxy.ts: 8ms, application-code: 24ms)
+ GET /api/auth/me 200 in 46ms (next.js: 19ms, proxy.ts: 5ms, application-code: 21ms)
+ GET /api/auth/me 200 in 48ms (next.js: 22ms, proxy.ts: 7ms, application-code: 20ms)
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+ GET /employees/phase3-runtime-empty 200 in 2.9s (next.js: 2.1s, proxy.ts: 4ms, application-code: 743ms)
+ GET /api/auth/me 200 in 32ms (next.js: 6ms, proxy.ts: 2ms, application-code: 24ms)
+ GET /api/auth/me 200 in 31ms (next.js: 10ms, proxy.ts: 1714µs, application-code: 20ms)
+ POST /employees/phase3-runtime-empty 200 in 85ms (next.js: 25ms, proxy.ts: 8ms, application-code: 53ms)
+  └─ ƒ markReminderShownAction("calendar") in 15ms app/lib/setup-health-actions.ts
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+ GET /employees/phase3-runtime-empty/profile 200 in 1094ms (next.js: 878ms, proxy.ts: 2ms, application-code: 213ms)
+ GET /api/auth/me 200 in 21ms (next.js: 4ms, proxy.ts: 3ms, application-code: 14ms)
+ GET /api/auth/me 200 in 24ms (next.js: 8ms, proxy.ts: 3ms, application-code: 13ms)
+ POST /employees/phase3-runtime-empty/profile 200 in 45ms (next.js: 18ms, proxy.ts: 5ms, application-code: 22ms)
+  └─ ƒ markReminderShownAction("calendar") in 11ms app/lib/setup-health-actions.ts
+prisma:error 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+    at async EmployeeSupplementalProfilePage (app\(panel)\employees\[id]\profile\page.tsx:13:20)
+  11 |   const { id } = await params;
+  12 |   const session = await getSessionContext();
+> 13 |   const employee = await getEmployee(id);
+     |                    ^
+  14 |   const storageStates = await listClientStorageStates(session?.tenantId ?? null);
+  15 |   const access = await getEmployeeAccess();
+  16 | {
+  code: 'P2022',
+  meta: { modelName: 'Employee', column: 'OrganizationUnit.mission' },
+  clientVersion: '6.19.3',
+  digest: '2798113002'
+}
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+ GET /employees/phase3-runtime-partial/profile 200 in 323ms (next.js: 14ms, proxy.ts: 10ms, application-code: 299ms)
+ GET /api/auth/me 200 in 56ms (next.js: 11ms, proxy.ts: 11ms, application-code: 34ms)
+ GET /api/auth/me 200 in 56ms (next.js: 19ms, proxy.ts: 11ms, application-code: 27ms)
+✓ Compiled in 918ms
+ POST /employees/phase3-runtime-partial/profile 200 in 4.4s (next.js: 3.6s, proxy.ts: 12ms, application-code: 783ms)
+  └─ ƒ markReminderShownAction("calendar") in 693ms app/lib/setup-health-actions.ts
+ GET /login 200 in 4.4s (next.js: 13ms, proxy.ts: 9ms, application-code: 4.4s)
+ GET /login 200 in 548ms (next.js: 72ms, proxy.ts: 61ms, application-code: 415ms)
+prisma:error 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+    at async EmployeeSupplementalProfilePage (app\(panel)\employees\[id]\profile\page.tsx:13:20)
+  11 |   const { id } = await params;
+  12 |   const session = await getSessionContext();
+> 13 |   const employee = await getEmployee(id);
+     |                    ^
+  14 |   const storageStates = await listClientStorageStates(session?.tenantId ?? null);
+  15 |   const access = await getEmployeeAccess();
+  16 | {
+  code: 'P2022',
+  meta: { modelName: 'Employee', column: 'OrganizationUnit.mission' },
+  clientVersion: '6.19.3',
+  digest: '2798113002'
+}
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+ GET /login 200 in 708ms (next.js: 10ms, proxy.ts: 7ms, application-code: 692ms)
+ GET /login 200 in 577ms (next.js: 16ms, proxy.ts: 3ms, application-code: 558ms)
+ GET /login 200 in 541ms (next.js: 47ms, proxy.ts: 5ms, application-code: 489ms)
+ GET /login 200 in 322ms (next.js: 115ms, proxy.ts: 97ms, application-code: 110ms)
+ GET /login 200 in 102ms (next.js: 23ms, proxy.ts: 15ms, application-code: 65ms)
+ GET /login 200 in 76ms (next.js: 4ms, proxy.ts: 3ms, application-code: 70ms)
+prisma:error 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+    at async EmployeeSupplementalProfilePage (app\(panel)\employees\[id]\profile\page.tsx:13:20)
+  11 |   const { id } = await params;
+  12 |   const session = await getSessionContext();
+> 13 |   const employee = await getEmployee(id);
+     |                    ^
+  14 |   const storageStates = await listClientStorageStates(session?.tenantId ?? null);
+  15 |   const access = await getEmployeeAccess();
+  16 | {
+  code: 'P2022',
+  meta: { modelName: 'Employee', column: 'OrganizationUnit.mission' },
+  clientVersion: '6.19.3',
+  digest: '2798113002'
+}
+ GET /employees/phase3-runtime-partial/profile 200 in 762ms (next.js: 80ms, proxy.ts: 15ms, application-code: 667ms)
+ GET /login 200 in 162ms (next.js: 2ms, proxy.ts: 3ms, application-code: 157ms)
+ GET /login 200 in 173ms (next.js: 5ms, proxy.ts: 5ms, application-code: 163ms)
+ GET /login 200 in 205ms (next.js: 18ms, proxy.ts: 65ms, application-code: 123ms)
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+ GET /login 200 in 204ms (next.js: 10ms, proxy.ts: 5ms, application-code: 189ms)
+ GET /employees/phase3-runtime-complete/profile 200 in 1480ms (next.js: 205ms, proxy.ts: 61ms, application-code: 1213ms)
+ GET /login 200 in 207ms (next.js: 12ms, proxy.ts: 3ms, application-code: 192ms)
+ GET /login 200 in 175ms (next.js: 20ms, proxy.ts: 30ms, application-code: 124ms)
+ GET /login 200 in 3.1s (next.js: 7ms, proxy.ts: 9ms, application-code: 3.1s)
+ GET /api/auth/me 200 in 3.1s (next.js: 3.0s, proxy.ts: 9ms, application-code: 29ms)
+ GET /api/auth/me 200 in 3.1s (next.js: 3.0s, proxy.ts: 5ms, application-code: 23ms)
+ GET /login 200 in 3.1s (next.js: 5ms, proxy.ts: 3ms, application-code: 3.1s)
+ GET /login 200 in 3.2s (next.js: 6ms, proxy.ts: 10ms, application-code: 3.1s)
+ GET /login 200 in 135ms (next.js: 14ms, proxy.ts: 9ms, application-code: 113ms)
+ GET /login 200 in 112ms (next.js: 33ms, proxy.ts: 4ms, application-code: 75ms)
+ GET /login 200 in 80ms (next.js: 7ms, proxy.ts: 3ms, application-code: 69ms)
+ POST /employees/phase3-runtime-complete/profile 200 in 186ms (next.js: 43ms, proxy.ts: 12ms, application-code: 131ms)
+  └─ ƒ markReminderShownAction("calendar") in 99ms app/lib/setup-health-actions.ts
+ GET /login 200 in 80ms (next.js: 4ms, proxy.ts: 5ms, application-code: 72ms)
+ GET /login 200 in 95ms (next.js: 3ms, proxy.ts: 4ms, application-code: 88ms)
+ GET /login 200 in 89ms (next.js: 3ms, proxy.ts: 3ms, application-code: 83ms)
+ GET /login 200 in 89ms (next.js: 8ms, proxy.ts: 3ms, application-code: 78ms)
+ GET /login 200 in 96ms (next.js: 2ms, proxy.ts: 3ms, application-code: 90ms)
+ GET /login 200 in 127ms (next.js: 7ms, proxy.ts: 5ms, application-code: 114ms)
+ GET /login 200 in 141ms (next.js: 3ms, proxy.ts: 3ms, application-code: 135ms)
+ GET /login 200 in 125ms (next.js: 7ms, proxy.ts: 8ms, application-code: 110ms)
+ GET /login 200 in 112ms (next.js: 9ms, proxy.ts: 5ms, application-code: 98ms)
+ GET /login 200 in 105ms (next.js: 5ms, proxy.ts: 4ms, application-code: 96ms)
+ GET /login 200 in 109ms (next.js: 9ms, proxy.ts: 3ms, application-code: 98ms)
+ GET /login 200 in 113ms (next.js: 5ms, proxy.ts: 7ms, application-code: 101ms)
+ GET /login 200 in 78ms (next.js: 5ms, proxy.ts: 7ms, application-code: 65ms)
+ GET /login 200 in 62ms (next.js: 4ms, proxy.ts: 6ms, application-code: 51ms)
+ GET /login 200 in 27ms (next.js: 3ms, proxy.ts: 2ms, application-code: 21ms)
+ GET /login 200 in 118ms (next.js: 4ms, proxy.ts: 8ms, application-code: 106ms)
+ POST /api/auth/login 400 in 52ms (next.js: 23ms, proxy.ts: 3ms, application-code: 26ms)
+ GET /login?next=%2Femployees%2Fphase3-runtime-empty%2Fprofile 200 in 132ms (next.js: 3ms, proxy.ts: 4ms, application-code: 125ms)
+[setup-health] panel-layout {
+  tenantId: 'cmrvvipw70000oyyo6123270j',
+  userId: 'cmrvvipy90009oyyocqnstw83',
+  score: 40,
+  completedCount: 2,
+  totalCriticalCount: 5,
+  nextReminder: 'calendar'
+}
+prisma:error 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `prisma.employee.findFirst()` invocation:
+
+
+The column `OrganizationUnit.mission` does not exist in the current database.
+    at async EmployeeDetailPage (app\(panel)\employees\[id]\page.tsx:17:72)
+  15 |   const session = await getSessionContext();
+  16 |   const tenantId = session?.tenantId ?? null;
+> 17 |   const [employee, currentContract, storageStates, endedEmployeeIds] = await Promise.all([
+     |                                                                        ^
+  18 |     getEmployee(id),
+  19 |     getCurrentEmployeeContract(id, tenantId),
+  20 |     listClientStorageStates(tenantId), {
+  code: 'P2022',
+  meta: { modelName: 'Employee', column: 'OrganizationUnit.mission' },
+  clientVersion: '6.19.3',
+  digest: '3357152728'
+}
+ GET /employees/phase3-runtime-partial 200 in 761ms (next.js: 146ms, proxy.ts: 3ms, application-code: 612ms)
+ GET /api/auth/me 200 in 46ms (next.js: 14ms, proxy.ts: 5ms, application-code: 27ms)
+ GET /api/auth/me 200 in 46ms (next.js: 15ms, proxy.ts: 12ms, application-code: 19ms)
+ POST /employees/phase3-runtime-partial 200 in 74ms (next.js: 18ms, proxy.ts: 13ms, application-code: 42ms)
+  └─ ƒ markReminderShownAction("calendar") in 17ms app/lib/setup-health-actions.ts
+[?25h
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel
+npm error workspace @apps/dastranj-panel@0.1.0
+npm error location C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\dastranj-panel
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c next dev -p 3030

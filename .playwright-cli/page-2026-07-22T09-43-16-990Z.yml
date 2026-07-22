@@ -1,0 +1,254 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=e59] [cursor=pointer]
+  - generic [ref=e63]:
+    - generic [ref=e64]:
+      - navigation "مسیر صفحه" [ref=e66]:
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - button "خانه" [ref=e69] [cursor=pointer]
+          - listitem [ref=e643]
+          - listitem [ref=e647]:
+            - generic [ref=e648]: positions
+      - main [ref=e78]:
+        - main [ref=e649]:
+          - navigation "مسیر" [ref=e650]:
+            - link "واحدها" [ref=e651] [cursor=pointer]:
+              - /url: /organization-units
+            - link "واحد مالی QA" [ref=e654] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=positions
+            - generic [ref=e657]: مدیر مالی QA
+          - generic [ref=e658]:
+            - generic [ref=e659]:
+              - paragraph [ref=e660]: پروفایل سمت سازمانی
+              - heading "مدیر مالی QA" [level=1] [ref=e661]
+              - generic [ref=e662]:
+                - generic [ref=e663]: PF-QA
+                - generic [ref=e664]: فعال
+                - generic [ref=e665]: واحد مالی QA
+                - generic [ref=e666]: "بازنگری شغل: —"
+              - paragraph [ref=e667]: اطلاعات جایگاه، ظرفیت، پروفایل شغلی و شرایط احراز
+            - generic [ref=e668]:
+              - link "بازگشت به واحد" [ref=e669] [cursor=pointer]:
+                - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=positions
+              - button "آرشیو سمت" [ref=e671] [cursor=pointer]
+          - generic [ref=e672]:
+            - article [ref=e673]:
+              - generic [ref=e674]: ظرفیت مصوب
+              - strong [ref=e675]: ۲
+            - article [ref=e676]:
+              - generic [ref=e677]: انتصاب فعال
+              - strong [ref=e678]: ۰
+            - article [ref=e679]:
+              - generic [ref=e680]: ظرفیت باقی‌مانده
+              - strong [ref=e681]: ۲
+            - article [ref=e682]:
+              - generic [ref=e683]: تکمیل پروفایل
+              - strong [ref=e684]: 1/6
+          - generic [ref=e685]:
+            - article [ref=e686]:
+              - heading "اطلاعات پایه و گزارش‌دهی" [level=2] [ref=e687]
+              - generic [ref=e688]:
+                - generic [ref=e689]:
+                  - generic [ref=e690]: عنوان سمت *
+                  - textbox "عنوان سمت *" [ref=e691]: مدیر مالی QA
+                - generic [ref=e692]:
+                  - generic [ref=e693]: کد سمت
+                  - textbox "کد سمت" [ref=e694]: PF-QA
+                - generic [ref=e695]:
+                  - generic [ref=e696]: ظرفیت سمت
+                  - spinbutton "ظرفیت سمت کمتر از 0 انتصاب فعال قابل ثبت نیست." [ref=e697]: "2"
+                  - generic [ref=e698]: کمتر از 0 انتصاب فعال قابل ثبت نیست.
+                - generic [ref=e699]:
+                  - generic [ref=e700]: وضعیت Lifecycle
+                  - combobox "وضعیت Lifecycle" [ref=e701]:
+                    - option "فعال" [selected]
+                    - option "غیرفعال"
+                - generic [ref=e702]:
+                  - generic [ref=e703]: پروفایل شغلی
+                  - combobox "پروفایل شغلی" [ref=e704]:
+                    - option "تعریف نشده" [selected]
+                - generic [ref=e705]:
+                  - generic [ref=e706]: گزارش به سمت
+                  - combobox "گزارش به سمت مدیر واحد با سمت بالادست یکی فرض نمی‌شود." [ref=e707]:
+                    - option "تعریف نشده" [selected]
+                  - generic [ref=e708]: مدیر واحد با سمت بالادست یکی فرض نمی‌شود.
+                - generic [ref=e709]:
+                  - generic [ref=e710]: توضیحات اختصاصی جایگاه
+                  - textbox "توضیحات اختصاصی جایگاه" [ref=e711]
+                - button "ذخیره اطلاعات سمت" [ref=e712] [cursor=pointer]
+            - article [ref=e713]:
+              - heading "وضعیت تکمیل" [level=2] [ref=e714]
+              - progressbar [ref=e715]
+              - list [ref=e717]:
+                - listitem [ref=e718]: پروفایل شغلی
+                - listitem [ref=e721]: سمت بالادست
+                - listitem [ref=e724]: هدف شغل
+                - listitem [ref=e727]: وظایف اصلی
+                - listitem [ref=e730]: شرایط احراز
+              - paragraph [ref=e733]: طبقه‌بندی، بازه حقوقی و تجهیزات به دلیل نبود Source واقعی در Completion اجباری لحاظ نشده‌اند.
+          - generic [ref=e734]:
+            - generic [ref=e736]:
+              - heading "شرح شغل و شرایط احراز" [level=2] [ref=e737]
+              - paragraph [ref=e738]: Job Profile مستقل و قابل استفاده مجدد؛ Assignment مستقیماً به Job متصل نیست.
+              - paragraph [ref=e739]: هر ذخیره شماره بازنگری را افزایش می‌دهد؛ تاریخچه Snapshot و قابلیت بازگردانی در زیرساخت فعلی وجود ندارد.
+            - generic [ref=e740]:
+              - generic [ref=e741]:
+                - generic [ref=e742]: عنوان شغلی *
+                - textbox "عنوان شغلی *" [ref=e743]: مدیر مالی QA
+              - generic [ref=e744]:
+                - generic [ref=e745]: کد شغلی
+                - textbox "کد شغلی" [ref=e746]
+              - generic [ref=e747]:
+                - generic [ref=e748]: هدف شغل
+                - textbox "هدف شغل" [ref=e749]
+              - generic [ref=e750]:
+                - generic [ref=e751]: شرح کلی مسئولیت
+                - textbox "شرح کلی مسئولیت" [ref=e752]
+              - group "وظایف اصلی" [ref=e753]:
+                - paragraph [ref=e755]: هنوز وظیفه‌ای ثبت نشده است.
+                - button "افزودن وظیفه" [ref=e756] [cursor=pointer]
+              - group "وظایف دوره‌ای" [ref=e758]:
+                - paragraph [ref=e760]: هنوز وظیفه‌ای ثبت نشده است.
+                - button "افزودن وظیفه" [ref=e761] [cursor=pointer]
+              - generic [ref=e763]:
+                - generic [ref=e764]: مسئولیت‌های گزارش‌دهی
+                - textbox "مسئولیت‌های گزارش‌دهی هر مورد را در یک خط وارد کنید." [ref=e765]
+                - generic [ref=e766]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e767]:
+                - generic [ref=e768]: خروجی‌های مورد انتظار
+                - textbox "خروجی‌های مورد انتظار هر مورد را در یک خط وارد کنید." [ref=e769]
+                - generic [ref=e770]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e771]:
+                - generic [ref=e772]: ارتباطات داخلی
+                - textbox "ارتباطات داخلی هر مورد را در یک خط وارد کنید." [ref=e773]
+                - generic [ref=e774]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e775]:
+                - generic [ref=e776]: ارتباطات خارجی
+                - textbox "ارتباطات خارجی هر مورد را در یک خط وارد کنید." [ref=e777]
+                - generic [ref=e778]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e779]:
+                - generic [ref=e780]: شاخص‌های عملکرد پیشنهادی
+                - textbox "شاخص‌های عملکرد پیشنهادی هر مورد را در یک خط وارد کنید." [ref=e781]
+                - generic [ref=e782]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e783]:
+                - generic [ref=e784]: محل خدمت پیشنهادی
+                - textbox "محل خدمت پیشنهادی" [ref=e785]
+              - generic [ref=e786]:
+                - generic [ref=e787]: محیط کاری
+                - textbox "محیط کاری" [ref=e788]
+              - generic [ref=e789]:
+                - generic [ref=e790]: ملاحظات
+                - textbox "ملاحظات" [ref=e791]
+              - heading "شرایط احراز" [level=3] [ref=e792]
+              - generic [ref=e793]:
+                - generic [ref=e794]: حداقل مدرک
+                - textbox "حداقل مدرک" [ref=e795]
+              - generic [ref=e796]:
+                - generic [ref=e797]: حداقل سابقه (ماه)
+                - spinbutton "حداقل سابقه (ماه)" [ref=e798]
+              - generic [ref=e799]:
+                - generic [ref=e800]: سطح تجربه
+                - textbox "سطح تجربه" [ref=e801]
+              - generic [ref=e802]:
+                - generic [ref=e803]: رشته‌های مرتبط
+                - textbox "رشته‌های مرتبط هر مورد را در یک خط وارد کنید." [ref=e804]
+                - generic [ref=e805]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e806]:
+                - generic [ref=e807]: مهارت‌های تخصصی
+                - textbox "مهارت‌های تخصصی هر مورد را در یک خط وارد کنید." [ref=e808]
+                - generic [ref=e809]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e810]:
+                - generic [ref=e811]: مهارت‌های نرم
+                - textbox "مهارت‌های نرم هر مورد را در یک خط وارد کنید." [ref=e812]
+                - generic [ref=e813]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e814]:
+                - generic [ref=e815]: گواهینامه‌ها
+                - textbox "گواهینامه‌ها هر مورد را در یک خط وارد کنید." [ref=e816]
+                - generic [ref=e817]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e818]:
+                - generic [ref=e819]: نرم‌افزارهای موردنیاز
+                - textbox "نرم‌افزارهای موردنیاز هر مورد را در یک خط وارد کنید." [ref=e820]
+                - generic [ref=e821]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e822]:
+                - generic [ref=e823]: زبان‌ها
+                - textbox "زبان‌ها هر مورد را در یک خط وارد کنید." [ref=e824]
+                - generic [ref=e825]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=e826]:
+                - generic [ref=e827]: امکان مأموریت
+                - combobox "امکان مأموریت" [ref=e828]:
+                  - option "تعیین نشده" [selected]
+                  - option "بله"
+                  - option "خیر"
+              - generic [ref=e829]:
+                - generic [ref=e830]: شرایط محل خدمت
+                - textbox "شرایط محل خدمت" [ref=e831]
+              - generic [ref=e832]:
+                - generic [ref=e833]: ملاحظات خاص
+                - textbox "ملاحظات خاص" [ref=e834]
+              - button "ذخیره پروفایل شغلی" [ref=e835] [cursor=pointer]
+          - generic [ref=e836]:
+            - heading "افراد منصوب‌شده" [level=2] [ref=e837]
+            - paragraph [ref=e843]: هیچ انتصابی برای این سمت وجود ندارد.
+          - generic [ref=e844]:
+            - article [ref=e845]:
+              - heading "طبقه‌بندی، حقوق و تجهیزات" [level=2] [ref=e846]
+              - paragraph [ref=e847]: Source واقعی Job Classification، Compensation و Asset Catalog وجود ندارد؛ داده آزاد یا Engine موازی ساخته نشده است.
+            - article [ref=e848]:
+              - heading "اسناد، فرآیند و تاریخچه" [level=2] [ref=e849]
+              - paragraph [ref=e850]: Document Entity Link، Workflow Usage و Audit عمومی مرتبط وجود ندارد؛ این بخش داده ساختگی نمایش نمی‌دهد.
+    - complementary [ref=e141]:
+      - generic [ref=e142]:
+        - generic [ref=e143]: Q
+        - generic [ref=e144]:
+          - generic [ref=e145]: QA Phase3
+          - generic [ref=e146]: +98 9352720999
+      - generic [ref=e147]:
+        - generic [ref=e148]: PH
+        - generic [ref=e149]:
+          - generic [ref=e150]: Phase3 Closure QA
+          - generic [ref=e151]: phase3-closure-qa
+        - button "تغییر کسب و کار" [ref=e152] [cursor=pointer]
+      - generic [ref=e155]:
+        - button "خروج" [ref=e156] [cursor=pointer]
+        - button "اعلان‌ها" [ref=e161] [cursor=pointer]:
+          - generic [ref=e166]: "1"
+        - button "تنظیمات کلی" [ref=e167] [cursor=pointer]
+        - button "داشبورد" [ref=e172] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=e177] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=e185]:
+        - link "راه‌اندازی سریع" [ref=e186] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=e191] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=e197] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=e203] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=e208] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=e213] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=e221] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=e228] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=e235] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=e242] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=e248] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=e254] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=e261] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=e266] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=e272] [cursor=pointer]:
+        - paragraph [ref=e273]: tenant فعال
+        - button "Phase3 Closure QA" [ref=e274]
+      - generic [ref=e275]:
+        - button "جمع کردن سایدبار" [expanded] [ref=e277] [cursor=pointer]
+        - generic [ref=e280]: 0.8.0

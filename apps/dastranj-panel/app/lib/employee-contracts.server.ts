@@ -138,6 +138,39 @@ export async function getCurrentEmployeeContract(employeeId: string, tenantId?: 
   }
 }
 
+/** Returns the active contract, or the most recently ended contract for detail-only display. */
+export async function getEmployeeDetailContract(employeeId: string, tenantId?: string | null) {
+  try {
+    const current = await getCurrentEmployeeContract(employeeId, tenantId);
+    if (current) return current;
+
+    const historical = await prisma.employeeContract.findFirst({
+      where: {
+        employeeId,
+        status: { in: ['ended', 'canceled'] },
+        ...employeeContractTenantFilter(tenantId),
+      },
+      orderBy: [{ endDate: 'desc' }, { finalizedAt: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        id: true,
+        employeeId: true,
+        status: true,
+        isCurrent: true,
+        startDate: true,
+        endDate: true,
+        contractNumber: true,
+        templateId: true,
+        data: true,
+        finalizedAt: true,
+      },
+    });
+    return historical ? contractRowToSummary(historical) : null;
+  } catch (error) {
+    if (isMissingEmployeeContractTable(error)) return null;
+    throw error;
+  }
+}
+
 export async function getCurrentEmployeeContracts(employeeIds: string[], tenantId?: string | null) {
   if (!employeeIds.length) return new Map<string, EmployeeCurrentContractSummary>();
   try {

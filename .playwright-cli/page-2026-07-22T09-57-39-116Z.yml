@@ -1,0 +1,64 @@
+- generic [active] [ref=f4e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f4e2] [cursor=pointer]
+  - generic [ref=f4e6]:
+    - generic [ref=f4e7]:
+      - navigation "مسیر صفحه" [ref=f4e9]:
+        - list [ref=f4e10]:
+          - listitem [ref=f4e11]:
+            - button "خانه" [ref=f4e12] [cursor=pointer]
+          - listitem [ref=f4e14]
+          - listitem [ref=f4e18]:
+            - generic [ref=f4e19]: واحدهای سازمانی
+      - main [ref=f4e21]:
+        - generic "در حال دریافت اطلاعات واحدهای سازمانی" [ref=f4e23]
+    - complementary [ref=f4e40]:
+      - generic [ref=f4e41]:
+        - generic [ref=f4e42]: ؟
+        - generic [ref=f4e43]: در حال بارگذاری...
+      - generic [ref=f4e45]:
+        - generic [ref=f4e46]: TEN
+        - generic [ref=f4e47]: tenant
+        - button "تغییر کسب و کار" [ref=f4e49] [cursor=pointer]
+      - generic [ref=f4e52]:
+        - button "خروج" [ref=f4e53] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f4e58] [cursor=pointer]:
+          - generic [ref=f4e63]: "1"
+        - button "تنظیمات کلی" [ref=f4e64] [cursor=pointer]
+        - button "داشبورد" [ref=f4e69] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f4e74] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f4e82]:
+        - link "راه‌اندازی سریع" [ref=f4e83] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f4e88] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f4e94] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f4e100] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f4e105] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f4e110] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f4e118] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f4e125] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f4e132] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f4e139] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f4e145] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f4e151] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f4e158] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f4e163] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f4e169] [cursor=pointer]:
+        - paragraph [ref=f4e170]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f4e171]
+      - generic [ref=f4e172]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f4e174] [cursor=pointer]
+        - generic [ref=f4e177]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f4e183] [cursor=pointer]

@@ -13,12 +13,12 @@ type EmployeeAuditInput = {
   otpVerified?: boolean;
 };
 
-const SENSITIVE_FIELDS = new Set(['nationalId', 'mobile1', 'mobile2', 'email', 'identityPhotoUrl', 'bankAccounts', 'health']);
+const SENSITIVE_FIELDS = new Set(['nationalId', 'mobile1', 'mobile2', 'email', 'identityPhotoUrl', 'bankAccounts', 'health', 'emergencyContact']);
 
 function mask(value: string | null | undefined, fieldKey?: string) {
   if (!value) return null;
   if (!fieldKey || !SENSITIVE_FIELDS.has(fieldKey)) return value;
-  if (fieldKey === 'identityPhotoUrl' || fieldKey === 'health') return '[REDACTED]';
+  if (fieldKey === 'identityPhotoUrl' || fieldKey === 'health' || fieldKey === 'emergencyContact') return '[REDACTED]';
   if (fieldKey === 'email') {
     const [local, domain] = value.split('@');
     return `${local.slice(0, 2)}***@${domain ?? ''}`;

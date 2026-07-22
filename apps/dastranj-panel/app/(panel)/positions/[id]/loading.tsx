@@ -1,0 +1,1 @@
+export default function LoadingPosition(){return <main className="org-profile-page" dir="rtl" lang="fa" aria-busy="true"><div className="org-profile-skeleton"/><div className="org-profile-skeleton"/></main>}

@@ -1,0 +1,76 @@
+- generic [active] [ref=f35e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f35e2] [cursor=pointer]
+  - generic [ref=f35e6]:
+    - generic [ref=f35e7]:
+      - navigation "مسیر صفحه" [ref=f35e9]:
+        - list [ref=f35e10]:
+          - listitem [ref=f35e11]:
+            - button "خانه" [ref=f35e12] [cursor=pointer]
+          - listitem [ref=f35e14]
+          - listitem [ref=f35e18]:
+            - button "کارمندان" [ref=f35e19] [cursor=pointer]
+          - listitem [ref=f35e21]
+          - listitem [ref=f35e25]:
+            - generic [ref=f35e26]: history
+      - main [ref=f35e28]:
+        - main [ref=f35e30]:
+          - link "بازگشت به پرونده" [ref=f35e31] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-historical
+          - generic [ref=f35e32]:
+            - heading "تاریخچه تغییرات Historical Contract" [level=2] [ref=f35e34]
+            - article [ref=f35e36]:
+              - generic [ref=f35e37]:
+                - heading "contract_ended" [level=3] [ref=f35e38]
+                - paragraph [ref=f35e39]: "فیلد: contract · ۱۴۰۵/۰۴/۳۱"
+                - paragraph [ref=f35e40]: — ← —
+    - complementary [ref=f35e42]:
+      - generic [ref=f35e43]:
+        - generic [ref=f35e44]: ؟
+        - generic [ref=f35e45]: در حال بارگذاری...
+      - generic [ref=f35e47]:
+        - generic [ref=f35e48]: TEN
+        - generic [ref=f35e49]: tenant
+        - button "تغییر کسب و کار" [ref=f35e51] [cursor=pointer]
+      - generic [ref=f35e54]:
+        - button "خروج" [ref=f35e55] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f35e60] [cursor=pointer]:
+          - generic [ref=f35e65]: "1"
+        - button "تنظیمات کلی" [ref=f35e66] [cursor=pointer]
+        - button "داشبورد" [ref=f35e71] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f35e76] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f35e84]:
+        - link "راه‌اندازی سریع" [ref=f35e85] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f35e90] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f35e96] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f35e102] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f35e107] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f35e112] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f35e120] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f35e127] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f35e134] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f35e141] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f35e147] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f35e153] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f35e160] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f35e165] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f35e171] [cursor=pointer]:
+        - paragraph [ref=f35e172]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f35e173]
+      - generic [ref=f35e174]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f35e176] [cursor=pointer]
+        - generic [ref=f35e179]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f35e185] [cursor=pointer]

@@ -8,7 +8,7 @@
     "build": "prisma generate && next build",
     "start": "npm run migrate-and-start",
     "migrate-and-start": "node scripts/migrate-and-start.mjs",
-    "lint": "next lint",
+    "lint": "eslint .",
     "prisma:generate": "prisma generate",
     "prisma:generate:win": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1",
     "prisma:generate:win:hard": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1 -KillAllNode",
@@ -34,6 +34,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "dotenv": "^16.6.1",
+    "eslint": "^9.39.1",
     "prisma": "^6.7.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"

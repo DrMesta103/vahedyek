@@ -1,0 +1,85 @@
+- generic [active] [ref=f32e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f32e2] [cursor=pointer]
+  - generic [ref=f32e6]:
+    - generic [ref=f32e7]:
+      - navigation "مسیر صفحه" [ref=f32e9]:
+        - list [ref=f32e10]:
+          - listitem [ref=f32e11]:
+            - button "خانه" [ref=f32e12] [cursor=pointer]
+          - listitem [ref=f32e14]
+          - listitem [ref=f32e18]:
+            - button "کارمندان" [ref=f32e19] [cursor=pointer]
+          - listitem [ref=f32e21]
+          - listitem [ref=f32e25]:
+            - button "phase3-runtime-disabled" [ref=f32e26] [cursor=pointer]
+          - listitem [ref=f32e28]
+          - listitem [ref=f32e32]:
+            - generic [ref=f32e33]: history
+      - main [ref=f32e35]:
+        - main [ref=f32e37]:
+          - link "بازگشت به پرونده" [ref=f32e38] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-disabled
+          - generic [ref=f32e39]:
+            - heading "تاریخچه تغییرات Disabled Profile" [level=2] [ref=f32e41]
+            - generic [ref=f32e42]:
+              - article [ref=f32e43]:
+                - generic [ref=f32e44]:
+                  - heading "profile_fixture_retained" [level=3] [ref=f32e45]
+                  - paragraph [ref=f32e46]: "فیلد: profile · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f32e47]: — ← —
+              - article [ref=f32e48]:
+                - generic [ref=f32e49]:
+                  - heading "employee_disabled" [level=3] [ref=f32e50]
+                  - paragraph [ref=f32e51]: "فیلد: isActive · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f32e52]: — ← —
+    - complementary [ref=f32e54]:
+      - generic [ref=f32e55]:
+        - generic [ref=f32e56]: ؟
+        - generic [ref=f32e57]: در حال بارگذاری...
+      - generic [ref=f32e59]:
+        - generic [ref=f32e60]: TEN
+        - generic [ref=f32e61]: tenant
+        - button "تغییر کسب و کار" [ref=f32e63] [cursor=pointer]
+      - generic [ref=f32e66]:
+        - button "خروج" [ref=f32e67] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f32e72] [cursor=pointer]:
+          - generic [ref=f32e77]: "1"
+        - button "تنظیمات کلی" [ref=f32e78] [cursor=pointer]
+        - button "داشبورد" [ref=f32e83] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f32e88] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f32e96]:
+        - link "راه‌اندازی سریع" [ref=f32e97] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f32e102] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f32e108] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f32e114] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f32e119] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f32e124] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f32e132] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f32e139] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f32e146] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f32e153] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f32e159] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f32e165] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f32e172] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f32e177] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f32e183] [cursor=pointer]:
+        - paragraph [ref=f32e184]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f32e185]
+      - generic [ref=f32e186]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f32e188] [cursor=pointer]
+        - generic [ref=f32e191]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f32e197] [cursor=pointer]

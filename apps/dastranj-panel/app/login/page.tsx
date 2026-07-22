@@ -93,7 +93,7 @@ function LoginPageContent() {
               required
               dir="ltr"
               inputMode={identifierType === 'email' ? 'email' : 'numeric'}
-              maxLength={identifierType === 'email' ? undefined : 10}
+              maxLength={undefined}
               placeholder={identifierType === 'email' ? 'example@email.com' : '9352720114'}
               prefix={showIranPrefix ? 'IR +98' : undefined}
             />

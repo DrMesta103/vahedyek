@@ -18,7 +18,7 @@ export default async function EditOrganizationUnitPage({ params }: EditOrganizat
     notFound();
   }
   if (unit.status === 'ARCHIVED') {
-    return <div className="page-stack" dir="rtl" lang="fa"><PageIntro title="واحد سازمانی آرشیوی" description="این واحد فقط برای مشاهده سوابق نگهداری می‌شود و امکان ویرایش آن وجود ندارد." action={<Link href="/organization-units" className="secondary-link">بازگشت به فهرست</Link>} /><FormCard title="مشخصات واحد"><dl className="org-archived-summary"><div><dt>عنوان</dt><dd>{unit.title}</dd></div><div><dt>کد</dt><dd>{unit.code || 'ثبت نشده'}</dd></div><div><dt>نوع</dt><dd>{unit.type}</dd></div></dl></FormCard></div>;
+    return <div className="page-stack" dir="rtl" lang="fa"><PageIntro title="واحد سازمانی آرشیوی" description="این واحد فقط برای مشاهده سوابق نگهداری می‌شود و امکان ویرایش آن وجود ندارد." action={<Link href={`/organization-units/${unit.id}`} className="secondary-link">بازگشت به پروفایل</Link>} /><FormCard title="مشخصات واحد"><dl className="org-archived-summary"><div><dt>عنوان</dt><dd>{unit.title}</dd></div><div><dt>کد</dt><dd>{unit.code || 'ثبت نشده'}</dd></div><div><dt>نوع</dt><dd>{unit.type}</dd></div><div><dt>مأموریت</dt><dd>{unit.mission||'ثبت نشده'}</dd></div></dl></FormCard></div>;
   }
   const options = await getOrganizationUnitFormOptions(id);
 
@@ -28,8 +28,8 @@ export default async function EditOrganizationUnitPage({ params }: EditOrganizat
         title="ویرایش واحد سازمانی"
         description="عنوان و توضیحات واحد را به‌روزرسانی کنید."
         action={
-          <Link href="/organization-units" className="secondary-link">
-            بازگشت به لیست
+          <Link href={`/organization-units/${unit.id}`} className="secondary-link">
+            بازگشت به پروفایل
           </Link>
         }
       />
@@ -48,6 +48,8 @@ export default async function EditOrganizationUnitPage({ params }: EditOrganizat
             <span>توضیح</span>
             <textarea name="description" rows={4} defaultValue={unit.description ?? ''} />
           </label>
+          <label className="full-span"><span>مأموریت واحد</span><textarea name="mission" rows={4} maxLength={10000} defaultValue={unit.mission ?? ''} /><small>دلیل وجود و نقش محوری این واحد را بنویسید.</small></label>
+          <label className="full-span"><span>وظایف اصلی واحد</span><textarea name="mainResponsibilities" rows={6} defaultValue={Array.isArray(unit.mainResponsibilities) ? unit.mainResponsibilities.filter((item): item is string => typeof item === 'string').join('\n') : ''} /><small>هر مسئولیت را در یک خط وارد کنید.</small></label>
           <div className="full-span">
             <button type="submit" className="primary-button">
               ذخیره تغییرات

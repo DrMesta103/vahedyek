@@ -1,0 +1,1 @@
+export default function LoadingOrganizationUnitProfile(){return <main className="org-profile-page" dir="rtl" lang="fa" aria-busy="true"><div className="org-profile-skeleton"/><div className="org-profile-summary">{Array.from({length:8},(_,index)=><span className="org-profile-skeleton" key={index}/>)}</div></main>}

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Building2, ChevronDown, ChevronLeft, ChevronUp, Network, Search, TableProperties, UserRound, UsersRound } from 'lucide-react';
 import { createPositionAction, deleteOrganizationUnitAction, setOrganizationUnitStatusAction, setPositionStatusAction } from '../../../lib/actions';
@@ -16,7 +16,7 @@ export type OrganizationUnitListItem = {
   manager: { id: string; firstName: string; lastName: string; personnelCode: string | null } | null;
   childCount: number; employeeCount: number; positionCount: number; vacantPositionCount: number; positions: Position[];
 };
-type Access = { canView: boolean; canCreate: boolean; canUpdate: boolean; canDelete: boolean };
+type Access = { canView: boolean; canCreate: boolean; canUpdate: boolean; canDelete: boolean; canViewPosition: boolean; canCreatePosition: boolean; canUpdatePosition: boolean; canArchivePosition: boolean; canViewAssignments: boolean };
 type CreateOptions = {
   units: Array<{ id: string; title: string; code:string|null; parentId:string|null }>;
   employees: Array<{ id: string; firstName: string; lastName: string; personnelCode: string | null }>;
@@ -31,7 +31,7 @@ const typeLabels: Record<string, string> = { DEPARTMENT: 'واحد', DIVISION: '
 export function OrganizationUnitsPageClient({ items, access, createOptions }: { items: OrganizationUnitListItem[]; access: Access; createOptions: CreateOptions }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(() => searchParams.get('create') === '1' && access.canCreate);
   const [query, setQuery] = useState('');
   const [unitStatus, setUnitStatus] = useState('ALL');
   const [unitType, setUnitType] = useState('ALL');
@@ -40,15 +40,16 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
   const [view, setView] = useState<'list' | 'tree'>('list');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [expandedPositions, setExpandedPositions] = useState<Set<string>>(new Set());
-  const [defaultParentId, setDefaultParentId] = useState<string | undefined>();
-  const [positionUnitId, setPositionUnitId] = useState<string | null>(null);
+  const [defaultParentId, setDefaultParentId] = useState<string | undefined>(()=>searchParams.get('parent')||undefined);
+  const [positionUnitId, setPositionUnitId] = useState<string | null>(()=>access.canCreatePosition?searchParams.get('positionUnit'):null);
   const [positionTitle, setPositionTitle] = useState('');
   const [positionCode, setPositionCode] = useState('');
   const [positionCapacity, setPositionCapacity] = useState(1);
+  const [positionStatus, setPositionStatus] = useState<'ACTIVE'|'INACTIVE'>('ACTIVE');
+  const [positionSuccess, setPositionSuccess] = useState<string | null>(null);
   const [positionError, setPositionError] = useState<string | null>(null);
   const [savingPosition, setSavingPosition] = useState(false);
 
-  useEffect(() => { if (searchParams.get('create') === '1' && access.canCreate) setCreateOpen(true); }, [searchParams, access.canCreate]);
   const closeCreate = () => { setCreateOpen(false); if (searchParams.get('create') === '1') router.replace('/organization-units'); };
 
   const stats = useMemo(() => ({
@@ -83,13 +84,13 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
   const availableTypes = useMemo(() => Array.from(new Set(items.map((item) => item.type))).sort(), [items]);
 
   const visible = useMemo(() => view === 'list' ? filtered : filtered.filter((item) => !item.parentId || !filtered.some((parent) => parent.id === item.parentId)), [filtered, view]);
-  const toggle = (id: string) => setExpanded((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
-  const togglePositions = (id: string) => setExpandedPositions((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
-  const openPosition = (unitId: string) => { setPositionUnitId(unitId); setPositionTitle(''); setPositionCode(''); setPositionCapacity(1); setPositionError(null); };
+  const toggle = (id: string) => setExpanded((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const togglePositions = (id: string) => setExpandedPositions((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const openPosition = (unitId: string) => { setPositionUnitId(unitId); setPositionTitle(''); setPositionCode(''); setPositionCapacity(1); setPositionStatus('ACTIVE'); setPositionError(null); setPositionSuccess(null); };
   const savePosition = async () => {
     if (!positionUnitId || savingPosition) return;
     setSavingPosition(true); setPositionError(null);
-    try { await createPositionAction({ organizationUnitId: positionUnitId, title: positionTitle, code: positionCode, capacity: positionCapacity }); setPositionUnitId(null); router.refresh(); }
+    try { await createPositionAction({ organizationUnitId: positionUnitId, title: positionTitle, code: positionCode, capacity: positionCapacity, status: positionStatus }); setPositionUnitId(null); setPositionSuccess('سمت سازمانی با موفقیت ثبت شد.'); router.replace('/organization-units'); router.refresh(); }
     catch (error) { setPositionError(error instanceof Error ? error.message : 'ثبت سمت انجام نشد.'); }
     finally { setSavingPosition(false); }
   };
@@ -104,7 +105,7 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
     return <div key={item.id} className="org-structure-node" style={{ '--org-depth': depth } as React.CSSProperties}>
       <article className="org-structure-row">
         {canExpandTree ? <button className="org-expand-button" type="button" onClick={() => toggle(item.id)} aria-expanded={isExpanded} aria-label={`${isExpanded ? 'بستن' : 'باز کردن'} زیرواحدهای ${item.title}`}>{isExpanded ? <ChevronUp /> : <ChevronDown />}</button> : <span className="org-expand-placeholder" aria-hidden />}
-        <div className="org-unit-identity"><strong>{item.title}</strong><span>{item.code || 'بدون کد'} · {typeLabels[item.type] || item.type}</span></div>
+        <div className="org-unit-identity"><Link href={`/organization-units/${item.id}`}><strong>{item.title}</strong></Link><span>{item.code || 'بدون کد'} · {typeLabels[item.type] || item.type}</span></div>
         <div className="org-unit-parent"><small>واحد بالادست</small><span>{item.parent?.title || 'ریشه سازمان'}</span></div>
         <div className="org-unit-manager"><small>مدیر</small><span>{item.manager ? `${item.manager.firstName} ${item.manager.lastName}` : 'بدون مدیر'}</span></div>
         <div className="org-unit-metrics"><span title="زیرواحد"><Network />{item.childCount}</span><span title="سمت"><UserRound />{item.positionCount}</span><span title="کارمند فعال"><UsersRound />{item.employeeCount}</span></div>
@@ -113,7 +114,7 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
         <div className="org-row-actions">
           {item.positionCount > 0 && <button type="button" onClick={() => togglePositions(item.id)} aria-expanded={positionsOpen}>{positionsOpen ? 'بستن سمت‌ها' : 'مشاهده سمت‌ها'}</button>}
           {access.canCreate && item.status !== 'ARCHIVED' && <button type="button" onClick={() => { setDefaultParentId(item.id); setCreateOpen(true); }}>افزودن زیرواحد</button>}
-          {access.canUpdate && item.status !== 'ARCHIVED' && <><Link href={`/organization-units/${item.id}/edit`} aria-label={`ویرایش ${item.title}`}>ویرایش</Link><button type="button" onClick={() => openPosition(item.id)}>افزودن سمت</button><form action={setOrganizationUnitStatusAction}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="status" value={item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}/><button type="submit">{item.status === 'ACTIVE' ? 'غیرفعال' : 'فعال'}</button></form><form action={setOrganizationUnitStatusAction}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="status" value="ARCHIVED"/><button type="submit">آرشیو</button></form></>}
+          <Link href={`/organization-units/${item.id}`}>مشاهده پروفایل</Link>{access.canCreatePosition && item.status === 'ACTIVE' && <button type="button" onClick={() => openPosition(item.id)}>افزودن سمت</button>}{access.canUpdate && item.status !== 'ARCHIVED' && <><Link href={`/organization-units/${item.id}/edit`} aria-label={`ویرایش ${item.title}`}>ویرایش</Link><form action={setOrganizationUnitStatusAction}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="status" value={item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}/><button type="submit">{item.status === 'ACTIVE' ? 'غیرفعال' : 'فعال'}</button></form><form action={setOrganizationUnitStatusAction} onSubmit={(event)=>{if(!window.confirm('وابستگی‌های فعال بررسی می‌شوند. آیا از آرشیو این واحد مطمئن هستید؟'))event.preventDefault()}}><input type="hidden" name="id" value={item.id}/><input type="hidden" name="status" value="ARCHIVED"/><button type="submit">آرشیو</button></form></>}
           {access.canDelete && item.status !== 'ARCHIVED' && <form action={deleteOrganizationUnitAction} onSubmit={(event) => { if (!window.confirm(`آیا از حذف دائمی واحد «${item.title}» مطمئن هستید؟`)) event.preventDefault(); }}><input type="hidden" name="id" value={item.id}/><button className="is-danger" type="submit">حذف</button></form>}
         </div>
       </article>
@@ -122,8 +123,8 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
           <div><strong>{position.title}</strong><span>{position.code || 'بدون کد'}</span></div>
           <span>ظرفیت: {position.capacity.toLocaleString('fa-IR')}</span><span>منصوب: {position.assignedCount.toLocaleString('fa-IR')}</span><span>باقی‌مانده: {position.remainingCapacity.toLocaleString('fa-IR')}</span>
           <span className={`org-capacity-badge is-${position.capacityStatus.toLowerCase()}`}>{capacityLabels[position.capacityStatus]}</span>
-          <div className="org-position-actions">{access.canUpdate && position.status !== 'ARCHIVED' && <><form action={setPositionStatusAction}><input type="hidden" name="id" value={position.id}/><input type="hidden" name="status" value={position.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}/><button type="submit">{position.status === 'ACTIVE' ? 'غیرفعال' : 'فعال'}</button></form><form action={setPositionStatusAction}><input type="hidden" name="id" value={position.id}/><input type="hidden" name="status" value="ARCHIVED"/><button type="submit">آرشیو</button></form></>}</div>
-          <details><summary>مشاهده افراد منصوب‌شده</summary>{position.assignments.length ? position.assignments.map((assignment) => <Link key={assignment.id} href={`/employees/${assignment.employee.id}`}>{assignment.employee.firstName} {assignment.employee.lastName} · {assignment.employee.personnelCode || 'بدون کد'} · {assignment.startDate || 'تاریخ ثبت نشده'}<ChevronLeft /></Link>) : <p>فرد فعالی به این سمت منصوب نشده است.</p>}</details>
+          <div className="org-position-actions"><Link href={`/positions/${position.id}`}>پروفایل سمت</Link>{access.canUpdatePosition && position.status !== 'ARCHIVED' && <form action={setPositionStatusAction}><input type="hidden" name="id" value={position.id}/><input type="hidden" name="status" value={position.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}/><button type="submit">{position.status === 'ACTIVE' ? 'غیرفعال' : 'فعال'}</button></form>}{access.canArchivePosition && position.status !== 'ARCHIVED' && <form action={setPositionStatusAction} onSubmit={(event)=>{if(!window.confirm('سمت دارای انتصاب فعال آرشیو نمی‌شود. ادامه می‌دهید؟'))event.preventDefault()}}><input type="hidden" name="id" value={position.id}/><input type="hidden" name="status" value="ARCHIVED"/><button type="submit">آرشیو</button></form>}</div>
+          {access.canViewAssignments?<details><summary>مشاهده افراد منصوب‌شده</summary>{position.assignments.length ? position.assignments.map((assignment) => <Link key={assignment.id} href={`/employees/${assignment.employee.id}`}>{assignment.employee.firstName} {assignment.employee.lastName} · {assignment.employee.personnelCode || 'بدون کد'} · {assignment.startDate || 'تاریخ ثبت نشده'}<ChevronLeft /></Link>) : <p>فرد فعالی به این سمت منصوب نشده است.</p>}</details>:<p className="org-muted">اطلاعات هویتی افراد با مجوز فعلی قابل مشاهده نیست.</p>}
         </article>) : <p className="org-inline-empty">برای این واحد هنوز سمتی تعریف نشده است.</p>}
       </section>}
       {view === 'tree' && isExpanded && children.map((child) => renderUnit(child, depth + 1, nextLineage))}
@@ -131,13 +132,14 @@ export function OrganizationUnitsPageClient({ items, access, createOptions }: { 
   };
 
   return <>
+    {positionSuccess&&<div className="org-success" role="status">{positionSuccess}</div>}
     <header className="org-page-header"><div><h1>واحدها و سمت‌های سازمانی</h1><p>ساختار سازمان، واحدها، زیرواحدها، سمت‌ها و افراد منصوب‌شده را مدیریت کنید.</p></div>{access.canCreate && <button className="module-page-add-btn" onClick={() => setCreateOpen(true)}><span aria-hidden>+</span>افزودن واحد سازمانی</button>}</header>
     <section className="org-summary-grid" aria-label="آمار ساختار سازمانی">
       {[['کل واحدها', stats.total], ['واحد فعال', stats.active], ['زیرواحدها', stats.children], ['کل سمت‌ها', stats.positions], ['سمت بدون متصدی', stats.withoutAssignee], ['سمت با ظرفیت خالی', stats.vacant], ['کارکنان منصوب‌شده', stats.employees], ['واحد بدون مدیر', stats.withoutManager]].map(([label, count]) => <article key={label}><span>{label}</span><strong>{Number(count).toLocaleString('fa-IR')}</strong></article>)}
     </section>
     <section className="org-controls"><label className="org-search"><Search/><span className="sr-only">جستجو</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="جستجو بر اساس نام واحد، سمت، کد واحد یا مدیر واحد..."/></label><select aria-label="وضعیت واحد" value={unitStatus} onChange={(event) => setUnitStatus(event.target.value)}><option value="ALL">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option><option value="ARCHIVED">آرشیوی</option></select><select aria-label="نوع واحد" value={unitType} onChange={(event) => setUnitType(event.target.value)}><option value="ALL">همه نوع‌ها</option>{availableTypes.map((type) => <option key={type} value={type}>{typeLabels[type] || type}</option>)}</select><select aria-label="وضعیت سمت" value={positionFilter} onChange={(event) => setPositionFilter(event.target.value)}><option value="ALL">همه سمت‌ها</option><option value="HAS">دارای سمت</option><option value="NONE">بدون سمت</option><option value="UNASSIGNED">بدون متصدی</option><option value="AVAILABLE">ظرفیت خالی</option><option value="FULL">تکمیل ظرفیت</option></select><select aria-label="مدیریت" value={managerFilter} onChange={(event) => setManagerFilter(event.target.value)}><option value="ALL">همه مدیران</option><option value="HAS">دارای مدیر</option><option value="NONE">بدون مدیر</option></select><div className="org-view-switch"><button className={view === 'list' ? 'is-active' : ''} onClick={() => setView('list')} aria-pressed={view === 'list'}><TableProperties/>فهرست</button><button className={view === 'tree' ? 'is-active' : ''} onClick={() => setView('tree')} aria-pressed={view === 'tree'}><Network/>درخت</button></div></section>
     {!items.length ? <section className="org-empty-state"><Building2/><h2>هنوز واحد سازمانی تعریف نشده است.</h2>{access.canCreate && <button onClick={() => setCreateOpen(true)}>افزودن واحد سازمانی</button>}</section> : !filtered.length ? <section className="org-empty-state"><Search/><h2>نتیجه‌ای با این جستجو و فیلترها پیدا نشد.</h2><button onClick={() => { setQuery(''); setUnitStatus('ALL'); setUnitType('ALL'); setPositionFilter('ALL'); setManagerFilter('ALL'); }}>پاک‌کردن فیلترها</button></section> : <section className="org-structure-list">{visible.map((item) => renderUnit(item))}</section>}
-    <CreateOrganizationUnitDialog open={createOpen} onClose={() => { setDefaultParentId(undefined); closeCreate(); }} units={createOptions.units} employees={createOptions.employees} templates={createOptions.templates} autoCode={createOptions.autoCode} defaultParentId={defaultParentId}/>
-    <PanelFormModal open={Boolean(positionUnitId)} title="افزودن سمت سازمانی" lead="عنوان، کد و ظرفیت سمت را وارد کنید." onClose={() => setPositionUnitId(null)} error={positionError} footer={<PanelFormModalActions submitLabel="ثبت سمت" saving={savingPosition} disabled={!positionTitle.trim()} onSubmit={() => void savePosition()} onCancel={() => setPositionUnitId(null)}/>}><label className="calendar-create-field"><span>عنوان سمت</span><input value={positionTitle} onChange={(event) => setPositionTitle(event.target.value)} autoFocus/></label><label className="calendar-create-field"><span>کد سمت</span><input value={positionCode} onChange={(event) => setPositionCode(event.target.value)}/></label><label className="calendar-create-field"><span>ظرفیت</span><input type="number" min="0" value={positionCapacity} onChange={(event) => setPositionCapacity(Number(event.target.value))}/></label></PanelFormModal>
+    {createOpen&&<CreateOrganizationUnitDialog open onClose={() => { setDefaultParentId(undefined); closeCreate(); }} units={createOptions.units} employees={createOptions.employees} templates={createOptions.templates} autoCode={createOptions.autoCode} defaultParentId={defaultParentId}/>}
+    <PanelFormModal open={Boolean(positionUnitId)} title="افزودن سمت سازمانی" lead="عنوان، کد، ظرفیت و وضعیت اولیه سمت را وارد کنید." onClose={() => setPositionUnitId(null)} error={positionError} footer={<PanelFormModalActions submitLabel="ثبت سمت" saving={savingPosition} disabled={!positionTitle.trim()} onSubmit={() => void savePosition()} onCancel={() => setPositionUnitId(null)}/>}><label className="calendar-create-field"><span>عنوان سمت</span><input value={positionTitle} onChange={(event) => setPositionTitle(event.target.value)} maxLength={200} autoFocus/></label><label className="calendar-create-field"><span>کد سمت</span><input value={positionCode} onChange={(event) => setPositionCode(event.target.value)}/></label><label className="calendar-create-field"><span>ظرفیت</span><input type="number" min="0" max="2147483647" value={positionCapacity} onChange={(event) => setPositionCapacity(Number(event.target.value))}/></label><label className="calendar-create-field"><span>وضعیت اولیه</span><select value={positionStatus} onChange={(event)=>setPositionStatus(event.target.value as 'ACTIVE'|'INACTIVE')}><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option></select></label></PanelFormModal>
   </>;
 }

@@ -1,0 +1,1 @@
+'use client'; export default function PositionError({reset}:{error:Error;reset:()=>void}){return <main className="org-section-empty" dir="rtl"><h1>دریافت پروفایل سمت انجام نشد</h1><button onClick={reset}>تلاش دوباره</button></main>}

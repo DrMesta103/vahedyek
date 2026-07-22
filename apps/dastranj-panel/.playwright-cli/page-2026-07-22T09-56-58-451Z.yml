@@ -1,0 +1,73 @@
+- generic [active] [ref=f5e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f5e2] [cursor=pointer]
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - navigation "مسیر صفحه" [ref=f5e9]:
+        - list [ref=f5e10]:
+          - listitem [ref=f5e11]:
+            - button "خانه" [ref=f5e12] [cursor=pointer]
+          - listitem [ref=f5e14]
+          - listitem [ref=f5e18]:
+            - button "کارمندان" [ref=f5e19] [cursor=pointer]
+          - listitem [ref=f5e21]
+          - listitem [ref=f5e25]:
+            - button "phase3-runtime-partial" [ref=f5e26] [cursor=pointer]
+          - listitem [ref=f5e28]
+          - listitem [ref=f5e32]:
+            - generic [ref=f5e33]: history
+      - main [ref=f5e35]:
+        - main [ref=f5e37]:
+          - generic [ref=f5e39]:
+            - heading "دسترسی به تاریخچه محدود است" [level=2] [ref=f5e40]
+            - paragraph [ref=f5e41]: برای مشاهدهٔ رویدادهای حساس پرونده، مجوز تاریخچهٔ کارمندان لازم است.
+    - complementary [ref=f5e43]:
+      - generic [ref=f5e44]:
+        - generic [ref=f5e45]: ؟
+        - generic [ref=f5e46]: در حال بارگذاری...
+      - generic [ref=f5e48]:
+        - generic [ref=f5e49]: TEN
+        - generic [ref=f5e50]: tenant
+        - button "تغییر کسب و کار" [ref=f5e52] [cursor=pointer]
+      - generic [ref=f5e55]:
+        - button "خروج" [ref=f5e56] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f5e61] [cursor=pointer]:
+          - generic [ref=f5e66]: "1"
+        - button "تنظیمات کلی" [ref=f5e67] [cursor=pointer]
+        - button "داشبورد" [ref=f5e72] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f5e77] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f5e85]:
+        - link "راه‌اندازی سریع" [ref=f5e86] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f5e91] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f5e97] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f5e103] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f5e108] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f5e113] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f5e121] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f5e128] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f5e135] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f5e142] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f5e148] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f5e154] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f5e161] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f5e166] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f5e172] [cursor=pointer]:
+        - paragraph [ref=f5e173]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f5e174]
+      - generic [ref=f5e175]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f5e177] [cursor=pointer]
+        - generic [ref=f5e180]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f5e186] [cursor=pointer]

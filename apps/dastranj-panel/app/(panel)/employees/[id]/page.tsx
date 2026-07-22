@@ -3,7 +3,7 @@ import { EmployeeNavPath } from '../../../components/business-sidebar/EmployeeNa
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { getSessionContext } from '../../../lib/auth';
 import { getEmployee } from '../../../lib/data';
-import { getCurrentEmployeeContract, getEndedEmployeeIds } from '../../../lib/employee-contracts.server';
+import { getEmployeeDetailContract, getEndedEmployeeIds } from '../../../lib/employee-contracts.server';
 import { listClientStorageStates } from '../../../lib/client-storage-persistence';
 import { getEmployeeSupplementalStorageKey, normalizeEmployeeSupplementalProfile, getDefaultEmployeeSupplementalProfile } from '../../../lib/employee-contract-drafts';
 import { requireEmployeeAccess } from '../../../lib/organization-unit-access';
@@ -16,7 +16,7 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
   const tenantId = session?.tenantId ?? null;
   const [employee, currentContract, storageStates, endedEmployeeIds] = await Promise.all([
     getEmployee(id),
-    getCurrentEmployeeContract(id, tenantId),
+    getEmployeeDetailContract(id, tenantId),
     listClientStorageStates(tenantId),
     getEndedEmployeeIds([id], tenantId),
   ]);
@@ -82,7 +82,15 @@ export default async function EmployeeDetailPage({ params }: { params: Promise<{
     workGroups: employee.workGroupMemberships.map((item) => ({
       id: item.workGroup.id,
       title: item.workGroup.title,
+      location: item.workGroup.location ? { id: item.workGroup.location.id, title: item.workGroup.location.title } : null,
     })),
+    workLocation: employee.workGroupMemberships.find((item) => item.workGroup.location)?.workGroup.location?.title ?? null,
+    employmentStartDate: employee.organizationUnits.find((item) => item.startDate)?.startDate ?? currentContract?.startDate ?? null,
+    accountState: employee.quickSetupInvitationStatus === 'sent'
+      ? 'دعوت در انتظار'
+      : employee.userTenantMembership
+        ? 'عضویت متصل'
+        : 'بدون حساب',
     bankAccountsCount: Array.isArray(employee.bankAccounts) ? employee.bankAccounts.length : 0,
     guaranteeCount: Array.isArray(employee.guarantees) ? employee.guarantees.length : 0,
     supplemental,

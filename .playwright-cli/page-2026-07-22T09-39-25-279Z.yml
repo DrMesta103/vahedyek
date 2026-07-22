@@ -1,0 +1,35 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]
+  - alert [ref=e68]
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - generic [ref=e102]: انتخاب کسب‌وکار
+        - heading "tenant جدید بسازید" [level=1] [ref=e103]
+        - paragraph [ref=e104]: فرآیند ساخت tenant در همین کارت و بدون باکس توضیحی ادامه پیدا می‌کند.
+      - generic [ref=e105]: ۲. مالک
+    - generic [ref=e144]:
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]: شماره موبایل
+          - textbox "شماره موبایل" [disabled] [ref=e152]: "9352720999"
+        - generic [ref=e153]:
+          - generic [ref=e154]: نام
+          - textbox "نام" [disabled] [ref=e158]: QA
+        - generic [ref=e159]:
+          - generic [ref=e160]: نام خانوادگی
+          - textbox "نام خانوادگی" [disabled] [ref=e164]: Phase3
+        - generic [ref=e165]:
+          - generic [ref=e166]: نام کسب‌وکار
+          - textbox "نام کسب‌وکار" [ref=e170]:
+            - /placeholder: نام کسب‌وکار را وارد کنید
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]: نام‌های قبلی
+            - generic [ref=e174]: 2 مورد
+          - generic [ref=e175]:
+            - button "Phase3 Runtime Test Tenant" [ref=e176] [cursor=pointer]
+            - button "تاو" [ref=e177] [cursor=pointer]
+      - generic [ref=e179]:
+        - button "بازگشت" [ref=e180] [cursor=pointer]
+        - button "ادامه" [ref=e181] [cursor=pointer]

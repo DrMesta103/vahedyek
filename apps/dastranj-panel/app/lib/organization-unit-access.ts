@@ -8,6 +8,14 @@ export const ORGANIZATION_UNIT_PERMISSIONS = {
   delete: 'organization_units.delete',
 } as const;
 
+export const POSITION_PERMISSIONS = {
+  view: 'positions.view',
+  create: 'positions.create',
+  update: 'positions.update',
+  archive: 'positions.archive',
+  viewAssignments: 'positions.view_assignments',
+} as const;
+
 export const EMPLOYEE_PERMISSIONS = {
   view: 'employees.view',
   update: 'employees.update',
@@ -70,6 +78,34 @@ export async function requireOrganizationUnitAccess(permission: 'view' | 'create
   return { tenantId: access.tenantId, access };
 }
 
+export async function getPositionAccess() {
+  const session = await getSessionContext();
+  if (!session?.tenantId || !session.userId) return { tenantId: null, canView: false, canCreate: false, canUpdate: false, canArchive: false, canViewAssignments: false };
+  const membership = await prisma.userTenantMembership.findUnique({
+    where: { userId_tenantId: { userId: session.userId, tenantId: session.tenantId } },
+    include: { roles: { include: { role: { include: { permissions: { select: { permissionKey: true } } } } } } },
+  });
+  const roles = new Set([membership?.role?.toLowerCase(), ...(membership?.roles.map((item) => item.role.key.toLowerCase()) ?? [])].filter(Boolean));
+  const permissions = new Set(membership?.roles.flatMap((item) => item.role.permissions.map((permission) => permission.permissionKey)) ?? []);
+  const managesByRole = [...roles].some((role) => MANAGE_ROLES.has(role as string));
+  const has = (key: string) => managesByRole || permissions.has(key);
+  return {
+    tenantId: session.tenantId,
+    canView: has(POSITION_PERMISSIONS.view),
+    canCreate: has(POSITION_PERMISSIONS.create),
+    canUpdate: has(POSITION_PERMISSIONS.update),
+    canArchive: has(POSITION_PERMISSIONS.archive),
+    canViewAssignments: has(POSITION_PERMISSIONS.viewAssignments),
+  };
+}
+
+export async function requirePositionAccess(permission: 'view' | 'create' | 'update' | 'archive' | 'viewAssignments') {
+  const access = await getPositionAccess();
+  const allowed = permission === 'view' ? access.canView : permission === 'create' ? access.canCreate : permission === 'update' ? access.canUpdate : permission === 'archive' ? access.canArchive : access.canViewAssignments;
+  if (!access.tenantId || !allowed) throw new Error('برای انجام این عملیات روی سمت‌های سازمانی دسترسی کافی ندارید.');
+  return { tenantId: access.tenantId, access };
+}
+
 export async function getEmployeeAccess() {
   const session = await getSessionContext();
   if (!session?.tenantId || !session.userId) {
@@ -116,7 +152,7 @@ export async function getEmployeeAccess() {
     canBankUpdate: hasSensitive(EMPLOYEE_PERMISSIONS.bankUpdate) || hasSensitive(EMPLOYEE_PERMISSIONS.sensitiveUpdate),
     canHealthView: hasSensitive(EMPLOYEE_PERMISSIONS.healthView),
     canHealthUpdate: hasSensitive(EMPLOYEE_PERMISSIONS.healthUpdate),
-    canHistoryView: hasSensitive(EMPLOYEE_PERMISSIONS.historyView) || managesByRole,
+    canHistoryView: hasSensitive(EMPLOYEE_PERMISSIONS.historyView),
   };
 }
 

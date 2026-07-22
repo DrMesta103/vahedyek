@@ -1,0 +1,296 @@
+- generic [active] [ref=f46e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f46e2] [cursor=pointer]
+  - generic [ref=f46e6]:
+    - generic [ref=f46e7]:
+      - navigation "مسیر صفحه" [ref=f46e9]:
+        - list [ref=f46e10]:
+          - listitem [ref=f46e11]:
+            - button "خانه" [ref=f46e12] [cursor=pointer]
+          - listitem [ref=f46e14]
+          - listitem [ref=f46e18]:
+            - generic [ref=f46e19]: کارمندان
+      - main [ref=f46e21]:
+        - generic [ref=f46e23]:
+          - link "جزییات کارمند" [ref=f46e26] [cursor=pointer]:
+            - /url: /employees
+          - generic [ref=f46e29]:
+            - generic [ref=f46e30]:
+              - article [ref=f46e31]:
+                - generic [ref=f46e37]:
+                  - heading "Historical Contract" [level=2] [ref=f46e38]
+                  - paragraph [ref=f46e39]: "Personnel code: phase3-runtime-historical"
+                  - paragraph [ref=f46e40]: "کد ملی: ثبت نشده"
+                - generic [ref=f46e41]:
+                  - generic "09120000002" [ref=f46e42]
+                  - generic "phase3.historical@local.test" [ref=f46e46]
+                  - generic "Organization unit not registered" [ref=f46e51]: ثبت نشده
+                - generic [ref=f46e56]:
+                  - generic [ref=f46e57]: Ended employment
+                  - generic [ref=f46e58]: بدون حساب
+                  - generic [ref=f46e59]: محل کار ثبت نشده است.
+                  - generic [ref=f46e60]: "شروع همکاری: ۱۴۰۳/۱۰/۱۲"
+                  - generic [ref=f46e61]: 5% profile
+                - generic [ref=f46e62]:
+                  - button "ویرایش" [ref=f46e63] [cursor=pointer]
+                  - button "Disable" [ref=f46e68] [cursor=pointer]
+                  - button "شروع فرآیند خاتمه همکاری" [ref=f46e70] [cursor=pointer]
+                  - link "ضمانت‌ها" [ref=f46e71] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-historical/guarantee
+              - article [ref=f46e72]:
+                - generic [ref=f46e73]:
+                  - heading "اطلاعات آخرین قرارداد" [level=3] [ref=f46e74]
+                  - link "بازگشت به فهرست" [ref=f46e75] [cursor=pointer]:
+                    - /url: /employees
+                - generic [ref=f46e78]:
+                  - generic [ref=f46e79]:
+                    - generic [ref=f46e80]: شماره قرارداد
+                    - strong [ref=f46e81]: PHASE3-HIST-001
+                  - generic [ref=f46e82]:
+                    - generic [ref=f46e83]: مبلغ قرارداد
+                    - strong [ref=f46e84]: ثبت نشده
+                  - generic [ref=f46e85]:
+                    - generic [ref=f46e86]: نوع قرارداد
+                    - strong [ref=f46e87]: ثبت نشده
+                  - generic [ref=f46e88]:
+                    - generic [ref=f46e89]: وضعیت قرارداد
+                    - strong [ref=f46e90]: پایان‌یافته
+                  - generic [ref=f46e91]:
+                    - generic [ref=f46e92]: مدت قرارداد
+                    - strong [ref=f46e93]: ثبت شده
+                  - generic [ref=f46e94]:
+                    - generic [ref=f46e95]: بازه قرارداد
+                    - strong [ref=f46e96]: از تاریخ 2025-01-01 تا 2025-12-31
+                - generic [ref=f46e97]:
+                  - generic [ref=f46e98]: واحد سازمانی ثبت نشده
+                  - generic [ref=f46e99]: گروه کاری ثبت نشده
+              - article [ref=f46e100]:
+                - strong [ref=f46e105]: ۵%
+                - generic [ref=f46e106]:
+                  - generic [ref=f46e107]: عنوان شغلی ثبت نشده
+                  - generic [ref=f46e108]: قرارداد تاریخی
+                - generic [ref=f46e109]:
+                  - paragraph [ref=f46e110]: ۵۶۷ روز از شروع قرارداد گذشته
+                  - paragraph [ref=f46e112]: ۱۴ مرحله ناقص در قرارداد
+            - region "Employee record summary" [ref=f46e114]:
+              - article [ref=f46e115]:
+                - heading "Basic information" [level=3] [ref=f46e116]
+                - generic [ref=f46e117]:
+                  - generic [ref=f46e118]: Mobile
+                  - strong [ref=f46e119]: "09120000002"
+                - generic [ref=f46e120]:
+                  - generic [ref=f46e121]: Email
+                  - strong [ref=f46e122]: phase3.historical@local.test
+                - generic [ref=f46e123]:
+                  - generic [ref=f46e124]: Marital status
+                  - strong [ref=f46e125]: single
+                - generic [ref=f46e126]:
+                  - generic [ref=f46e127]: Children
+                  - strong [ref=f46e128]: ۰
+              - article [ref=f46e129]:
+                - heading "Organization" [level=3] [ref=f46e130]
+                - generic [ref=f46e131]:
+                  - generic [ref=f46e132]: Unit
+                  - strong [ref=f46e133]: ثبت نشده
+                - generic [ref=f46e134]:
+                  - generic [ref=f46e135]: Position
+                  - strong [ref=f46e136]: ثبت نشده
+                - generic [ref=f46e137]:
+                  - generic [ref=f46e138]: Manager
+                  - strong [ref=f46e139]: Not registered
+                - generic [ref=f46e140]:
+                  - generic [ref=f46e141]: Work group
+                  - strong [ref=f46e142]: Not registered
+              - article [ref=f46e143]:
+                - heading "Account" [level=3] [ref=f46e144]
+                - generic [ref=f46e145]:
+                  - generic [ref=f46e146]: Account status
+                  - strong [ref=f46e147]: No user account
+                - generic [ref=f46e148]:
+                  - generic [ref=f46e149]: User
+                  - strong [ref=f46e150]: Not registered
+                - generic [ref=f46e151]:
+                  - generic [ref=f46e152]: Membership role
+                  - strong [ref=f46e153]: Not registered
+                - generic [ref=f46e154]:
+                  - generic [ref=f46e155]: Profile status
+                  - strong [ref=f46e156]: Incomplete
+            - region "Contract timeline" [ref=f46e157]:
+              - generic [ref=f46e158]:
+                - heading "Contract timeline" [level=3] [ref=f46e159]
+                - generic [ref=f46e160]: Historical contract
+              - generic [ref=f46e161]:
+                - generic [ref=f46e162]:
+                  - generic [ref=f46e163]: Start
+                  - strong [ref=f46e164]: 2025-01-01
+                - generic [ref=f46e165]:
+                  - generic [ref=f46e166]: End
+                  - strong [ref=f46e167]: 2025-12-31
+                - generic [ref=f46e168]:
+                  - generic [ref=f46e169]: Total days
+                  - strong [ref=f46e170]: ۳۶۴
+                - generic [ref=f46e171]:
+                  - generic [ref=f46e172]: Elapsed
+                  - strong [ref=f46e173]: ۳۶۴ (100%)
+                - generic [ref=f46e174]:
+                  - generic [ref=f46e175]: Remaining
+                  - strong [ref=f46e176]: ۰ (0%)
+            - generic [ref=f46e177]:
+              - heading "گزارشات و درخواست ها" [level=3] [ref=f46e179]
+              - generic [ref=f46e180]:
+                - link [ref=f46e181] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/history
+                  - generic [ref=f46e185]:
+                    - heading "تاریخچه تغییرات" [level=3] [ref=f46e187]
+                    - paragraph [ref=f46e188]: تغییرات مهم پرونده با مقادیر حساس ماسک‌شده ثبت می‌شود.
+                - link [ref=f46e193] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/requests
+                  - generic [ref=f46e197]:
+                    - heading "درخواست ها" [level=3] [ref=f46e199]
+                    - paragraph [ref=f46e200]: همه درخواست های ثبت شده توسط کارمند را در اینجا می بینید.
+                - link [ref=f46e205] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/work-report
+                  - generic [ref=f46e209]:
+                    - heading "گزارش کارکرد" [level=3] [ref=f46e211]
+                    - paragraph [ref=f46e212]: مشاهده گزارش ماهانه، حضور، مرخصی، اضافه کاری و وضعیت تردد کارمند.
+                - article [ref=f46e217]:
+                  - generic [ref=f46e221]:
+                    - generic [ref=f46e222]:
+                      - heading "ارزیابی عملکرد" [level=3] [ref=f46e223]
+                      - generic [ref=f46e224]: در آینده
+                    - paragraph [ref=f46e225]: سوابق ارزیابی، بازخوردها و نتایج دوره ای در این بخش نمایش داده می شود.
+                - article [ref=f46e230]:
+                  - generic [ref=f46e234]:
+                    - generic [ref=f46e235]:
+                      - heading "گزارش حقوق و دستمزد" [level=3] [ref=f46e236]
+                      - generic [ref=f46e237]: در آینده
+                    - paragraph [ref=f46e238]: خلاصه اطلاعات حقوق و تردد کارمند از اینجا قابل مشاهده خواهد بود.
+            - generic [ref=f46e243]:
+              - heading "اطلاعات قرارداد" [level=3] [ref=f46e245]
+              - generic [ref=f46e246]:
+                - link [ref=f46e247] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/profile
+                  - generic [ref=f46e251]:
+                    - heading "مشخصات کارمند" [level=3] [ref=f46e253]
+                    - paragraph [ref=f46e254]: اطلاعات شخصی، تحصیلی، شغلی، نظام وظیفه و آدرس کارمند را مدیریت کنید.
+                - link [ref=f46e259] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/contract-drafts
+                  - generic [ref=f46e263]:
+                    - heading "تنظیم پیش نویس" [level=3] [ref=f46e265]
+                    - paragraph [ref=f46e266]: پیش نویس قرارداد را باز کنید، از قالب آماده شروع کنید و مراحل را ادامه دهید.
+                - article [ref=f46e271]:
+                  - generic [ref=f46e275]:
+                    - generic [ref=f46e276]:
+                      - heading "مرکز اسناد" [level=3] [ref=f46e277]
+                      - generic [ref=f46e278]: در آینده
+                    - paragraph [ref=f46e279]: پیوست ها، قراردادهای امضا شده و اسناد مرتبط در این بخش نگهداری می شوند.
+                - article [ref=f46e283]:
+                  - generic [ref=f46e287]:
+                    - generic [ref=f46e288]:
+                      - heading "تاریخچه چاپ قرارداد" [level=3] [ref=f46e289]
+                      - generic [ref=f46e290]: در آینده
+                    - paragraph [ref=f46e291]: نسخه های چاپ شده قرارداد و سوابق مرتبطه در اینجا ثبت می شود.
+              - article [ref=f46e298]:
+                - generic [ref=f46e302]:
+                  - generic [ref=f46e303]:
+                    - heading "تنظیم متن قرارداد" [level=3] [ref=f46e304]
+                    - generic [ref=f46e305]: در آینده
+                  - paragraph [ref=f46e306]: متن قرارداد، بندها و شرایط همکاری را از این مسیر تنظیم کنید.
+            - generic [ref=f46e310]:
+              - heading "ایجاد متمم" [level=3] [ref=f46e312]
+              - generic [ref=f46e313]:
+                - article [ref=f46e314]:
+                  - generic [ref=f46e318]:
+                    - generic [ref=f46e319]:
+                      - heading "متمم بر مبلغ قرارداد" [level=3] [ref=f46e320]
+                      - generic [ref=f46e321]: در آینده
+                    - paragraph [ref=f46e322]: ثبت تغییرات مالی یا مزایای قرارداد از این بخش انجام می شود.
+                - article [ref=f46e327]:
+                  - generic [ref=f46e331]:
+                    - generic [ref=f46e332]:
+                      - heading "متمم بر تاریخ (تمدید)" [level=3] [ref=f46e333]
+                      - generic [ref=f46e334]: در آینده
+                    - paragraph [ref=f46e335]: مدت قرارداد و تاریخ های تمدید از این مسیر قابل مدیریت است.
+                - article [ref=f46e339]:
+                  - generic [ref=f46e343]:
+                    - generic [ref=f46e344]:
+                      - heading "متمم بر نوع قرارداد" [level=3] [ref=f46e345]
+                      - generic [ref=f46e346]: در آینده
+                    - paragraph [ref=f46e347]: تغییر نوع قرارداد یا ساختار همکاری از اینجا اعمال می شود.
+            - generic [ref=f46e354]:
+              - heading "خاتمه همکاری" [level=3] [ref=f46e356]
+              - generic [ref=f46e357]:
+                - article [ref=f46e358]:
+                  - generic [ref=f46e362]:
+                    - generic [ref=f46e363]:
+                      - heading "درخواست استعفا" [level=3] [ref=f46e364]
+                      - generic [ref=f46e365]: در آینده
+                    - paragraph [ref=f46e366]: فرایند ثبت، بررسی و تایید درخواست استعفا در این بخش انجام می شود.
+                - article [ref=f46e371]:
+                  - generic [ref=f46e375]:
+                    - generic [ref=f46e376]:
+                      - heading "ترک کار" [level=3] [ref=f46e377]
+                      - generic [ref=f46e378]: در آینده
+                    - paragraph [ref=f46e379]: فرایند ترک کار کارمند و ثبت نتیجه نهایی از این مسیر پیگیری می شود.
+                - article [ref=f46e384]:
+                  - generic [ref=f46e388]:
+                    - generic [ref=f46e389]:
+                      - heading "اخراج" [level=3] [ref=f46e390]
+                      - generic [ref=f46e391]: در آینده
+                    - paragraph [ref=f46e392]: ثبت و پیگیری فرایند اخراج کارمند در این بخش انجام می شود.
+                - link [ref=f46e399] [cursor=pointer]:
+                  - /url: /employees/phase3-runtime-historical/bank-accounts
+                  - generic [ref=f46e403]:
+                    - heading "تسویه نهایی" [level=3] [ref=f46e405]
+                    - paragraph [ref=f46e406]: حساب های بانکی، ضمانت ها و تسویه نهایی کارمند از این بخش مدیریت می شود.
+              - paragraph [ref=f46e410]: تنها در صورت خاتمه همکاری، فرایند تسویه فعال خواهد شد.
+    - complementary [ref=f46e412]:
+      - generic [ref=f46e413]:
+        - generic [ref=f46e414]: ؟
+        - generic [ref=f46e415]: در حال بارگذاری...
+      - generic [ref=f46e417]:
+        - generic [ref=f46e418]: TEN
+        - generic [ref=f46e419]: tenant
+        - button "تغییر کسب و کار" [ref=f46e421] [cursor=pointer]
+      - generic [ref=f46e424]:
+        - button "خروج" [ref=f46e425] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f46e430] [cursor=pointer]:
+          - generic [ref=f46e435]: "1"
+        - button "تنظیمات کلی" [ref=f46e436] [cursor=pointer]
+        - button "داشبورد" [ref=f46e441] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f46e446] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f46e454]:
+        - link "راه‌اندازی سریع" [ref=f46e455] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f46e460] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f46e466] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f46e472] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f46e477] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f46e482] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f46e490] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f46e497] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f46e504] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f46e511] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f46e517] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f46e523] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f46e530] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f46e535] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f46e541] [cursor=pointer]:
+        - paragraph [ref=f46e542]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f46e543]
+      - generic [ref=f46e544]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f46e546] [cursor=pointer]
+        - generic [ref=f46e549]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f46e555] [cursor=pointer]

@@ -28,7 +28,7 @@ import {
 import { prisma } from './prisma';
 import { listEmployeeImportJobsForTenant } from './employee-import-jobs';
 import { listClientStorageStates } from './client-storage-persistence';
-import { requireOrganizationUnitAccess } from './organization-unit-access';
+import { getEmployeeAccess, getPositionAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
 import { findDefaultNamingPattern, getNamingPatternPreview, getNamingPatternsFromStorage, getNamingPatternsStorageKey } from './naming-patterns';
 import { normalizeContractDraftTemplate, type ContractDraftTemplate } from './contract-draft-templates';
 import {
@@ -510,6 +510,8 @@ export async function getRequestReason(id: string) {
 
 export async function getOrganizationStructureOverview() {
   const { tenantId, access } = await requireOrganizationUnitAccess('view');
+  const [positionAccess, employeeAccess] = await Promise.all([getPositionAccess(), getEmployeeAccess()]);
+  const canSeePeople = positionAccess.canViewAssignments && employeeAccess.canView;
   const today = new Date().toISOString().slice(0, 10);
   const isCurrentAssignment = (assignment: { status: string; startDate: string | null; endDate: string | null; employee: { isActive: boolean } }) =>
     assignment.status === 'ACTIVE' && assignment.employee.isActive && (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today);
@@ -535,7 +537,7 @@ export async function getOrganizationStructureOverview() {
     },
     orderBy: { createdAt: 'asc' },
   }).then((units) => ({
-    access,
+    access: { ...access, canViewPosition: positionAccess.canView, canCreatePosition: positionAccess.canCreate, canUpdatePosition: positionAccess.canUpdate, canArchivePosition: positionAccess.canArchive, canViewAssignments: canSeePeople },
     items: units.map((unit) => {
       const activeAssignments = unit.employees.filter(isCurrentAssignment);
       const positions = unit.positions.map((position) => {
@@ -551,8 +553,8 @@ export async function getOrganizationStructureOverview() {
       });
       return {
         ...unit,
-        employees: activeAssignments,
-        positions,
+        employees: canSeePeople ? activeAssignments : [],
+        positions: positionAccess.canView ? positions.map((position) => ({ ...position, assignments: canSeePeople ? position.assignments : [] })) : [],
         employeeCount: activeAssignments.length,
         positionCount: positions.length,
         vacantPositionCount: positions.filter((position) => position.status === 'ACTIVE' && position.remainingCapacity > 0).length,
@@ -875,6 +877,92 @@ function parseDateInput(value?: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+const assignmentIsCurrent = (today: string) => (assignment: { status: string; startDate: string | null; endDate: string | null; employee: { isActive: boolean } }) =>
+  assignment.status === 'ACTIVE' && assignment.employee.isActive && (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today);
+
+export async function getOrganizationUnitProfile(id: string) {
+  const [{ tenantId, access: unitAccess }, positionAccess, employeeAccess] = await Promise.all([
+    requireOrganizationUnitAccess('view'), getPositionAccess(), getEmployeeAccess(),
+  ]);
+  const canSeePeople = positionAccess.canViewAssignments && employeeAccess.canView;
+  const unit = await prisma.organizationUnit.findFirst({
+    where: { id, tenantId },
+    include: {
+      parent: { select: { id: true, title: true, parent: { select: { id: true, title: true } } } },
+      manager: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } },
+      children: {
+        where: { tenantId }, orderBy: { title: 'asc' },
+        include: { manager: { select: { id: true, firstName: true, lastName: true } }, _count: { select: { children: true, positions: true, employees: true } } },
+      },
+      positions: {
+        orderBy: { createdAt: 'asc' },
+        include: {
+          jobProfile: { select: { id: true, title: true, code: true, purpose: true } },
+          reportsToPosition: { select: { id: true, title: true } },
+          assignments: { include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } } },
+        },
+      },
+      employees: { include: { position: { select: { id: true, title: true } }, employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } } },
+    },
+  });
+  if (!unit) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const current = assignmentIsCurrent(today);
+  const positions = unit.positions.map((position) => {
+    const activeAssignments = position.assignments.filter(current);
+    const remainingCapacity = position.capacity - activeAssignments.length;
+    const missingItems = [!position.code && 'کد سمت', !position.jobProfileId && 'پروفایل شغلی', !position.reportsToPositionId && 'سمت بالادست', !position.jobProfile?.purpose && 'هدف شغل'].filter(Boolean) as string[];
+    return {
+      ...position,
+      assignments: canSeePeople ? activeAssignments : [],
+      activeAssignmentCount: activeAssignments.length,
+      remainingCapacity,
+      capacityStatus: position.status !== 'ACTIVE' ? position.status : activeAssignments.length === 0 ? 'WITHOUT_ASSIGNEE' : remainingCapacity < 0 ? 'OVER_CAPACITY' : remainingCapacity === 0 ? 'FULL' : 'HAS_AVAILABLE_CAPACITY',
+      completion: { completed: 4 - missingItems.length, total: 4, missingItems },
+    };
+  });
+  const activeAssignments = unit.employees.filter(current);
+  return {
+    ...unit,
+    positions: positionAccess.canView ? positions : [],
+    employees: canSeePeople ? activeAssignments : [],
+    canSeePeople,
+    access: { canUpdateUnit: unitAccess.canUpdate, canCreateUnit: unitAccess.canCreate, canDeleteUnit: unitAccess.canDelete, canViewPosition: positionAccess.canView, canCreatePosition: positionAccess.canCreate, canUpdatePosition: positionAccess.canUpdate, canArchivePosition: positionAccess.canArchive },
+    summary: {
+      childCount: unit.children.length,
+      positionCount: positions.length,
+      totalCapacity: positions.reduce((sum, position) => sum + position.capacity, 0),
+      activeAssignmentCount: activeAssignments.length,
+      uniqueEmployeeCount: new Set(activeAssignments.map((assignment) => assignment.employeeId)).size,
+      remainingCapacity: positions.filter((position) => position.status === 'ACTIVE').reduce((sum, position) => sum + Math.max(0, position.remainingCapacity), 0),
+      unassignedCount: positions.filter((position) => position.status === 'ACTIVE' && position.activeAssignmentCount === 0).length,
+      overCapacityCount: positions.filter((position) => position.remainingCapacity < 0).length,
+    },
+  };
+}
+
+export async function getPositionProfile(id: string) {
+  const [{ tenantId, access }, employeeAccess] = await Promise.all([requirePositionAccess('view'), getEmployeeAccess()]);
+  const canSeePeople = access.canViewAssignments && employeeAccess.canView;
+  const position = await prisma.position.findFirst({
+    where: { id, organizationUnit: { tenantId } },
+    include: {
+      organizationUnit: { select: { id: true, title: true, status: true } }, jobProfile: true,
+      reportsToPosition: { select: { id: true, title: true, organizationUnit: { select: { id: true, title: true } } } },
+      assignments: { include: { employee: { select: { id: true, firstName: true, lastName: true, personnelCode: true, isActive: true } } } },
+    },
+  });
+  if (!position) return null;
+  const current = assignmentIsCurrent(new Date().toISOString().slice(0, 10));
+  const activeAssignments = position.assignments.filter(current);
+  const [availablePositions, jobProfiles] = await Promise.all([
+    prisma.position.findMany({ where: { organizationUnit: { tenantId }, status: { not: 'ARCHIVED' }, id: { not: id } }, select: { id: true, title: true, reportsToPositionId: true, organizationUnit: { select: { title: true } } }, orderBy: { title: 'asc' } }),
+    prisma.jobProfile.findMany({ where: { tenantId, status: { not: 'ARCHIVED' } }, select: { id: true, title: true, code: true }, orderBy: { title: 'asc' } }),
+  ]);
+  const missingItems = [!position.code && 'کد سمت', !position.jobProfileId && 'پروفایل شغلی', !position.reportsToPositionId && 'سمت بالادست', !position.jobProfile?.purpose && 'هدف شغل', !(Array.isArray(position.jobProfile?.mainTasks) && position.jobProfile.mainTasks.length) && 'وظایف اصلی', !position.jobProfile?.minimumEducation && 'شرایط احراز'].filter(Boolean) as string[];
+  return { ...position, assignments: canSeePeople ? position.assignments : [], activeAssignments: canSeePeople ? activeAssignments : [], activeAssignmentCount: activeAssignments.length, remainingCapacity: position.capacity - activeAssignments.length, canSeePeople, access, availablePositions, jobProfiles, completion: { completed: 6 - missingItems.length, total: 6, missingItems } };
+}
+
 export async function getOrganizationUnitFormOptions(excludeId?: string) {
   const { tenantId } = await requireOrganizationUnitAccess('update');
   const [units, employees] = await Promise.all([
@@ -1128,7 +1216,7 @@ export async function getEmployee(id: string) {
           position: { select: { id: true, title: true, code: true, status: true } },
         },
       },
-      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: true } },
+      workGroupMemberships: { where: { workGroup: { tenantId }, isCurrent: true }, include: { workGroup: { include: { location: { select: { id: true, title: true } } } } } },
     },
   });
 }

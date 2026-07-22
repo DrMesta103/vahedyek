@@ -1,0 +1,166 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=e59] [cursor=pointer]
+  - generic [ref=e63]:
+    - generic [ref=e64]:
+      - navigation "مسیر صفحه" [ref=e66]:
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - button "خانه" [ref=e69] [cursor=pointer]
+          - listitem [ref=e71]
+          - listitem [ref=e75]:
+            - generic [ref=e76]: واحدهای سازمانی
+      - main [ref=e78]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - heading "واحدها و سمت‌های سازمانی" [level=1] [ref=e83]
+              - paragraph [ref=e84]: ساختار سازمان، واحدها، زیرواحدها، سمت‌ها و افراد منصوب‌شده را مدیریت کنید.
+            - button "افزودن واحد سازمانی" [ref=e85] [cursor=pointer]:
+              - generic [ref=e86]: +
+              - text: افزودن واحد سازمانی
+          - region "آمار ساختار سازمانی" [ref=e87]:
+            - article [ref=e88]:
+              - generic [ref=e89]: کل واحدها
+              - strong [ref=e90]: ۰
+            - article [ref=e91]:
+              - generic [ref=e92]: واحد فعال
+              - strong [ref=e93]: ۰
+            - article [ref=e94]:
+              - generic [ref=e95]: زیرواحدها
+              - strong [ref=e96]: ۰
+            - article [ref=e97]:
+              - generic [ref=e98]: کل سمت‌ها
+              - strong [ref=e99]: ۰
+            - article [ref=e100]:
+              - generic [ref=e101]: سمت بدون متصدی
+              - strong [ref=e102]: ۰
+            - article [ref=e103]:
+              - generic [ref=e104]: سمت با ظرفیت خالی
+              - strong [ref=e105]: ۰
+            - article [ref=e106]:
+              - generic [ref=e107]: کارکنان منصوب‌شده
+              - strong [ref=e108]: ۰
+            - article [ref=e109]:
+              - generic [ref=e110]: واحد بدون مدیر
+              - strong [ref=e111]: ۰
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - generic [ref=e117]: جستجو
+              - textbox "جستجو" [ref=e118]:
+                - /placeholder: جستجو بر اساس نام واحد، سمت، کد واحد یا مدیر واحد...
+            - combobox "وضعیت واحد" [ref=e119]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "فعال"
+              - option "غیرفعال"
+              - option "آرشیوی"
+            - combobox "نوع واحد" [ref=e120]:
+              - option "همه نوع‌ها" [selected]
+            - combobox "وضعیت سمت" [ref=e121]:
+              - option "همه سمت‌ها" [selected]
+              - option "دارای سمت"
+              - option "بدون سمت"
+              - option "بدون متصدی"
+              - option "ظرفیت خالی"
+              - option "تکمیل ظرفیت"
+            - combobox "مدیریت" [ref=e122]:
+              - option "همه مدیران" [selected]
+              - option "دارای مدیر"
+              - option "بدون مدیر"
+            - generic [ref=e123]:
+              - button "فهرست" [pressed] [ref=e124] [cursor=pointer]
+              - button "درخت" [ref=e127] [cursor=pointer]
+          - generic [ref=e133]:
+            - heading "هنوز واحد سازمانی تعریف نشده است." [level=2] [ref=e138]
+            - button "افزودن واحد سازمانی" [ref=e139] [cursor=pointer]
+    - complementary [ref=e141]:
+      - generic [ref=e142]:
+        - generic [ref=e143]: Q
+        - generic [ref=e144]:
+          - generic [ref=e145]: QA Phase3
+          - generic [ref=e146]: +98 9352720999
+      - generic [ref=e147]:
+        - generic [ref=e148]: PH
+        - generic [ref=e149]:
+          - generic [ref=e150]: Phase3 Closure QA
+          - generic [ref=e151]: phase3-closure-qa
+        - button "تغییر کسب و کار" [ref=e152] [cursor=pointer]
+      - generic [ref=e155]:
+        - button "خروج" [ref=e156] [cursor=pointer]
+        - button "اعلان‌ها" [ref=e161] [cursor=pointer]:
+          - generic [ref=e166]: "1"
+        - button "تنظیمات کلی" [ref=e167] [cursor=pointer]
+        - button "داشبورد" [ref=e172] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=e177] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=e185]:
+        - link "راه‌اندازی سریع" [ref=e186] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=e191] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=e197] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=e203] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=e208] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=e213] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=e221] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=e228] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=e235] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=e242] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=e248] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=e254] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=e261] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=e266] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=e272] [cursor=pointer]:
+        - paragraph [ref=e273]: tenant فعال
+        - button "Phase3 Closure QA" [ref=e274]
+      - generic [ref=e275]:
+        - button "جمع کردن سایدبار" [expanded] [ref=e277] [cursor=pointer]
+        - generic [ref=e280]: 0.8.0
+  - dialog [ref=e281]:
+    - banner [ref=e282]:
+      - generic [ref=e283]:
+        - heading "تنظیمات ضروری این کسب‌وکار هنوز کامل نشده است" [level=2] [ref=e284]
+        - button "بستن" [ref=e285] [cursor=pointer]
+      - paragraph [ref=e289]: برای اینکه تردد، درخواست‌ها و مدیریت کارکنان بدون اختلال کار کند، این تنظیمات را تکمیل کنید.
+    - generic [ref=e291]:
+      - generic [ref=e293]:
+        - generic [ref=e294]: اقدام پیشنهادی بعدی
+        - heading "محل کار هنوز ثبت نشده است." [level=3] [ref=e295]
+        - paragraph [ref=e296]: برای اینکه کارکنان بتوانند ورود و خروج خود را با موبایل ثبت کنند، باید محل کار و محدوده مجاز تردد مشخص شود.
+      - generic [ref=e297]:
+        - generic [ref=e298]:
+          - strong [ref=e299]: این تنظیمات هنوز وارد نشده‌اند
+          - generic [ref=e300]: 5 مورد ناقص
+        - list [ref=e301]:
+          - listitem [ref=e302]:
+            - generic [ref=e303]: محل کار
+            - generic [ref=e304]: ناقص
+          - listitem [ref=e305]:
+            - generic [ref=e306]: تقویم کاری
+            - generic [ref=e307]: ناقص
+          - listitem [ref=e308]:
+            - generic [ref=e309]: سیاست کاری
+            - generic [ref=e310]: ناقص
+          - listitem [ref=e311]:
+            - generic [ref=e312]: کارمندان
+            - generic [ref=e313]: ناقص
+          - listitem [ref=e314]:
+            - generic [ref=e315]: گروه‌های کاری
+            - generic [ref=e316]: ناقص
+    - contentinfo [ref=e317]:
+      - generic [ref=e318]:
+        - link "ثبت محل کار" [ref=e319] [cursor=pointer]:
+          - /url: /locations
+        - button "مجدد یادآوری کن" [ref=e320] [cursor=pointer]

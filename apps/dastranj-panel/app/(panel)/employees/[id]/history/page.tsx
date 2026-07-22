@@ -2,12 +2,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '../../../../lib/prisma';
 import { getSessionContext } from '../../../../lib/auth';
-import { requireEmployeeAccess } from '../../../../lib/organization-unit-access';
+import { getEmployeeAccess } from '../../../../lib/organization-unit-access';
 import { formatPersianDate } from '../../../../lib/format-date';
 
 export default async function EmployeeHistoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireEmployeeAccess('historyView');
+  const access = await getEmployeeAccess();
+  if (!access.canHistoryView) {
+    return <main className="page-stack module-page" dir="rtl" lang="fa"><section className="employee-detail-section"><div className="employee-detail-section-head"><h2>دسترسی به تاریخچه محدود است</h2><p>برای مشاهدهٔ رویدادهای حساس پرونده، مجوز تاریخچهٔ کارمندان لازم است.</p></div></section></main>;
+  }
   const session = await getSessionContext();
   if (!session?.tenantId) notFound();
   const employee = await prisma.employee.findFirst({ where: { id, tenantId: session.tenantId }, select: { id: true, firstName: true, lastName: true } });

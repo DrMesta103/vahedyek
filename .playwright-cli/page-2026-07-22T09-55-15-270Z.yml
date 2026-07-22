@@ -1,0 +1,159 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e35] [cursor=pointer]
+  - alert [ref=e29]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=e59] [cursor=pointer]
+  - generic [ref=e63]:
+    - generic [ref=e64]:
+      - navigation "مسیر صفحه" [ref=e66]:
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - button "خانه" [ref=e69] [cursor=pointer]
+          - listitem [ref=e71]
+          - listitem [ref=e75]:
+            - generic [ref=e76]: واحدهای سازمانی
+      - main [ref=e78]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - heading "واحدها و سمت‌های سازمانی" [level=1] [ref=e83]
+              - paragraph [ref=e84]: ساختار سازمان، واحدها، زیرواحدها، سمت‌ها و افراد منصوب‌شده را مدیریت کنید.
+            - button "افزودن واحد سازمانی" [ref=e85] [cursor=pointer]:
+              - generic [ref=e86]: +
+              - text: افزودن واحد سازمانی
+          - region "آمار ساختار سازمانی" [ref=e87]:
+            - article [ref=e88]:
+              - generic [ref=e89]: کل واحدها
+              - strong [ref=e90]: ۳
+            - article [ref=e91]:
+              - generic [ref=e92]: واحد فعال
+              - strong [ref=e93]: ۳
+            - article [ref=e94]:
+              - generic [ref=e95]: زیرواحدها
+              - strong [ref=e96]: ۲
+            - article [ref=e97]:
+              - generic [ref=e98]: کل سمت‌ها
+              - strong [ref=e99]: ۱
+            - article [ref=e100]:
+              - generic [ref=e101]: سمت بدون متصدی
+              - strong [ref=e102]: ۰
+            - article [ref=e103]:
+              - generic [ref=e104]: سمت با ظرفیت خالی
+              - strong [ref=e105]: ۰
+            - article [ref=e106]:
+              - generic [ref=e107]: کارکنان منصوب‌شده
+              - strong [ref=e108]: ۲
+            - article [ref=e109]:
+              - generic [ref=e110]: واحد بدون مدیر
+              - strong [ref=e111]: ۳
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - generic [ref=e117]: جستجو
+              - textbox "جستجو" [active] [ref=e118]:
+                - /placeholder: جستجو بر اساس نام واحد، سمت، کد واحد یا مدیر واحد...
+                - text: Closure Team
+            - combobox "وضعیت واحد" [ref=e119]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "فعال"
+              - option "غیرفعال"
+              - option "آرشیوی"
+            - combobox "نوع واحد" [ref=e120]:
+              - option "همه نوع‌ها" [selected]
+              - option "واحد"
+              - option "تیم"
+            - combobox "وضعیت سمت" [ref=e121]:
+              - option "همه سمت‌ها" [selected]
+              - option "دارای سمت"
+              - option "بدون سمت"
+              - option "بدون متصدی"
+              - option "ظرفیت خالی"
+              - option "تکمیل ظرفیت"
+            - combobox "مدیریت" [ref=e122]:
+              - option "همه مدیران" [selected]
+              - option "دارای مدیر"
+              - option "بدون مدیر"
+            - generic [ref=e123]:
+              - button "فهرست" [pressed] [ref=e124] [cursor=pointer]
+              - button "درخت" [ref=e127] [cursor=pointer]
+          - article [ref=e220]:
+            - generic [ref=e222]:
+              - link [ref=e223] [cursor=pointer]:
+                - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx
+                - strong [ref=e224]: Closure Team
+              - generic [ref=e225]: CLOSE-TEAM-0722 · تیم
+            - generic [ref=e226]:
+              - generic [ref=e227]: واحد بالادست
+              - generic [ref=e228]: Closure Department
+            - generic [ref=e229]:
+              - generic [ref=e230]: مدیر
+              - generic [ref=e231]: بدون مدیر
+            - generic [ref=e232]:
+              - generic "زیرواحد" [ref=e233]: "0"
+              - generic "سمت" [ref=e239]: "0"
+              - generic "کارمند فعال" [ref=e243]: "0"
+            - generic [ref=e248]: فعال
+            - time [ref=e249]: ۱۴۰۵/۴/۳۱
+            - generic [ref=e250]:
+              - button "افزودن زیرواحد" [ref=e251] [cursor=pointer]
+              - link "مشاهده پروفایل" [ref=e252] [cursor=pointer]:
+                - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx
+              - button "افزودن سمت" [ref=e253] [cursor=pointer]
+              - link "ویرایش Closure Team" [ref=e254] [cursor=pointer]:
+                - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx/edit
+                - text: ویرایش
+              - button "غیرفعال" [ref=e256] [cursor=pointer]
+              - button "آرشیو" [ref=e258] [cursor=pointer]
+              - button "حذف" [ref=e260] [cursor=pointer]
+    - complementary [ref=e262]:
+      - generic [ref=e263]:
+        - generic [ref=e264]: Q
+        - generic [ref=e265]:
+          - generic [ref=e266]: QA Phase3
+          - generic [ref=e267]: +98 9352720999
+      - generic [ref=e268]:
+        - generic [ref=e269]: PH
+        - generic [ref=e270]:
+          - generic [ref=e271]: Phase3 Closure QA
+          - generic [ref=e272]: phase3-closure-qa
+        - button "تغییر کسب و کار" [ref=e273] [cursor=pointer]
+      - generic [ref=e276]:
+        - button "خروج" [ref=e277] [cursor=pointer]
+        - button "اعلان‌ها" [ref=e282] [cursor=pointer]:
+          - generic [ref=e287]: "1"
+        - button "تنظیمات کلی" [ref=e288] [cursor=pointer]
+        - button "داشبورد" [ref=e293] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=e298] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=e306]:
+        - link "راه‌اندازی سریع" [ref=e307] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=e312] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=e318] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=e324] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=e329] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=e334] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=e342] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=e349] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=e356] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=e363] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=e369] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=e375] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=e382] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=e387] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=e393] [cursor=pointer]:
+        - paragraph [ref=e394]: tenant فعال
+        - button "Phase3 Closure QA" [ref=e395]
+      - generic [ref=e396]:
+        - button "جمع کردن سایدبار" [expanded] [ref=e398] [cursor=pointer]
+        - generic [ref=e401]: 0.8.0

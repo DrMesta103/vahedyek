@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "ورود" [level=1] [ref=e5]
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - generic [ref=e9]: ایمیل یا شماره موبایل
+          - generic [ref=e10]:
+            - generic [ref=e11]: "*"
+            - generic [ref=e12]: الزامی
+        - generic [ref=e14]:
+          - generic [ref=e15]: IR +98
+          - textbox "ایمیل یا شماره موبایل الزامی" [ref=e16]:
+            - /placeholder: "9352720114"
+            - text: "3"
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: رمز عبور
+          - generic [ref=e20]:
+            - generic [ref=e21]: "*"
+            - generic [ref=e22]: الزامی
+        - textbox "رمز عبور الزامی" [ref=e25]: Phase3Local!Owner2026
+      - generic [ref=e40]: ایمیل یا شماره موبایل صحیح وارد کنید.
+      - button "ورود" [ref=e26] [cursor=pointer]
+    - paragraph [ref=e27]:
+      - text: حساب ندارید؟
+      - link "ثبت‌نام کنید" [ref=e28] [cursor=pointer]:
+        - /url: /register
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]

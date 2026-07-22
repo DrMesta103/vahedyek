@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: ساخت حساب جدید
+      - heading "حساب را بسازید و tenant خودتان را در چند قدم فعال کنید" [level=1] [ref=e6]
+      - paragraph [ref=e7]: پس از ثبت‌نام، مسیر انتخاب پکیج، ساخت کسب‌وکار و ورود به پنل اصلی در همان flow ادامه پیدا می‌کند.
+      - generic [ref=e8]:
+        - generic [ref=e9]: ثبت‌نام سریع
+        - generic [ref=e10]: مالک tenant روی همین حساب
+        - generic [ref=e11]: مناسب تیم‌های ایرانی
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: شروع با دسترنج
+        - heading "ثبت‌نام" [level=1] [ref=e15]
+        - paragraph [ref=e16]: حساب جدید بسازید تا بعد از آن کسب‌وکار خودتان را ایجاد کنیم.
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]:
+              - generic [ref=e21]: نام
+              - generic [ref=e22]:
+                - generic [ref=e23]: "*"
+                - generic [ref=e24]: الزامی
+            - textbox "نام الزامی" [ref=e27]
+          - generic [ref=e28]:
+            - generic [ref=e29]:
+              - generic [ref=e30]: نام خانوادگی
+              - generic [ref=e31]:
+                - generic [ref=e32]: "*"
+                - generic [ref=e33]: الزامی
+            - textbox "نام خانوادگی الزامی" [ref=e36]
+        - generic [ref=e37]:
+          - generic [ref=e38]:
+            - generic [ref=e39]: ایمیل یا شماره موبایل
+            - generic [ref=e40]:
+              - generic [ref=e41]: "*"
+              - generic [ref=e42]: الزامی
+          - generic [ref=e44]:
+            - generic [ref=e45]: IR +98
+            - textbox "ایمیل یا شماره موبایل الزامی" [ref=e46]:
+              - /placeholder: "9352720114"
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: رمز عبور
+            - generic [ref=e50]:
+              - generic [ref=e51]: "*"
+              - generic [ref=e52]: الزامی
+          - textbox "رمز عبور الزامی" [ref=e55]:
+            - /placeholder: حداقل ۶ کاراکتر
+        - button "ثبت‌نام" [ref=e56] [cursor=pointer]
+      - paragraph [ref=e57]:
+        - text: حساب دارید؟
+        - link "وارد شوید" [ref=e58] [cursor=pointer]:
+          - /url: /login
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]

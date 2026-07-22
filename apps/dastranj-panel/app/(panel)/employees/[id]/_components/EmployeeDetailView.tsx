@@ -32,7 +32,7 @@ import { computeSupplementalCompleteness } from '../../../../lib/employee-supple
 import type { EmployeeCurrentContractSummary } from '../../../../lib/employee-contracts';
 import type { EmployeeSupplementalProfile } from '../../../../lib/employee-contract-drafts';
 import { EditEmployeeFlow, type EditEmployeeData } from './EditEmployeeFlow';
-import { toggleEmployeeActiveAction } from '../../../../lib/actions';
+import { createEmployeeTerminationIntentAction, toggleEmployeeActiveAction } from '../../../../lib/actions';
 
 type EmployeeDetailSection = {
   title: string;
@@ -62,7 +62,10 @@ type EmployeeDetailData = EditEmployeeData & {
     user: { id: string; firstName: string; lastName: string; email: string | null; mobile: string | null };
     roles: Array<{ key: string; label: string }>;
   } | null;
-  workGroups?: Array<{ id: string; title: string }>;
+  workGroups?: Array<{ id: string; title: string; location?: { id: string; title: string } | null }>;
+  workLocation?: string | null;
+  employmentStartDate?: string | null;
+  accountState?: string;
   organizationUnits?: Array<{
     id: string;
     title: string;
@@ -274,6 +277,8 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
   const organizationUnits = employee.organizationUnits ?? [];
   const workGroups = employee.workGroups ?? [];
   const currentContract = employee.currentContract ?? null;
+  const contractDisplayKind = currentContract?.status === 'active' ? 'active' : currentContract ? 'historical' : 'none';
+  const contractDisplayLabel = contractDisplayKind === 'active' ? 'Active contract' : contractDisplayKind === 'historical' ? 'Historical contract' : 'No active contract';
   const contractProgress = getEmployeeContractProfileProgress(currentContract);
   const contractTimeline = getEmployeeContractTimelineProgress(currentContract);
   const profileCompletion = computeSupplementalCompleteness(employee.supplemental, employee);
@@ -317,7 +322,9 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
             </div>
             <div className="employee-detail-status-badges employee-detail-status-badges--summary">
               <span className="employee-detail-status-badge is-solid">{lifecycleStatus}</span>
-              <span className="employee-detail-status-badge is-outline">{employee.userTenantMembership ? 'User connected' : 'No user account'}</span>
+              <span className="employee-detail-status-badge is-outline">{employee.accountState ?? (employee.userTenantMembership ? 'User connected' : 'No user account')}</span>
+              <span className="employee-detail-status-badge is-outline">{employee.workLocation ? `محل کار: ${employee.workLocation}` : 'محل کار ثبت نشده است.'}</span>
+              <span className="employee-detail-status-badge is-outline">{employee.employmentStartDate ? `شروع همکاری: ${formatPersianDate(employee.employmentStartDate)}` : 'تاریخ شروع همکاری ثبت نشده است.'}</span>
               <span className="employee-detail-status-badge is-outline">{profileCompletion}% profile</span>
             </div>
             <div className="employee-detail-hero-profile-actions">
@@ -336,6 +343,14 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
                   <button type="submit" className="employee-detail-action-btn">
                     {employee.isActive ? 'Disable' : 'Reactivate'}
                   </button>
+                </form>
+              ) : null}
+              {employee.permissions.canDisable ? (
+                <form action={createEmployeeTerminationIntentAction} onSubmit={(event) => {
+                  if (!window.confirm('فقط درخواست شروع فرآیند ثبت می‌شود و وضعیت کارمند تغییر نمی‌کند. ادامه می‌دهید؟')) event.preventDefault();
+                }}>
+                  <input type="hidden" name="employeeId" value={employee.id} />
+                  <button type="submit" className="employee-detail-action-btn">شروع فرآیند خاتمه همکاری</button>
                 </form>
               ) : null}
               <Link href={`/employees/${employee.id}/guarantee`} className="employee-detail-action-btn">
@@ -360,6 +375,14 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               <div className="employee-detail-contract-item">
                 <span>مبلغ قرارداد</span>
                 <strong>{currentContract?.dailyBaseSalary ? `${formatFaNumber(currentContract.dailyBaseSalary)} ریال روزانه` : 'ثبت نشده'}</strong>
+              </div>
+              <div className="employee-detail-contract-item">
+                <span>نوع قرارداد</span>
+                <strong>{normalizeDisplay(currentContract?.templateName ?? currentContract?.jobTitle ?? null)}</strong>
+              </div>
+              <div className="employee-detail-contract-item">
+                <span>وضعیت قرارداد</span>
+                <strong>{contractDisplayKind === 'active' ? 'فعال' : contractDisplayKind === 'historical' ? 'پایان‌یافته' : 'ثبت نشده'}</strong>
               </div>
               <div className="employee-detail-contract-item is-wide">
                 <span>مدت قرارداد</span>
@@ -388,7 +411,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
             </div>
             <div className="employee-detail-status-badges">
               <span className="employee-detail-status-badge is-outline">{primaryAssignment?.position?.title || currentContract?.jobTitle || 'عنوان شغلی ثبت نشده'}</span>
-              <span className="employee-detail-status-badge is-solid">{currentContract ? 'قرارداد فعال' : 'فاقد قرارداد'}</span>
+              <span className="employee-detail-status-badge is-solid">{contractDisplayKind === 'active' ? 'قرارداد فعال' : contractDisplayKind === 'historical' ? 'قرارداد تاریخی' : 'فاقد قرارداد'}</span>
             </div>
             <div className="employee-detail-status-stats">
               <p>
@@ -436,7 +459,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
         <section className="employee-detail-contract-timeline" aria-label="Contract timeline">
           <div className="employee-detail-section-head">
             <h3>Contract timeline</h3>
-            <span className="employee-detail-status-badge is-outline">{currentContract ? 'Active contract' : 'No active contract'}</span>
+            <span className="employee-detail-status-badge is-outline">{contractDisplayLabel}</span>
           </div>
           {contractTimeline.hasTimeline ? (
             <div className="employee-detail-timeline-grid">
@@ -447,7 +470,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               <div><span>Remaining</span><strong>{formatFaNumber(contractTimeline.remainingDays, { useGrouping: false })} ({contractTimeline.remainingPercent}%)</strong></div>
             </div>
           ) : (
-            <p className="employee-detail-empty-note">No active contract timeline is available.</p>
+            <p className="employee-detail-empty-note">No contract timeline is available.</p>
           )}
         </section>
 

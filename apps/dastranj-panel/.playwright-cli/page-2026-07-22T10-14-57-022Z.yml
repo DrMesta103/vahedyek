@@ -1,0 +1,454 @@
+- generic [active] [ref=f8e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f8e2] [cursor=pointer]
+  - generic [ref=f8e6]:
+    - generic [ref=f8e7]:
+      - navigation "مسیر صفحه" [ref=f8e9]:
+        - list [ref=f8e10]:
+          - listitem [ref=f8e11]:
+            - button "خانه" [ref=f8e12] [cursor=pointer]
+          - listitem [ref=f8e14]
+          - listitem [ref=f8e18]:
+            - button "کارمندان" [ref=f8e19] [cursor=pointer]
+          - listitem [ref=f8e21]
+          - listitem [ref=f8e25]:
+            - button "phase3-runtime-partial" [ref=f8e26] [cursor=pointer]
+          - listitem [ref=f8e28]
+          - listitem [ref=f8e32]:
+            - generic [ref=f8e33]: مشخصات
+      - main [ref=f8e35]:
+        - generic [ref=f8e37]:
+          - link "مشخصات کارمند" [ref=f8e40] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-partial
+          - generic [ref=f8e43]:
+            - generic [ref=f8e44]:
+              - link "بازگشت به جزئیات کارمند" [ref=f8e45] [cursor=pointer]:
+                - /url: /employees/phase3-runtime-partial
+              - button "ویرایش مشخصات" [ref=f8e48] [cursor=pointer]
+            - generic [ref=f8e49]:
+              - generic [ref=f8e50]:
+                - generic [ref=f8e51]:
+                  - heading "طرف دوم قرارداد" [level=3] [ref=f8e52]
+                  - generic [ref=f8e53]: کارمند
+                - button "ویرایش مشخصات کارمند" [ref=f8e54] [cursor=pointer]
+              - paragraph [ref=f8e58]:
+                - generic [ref=f8e61]: طرف دوم قرارداد، فردی است که تحت این قرارداد در سازمان استخدام می‌شود.
+              - generic [ref=f8e68]:
+                - generic [ref=f8e69]: "نام و نام خانوادگی:"
+                - strong [ref=f8e70]: Partial Profile
+              - generic [ref=f8e71]:
+                - heading "اطلاعات شخصی" [level=4] [ref=f8e72]
+                - generic [ref=f8e73]:
+                  - generic [ref=f8e74]:
+                    - generic [ref=f8e75]: نام پدر
+                    - strong [ref=f8e76]: ثبت نشده
+                  - generic [ref=f8e77]:
+                    - generic [ref=f8e78]: کدملی
+                    - strong [ref=f8e79]: "1234567891"
+                  - generic [ref=f8e80]:
+                    - generic [ref=f8e81]: تاریخ تولد
+                    - strong [ref=f8e82]: ثبت نشده
+                  - generic [ref=f8e83]:
+                    - generic [ref=f8e84]: محل صدور شناسنامه
+                    - strong [ref=f8e85]: ثبت نشده
+                  - generic [ref=f8e86]:
+                    - generic [ref=f8e87]: جنسیت
+                    - strong [ref=f8e88]: ثبت نشده
+                  - generic [ref=f8e89]:
+                    - generic [ref=f8e90]: وضعیت تأهل
+                    - strong [ref=f8e91]: مجرد
+                  - generic [ref=f8e92]:
+                    - generic [ref=f8e93]: تعداد فرزندان
+                    - strong [ref=f8e94]: ثبت نشده
+              - generic [ref=f8e95]:
+                - heading "اطلاعات تحصیلی" [level=4] [ref=f8e96]
+                - generic [ref=f8e98]:
+                  - generic [ref=f8e99]: مدرک 1
+                  - generic [ref=f8e100]:
+                    - generic [ref=f8e101]:
+                      - generic [ref=f8e102]: رشته تحصیلی
+                      - strong [ref=f8e103]: ثبت نشده
+                    - generic [ref=f8e104]:
+                      - generic [ref=f8e105]: مدرک تحصیلی
+                      - strong [ref=f8e106]: ثبت نشده
+              - generic [ref=f8e107]:
+                - heading "اطلاعات شغلی" [level=4] [ref=f8e108]
+                - generic [ref=f8e110]:
+                  - generic [ref=f8e111]: سابقه 1
+                  - generic [ref=f8e112]:
+                    - generic [ref=f8e113]:
+                      - generic [ref=f8e114]: عنوان شغل
+                      - strong [ref=f8e115]: ثبت نشده
+                    - generic [ref=f8e116]:
+                      - generic [ref=f8e117]: تاریخ شروع
+                      - strong [ref=f8e118]: ثبت نشده
+              - generic [ref=f8e119]:
+                - heading "اطلاعات نظام وظیفه" [level=4] [ref=f8e120]
+                - generic [ref=f8e122]:
+                  - generic [ref=f8e123]: وضعیت نظام وظیفه
+                  - strong [ref=f8e124]: ثبت نشده
+              - generic [ref=f8e125]:
+                - heading "اطلاعات آدرس" [level=4] [ref=f8e126]
+                - generic [ref=f8e127]:
+                  - generic [ref=f8e128]:
+                    - generic [ref=f8e129]: کشور
+                    - strong [ref=f8e130]: ثبت نشده
+                  - generic [ref=f8e131]:
+                    - generic [ref=f8e132]: استان
+                    - strong [ref=f8e133]: ثبت نشده
+                  - generic [ref=f8e134]:
+                    - generic [ref=f8e135]: شهر
+                    - strong [ref=f8e136]: ثبت نشده
+                  - generic [ref=f8e137]:
+                    - generic [ref=f8e138]: خیابان
+                    - strong [ref=f8e139]: ثبت نشده
+                  - generic [ref=f8e140]:
+                    - generic [ref=f8e141]: کوچه
+                    - strong [ref=f8e142]: ثبت نشده
+                  - generic [ref=f8e143]:
+                    - generic [ref=f8e144]: نام ساختمان
+                    - strong [ref=f8e145]: ثبت نشده
+                  - generic [ref=f8e146]:
+                    - generic [ref=f8e147]: پلاک
+                    - strong [ref=f8e148]: ثبت نشده
+                  - generic [ref=f8e149]:
+                    - generic [ref=f8e150]: طبقه
+                    - strong [ref=f8e151]: ثبت نشده
+                  - generic [ref=f8e152]:
+                    - generic [ref=f8e153]: واحد
+                    - strong [ref=f8e154]: ثبت نشده
+                  - generic [ref=f8e155]:
+                    - generic [ref=f8e156]: کد پستی سکونت
+                    - strong [ref=f8e157]: ثبت نشده
+              - generic [ref=f8e158]: "تکمیل مشخصات: ۹%"
+              - button "جزئیات کمتر" [expanded] [ref=f8e160] [cursor=pointer]
+            - generic [ref=f8e163]:
+              - generic [ref=f8e164]:
+                - heading "دسته‌های پرونده" [level=2] [ref=f8e165]
+                - paragraph [ref=f8e166]: اطلاعات اختیاری، تکمیل اجباری پرونده را کاهش نمی‌دهند.
+              - generic [ref=f8e167]:
+                - article [ref=f8e168]:
+                  - generic [ref=f8e169]:
+                    - heading "اطلاعات شخصی" [level=3] [ref=f8e170]
+                    - paragraph [ref=f8e171]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e172]:
+                  - generic [ref=f8e173]:
+                    - heading "تماس و اضطراری" [level=3] [ref=f8e174]
+                    - paragraph [ref=f8e175]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e176]:
+                  - generic [ref=f8e177]:
+                    - heading "خانوادگی" [level=3] [ref=f8e178]
+                    - paragraph [ref=f8e179]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e180]:
+                  - generic [ref=f8e181]:
+                    - heading "تحصیلات" [level=3] [ref=f8e182]
+                    - paragraph [ref=f8e183]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e184]:
+                  - generic [ref=f8e185]:
+                    - heading "سوابق شغلی" [level=3] [ref=f8e186]
+                    - paragraph [ref=f8e187]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e188]:
+                  - generic [ref=f8e189]:
+                    - heading "مهارت‌ها" [level=3] [ref=f8e190]
+                    - paragraph [ref=f8e191]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e192]:
+                  - generic [ref=f8e193]:
+                    - heading "سازمانی و استخدامی" [level=3] [ref=f8e194]
+                    - paragraph [ref=f8e195]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e196]:
+                  - generic [ref=f8e197]:
+                    - heading "نظام وظیفه" [level=3] [ref=f8e198]
+                    - paragraph [ref=f8e199]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e200]:
+                  - generic [ref=f8e201]:
+                    - heading "آدرس" [level=3] [ref=f8e202]
+                    - paragraph [ref=f8e203]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e204]:
+                  - generic [ref=f8e205]:
+                    - heading "علایق" [level=3] [ref=f8e206]
+                    - paragraph [ref=f8e207]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e208]:
+                  - generic [ref=f8e209]:
+                    - heading "ترجیحات کاری" [level=3] [ref=f8e210]
+                    - paragraph [ref=f8e211]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e212]:
+                  - generic [ref=f8e213]:
+                    - heading "مدارک" [level=3] [ref=f8e214]
+                    - paragraph [ref=f8e215]: این قابلیت در دست توسعه است.
+                - article [ref=f8e216]:
+                  - generic [ref=f8e217]:
+                    - heading "اطلاعات بانکی" [level=3] [ref=f8e218]
+                    - paragraph [ref=f8e219]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e220]:
+                  - generic [ref=f8e221]:
+                    - heading "آموزش" [level=3] [ref=f8e222]
+                    - paragraph [ref=f8e223]: این قابلیت در دست توسعه است.
+                - article [ref=f8e224]:
+                  - generic [ref=f8e225]:
+                    - heading "دسترسی‌ها" [level=3] [ref=f8e226]
+                    - paragraph [ref=f8e227]: منبع داده واقعی پرونده کارمند
+                - article [ref=f8e228]:
+                  - generic [ref=f8e229]:
+                    - heading "تاریخچه" [level=3] [ref=f8e230]
+                    - paragraph [ref=f8e231]: منبع داده واقعی پرونده کارمند
+            - generic [ref=f8e232]:
+              - generic [ref=f8e233]:
+                - heading "وضعیت تکمیل پرونده" [level=2] [ref=f8e234]
+                - paragraph [ref=f8e235]: "57% تکمیل الزامی · سطح فعلی: 1 · نیاز سطح 2: شهر، حساب بانکی"
+              - generic [ref=f8e236]:
+                - article [ref=f8e237]:
+                  - generic [ref=f8e238]:
+                    - heading "سطح 1" [level=3] [ref=f8e239]
+                    - paragraph [ref=f8e240]: 2 از 2 دسته کامل
+                - article [ref=f8e241]:
+                  - generic [ref=f8e242]:
+                    - heading "سطح 2" [level=3] [ref=f8e243]
+                    - paragraph [ref=f8e244]: 1 از 8 دسته کامل
+                - article [ref=f8e245]:
+                  - generic [ref=f8e246]:
+                    - heading "سطح 3" [level=3] [ref=f8e247]
+                    - paragraph [ref=f8e248]: 2 از 5 دسته کامل
+                - article [ref=f8e249]:
+                  - generic [ref=f8e250]:
+                    - heading "سطح 4" [level=3] [ref=f8e251]
+                    - paragraph [ref=f8e252]: 0 از 1 دسته کامل
+            - generic [ref=f8e253]:
+              - heading "نواقص پرونده" [level=2] [ref=f8e255]
+              - generic [ref=f8e256]:
+                - article [ref=f8e257]:
+                  - generic [ref=f8e258]:
+                    - heading "شهر ثبت نشده است." [level=3] [ref=f8e259]
+                    - paragraph [ref=f8e260]: آدرس · اهمیت مهم
+                  - link "مشاهده و تکمیل" [ref=f8e261] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#address
+                - article [ref=f8e262]:
+                  - generic [ref=f8e263]:
+                    - heading "حساب بانکی ثبت نشده است." [level=3] [ref=f8e264]
+                    - paragraph [ref=f8e265]: اطلاعات بانکی · اهمیت مهم
+                  - link "مشاهده و تکمیل" [ref=f8e266] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/bank-accounts
+                - article [ref=f8e267]:
+                  - generic [ref=f8e268]:
+                    - heading "مهارت ثبت نشده است." [level=3] [ref=f8e269]
+                    - paragraph [ref=f8e270]: مهارت‌ها · اهمیت عادی
+                  - link "مشاهده و تکمیل" [ref=f8e271] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#skills
+            - generic [ref=f8e272]:
+              - heading "ماتریس دسته‌های پرونده" [level=2] [ref=f8e274]
+              - generic [ref=f8e275]:
+                - article [ref=f8e276]:
+                  - generic [ref=f8e277]:
+                    - heading "اطلاعات شخصی" [level=3] [ref=f8e278]
+                    - paragraph [ref=f8e279]: 100% · 0 مورد ناقص · کامل
+                  - link "مشاهده و تکمیل" [ref=f8e280] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#personal
+                - article [ref=f8e281]:
+                  - generic [ref=f8e282]:
+                    - heading "اطلاعات تماس" [level=3] [ref=f8e283]
+                    - paragraph [ref=f8e284]: 100% · 0 مورد ناقص · کامل
+                  - link "مشاهده و تکمیل" [ref=f8e285] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#contact
+                - article [ref=f8e286]:
+                  - generic [ref=f8e287]:
+                    - heading "اطلاعات خانوادگی" [level=3] [ref=f8e288]
+                    - paragraph [ref=f8e289]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e290] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#family
+                - article [ref=f8e291]:
+                  - generic [ref=f8e292]:
+                    - heading "اطلاعات تحصیلی" [level=3] [ref=f8e293]
+                    - paragraph [ref=f8e294]: 100% · 0 مورد ناقص · کامل
+                  - link "مشاهده و تکمیل" [ref=f8e295] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#education
+                - article [ref=f8e296]:
+                  - generic [ref=f8e297]:
+                    - heading "سوابق شغلی" [level=3] [ref=f8e298]
+                    - paragraph [ref=f8e299]: 100% · 0 مورد ناقص · کامل
+                  - link "مشاهده و تکمیل" [ref=f8e300] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#work-history
+                - article [ref=f8e301]:
+                  - generic [ref=f8e302]:
+                    - heading "مهارت‌ها" [level=3] [ref=f8e303]
+                    - paragraph [ref=f8e304]: 0% · 1 مورد ناقص · ناقص
+                  - link "مشاهده و تکمیل" [ref=f8e305] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#skills
+                - article [ref=f8e306]:
+                  - generic [ref=f8e307]:
+                    - heading "اطلاعات سازمانی" [level=3] [ref=f8e308]
+                    - paragraph [ref=f8e309]: 100% · 0 مورد ناقص · کامل
+                  - link "مشاهده و تکمیل" [ref=f8e310] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#organization
+                - article [ref=f8e311]:
+                  - generic [ref=f8e312]:
+                    - heading "نظام وظیفه" [level=3] [ref=f8e313]
+                    - paragraph [ref=f8e314]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e315] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#military
+                - article [ref=f8e316]:
+                  - generic [ref=f8e317]:
+                    - heading "آدرس" [level=3] [ref=f8e318]
+                    - paragraph [ref=f8e319]: 0% · 1 مورد ناقص · ناقص
+                  - link "مشاهده و تکمیل" [ref=f8e320] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#address
+                - article [ref=f8e321]:
+                  - generic [ref=f8e322]:
+                    - heading "علایق" [level=3] [ref=f8e323]
+                    - paragraph [ref=f8e324]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e325] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#interests
+                - article [ref=f8e326]:
+                  - generic [ref=f8e327]:
+                    - heading "ترجیحات کاری" [level=3] [ref=f8e328]
+                    - paragraph [ref=f8e329]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e330] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#preferences
+                - article [ref=f8e331]:
+                  - generic [ref=f8e332]:
+                    - heading "مدارک" [level=3] [ref=f8e333]
+                    - paragraph [ref=f8e334]: این قابلیت در دست توسعه است.
+                - article [ref=f8e335]:
+                  - generic [ref=f8e336]:
+                    - heading "اطلاعات بانکی" [level=3] [ref=f8e337]
+                    - paragraph [ref=f8e338]: "0% · 1 مورد ناقص · مهلت گذشته · مهلت: ۱۴۰۴/۱۰/۱۸"
+                  - link "مشاهده و تکمیل" [ref=f8e339] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/bank-accounts
+                - article [ref=f8e340]:
+                  - generic [ref=f8e341]:
+                    - heading "آموزش" [level=3] [ref=f8e342]
+                    - paragraph [ref=f8e343]: این قابلیت در دست توسعه است.
+                - article [ref=f8e344]:
+                  - generic [ref=f8e345]:
+                    - heading "دسترسی‌ها" [level=3] [ref=f8e346]
+                    - paragraph [ref=f8e347]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e348] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/profile#access
+                - article [ref=f8e349]:
+                  - generic [ref=f8e350]:
+                    - heading "تاریخچه" [level=3] [ref=f8e351]
+                    - paragraph [ref=f8e352]: 0% · 0 مورد ناقص · اختیاری
+                  - link "مشاهده و تکمیل" [ref=f8e353] [cursor=pointer]:
+                    - /url: /employees/phase3-runtime-partial/history
+            - generic [ref=f8e354]:
+              - heading "مهارت‌ها" [level=2] [ref=f8e356]
+              - generic [ref=f8e357]:
+                - textbox "عنوان مهارت" [ref=f8e358]
+                - combobox [ref=f8e359]:
+                  - option "فنی" [selected]
+                  - option "نرم"
+                  - option "رایانه‌ای"
+                  - option "زبان"
+                  - option "مدیریتی"
+                  - option "ارتباطی"
+                  - option "هنری"
+                  - option "ورزشی"
+                - combobox [ref=f8e360]:
+                  - option "مبتدی" [selected]
+                  - option "متوسط"
+                  - option "پیشرفته"
+                  - option "متخصص"
+                - textbox "توضیح" [ref=f8e361]
+                - button "افزودن مهارت" [ref=f8e362] [cursor=pointer]
+            - generic [ref=f8e363]:
+              - heading "علایق" [level=2] [ref=f8e365]
+              - generic [ref=f8e366]:
+                - textbox "عنوان علاقه" [ref=f8e367]
+                - combobox [ref=f8e368]:
+                  - option "ورزش"
+                  - option "هنر"
+                  - option "مطالعه"
+                  - option "سفر"
+                  - option "اجتماعی"
+                  - option "یادگیری"
+                  - option "داوطلبانه"
+                  - option "سایر" [selected]
+                - textbox "توضیح" [ref=f8e369]
+                - button "افزودن علاقه" [ref=f8e370] [cursor=pointer]
+            - generic [ref=f8e371]:
+              - generic [ref=f8e372]:
+                - heading "ترجیحات کاری" [level=2] [ref=f8e373]
+                - paragraph [ref=f8e374]: این موارد ترجیح کارمند هستند و تعهد قطعی محسوب نمی‌شوند.
+              - generic [ref=f8e375]:
+                - generic [ref=f8e376]:
+                  - checkbox "prefersOvertime" [ref=f8e377]
+                  - text: prefersOvertime
+                - generic [ref=f8e378]:
+                  - checkbox "prefersFridayWork" [ref=f8e379]
+                  - text: prefersFridayWork
+                - generic [ref=f8e380]:
+                  - checkbox "prefersBusinessTravel" [ref=f8e381]
+                  - text: prefersBusinessTravel
+                - generic [ref=f8e382]:
+                  - checkbox "canRelocate" [ref=f8e383]
+                  - text: canRelocate
+                - generic [ref=f8e384]:
+                  - checkbox "prefersRemote" [ref=f8e385]
+                  - text: prefersRemote
+                - generic [ref=f8e386]:
+                  - checkbox "prefersOnSite" [ref=f8e387]
+                  - text: prefersOnSite
+                - generic [ref=f8e388]:
+                  - checkbox "prefersHybrid" [ref=f8e389]
+                  - text: prefersHybrid
+                - generic [ref=f8e390]:
+                  - checkbox "prefersTeamWork" [ref=f8e391]
+                  - text: prefersTeamWork
+                - generic [ref=f8e392]:
+                  - checkbox "prefersIndividualWork" [ref=f8e393]
+                  - text: prefersIndividualWork
+                - generic [ref=f8e394]:
+                  - checkbox "prefersManagementRole" [ref=f8e395]
+                  - text: prefersManagementRole
+                - generic [ref=f8e396]:
+                  - checkbox "prefersExecutionRole" [ref=f8e397]
+                  - text: prefersExecutionRole
+                - button "ذخیره ترجیحات" [ref=f8e398] [cursor=pointer]
+    - complementary [ref=f8e400]:
+      - generic [ref=f8e401]:
+        - generic [ref=f8e402]: ؟
+        - generic [ref=f8e403]: در حال بارگذاری...
+      - generic [ref=f8e405]:
+        - generic [ref=f8e406]: TEN
+        - generic [ref=f8e407]: tenant
+        - button "تغییر کسب و کار" [ref=f8e409] [cursor=pointer]
+      - generic [ref=f8e412]:
+        - button "خروج" [ref=f8e413] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f8e418] [cursor=pointer]:
+          - generic [ref=f8e423]: "1"
+        - button "تنظیمات کلی" [ref=f8e424] [cursor=pointer]
+        - button "داشبورد" [ref=f8e429] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f8e434] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f8e442]:
+        - link "راه‌اندازی سریع" [ref=f8e443] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f8e448] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f8e454] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f8e460] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f8e465] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f8e470] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f8e478] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f8e485] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f8e492] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f8e499] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f8e505] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f8e511] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f8e518] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f8e523] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f8e529] [cursor=pointer]:
+        - paragraph [ref=f8e530]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f8e531]
+      - generic [ref=f8e532]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f8e534] [cursor=pointer]
+        - generic [ref=f8e537]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f8e543] [cursor=pointer]

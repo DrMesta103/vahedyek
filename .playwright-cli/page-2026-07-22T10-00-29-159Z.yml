@@ -1,0 +1,101 @@
+- generic [active] [ref=f26e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f26e2] [cursor=pointer]
+  - generic [ref=f26e6]:
+    - generic [ref=f26e7]:
+      - navigation "مسیر صفحه" [ref=f26e9]:
+        - list [ref=f26e10]:
+          - listitem [ref=f26e11]:
+            - button "خانه" [ref=f26e12] [cursor=pointer]
+          - listitem [ref=f26e14]
+          - listitem [ref=f26e18]:
+            - button "کارمندان" [ref=f26e19] [cursor=pointer]
+          - listitem [ref=f26e21]
+          - listitem [ref=f26e25]:
+            - button "phase3-runtime-complete" [ref=f26e26] [cursor=pointer]
+          - listitem [ref=f26e28]
+          - listitem [ref=f26e32]:
+            - generic [ref=f26e33]: history
+      - main [ref=f26e35]:
+        - main [ref=f26e37]:
+          - link "بازگشت به پرونده" [ref=f26e38] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-complete
+          - generic [ref=f26e39]:
+            - heading "تاریخچه تغییرات Complete Profile" [level=2] [ref=f26e41]
+            - generic [ref=f26e42]:
+              - article [ref=f26e43]:
+                - generic [ref=f26e44]:
+                  - heading "profile_approval_approved" [level=3] [ref=f26e45]
+                  - paragraph [ref=f26e46]: "فیلد: health · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f26e47]: "[REDACTED] ← [REDACTED]"
+              - article [ref=f26e48]:
+                - generic [ref=f26e49]:
+                  - heading "profile_approval_rejected" [level=3] [ref=f26e50]
+                  - paragraph [ref=f26e51]: "فیلد: health · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f26e52]: "[REDACTED] ← [REDACTED]"
+              - article [ref=f26e53]:
+                - generic [ref=f26e54]:
+                  - heading "profile_approval_approved" [level=3] [ref=f26e55]
+                  - paragraph [ref=f26e56]: "فیلد: health · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f26e57]: "[REDACTED] ← [REDACTED]"
+              - article [ref=f26e58]:
+                - generic [ref=f26e59]:
+                  - heading "profile_approval_pending_approval" [level=3] [ref=f26e60]
+                  - paragraph [ref=f26e61]: "فیلد: health · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f26e62]: "[REDACTED] ← [REDACTED]"
+              - article [ref=f26e63]:
+                - generic [ref=f26e64]:
+                  - heading "health_profile_submitted" [level=3] [ref=f26e65]
+                  - paragraph [ref=f26e66]: "فیلد: health · ۱۴۰۵/۰۴/۳۱"
+                  - paragraph [ref=f26e67]: — ← [REDACTED]
+    - complementary [ref=f26e69]:
+      - generic [ref=f26e70]:
+        - generic [ref=f26e71]: ؟
+        - generic [ref=f26e72]: در حال بارگذاری...
+      - generic [ref=f26e74]:
+        - generic [ref=f26e75]: TEN
+        - generic [ref=f26e76]: tenant
+        - button "تغییر کسب و کار" [ref=f26e78] [cursor=pointer]
+      - generic [ref=f26e81]:
+        - button "خروج" [ref=f26e82] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f26e87] [cursor=pointer]:
+          - generic [ref=f26e92]: "1"
+        - button "تنظیمات کلی" [ref=f26e93] [cursor=pointer]
+        - button "داشبورد" [ref=f26e98] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f26e103] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f26e111]:
+        - link "راه‌اندازی سریع" [ref=f26e112] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f26e117] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f26e123] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f26e129] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f26e134] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f26e139] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f26e147] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f26e154] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f26e161] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f26e168] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f26e174] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f26e180] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f26e187] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f26e192] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f26e198] [cursor=pointer]:
+        - paragraph [ref=f26e199]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f26e200]
+      - generic [ref=f26e201]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f26e203] [cursor=pointer]
+        - generic [ref=f26e206]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f26e212] [cursor=pointer]
+  - alert [ref=f26e216]

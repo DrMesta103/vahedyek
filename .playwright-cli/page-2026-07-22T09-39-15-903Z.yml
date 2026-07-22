@@ -1,0 +1,47 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]
+  - alert [ref=e68]
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - generic [ref=e102]: انتخاب کسب‌وکار
+        - heading "tenant جدید بسازید" [level=1] [ref=e103]
+        - paragraph [ref=e104]: فرآیند ساخت tenant در همین کارت و بدون باکس توضیحی ادامه پیدا می‌کند.
+      - generic [ref=e105]: ۱. پکیج
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - button "ماهانه" [ref=e109] [cursor=pointer]
+          - button "سالانه" [ref=e110] [cursor=pointer]
+        - generic [ref=e111]:
+          - button "استارتر برای شروع سریع و تیم‌های کوچک ۴۹۰ هزار تومان ۱ کسب‌وکار مدیریت پایه منابع انسانی پشتیبانی استاندارد" [ref=e112] [cursor=pointer]:
+            - generic [ref=e113]:
+              - generic [ref=e114]:
+                - generic [ref=e115]: استارتر
+                - generic [ref=e116]: برای شروع سریع و تیم‌های کوچک
+              - generic [ref=e117]: ۴۹۰ هزار تومان
+            - generic [ref=e118]:
+              - generic [ref=e119]: ۱ کسب‌وکار
+              - generic [ref=e120]: مدیریت پایه منابع انسانی
+              - generic [ref=e121]: پشتیبانی استاندارد
+          - button "رشد برای کسب‌وکارهای در حال توسعه ۹۹۰ هزار تومان چند کاربر همزمان گزارش‌های بیشتر فرم‌های پیشرفته‌تر" [ref=e122] [cursor=pointer]:
+            - generic [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]: رشد
+                - generic [ref=e126]: برای کسب‌وکارهای در حال توسعه
+              - generic [ref=e127]: ۹۹۰ هزار تومان
+            - generic [ref=e128]:
+              - generic [ref=e129]: چند کاربر همزمان
+              - generic [ref=e130]: گزارش‌های بیشتر
+              - generic [ref=e131]: فرم‌های پیشرفته‌تر
+          - button "سازمانی برای ساختارهای بزرگ و چند تیمی ۱.۹ میلیون تومان سفارشی‌سازی بیشتر اولویت پشتیبانی مناسب عملیات سنگین" [ref=e132] [cursor=pointer]:
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]: سازمانی
+                - generic [ref=e136]: برای ساختارهای بزرگ و چند تیمی
+              - generic [ref=e137]: ۱.۹ میلیون تومان
+            - generic [ref=e138]:
+              - generic [ref=e139]: سفارشی‌سازی بیشتر
+              - generic [ref=e140]: اولویت پشتیبانی
+              - generic [ref=e141]: مناسب عملیات سنگین
+      - button "ادامه" [ref=e143] [cursor=pointer]

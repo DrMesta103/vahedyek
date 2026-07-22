@@ -1,0 +1,153 @@
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=e59] [cursor=pointer]
+  - generic [ref=e63]:
+    - generic [ref=e64]:
+      - navigation "مسیر صفحه" [ref=e66]:
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - button "خانه" [ref=e69] [cursor=pointer]
+          - listitem [ref=e71]
+          - listitem [ref=e75]:
+            - generic [ref=e76]: واحدهای سازمانی
+      - main [ref=e78]:
+        - main [ref=e525]:
+          - navigation "مسیر ساختاری" [ref=e526]:
+            - link "واحدها و سمت‌های سازمانی" [ref=e527] [cursor=pointer]:
+              - /url: /organization-units
+            - generic [ref=e530]: واحد مالی QA
+          - generic [ref=e531]:
+            - generic [ref=e532]:
+              - paragraph [ref=e533]: پروفایل واحد سازمانی
+              - heading "واحد مالی QA" [level=1] [ref=e534]
+              - generic [ref=e535]:
+                - generic [ref=e536]: FIN-QA
+                - generic [ref=e537]: واحد
+                - generic [ref=e538]: فعال
+                - generic [ref=e539]: "آخرین تغییر: ۱۴۰۵/۴/۳۱"
+              - paragraph [ref=e540]: مدیریت اطلاعات ساختاری، زیرواحدها، سمت‌ها، کارکنان و ارتباطات سازمانی این واحد
+            - generic [ref=e541]:
+              - link "بازگشت به فهرست" [ref=e542] [cursor=pointer]:
+                - /url: /organization-units
+              - link "ویرایش واحد" [ref=e543] [cursor=pointer]:
+                - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo/edit
+              - link "افزودن زیرواحد" [ref=e544] [cursor=pointer]:
+                - /url: /organization-units?create=1&parent=cmrvw8olz000woyr8h3l9ldbo
+              - link "افزودن سمت" [ref=e545] [cursor=pointer]:
+                - /url: /organization-units?positionUnit=cmrvw8olz000woyr8h3l9ldbo
+              - button "غیرفعال‌سازی" [ref=e547] [cursor=pointer]
+              - button "آرشیو واحد" [ref=e549] [cursor=pointer]
+          - region "خلاصه واحد" [ref=e550]:
+            - article [ref=e551]:
+              - generic [ref=e552]: زیرواحد مستقیم
+              - strong [ref=e553]: ۰
+            - article [ref=e554]:
+              - generic [ref=e555]: سمت
+              - strong [ref=e556]: ۱
+            - article [ref=e557]:
+              - generic [ref=e558]: ظرفیت کل
+              - strong [ref=e559]: ۲
+            - article [ref=e560]:
+              - generic [ref=e561]: انتصاب فعال
+              - strong [ref=e562]: ۰
+            - article [ref=e563]:
+              - generic [ref=e564]: کارمند فعال یکتا
+              - strong [ref=e565]: ۰
+            - article [ref=e566]:
+              - generic [ref=e567]: ظرفیت خالی
+              - strong [ref=e568]: ۲
+            - article [ref=e569]:
+              - generic [ref=e570]: بدون متصدی
+              - strong [ref=e571]: ۱
+            - article [ref=e572]:
+              - generic [ref=e573]: بیش از ظرفیت
+              - strong [ref=e574]: ۰
+          - navigation "بخش‌های پروفایل" [ref=e575]:
+            - link "نمای کلی" [ref=e576] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=overview
+            - link "زیرواحدها" [ref=e577] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=children
+            - link "سمت‌ها و مشاغل" [active] [ref=e578] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=positions
+            - link "کارکنان منصوب‌شده" [ref=e579] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=employees
+            - link "اختیارات و ارتباطات" [ref=e580] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=authority
+            - link "اسناد و تاریخچه" [ref=e581] [cursor=pointer]:
+              - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo?tab=history
+          - generic [ref=e618]:
+            - generic [ref=e619]:
+              - generic [ref=e620]:
+                - heading "سمت‌ها و مشاغل" [level=2] [ref=e621]
+                - paragraph [ref=e622]: Lifecycle، ظرفیت و تکمیل پروفایل هر سمت
+              - link "افزودن سمت" [ref=e623] [cursor=pointer]:
+                - /url: /organization-units?positionUnit=cmrvw8olz000woyr8h3l9ldbo
+            - article [ref=e625]:
+              - generic [ref=e631]:
+                - link [ref=e632] [cursor=pointer]:
+                  - /url: /positions/cmrvw8om1000xoyr8hblrkte5
+                  - strong [ref=e633]: مدیر مالی QA
+                - generic [ref=e634]: PF-QA · بدون پروفایل شغلی
+              - generic [ref=e635]: فعال
+              - generic [ref=e636]: ظرفیت 2 / منصوب 0
+              - generic [ref=e637]: بدون متصدی
+              - generic [ref=e638]: تکمیل 1 از 4
+              - generic [ref=e639]:
+                - link "مشاهده و ویرایش" [ref=e640] [cursor=pointer]:
+                  - /url: /positions/cmrvw8om1000xoyr8hblrkte5
+                - button "آرشیو" [ref=e642] [cursor=pointer]
+    - complementary [ref=e141]:
+      - generic [ref=e142]:
+        - generic [ref=e143]: Q
+        - generic [ref=e144]:
+          - generic [ref=e145]: QA Phase3
+          - generic [ref=e146]: +98 9352720999
+      - generic [ref=e147]:
+        - generic [ref=e148]: PH
+        - generic [ref=e149]:
+          - generic [ref=e150]: Phase3 Closure QA
+          - generic [ref=e151]: phase3-closure-qa
+        - button "تغییر کسب و کار" [ref=e152] [cursor=pointer]
+      - generic [ref=e155]:
+        - button "خروج" [ref=e156] [cursor=pointer]
+        - button "اعلان‌ها" [ref=e161] [cursor=pointer]:
+          - generic [ref=e166]: "1"
+        - button "تنظیمات کلی" [ref=e167] [cursor=pointer]
+        - button "داشبورد" [ref=e172] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=e177] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=e185]:
+        - link "راه‌اندازی سریع" [ref=e186] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=e191] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=e197] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=e203] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=e208] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=e213] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=e221] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=e228] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=e235] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=e242] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=e248] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=e254] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=e261] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=e266] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=e272] [cursor=pointer]:
+        - paragraph [ref=e273]: tenant فعال
+        - button "Phase3 Closure QA" [ref=e274]
+      - generic [ref=e275]:
+        - button "جمع کردن سایدبار" [expanded] [ref=e277] [cursor=pointer]
+        - generic [ref=e280]: 0.8.0

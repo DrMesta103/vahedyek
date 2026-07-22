@@ -1,0 +1,221 @@
+- generic [ref=f1e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f1e2] [cursor=pointer]
+  - generic [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - navigation "مسیر صفحه" [ref=f1e9]:
+        - list [ref=f1e10]:
+          - listitem [ref=f1e11]:
+            - button "خانه" [ref=f1e12] [cursor=pointer]
+          - listitem [ref=f1e14]
+          - listitem [ref=f1e18]:
+            - generic [ref=f1e19]: واحدهای سازمانی
+      - main [ref=f1e21]:
+        - generic [ref=f1e23]:
+          - generic [ref=f1e24]:
+            - generic [ref=f1e25]:
+              - heading "واحدها و سمت‌های سازمانی" [level=1] [ref=f1e26]
+              - paragraph [ref=f1e27]: ساختار سازمان، واحدها، زیرواحدها، سمت‌ها و افراد منصوب‌شده را مدیریت کنید.
+            - button "افزودن واحد سازمانی" [ref=f1e28] [cursor=pointer]:
+              - generic [ref=f1e29]: +
+              - text: افزودن واحد سازمانی
+          - region "آمار ساختار سازمانی" [ref=f1e30]:
+            - article [ref=f1e31]:
+              - generic [ref=f1e32]: کل واحدها
+              - strong [ref=f1e33]: ۳
+            - article [ref=f1e34]:
+              - generic [ref=f1e35]: واحد فعال
+              - strong [ref=f1e36]: ۳
+            - article [ref=f1e37]:
+              - generic [ref=f1e38]: زیرواحدها
+              - strong [ref=f1e39]: ۲
+            - article [ref=f1e40]:
+              - generic [ref=f1e41]: کل سمت‌ها
+              - strong [ref=f1e42]: ۱
+            - article [ref=f1e43]:
+              - generic [ref=f1e44]: سمت بدون متصدی
+              - strong [ref=f1e45]: ۰
+            - article [ref=f1e46]:
+              - generic [ref=f1e47]: سمت با ظرفیت خالی
+              - strong [ref=f1e48]: ۰
+            - article [ref=f1e49]:
+              - generic [ref=f1e50]: کارکنان منصوب‌شده
+              - strong [ref=f1e51]: ۲
+            - article [ref=f1e52]:
+              - generic [ref=f1e53]: واحد بدون مدیر
+              - strong [ref=f1e54]: ۳
+          - generic [ref=f1e55]:
+            - generic [ref=f1e56]:
+              - generic [ref=f1e60]: جستجو
+              - textbox "جستجو" [ref=f1e61]:
+                - /placeholder: جستجو بر اساس نام واحد، سمت، کد واحد یا مدیر واحد...
+            - combobox "وضعیت واحد" [ref=f1e62]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "فعال"
+              - option "غیرفعال"
+              - option "آرشیوی"
+            - combobox "نوع واحد" [ref=f1e63]:
+              - option "همه نوع‌ها" [selected]
+              - option "واحد"
+              - option "تیم"
+            - combobox "وضعیت سمت" [ref=f1e64]:
+              - option "همه سمت‌ها" [selected]
+              - option "دارای سمت"
+              - option "بدون سمت"
+              - option "بدون متصدی"
+              - option "ظرفیت خالی"
+              - option "تکمیل ظرفیت"
+            - combobox "مدیریت" [ref=f1e65]:
+              - option "همه مدیران" [selected]
+              - option "دارای مدیر"
+              - option "بدون مدیر"
+            - generic [ref=f1e66]:
+              - button "فهرست" [ref=f1e67] [cursor=pointer]
+              - button "درخت" [pressed] [ref=f1e70] [cursor=pointer]
+          - generic [ref=f1e77]:
+            - article [ref=f1e78]:
+              - button "بستن زیرواحدهای واحد مالی QA" [expanded] [ref=f1e395] [cursor=pointer]
+              - generic [ref=f1e80]:
+                - link [ref=f1e81] [cursor=pointer]:
+                  - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo
+                  - strong [ref=f1e82]: واحد مالی QA
+                - generic [ref=f1e83]: FIN-QA · واحد
+              - generic [ref=f1e84]:
+                - generic [ref=f1e85]: واحد بالادست
+                - generic [ref=f1e86]: ریشه سازمان
+              - generic [ref=f1e87]:
+                - generic [ref=f1e88]: مدیر
+                - generic [ref=f1e89]: بدون مدیر
+              - generic [ref=f1e90]:
+                - generic "زیرواحد" [ref=f1e91]: "1"
+                - generic "سمت" [ref=f1e97]: "1"
+                - generic "کارمند فعال" [ref=f1e101]: "2"
+              - generic [ref=f1e106]: فعال
+              - time [ref=f1e107]: ۱۴۰۵/۴/۳۱
+              - generic [ref=f1e108]:
+                - button "مشاهده سمت‌ها" [ref=f1e109] [cursor=pointer]
+                - button "افزودن زیرواحد" [ref=f1e110] [cursor=pointer]
+                - link "مشاهده پروفایل" [ref=f1e111] [cursor=pointer]:
+                  - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo
+                - button "افزودن سمت" [ref=f1e112] [cursor=pointer]
+                - link "ویرایش واحد مالی QA" [ref=f1e113] [cursor=pointer]:
+                  - /url: /organization-units/cmrvw8olz000woyr8h3l9ldbo/edit
+                  - text: ویرایش
+                - button "غیرفعال" [ref=f1e115] [cursor=pointer]
+                - button "آرشیو" [ref=f1e117] [cursor=pointer]
+                - button "حذف" [ref=f1e119] [cursor=pointer]
+            - generic [ref=f1e398]:
+              - article [ref=f1e399]:
+                - button "بستن زیرواحدهای Closure Department" [expanded] [active] [ref=f1e442] [cursor=pointer]
+                - generic [ref=f1e403]:
+                  - link [ref=f1e404] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cg0001oyuoaqzmmuhm
+                    - strong [ref=f1e405]: Closure Department
+                  - generic [ref=f1e406]: CLOSE-DEPT-0722 · واحد
+                - generic [ref=f1e407]:
+                  - generic [ref=f1e408]: واحد بالادست
+                  - generic [ref=f1e409]: واحد مالی QA
+                - generic [ref=f1e410]:
+                  - generic [ref=f1e411]: مدیر
+                  - generic [ref=f1e412]: بدون مدیر
+                - generic [ref=f1e413]:
+                  - generic "زیرواحد" [ref=f1e414]: "1"
+                  - generic "سمت" [ref=f1e420]: "0"
+                  - generic "کارمند فعال" [ref=f1e424]: "0"
+                - generic [ref=f1e429]: فعال
+                - time [ref=f1e430]: ۱۴۰۵/۴/۳۱
+                - generic [ref=f1e431]:
+                  - button "افزودن زیرواحد" [ref=f1e432] [cursor=pointer]
+                  - link "مشاهده پروفایل" [ref=f1e433] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cg0001oyuoaqzmmuhm
+                  - button "افزودن سمت" [ref=f1e434] [cursor=pointer]
+                  - link "ویرایش Closure Department" [ref=f1e435] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cg0001oyuoaqzmmuhm/edit
+                    - text: ویرایش
+                  - button "غیرفعال" [ref=f1e437] [cursor=pointer]
+                  - button "آرشیو" [ref=f1e439] [cursor=pointer]
+                  - button "حذف" [ref=f1e441] [cursor=pointer]
+              - article [ref=f1e446]:
+                - generic [ref=f1e448]:
+                  - link [ref=f1e449] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx
+                    - strong [ref=f1e450]: Closure Team
+                  - generic [ref=f1e451]: CLOSE-TEAM-0722 · تیم
+                - generic [ref=f1e452]:
+                  - generic [ref=f1e453]: واحد بالادست
+                  - generic [ref=f1e454]: Closure Department
+                - generic [ref=f1e455]:
+                  - generic [ref=f1e456]: مدیر
+                  - generic [ref=f1e457]: بدون مدیر
+                - generic [ref=f1e458]:
+                  - generic "زیرواحد" [ref=f1e459]: "0"
+                  - generic "سمت" [ref=f1e465]: "0"
+                  - generic "کارمند فعال" [ref=f1e469]: "0"
+                - generic [ref=f1e474]: فعال
+                - time [ref=f1e475]: ۱۴۰۵/۴/۳۱
+                - generic [ref=f1e476]:
+                  - button "افزودن زیرواحد" [ref=f1e477] [cursor=pointer]
+                  - link "مشاهده پروفایل" [ref=f1e478] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx
+                  - button "افزودن سمت" [ref=f1e479] [cursor=pointer]
+                  - link "ویرایش Closure Team" [ref=f1e480] [cursor=pointer]:
+                    - /url: /organization-units/cmrvwo8cn0003oyuofvn4qsfx/edit
+                    - text: ویرایش
+                  - button "غیرفعال" [ref=f1e482] [cursor=pointer]
+                  - button "آرشیو" [ref=f1e484] [cursor=pointer]
+                  - button "حذف" [ref=f1e486] [cursor=pointer]
+    - complementary [ref=f1e205]:
+      - generic [ref=f1e206]:
+        - generic [ref=f1e207]: Q
+        - generic [ref=f1e208]:
+          - generic [ref=f1e209]: QA Phase3
+          - generic [ref=f1e210]: +98 9352720999
+      - generic [ref=f1e211]:
+        - generic [ref=f1e212]: PH
+        - generic [ref=f1e213]:
+          - generic [ref=f1e214]: Phase3 Closure QA
+          - generic [ref=f1e215]: phase3-closure-qa
+        - button "تغییر کسب و کار" [ref=f1e216] [cursor=pointer]
+      - generic [ref=f1e219]:
+        - button "خروج" [ref=f1e220] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f1e225] [cursor=pointer]:
+          - generic [ref=f1e230]: "1"
+        - button "تنظیمات کلی" [ref=f1e231] [cursor=pointer]
+        - button "داشبورد" [ref=f1e236] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f1e241] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f1e249]:
+        - link "راه‌اندازی سریع" [ref=f1e250] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f1e255] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f1e261] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f1e267] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f1e272] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f1e277] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f1e285] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f1e292] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f1e299] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f1e306] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f1e312] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f1e318] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f1e325] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f1e330] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f1e336] [cursor=pointer]:
+        - paragraph [ref=f1e337]: tenant فعال
+        - button "Phase3 Closure QA" [ref=f1e338]
+      - generic [ref=f1e339]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f1e341] [cursor=pointer]
+        - generic [ref=f1e344]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f1e350] [cursor=pointer]
+  - alert [ref=f1e354]

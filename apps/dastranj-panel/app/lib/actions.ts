@@ -50,7 +50,7 @@ import { buildRemoteWorkPolicyPayload } from './remote-work-policy';
 import { seedSampleData } from './seed';
 import type { ContractDraftTemplate } from './contract-draft-templates';
 import { normalizeContractDraftTemplate } from './contract-draft-templates';
-import { requireEmployeeAccess, requireOrganizationUnitAccess } from './organization-unit-access';
+import { requireEmployeeAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
 import { createEmployeeAuditLog } from './employee-audit';
 import * as XLSX from './xlsx';
 import type {
@@ -662,6 +662,69 @@ export type OrganizationUnitCreatePayload = {
   }>;
 };
 
+const POSTGRES_INT_MAX = 2_147_483_647;
+const SERIALIZABLE_RETRY_LIMIT = 3;
+
+function isTransientTransactionError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2034') return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /P2034|SQLSTATE\s*40P01|SQLSTATE\s*40001|deadlock detected|could not serialize access/i.test(message);
+}
+
+const ORGANIZATION_UNIT_TYPES = new Set(['DEPARTMENT', 'DIVISION', 'TEAM', 'BRANCH']);
+const POSITION_STATUSES = new Set(['ACTIVE', 'INACTIVE', 'ARCHIVED']);
+const ORGANIZATION_TEXT_LIMIT = 10_000;
+const textLines = (input: string, limit = 100) => input.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, limit);
+const JOB_TASK_TYPES = new Set(['CORE', 'SUPPORT', 'MANAGEMENT', 'REPORTING']);
+const JOB_TASK_FREQUENCIES = new Set(['ONGOING', 'DAILY', 'WEEKLY', 'MONTHLY', 'PERIODIC', 'ON_DEMAND']);
+const JOB_TASK_PRIORITIES = new Set(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
+
+function structuredJobTasks(raw: string) {
+  let parsed: unknown;
+  try { parsed = JSON.parse(raw || '[]'); } catch { throw new Error('ساختار وظایف شغلی معتبر نیست.'); }
+  if (!Array.isArray(parsed) || parsed.length > 100) throw new Error('حداکثر ۱۰۰ وظیفه در هر بخش قابل ثبت است.');
+  return parsed.map((item, displayOrder) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) throw new Error('یکی از وظایف شغلی معتبر نیست.');
+    const task = item as Record<string, unknown>;
+    const title = String(task.title ?? '').trim(); const description = String(task.description ?? '').trim(); const type = String(task.type ?? 'CORE');
+    const frequency = String(task.frequency ?? 'ONGOING'); const priority = String(task.priority ?? 'MEDIUM'); const expectedOutput = String(task.expectedOutput ?? '').trim();
+    if (!title || title.length > 200 || description.length > 2000 || expectedOutput.length > 2000 || !JOB_TASK_TYPES.has(type) || !JOB_TASK_FREQUENCIES.has(frequency) || !JOB_TASK_PRIORITIES.has(priority)) throw new Error(`اطلاعات وظیفه شماره ${displayOrder + 1} معتبر نیست.`);
+    return { title, description, type, frequency, priority, expectedOutput, displayOrder };
+  });
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
+async function runSerializableWithRetry<T>(operation: () => Promise<T>) {
+  for (let attempt = 1; attempt <= SERIALIZABLE_RETRY_LIMIT; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isTransientTransactionError(error)) throw error;
+      if (attempt === SERIALIZABLE_RETRY_LIMIT) {
+        throw new Error('اطلاعات هم‌زمان توسط کاربر دیگری تغییر کرده است. لطفاً دوباره تلاش کنید.');
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 40));
+    }
+  }
+  throw new Error('اطلاعات هم‌زمان توسط کاربر دیگری تغییر کرده است. لطفاً دوباره تلاش کنید.');
+}
+
+function mapOrganizationCreateError(error: unknown, usesAutoCode: boolean): Error {
+  if (error instanceof Error && !(error instanceof Prisma.PrismaClientKnownRequestError)) return error;
+  if (isUniqueConstraintError(error)) {
+    const detail = JSON.stringify((error as Prisma.PrismaClientKnownRequestError).meta ?? {});
+    if (/code/i.test(detail)) return new Error('این کد واحد سازمانی قبلاً استفاده شده است.');
+    if (/title|name/i.test(detail)) return new Error('واحدی با این نام در همین سطح سازمانی وجود دارد.');
+    return new Error('واحد سازمانی تکراری است. نام و کد واحد را بررسی کنید.');
+  }
+  if (isTransientTransactionError(error)) return new Error('اطلاعات هم‌زمان توسط کاربر دیگری تغییر کرده است. لطفاً دوباره تلاش کنید.');
+  if (usesAutoCode) return new Error('تولید کد واحد با خطا مواجه شد. لطفاً دوباره تلاش کنید یا حالت دستی را انتخاب کنید.');
+  return new Error('ایجاد واحد سازمانی انجام نشد. لطفاً دوباره تلاش کنید.');
+}
+
 export async function createOrganizationUnitFromDialogAction(data: OrganizationUnitCreatePayload) {
   const { tenantId } = await requireOrganizationUnitAccess('create');
   if (!data.units.length) throw new Error('حداقل یک واحد سازمانی برای ایجاد انتخاب کنید.');
@@ -710,13 +773,16 @@ export async function createOrganizationUnitFromDialogAction(data: OrganizationU
       const normalizedCode = position.code?.trim().toLocaleLowerCase('en-US') || '';
       if (!normalizedTitle) throw new Error(`عنوان سمت‌های واحد «${unit.title}» را وارد کنید.`);
       if (!Number.isInteger(position.capacity) || position.capacity < 0) throw new Error(`ظرفیت سمت در واحد «${unit.title}» صحیح نیست.`);
+      if (position.capacity > POSTGRES_INT_MAX) throw new Error(`ظرفیت سمت در واحد «${unit.title}» بیش از حد مجاز است.`);
       if (!['ACTIVE', 'INACTIVE'].includes(position.status)) throw new Error('وضعیت سمت معتبر نیست.');
       if (positionTitles.has(normalizedTitle) || (normalizedCode && positionCodes.has(normalizedCode))) throw new Error(`سمت تکراری در واحد «${unit.title}» وجود دارد.`);
       positionTitles.add(normalizedTitle); if (normalizedCode) positionCodes.add(normalizedCode);
     }
   }
 
-  const created = await prisma.$transaction(async (tx) => {
+  let created: { firstUnitId: string; unitCount: number; positionCount: number };
+  try {
+    created = await runSerializableWithRetry(() => prisma.$transaction(async (tx) => {
     const namingKey = getNamingPatternsStorageKey(tenantId);
     const namingScope = `tenant:${tenantId}`;
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${namingKey}))`;
@@ -759,25 +825,12 @@ export async function createOrganizationUnitFromDialogAction(data: OrganizationU
       positionCount += unit.positions.length;
     }
     return { firstUnitId: createdIds.get(data.units[0].clientId)!, unitCount: data.units.length, positionCount };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }));
+  } catch (error) {
+    throw mapOrganizationCreateError(error, data.units.some((unit) => unit.codeMode === 'AUTO'));
+  }
   revalidatePath('/organization-units');
   return { ok: true as const, unitId: created.firstUnitId, unitCount: created.unitCount, positionCount: created.positionCount };
-}
-
-export async function createOrganizationUnitAction(formData: FormData) {
-  const { tenantId } = await requireOrganizationUnitAccess('create');
-  const code = value(formData, 'code') || null;
-  if (code && await prisma.organizationUnit.findFirst({ where: { tenantId, code: { equals: code, mode: 'insensitive' } }, select: { id: true } })) throw new Error('کد واحد در این کسب‌وکار قبلاً استفاده شده است.');
-  await prisma.organizationUnit.create({
-    data: {
-      tenantId,
-      title: value(formData, 'title'),
-      code,
-      description: value(formData, 'description') || null,
-    },
-  });
-  revalidatePath('/organization-units');
-  redirect('/organization-units');
 }
 
 export async function updateOrganizationUnitAction(formData: FormData) {
@@ -797,26 +850,47 @@ export async function updateOrganizationUnitAction(formData: FormData) {
     while (cursor) {
       if (cursor === id || visited.has(cursor)) throw new Error('انتخاب این واحد بالادست، چرخه سازمانی ایجاد می‌کند.');
       visited.add(cursor);
-      const parent: { parentId: string | null } | null = await prisma.organizationUnit.findFirst({ where: { id: cursor, tenantId }, select: { parentId: true } });
+      const parent: { parentId: string | null } | null = await prisma.organizationUnit.findFirst({ where: { id: cursor, tenantId, status: 'ACTIVE' }, select: { parentId: true } });
       if (!parent) throw new Error('واحد بالادست در کسب‌وکار فعال پیدا نشد.');
       cursor = parent.parentId;
     }
   }
-  if (managerId && !(await prisma.employee.findFirst({ where: { id: managerId, tenantId }, select: { id: true } }))) throw new Error('مدیر انتخاب‌شده در کسب‌وکار فعال پیدا نشد.');
+  if (managerId && !(await prisma.employee.findFirst({ where: { id: managerId, tenantId, isActive: true }, select: { id: true } }))) throw new Error('مدیر باید کارمند فعال کسب‌وکار جاری باشد.');
 
-  await prisma.organizationUnit.update({
-    where: { id },
-    data: {
-      title: value(formData, 'title'),
-      code,
-      type: value(formData, 'type') || 'DEPARTMENT',
-      parentId,
-      managerId,
-      description: value(formData, 'description') || null,
-    },
-  });
+  const title = value(formData, 'title').trim();
+  if (!title) throw new Error('نام واحد سازمانی را وارد کنید.');
+  const type = value(formData, 'type') || 'DEPARTMENT';
+  if (!ORGANIZATION_UNIT_TYPES.has(type)) throw new Error('نوع واحد سازمانی معتبر نیست.');
+  const description = value(formData, 'description');
+  const mission = value(formData, 'mission');
+  const responsibilities = textLines(value(formData, 'mainResponsibilities'));
+  if (description.length > ORGANIZATION_TEXT_LIMIT || mission.length > ORGANIZATION_TEXT_LIMIT) throw new Error('متن اطلاعات حرفه‌ای واحد بیش از حد مجاز است.');
+  if (await prisma.organizationUnit.findFirst({ where: { tenantId, parentId, id: { not: id }, title: { equals: title, mode: 'insensitive' } }, select: { id: true } })) throw new Error('واحدی با این نام در همین سطح سازمانی وجود دارد.');
+  try {
+    await prisma.organizationUnit.update({
+      where: { id },
+      data: {
+        title,
+        code,
+        type,
+        parentId,
+        managerId,
+        description: description || null,
+        mission: mission || null,
+        mainResponsibilities: responsibilities,
+      },
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      const detail = JSON.stringify((error as Prisma.PrismaClientKnownRequestError).meta ?? {});
+      if (/code/i.test(detail)) throw new Error('این کد واحد سازمانی قبلاً استفاده شده است.');
+      throw new Error('واحدی با این نام در همین سطح سازمانی وجود دارد.');
+    }
+    throw error;
+  }
   revalidatePath('/organization-units');
-  redirect('/organization-units');
+  revalidatePath(`/organization-units/${id}`);
+  redirect(`/organization-units/${id}?success=unit`);
 }
 
 export async function deleteOrganizationUnitAction(formData: FormData) {
@@ -841,6 +915,21 @@ export type OrganizationTemplateEditorPayload = {
   units: Array<{ clientId: string; parentClientId?: string; name: string; type: string; description?: string; status: 'ACTIVE' | 'INACTIVE'; positions: Array<{ title: string; code?: string; capacity: number; status: 'ACTIVE' | 'INACTIVE' }> }>;
 };
 
+function normalizeTemplateUnitsForRevision(units: OrganizationTemplateEditorPayload['units']) {
+  return units.map((unit, displayOrder) => ({
+    clientId: unit.clientId,
+    parentClientId: unit.parentClientId ?? null,
+    name: unit.name.trim(),
+    type: unit.type,
+    description: unit.description?.trim() || null,
+    status: unit.status,
+    displayOrder,
+    positions: unit.positions.map((position, positionOrder) => ({
+      title: position.title.trim(), code: position.code?.trim() || null, capacity: position.capacity, status: position.status, displayOrder: positionOrder,
+    })),
+  }));
+}
+
 export async function saveOrganizationStructureTemplateAction(data: OrganizationTemplateEditorPayload) {
   const { tenantId } = await requireOrganizationUnitAccess(data.id ? 'update' : 'create');
   const name = data.name.trim();
@@ -859,13 +948,31 @@ export async function saveOrganizationStructureTemplateAction(data: Organization
     for (const position of unit.positions) {
       const title = position.title.trim().toLocaleLowerCase('fa'); const code = position.code?.trim().toLocaleLowerCase('en-US') || '';
       if (!title || !Number.isInteger(position.capacity) || position.capacity < 0) throw new Error(`اطلاعات سمت‌های واحد «${unit.name}» معتبر نیست.`);
+      if (position.capacity > POSTGRES_INT_MAX) throw new Error(`ظرفیت سمت در واحد «${unit.name}» بیش از حد مجاز است.`);
       if (titles.has(title) || (code && codes.has(code))) throw new Error(`سمت تکراری در واحد «${unit.name}» وجود دارد.`);
       titles.add(title); if (code) codes.add(code);
     }
   }
-  const template = await prisma.$transaction(async (tx) => {
-    const current = data.id ? await tx.organizationStructureTemplate.findFirst({ where: { id: data.id, tenantId, status: { not: 'ARCHIVED' } }, select: { id: true, version: true } }) : null;
+  let template: { id: string };
+  try {
+    template = await prisma.$transaction(async (tx) => {
+    const current = data.id ? await tx.organizationStructureTemplate.findFirst({
+      where: { id: data.id, tenantId, status: { not: 'ARCHIVED' } },
+      include: { units: { orderBy: { displayOrder: 'asc' }, include: { positions: { orderBy: { displayOrder: 'asc' } } } } },
+    }) : null;
     if (data.id && !current) throw new Error('قالب قابل ویرایش در کسب‌وکار جاری پیدا نشد.');
+    if (current) {
+      const storedRevision = current.units.map((unit) => ({
+        clientId: unit.id, parentClientId: unit.parentTemplateUnitId, name: unit.name, type: unit.type,
+        description: unit.description, status: unit.status, displayOrder: unit.displayOrder,
+        positions: unit.positions.map((position) => ({ title: position.title, code: position.code, capacity: position.capacity, status: position.status, displayOrder: position.displayOrder })),
+      }));
+      const unchanged = current.name === name
+        && current.description === (data.description?.trim() || null)
+        && current.status === data.status
+        && JSON.stringify(storedRevision) === JSON.stringify(normalizeTemplateUnitsForRevision(data.units));
+      if (unchanged) return current;
+    }
     const saved = current
       ? await tx.organizationStructureTemplate.update({ where: { id: current.id }, data: { name, description: data.description?.trim() || null, status: data.status, version: { increment: 1 } } })
       : await tx.organizationStructureTemplate.create({ data: { tenantId, name, description: data.description?.trim() || null, status: data.status } });
@@ -880,7 +987,12 @@ export async function saveOrganizationStructureTemplateAction(data: Organization
       if (unit.positions.length) await tx.organizationStructureTemplatePosition.createMany({ data: unit.positions.map((position, displayOrder) => ({ templateUnitId: savedUnit.id, title: position.title.trim(), code: position.code?.trim() || null, capacity: position.capacity, status: position.status, displayOrder })) });
     }
     return saved;
-  });
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) throw new Error('قالبی با این نام قبلاً ثبت شده است.');
+    if (error instanceof Error && !(error instanceof Prisma.PrismaClientKnownRequestError)) throw error;
+    throw new Error('ذخیره قالب ساختار سازمانی انجام نشد. لطفاً دوباره تلاش کنید.');
+  }
   revalidatePath('/business-settings/organization-templates'); revalidatePath('/organization-units');
   return { ok: true as const, id: template.id };
 }
@@ -901,34 +1013,104 @@ export async function setOrganizationUnitStatusAction(formData: FormData) {
   const current = await prisma.organizationUnit.findFirst({ where: { id, tenantId }, select: { status: true } });
   if (!current) throw new Error('واحد سازمانی در کسب‌وکار فعال پیدا نشد.');
   if (current.status === 'ARCHIVED') throw new Error('وضعیت واحد آرشیوی قابل تغییر نیست.');
+  if (status === 'ARCHIVED') {
+    const [activeChildren, activePositions, activeAssignments] = await Promise.all([
+      prisma.organizationUnit.count({ where: { tenantId, parentId: id, status: 'ACTIVE' } }),
+      prisma.position.count({ where: { organizationUnitId: id, status: 'ACTIVE' } }),
+      prisma.employeeOrganizationUnit.count({ where: { organizationUnitId: id, status: 'ACTIVE', employee: { isActive: true } } }),
+    ]);
+    if (activeChildren || activePositions || activeAssignments) throw new Error(`آرشیو واحد ممکن نیست؛ ${activeChildren} زیرواحد فعال، ${activePositions} سمت فعال و ${activeAssignments} انتصاب فعال وجود دارد.`);
+  }
   const updated = await prisma.organizationUnit.updateMany({ where: { id, tenantId, status: { not: 'ARCHIVED' } }, data: { status: status as never } });
   if (!updated.count) throw new Error('واحد سازمانی در کسب‌وکار فعال پیدا نشد.');
   revalidatePath('/organization-units');
 }
 
-export async function createPositionAction(data: { organizationUnitId: string; title: string; code?: string; capacity: number }) {
-  const { tenantId } = await requireOrganizationUnitAccess('update');
-  const unit = await prisma.organizationUnit.findFirst({ where: { id: data.organizationUnitId, tenantId, status: { not: 'ARCHIVED' } }, select: { id: true } });
+export async function createPositionAction(data: { organizationUnitId: string; title: string; code?: string; capacity: number; status?: 'ACTIVE' | 'INACTIVE' }) {
+  const { tenantId } = await requirePositionAccess('create');
+  const unit = await prisma.organizationUnit.findFirst({ where: { id: data.organizationUnitId, tenantId, status: 'ACTIVE' }, select: { id: true } });
   if (!unit) throw new Error('واحد سازمانی قابل ویرایش پیدا نشد.');
   if (!data.title.trim()) throw new Error('عنوان سمت الزامی است.');
   if (!Number.isInteger(data.capacity) || data.capacity < 0) throw new Error('ظرفیت سمت باید عدد صحیح و نامنفی باشد.');
+  if (data.capacity > POSTGRES_INT_MAX) throw new Error('ظرفیت سمت بیش از سقف فنی مجاز است.');
+  const status = data.status ?? 'ACTIVE';
+  if (!['ACTIVE', 'INACTIVE'].includes(status)) throw new Error('وضعیت اولیه سمت معتبر نیست.');
   const code = data.code?.trim() || null;
+  if (await prisma.position.findFirst({ where: { organizationUnitId: unit.id, title: { equals: data.title.trim(), mode: 'insensitive' } }, select: { id: true } })) throw new Error('عنوان سمت در این واحد قبلاً استفاده شده است.');
   if (code && await prisma.position.findFirst({ where: { organizationUnitId: unit.id, code: { equals: code, mode: 'insensitive' } }, select: { id: true } })) throw new Error('کد سمت در این واحد قبلاً استفاده شده است.');
-  await prisma.position.create({ data: { organizationUnitId: unit.id, title: data.title.trim(), code, capacity: data.capacity } });
+  try {
+    await prisma.position.create({ data: { organizationUnitId: unit.id, title: data.title.trim(), code, capacity: data.capacity, status } });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) throw new Error('عنوان یا کد سمت در این واحد قبلاً استفاده شده است.');
+    throw new Error('ثبت سمت سازمانی انجام نشد. لطفاً دوباره تلاش کنید.');
+  }
   revalidatePath('/organization-units');
   return { ok: true as const };
 }
 
 export async function setPositionStatusAction(formData: FormData) {
-  const { tenantId } = await requireOrganizationUnitAccess('update');
+  const requestedStatus = value(formData, 'status');
+  const { tenantId } = await requirePositionAccess(requestedStatus === 'ARCHIVED' ? 'archive' : 'update');
   const id = value(formData, 'id');
-  const status = value(formData, 'status');
+  const status = requestedStatus;
   if (!['ACTIVE', 'INACTIVE', 'ARCHIVED'].includes(status)) throw new Error('وضعیت سمت معتبر نیست.');
-  const position = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId } }, select: { status: true } });
+  const position = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId } }, select: { status: true, assignments: { where: { status: 'ACTIVE', employee: { isActive: true } }, select: { id: true, startDate: true, endDate: true } } } });
   if (!position) throw new Error('سمت سازمانی در کسب‌وکار فعال پیدا نشد.');
   if (position.status === 'ARCHIVED') throw new Error('وضعیت سمت آرشیوی قابل تغییر نیست.');
+  const today = new Date().toISOString().slice(0, 10);
+  const activeCount = position.assignments.filter((assignment) => (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today)).length;
+  if (status === 'ARCHIVED' && activeCount) throw new Error(`این سمت ${activeCount} انتصاب فعال دارد و قابل آرشیو نیست.`);
   await prisma.position.update({ where: { id }, data: { status: status as never } });
   revalidatePath('/organization-units');
+}
+
+export async function updatePositionAction(formData: FormData) {
+  const { tenantId } = await requirePositionAccess('update');
+  const id = value(formData, 'id');
+  const current = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId } }, include: { assignments: { where: { status: 'ACTIVE', employee: { isActive: true } } } } });
+  if (!current) throw new Error('سمت سازمانی در کسب‌وکار جاری پیدا نشد.');
+  if (current.status === 'ARCHIVED') throw new Error('سمت آرشیوی فقط قابل مشاهده است.');
+  const title = value(formData, 'title'); const code = value(formData, 'code') || null; const description = value(formData, 'description') || null;
+  const capacity = Number(value(formData, 'capacity')); const status = value(formData, 'status');
+  const jobProfileId = value(formData, 'jobProfileId') || null; const reportsToPositionId = value(formData, 'reportsToPositionId') || null;
+  if (!title || title.length > 200) throw new Error('عنوان سمت معتبر نیست.');
+  if (!Number.isInteger(capacity) || capacity < 0 || capacity > POSTGRES_INT_MAX) throw new Error('ظرفیت سمت باید عدد صحیح در محدوده مجاز باشد.');
+  if (!POSITION_STATUSES.has(status) || status === 'ARCHIVED') throw new Error('برای آرشیو سمت از عملیات آرشیو استفاده کنید.');
+  if (description && description.length > ORGANIZATION_TEXT_LIMIT) throw new Error('توضیحات سمت بیش از حد مجاز است.');
+  const today = new Date().toISOString().slice(0, 10);
+  const activeCount = current.assignments.filter((assignment) => (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today)).length;
+  if (capacity < activeCount) throw new Error(`ظرفیت نمی‌تواند کمتر از ${activeCount} انتصاب فعال باشد.`);
+  if (await prisma.position.findFirst({ where: { organizationUnitId: current.organizationUnitId, id: { not: id }, title: { equals: title, mode: 'insensitive' } }, select: { id: true } })) throw new Error('عنوان سمت در این واحد تکراری است.');
+  if (code && await prisma.position.findFirst({ where: { organizationUnitId: current.organizationUnitId, id: { not: id }, code: { equals: code, mode: 'insensitive' } }, select: { id: true } })) throw new Error('کد سمت در این واحد تکراری است.');
+  if (jobProfileId && !(await prisma.jobProfile.findFirst({ where: { id: jobProfileId, tenantId, status: { not: 'ARCHIVED' } }, select: { id: true } }))) throw new Error('پروفایل شغلی معتبر نیست.');
+  if (reportsToPositionId) {
+    if (reportsToPositionId === id) throw new Error('سمت نمی‌تواند به خودش گزارش دهد.');
+    let cursor: string | null = reportsToPositionId; const visited = new Set<string>();
+    while (cursor) { if (cursor === id || visited.has(cursor)) throw new Error('رابطه گزارش‌دهی چرخه ایجاد می‌کند.'); visited.add(cursor); const parent: { reportsToPositionId: string | null } | null = await prisma.position.findFirst({ where: { id: cursor, organizationUnit: { tenantId }, status: { not: 'ARCHIVED' } }, select: { reportsToPositionId: true } }); if (!parent) throw new Error('سمت بالادست معتبر نیست.'); cursor = parent.reportsToPositionId; }
+  }
+  try { await prisma.position.update({ where: { id }, data: { title, code, capacity, status: status as never, description, jobProfileId, reportsToPositionId } }); }
+  catch (error) { if (isUniqueConstraintError(error)) throw new Error('عنوان یا کد سمت در این واحد تکراری است.'); throw new Error('ویرایش سمت انجام نشد. لطفاً دوباره تلاش کنید.'); }
+  revalidatePath('/organization-units'); revalidatePath(`/organization-units/${current.organizationUnitId}`); revalidatePath(`/positions/${id}`);
+  redirect(`/positions/${id}?success=position`);
+}
+
+export async function saveJobProfileAction(formData: FormData) {
+  const { tenantId } = await requirePositionAccess('update');
+  const positionId = value(formData, 'positionId');
+  const position = await prisma.position.findFirst({ where: { id: positionId, organizationUnit: { tenantId }, status: { not: 'ARCHIVED' } }, select: { id: true, jobProfileId: true, organizationUnitId: true } });
+  if (!position) throw new Error('سمت قابل ویرایش پیدا نشد.');
+  const title = value(formData, 'jobTitle'); const code = value(formData, 'jobCode') || null; const purpose = value(formData, 'purpose') || null; const summary = value(formData, 'summary') || null;
+  if (!title || title.length > 200) throw new Error('عنوان پروفایل شغلی الزامی است.');
+  if ([purpose, summary].some((item) => item && item.length > ORGANIZATION_TEXT_LIMIT)) throw new Error('متن پروفایل شغلی بیش از حد مجاز است.');
+  const payload = { title, code, purpose, summary, mainTasks: structuredJobTasks(value(formData, 'mainTasksJson')), periodicTasks: structuredJobTasks(value(formData, 'periodicTasksJson')), reportingResponsibilities: textLines(value(formData, 'reportingResponsibilities')), expectedOutputs: textLines(value(formData, 'expectedOutputs')), internalRelations: textLines(value(formData, 'internalRelations')), externalRelations: textLines(value(formData, 'externalRelations')), suggestedKpis: textLines(value(formData, 'suggestedKpis')), suggestedWorkLocation: value(formData, 'suggestedWorkLocation') || null, workEnvironment: value(formData, 'workEnvironment') || null, considerations: value(formData, 'considerations') || null, minimumEducation: value(formData, 'minimumEducation') || null, relatedFields: textLines(value(formData, 'relatedFields')), minimumExperienceMonths: value(formData, 'minimumExperienceMonths') ? Number(value(formData, 'minimumExperienceMonths')) : null, experienceLevel: value(formData, 'experienceLevel') || null, technicalSkills: textLines(value(formData, 'technicalSkills')), softSkills: textLines(value(formData, 'softSkills')), certifications: textLines(value(formData, 'certifications')), requiredSoftware: textLines(value(formData, 'requiredSoftware')), languages: textLines(value(formData, 'languages')), travelRequired: value(formData, 'travelRequired') ? boolValue(formData, 'travelRequired') : null, workplaceConditions: value(formData, 'workplaceConditions') || null, specialRequirements: value(formData, 'specialRequirements') || null };
+  if (payload.minimumExperienceMonths !== null && (!Number.isInteger(payload.minimumExperienceMonths) || payload.minimumExperienceMonths < 0)) throw new Error('حداقل سابقه معتبر نیست.');
+  try {
+    if (position.jobProfileId && !(await prisma.jobProfile.findFirst({ where: { id: position.jobProfileId, tenantId }, select: { id: true } }))) throw new Error('پروفایل شغلی در کسب‌وکار جاری پیدا نشد.');
+    const profile = position.jobProfileId ? await prisma.jobProfile.update({ where: { id: position.jobProfileId }, data: { ...payload, revision: { increment: 1 } } }) : await prisma.jobProfile.create({ data: { tenantId, ...payload } });
+    if (!position.jobProfileId) await prisma.position.update({ where: { id: position.id }, data: { jobProfileId: profile.id } });
+  } catch (error) { if (isUniqueConstraintError(error)) throw new Error('کد پروفایل شغلی در این کسب‌وکار تکراری است.'); throw new Error('ذخیره پروفایل شغلی انجام نشد.'); }
+  revalidatePath(`/positions/${positionId}`); revalidatePath(`/organization-units/${position.organizationUnitId}`);
+  redirect(`/positions/${positionId}?success=job`);
 }
 
 export async function createShiftTemplateFromDialogAction(data: {
@@ -3227,6 +3409,22 @@ export async function toggleEmployeeActiveAction(formData: FormData) {
   revalidatePath('/employees');
 }
 
+/** Records only the request to start termination; the workflow deliberately remains out of scope. */
+export async function createEmployeeTerminationIntentAction(formData: FormData) {
+  await requireEmployeeAccess('disable');
+  const tenantId = await getTenantId();
+  const employeeId = value(formData, 'employeeId');
+  const reason = value(formData, 'reason') || null;
+  const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId }, select: { id: true } });
+  if (!employee) throw new Error('کارمند در کسب‌وکار فعال پیدا نشد.');
+  const existing = await prisma.employeeTerminationIntent.findFirst({ where: { tenantId, employeeId, status: 'DRAFT' }, select: { id: true } });
+  if (existing) throw new Error('درخواست شروع فرآیند خاتمه همکاری قبلاً ثبت شده است.');
+  const session = await getSessionContext();
+  await prisma.employeeTerminationIntent.create({ data: { tenantId, employeeId, initiatedBy: session?.userId ?? null, reason } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: 'termination_intent_created', fieldKey: 'terminationIntent', newValue: 'DRAFT', reason });
+  revalidatePath(`/employees/${employeeId}`);
+}
+
 export async function saveEmployeeBankAccountsAction(formData: FormData) {
   await requireEmployeeAccess('bankUpdate');
   const tenantId = await getTenantId();
@@ -3253,6 +3451,105 @@ export async function saveEmployeeGuaranteesAction(formData: FormData) {
   });
   revalidatePath(`/employees/${employeeId}`);
   revalidatePath(`/employees/${employeeId}/guarantee`);
+}
+
+const EMPLOYEE_SKILL_CATEGORIES = new Set(['TECHNICAL', 'SOFT', 'COMPUTER', 'LANGUAGE', 'MANAGEMENT', 'COMMUNICATION', 'ARTISTIC', 'SPORT']);
+const EMPLOYEE_SKILL_LEVELS = new Set(['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT']);
+const EMPLOYEE_INTEREST_CATEGORIES = new Set(['SPORT', 'ART', 'READING', 'TRAVEL', 'SOCIAL', 'LEARNING', 'VOLUNTEERING', 'OTHER']);
+
+async function requireEmployeeMutationTarget(employeeId: string) {
+  const tenantId = await getTenantId();
+  const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId }, select: { id: true } });
+  if (!employee) throw new Error('کارمند در کسب‌وکار فعال پیدا نشد.');
+  return { tenantId, employeeId: employee.id };
+}
+
+export async function saveEmployeeSkillAction(formData: FormData) {
+  await requireEmployeeAccess('update'); const employeeId = value(formData, 'employeeId'); const { tenantId } = await requireEmployeeMutationTarget(employeeId);
+  const title = value(formData, 'title'); const category = value(formData, 'category'); const level = value(formData, 'level'); const description = value(formData, 'description') || null;
+  if (!title || title.length > 120 || !EMPLOYEE_SKILL_CATEGORIES.has(category) || !EMPLOYEE_SKILL_LEVELS.has(level)) throw new Error('اطلاعات مهارت معتبر نیست.');
+  const id = value(formData, 'id');
+  if (id) await prisma.employeeSkill.updateMany({ where: { id, tenantId, employeeId }, data: { title, category, level, description, isActive: true } });
+  else await prisma.employeeSkill.create({ data: { tenantId, employeeId, title, category, level, description } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: id ? 'skill_updated' : 'skill_added', fieldKey: 'skill', newValue: `${title}:${category}:${level}` }); revalidatePath(`/employees/${employeeId}/profile`);
+}
+
+export async function deactivateEmployeeSkillAction(formData: FormData) { await requireEmployeeAccess('update'); const employeeId = value(formData, 'employeeId'); const { tenantId } = await requireEmployeeMutationTarget(employeeId); const id = value(formData, 'id'); await prisma.employeeSkill.updateMany({ where: { id, tenantId, employeeId }, data: { isActive: false } }); await createEmployeeAuditLog({ tenantId, employeeId, action: 'skill_removed', fieldKey: 'skill', newValue: id }); revalidatePath(`/employees/${employeeId}/profile`); }
+
+export async function saveEmployeeInterestAction(formData: FormData) {
+  await requireEmployeeAccess('update'); const employeeId = value(formData, 'employeeId'); const { tenantId } = await requireEmployeeMutationTarget(employeeId); const title = value(formData, 'title'); const category = value(formData, 'category');
+  if (!title || title.length > 120 || !EMPLOYEE_INTEREST_CATEGORIES.has(category)) throw new Error('اطلاعات علاقه‌مندی معتبر نیست.'); const id = value(formData, 'id'); const description = value(formData, 'description') || null;
+  if (id) await prisma.employeeInterest.updateMany({ where: { id, tenantId, employeeId }, data: { title, category, description, isActive: true } }); else await prisma.employeeInterest.create({ data: { tenantId, employeeId, title, category, description } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: id ? 'interest_updated' : 'interest_added', fieldKey: 'interest', newValue: `${title}:${category}` }); revalidatePath(`/employees/${employeeId}/profile`);
+}
+export async function deactivateEmployeeInterestAction(formData: FormData) { await requireEmployeeAccess('update'); const employeeId = value(formData, 'employeeId'); const { tenantId } = await requireEmployeeMutationTarget(employeeId); const id = value(formData, 'id'); await prisma.employeeInterest.updateMany({ where: { id, tenantId, employeeId }, data: { isActive: false } }); await createEmployeeAuditLog({ tenantId, employeeId, action: 'interest_removed', fieldKey: 'interest', newValue: id }); revalidatePath(`/employees/${employeeId}/profile`); }
+
+export async function saveEmployeeWorkPreferencesAction(formData: FormData) { await requireEmployeeAccess('update'); const employeeId = value(formData, 'employeeId'); const { tenantId } = await requireEmployeeMutationTarget(employeeId); const keys = ['prefersOvertime','prefersFridayWork','prefersBusinessTravel','canRelocate','prefersRemote','prefersOnSite','prefersHybrid','prefersTeamWork','prefersIndividualWork','prefersManagementRole','prefersExecutionRole']; const values = Object.fromEntries(keys.map((key) => [key, value(formData, key) === 'true'])); await prisma.employeeWorkPreference.upsert({ where: { employeeId }, create: { tenantId, employeeId, values }, update: { values } }); await createEmployeeAuditLog({ tenantId, employeeId, action: 'work_preferences_updated', fieldKey: 'preferences', newValue: JSON.stringify(values) }); revalidatePath(`/employees/${employeeId}/profile`); }
+
+export async function saveEmployeeHealthProfileAction(formData: FormData) {
+  await requireEmployeeAccess('healthUpdate');
+  const employeeId = value(formData, 'employeeId');
+  const { tenantId } = await requireEmployeeMutationTarget(employeeId);
+  const data = Object.fromEntries(['physicalHealthNotes','mobilityLimitations','specialMedicalConsiderations','workplaceAccommodationNeeds','mentalHealthNotes'].map((key) => [key, value(formData, key).slice(0, 4000) || null]));
+  const session = await getSessionContext();
+  await prisma.$transaction([
+    prisma.employeeHealthProfile.upsert({ where: { employeeId }, create: { tenantId, employeeId, ...data }, update: data }),
+    prisma.employeeProfileApproval.upsert({
+      where: { tenantId_employeeId_categoryKey: { tenantId, employeeId, categoryKey: 'HEALTH' } },
+      create: { tenantId, employeeId, categoryKey: 'HEALTH', status: 'SUBMITTED', submittedBy: session?.userId ?? null, submittedAt: new Date() },
+      update: { status: 'SUBMITTED', submittedBy: session?.userId ?? null, submittedAt: new Date(), reviewedBy: null, reviewedAt: null, reviewNote: null },
+    }),
+  ]);
+  await createEmployeeAuditLog({ tenantId, employeeId, action: 'health_profile_submitted', fieldKey: 'health', newValue: '[REDACTED]' });
+  revalidatePath(`/employees/${employeeId}/profile`);
+}
+
+const EMPLOYEE_PROFILE_APPROVAL_STATUSES = new Set(['PENDING_APPROVAL', 'APPROVED', 'REJECTED']);
+
+export async function reviewEmployeeProfileApprovalAction(formData: FormData) {
+  await requireEmployeeAccess('sensitiveUpdate');
+  const employeeId = value(formData, 'employeeId');
+  const categoryKey = value(formData, 'categoryKey');
+  const status = value(formData, 'status');
+  const reviewNote = value(formData, 'reviewNote').slice(0, 1000) || null;
+  if (categoryKey !== 'HEALTH' || !EMPLOYEE_PROFILE_APPROVAL_STATUSES.has(status)) throw new Error('وضعیت تأیید پروفایل معتبر نیست.');
+  const { tenantId } = await requireEmployeeMutationTarget(employeeId);
+  const session = await getSessionContext();
+  const current = await prisma.employeeProfileApproval.findUnique({ where: { tenantId_employeeId_categoryKey: { tenantId, employeeId, categoryKey } } });
+  if (!current) throw new Error('اطلاعاتی برای بررسی تأیید ارسال نشده است.');
+  await prisma.employeeProfileApproval.update({ where: { id: current.id }, data: { status: status as 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED', reviewedBy: session?.userId ?? null, reviewedAt: new Date(), reviewNote } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: `profile_approval_${status.toLowerCase()}`, fieldKey: 'health', oldValue: current.status, newValue: status, reason: reviewNote });
+  revalidatePath(`/employees/${employeeId}/profile`);
+}
+
+export type EmployeeEmergencyContactActionResult = { ok: true } | { ok: false; error: string };
+
+export async function saveEmployeeEmergencyContactAction(formData: FormData): Promise<EmployeeEmergencyContactActionResult> {
+  await requireEmployeeAccess('sensitiveUpdate');
+  const employeeId = value(formData, 'employeeId');
+  const { tenantId } = await requireEmployeeMutationTarget(employeeId);
+  const name = value(formData, 'name');
+  const relation = value(formData, 'relation');
+  const mobile = sanitizeIranMobileInput(value(formData, 'mobile'));
+  const id = value(formData, 'id');
+
+  if (name.length < 2 || name.length > 120 || relation.length < 2 || relation.length > 80) {
+    return { ok: false, error: 'اطلاعات تماس اضطراری معتبر نیست.' };
+  }
+  if (!isValidIranMobile(mobile)) return { ok: false, error: 'شماره تماس اضطراری معتبر نیست.' };
+
+  if (id) {
+    const current = await prisma.employeeEmergencyContact.findFirst({ where: { id, tenantId, employeeId } });
+    if (!current) throw new Error('تماس اضطراری در کسب‌وکار فعال پیدا نشد.');
+    await prisma.employeeEmergencyContact.update({ where: { id: current.id }, data: { name, relation, mobile } });
+    await createEmployeeAuditLog({ tenantId, employeeId, action: 'emergency_contact_updated', fieldKey: 'emergencyContact', oldValue: JSON.stringify(current), newValue: JSON.stringify({ name, relation, mobile }) });
+  } else {
+    await prisma.employeeEmergencyContact.create({ data: { tenantId, employeeId, name, relation, mobile } });
+    await createEmployeeAuditLog({ tenantId, employeeId, action: 'emergency_contact_added', fieldKey: 'emergencyContact', newValue: JSON.stringify({ name, relation, mobile }) });
+  }
+
+  revalidatePath(`/employees/${employeeId}/profile`);
+  return { ok: true };
 }
 
 type WorkGroupMemberAssignment = {

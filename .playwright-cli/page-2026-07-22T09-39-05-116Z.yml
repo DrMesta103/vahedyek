@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]
+  - alert [ref=e68]
+  - generic [ref=e71]:
+    - heading "ورود" [level=1] [ref=e73]
+    - generic [ref=e74]:
+      - generic [ref=e75]: ثبت‌نام انجام شد. حالا با همان اطلاعات وارد شوید.
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]: ایمیل یا شماره موبایل
+          - generic [ref=e79]:
+            - generic [ref=e80]: "*"
+            - generic [ref=e81]: الزامی
+        - generic [ref=e83]:
+          - generic [ref=e84]: IR +98
+          - textbox "ایمیل یا شماره موبایل الزامی" [ref=e85]:
+            - /placeholder: "9352720114"
+            - text: "9352720999"
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]: رمز عبور
+          - generic [ref=e89]:
+            - generic [ref=e90]: "*"
+            - generic [ref=e91]: الزامی
+        - textbox "رمز عبور الزامی" [ref=e94]
+      - button "ورود" [ref=e95] [cursor=pointer]
+    - paragraph [ref=e96]:
+      - text: حساب ندارید؟
+      - link "ثبت‌نام کنید" [ref=e97] [cursor=pointer]:
+        - /url: /register

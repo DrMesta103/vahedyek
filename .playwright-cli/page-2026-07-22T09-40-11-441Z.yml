@@ -1,0 +1,18 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]
+  - generic [ref=e40]:
+    - generic [ref=e42]:
+      - generic [ref=e43]: انتخاب کسب‌وکار
+      - heading "tenant فعلی را انتخاب کنید" [level=1] [ref=e44]
+      - paragraph [ref=e45]: از بین tenantهای موجود یکی را انتخاب کنید یا ساخت tenant جدید را شروع کنید.
+    - generic [ref=e46]:
+      - button "PH Phase3 Closure QA phase3-closure-qa " [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: PH
+        - generic [ref=e51]:
+          - generic [ref=e52]: Phase3 Closure QA
+          - generic [ref=e53]: phase3-closure-qa
+        - generic [ref=e54]: 
+      - button "+ ساخت کسب‌وکار جدید" [ref=e57] [cursor=pointer]:
+        - generic [ref=e58]: +
+        - text: ساخت کسب‌وکار جدید

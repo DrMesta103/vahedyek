@@ -1,0 +1,87 @@
+- generic [active] [ref=f36e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f36e2] [cursor=pointer]
+  - generic [ref=f36e6]:
+    - generic [ref=f36e7]:
+      - navigation "مسیر صفحه" [ref=f36e9]:
+        - list [ref=f36e10]:
+          - listitem [ref=f36e11]:
+            - button "خانه" [ref=f36e12] [cursor=pointer]
+          - listitem [ref=f36e14]
+          - listitem [ref=f36e18]:
+            - button "کارمندان" [ref=f36e19] [cursor=pointer]
+          - listitem [ref=f36e21]
+          - listitem [ref=f36e25]:
+            - button "phase3-runtime-disabled" [ref=f36e26] [cursor=pointer]
+          - listitem [ref=f36e28]
+          - listitem [ref=f36e32]:
+            - generic [ref=f36e33]: مشخصات
+      - main [ref=f36e35]:
+        - alert [ref=f36e631]:
+          - generic [ref=f36e632]:
+            - heading "امکان دریافت لیست کارکنان وجود ندارد." [level=2] [ref=f36e633]
+            - paragraph [ref=f36e634]: دوباره تلاش کنید.
+            - button "تلاش دوباره" [ref=f36e635] [cursor=pointer]
+    - complementary [ref=f36e41]:
+      - generic [ref=f36e42]:
+        - generic [ref=f36e43]: P
+        - generic [ref=f36e44]:
+          - generic [ref=f36e45]: Phase3 Owner
+          - generic [ref=f36e589]: phase3.owner@example.com
+      - generic [ref=f36e46]:
+        - generic [ref=f36e47]: DS
+        - generic [ref=f36e48]:
+          - generic [ref=f36e49]: Phase3 Runtime Test Tenant
+          - generic [ref=f36e590]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f36e50] [cursor=pointer]
+      - generic [ref=f36e53]:
+        - button "خروج" [ref=f36e54] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f36e59] [cursor=pointer]:
+          - generic [ref=f36e64]: "1"
+        - button "تنظیمات کلی" [ref=f36e65] [cursor=pointer]
+        - button "داشبورد" [ref=f36e70] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f36e75] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f36e83]:
+        - link "راه‌اندازی سریع" [ref=f36e84] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f36e89] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f36e95] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f36e101] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f36e106] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f36e111] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f36e119] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f36e126] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f36e133] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f36e140] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f36e146] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f36e152] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f36e159] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f36e164] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f36e591] [cursor=pointer]:
+        - paragraph [ref=f36e171]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f36e592]
+      - generic [ref=f36e173]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f36e175] [cursor=pointer]
+        - generic [ref=f36e178]: 0.8.0
+  - generic [ref=f36e183] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=f36e184]
+    - generic [ref=f36e636]:
+      - button "Open issues overlay" [ref=f36e637]:
+        - generic [ref=f36e638]:
+          - generic [ref=f36e639]: "0"
+          - generic [ref=f36e640]: "1"
+        - generic [ref=f36e641]: Issue
+      - button "Collapse issues badge" [ref=f36e642]
+  - alert [ref=f36e593]

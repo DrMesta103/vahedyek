@@ -1,0 +1,7 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=e64] [cursor=pointer]
+  - alert [ref=e68]
+  - generic [ref=e205]:
+    - generic [ref=e206]: 
+    - heading "کسب‌وکار شما در حال ساخته شدن است" [level=1] [ref=e208]
+    - paragraph [ref=e209]: داریم tenant را آماده می‌کنیم و شما را مستقیم وارد داشبورد می‌کنیم.
