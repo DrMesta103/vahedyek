@@ -17,6 +17,7 @@ export type OcrModelPricing = {
   outputTokenPriceUsd: number;
   cacheReadTokenPriceUsd?: number;
   cacheWriteTokenPriceUsd?: number;
+  pagePriceUsd: number;
 };
 
 export type OcrAiUsageCost = {
@@ -77,7 +78,36 @@ export function resolveOcrModelPricing(
     providerLabel: account.providerLabel,
     inputTokenPriceUsd: pricingModel.inputTokenPriceUsd,
     outputTokenPriceUsd: pricingModel.outputTokenPriceUsd,
+    pagePriceUsd: pricingModel.pagePriceUsd,
   };
+}
+
+export function resolvePagePriceUsdFromAccounts(
+  modelId: string,
+  accounts: AiProviderAccountForPricing[],
+): number {
+  if (!modelId || modelId === '—') return 0;
+
+  const fromCatalog = resolveOcrModelPricing(modelId, accounts);
+  if (fromCatalog && fromCatalog.pagePriceUsd > 0) return fromCatalog.pagePriceUsd;
+
+  const model = accounts
+    .filter((account) => account.isActive)
+    .flatMap((account) =>
+      (account.models ?? []).map((item) => ({
+        ...item,
+        accountId: account.id,
+      })),
+    )
+    .find(
+      (item) =>
+        item.isActive &&
+        (item.providerModelName === modelId ||
+          item.id === modelId ||
+          `${item.accountId}:${item.providerModelName}` === modelId),
+    );
+
+  return model?.pagePriceUsd ?? 0;
 }
 
 export function buildOcrUsageCost(input: {

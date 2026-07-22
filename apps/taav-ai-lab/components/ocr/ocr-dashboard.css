@@ -216,8 +216,15 @@
 
 .ai-lab-ocr-dashboard-kpis {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
+}
+
+.ai-lab-ocr-dashboard-kpis--status {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ai-lab-ocr-dashboard-kpis--usage {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .ai-lab-ocr-dashboard-kpi {
@@ -271,6 +278,18 @@
   border-color: rgba(251, 191, 36, 0.22);
   background: rgba(251, 191, 36, 0.1);
   color: #fcd34d;
+}
+
+.ai-lab-ocr-dashboard-kpi--teal .ai-lab-ocr-dashboard-kpi-icon {
+  border-color: rgba(45, 212, 191, 0.22);
+  background: rgba(45, 212, 191, 0.1);
+  color: #5eead4;
+}
+
+.ai-lab-ocr-dashboard-kpi--cyan .ai-lab-ocr-dashboard-kpi-icon {
+  border-color: rgba(34, 211, 238, 0.22);
+  background: rgba(34, 211, 238, 0.1);
+  color: #67e8f9;
 }
 
 .ai-lab-ocr-dashboard-kpi strong {
@@ -647,6 +666,14 @@
   direction: ltr;
 }
 
+.ai-lab-ocr-dashboard-row-metric--pages {
+  color: #93c5fd;
+}
+
+.ai-lab-ocr-dashboard-row-metric--pages small {
+  color: #93c5fd;
+}
+
 .ai-lab-ocr-dashboard-row-tokens {
   display: grid;
   gap: 2px;
@@ -767,7 +794,11 @@
 }
 
 @media (max-width: 1200px) {
-  .ai-lab-ocr-dashboard-kpis {
+  .ai-lab-ocr-dashboard-kpis--status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-lab-ocr-dashboard-kpis--usage {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -793,7 +824,8 @@
 }
 
 @media (max-width: 720px) {
-  .ai-lab-ocr-dashboard-kpis {
+  .ai-lab-ocr-dashboard-kpis--status,
+  .ai-lab-ocr-dashboard-kpis--usage {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

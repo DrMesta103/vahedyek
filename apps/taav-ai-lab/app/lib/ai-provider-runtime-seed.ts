@@ -57,6 +57,8 @@ async function runEnsureAiProviderSeedData(): Promise<void> {
         pricingModelId: seedModel.pricingModelId,
         modelType: seedModel.modelType,
         inputRatio: seedModel.inputRatio,
+        pricingUnit: seedModel.pricingUnit,
+        pagePriceUsd: seedModel.pagePriceUsd,
       });
 
       const existingModel = await prisma.aiProviderModel.findUnique({
@@ -76,9 +78,10 @@ async function runEnsureAiProviderSeedData(): Promise<void> {
             displayName: seedModel.displayName,
             providerModelName: seedModel.providerModelName,
             modelType: seedModel.modelType,
-            pricingUnit: 'TOKEN',
+            pricingUnit: prices.pricingUnit,
             inputTokenPriceUsd: prices.inputTokenPriceUsd,
             outputTokenPriceUsd: prices.outputTokenPriceUsd,
+            pagePriceUsd: prices.pagePriceUsd,
             supportsPersian: seedModel.supportsPersian ?? false,
             supportsEnglish: seedModel.supportsEnglish ?? false,
             supportsVision: seedModel.supportsVision ?? false,

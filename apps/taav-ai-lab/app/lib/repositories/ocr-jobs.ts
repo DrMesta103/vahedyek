@@ -3,6 +3,7 @@ import {
   buildOcrCostMeta,
   buildOcrUsageCost,
 } from '../ocr-ai-pricing';
+import { usdToTomanCost } from '../ai-usage-cost';
 import { DEFAULT_OCR_MODEL_ID, type OcrModelProvider } from '../ocr-models';
 import { AI_PROVIDER_LABELS, type AiProviderType } from '../types/ai-accounts';
 import {
@@ -25,6 +26,7 @@ function mapAccountProviderToOcrProvider(value: string): OcrModelProvider | null
   if (normalized === 'DEEPSEEK') return 'deepseek';
   if (normalized === 'GEMINI') return 'google';
   if (normalized === 'GROK') return 'xai';
+  if (normalized === 'MISTRAL') return 'openai';
   return null;
 }
 
@@ -55,6 +57,12 @@ function readModelTokenPrices(row: unknown) {
     inputTokenPriceUsd: toNumber(anyRow.inputTokenPriceUsd ?? 0),
     outputTokenPriceUsd: toNumber(anyRow.outputTokenPriceUsd ?? 0),
   };
+}
+
+function readModelPagePriceUsd(row: unknown) {
+  const anyRow = row as { pagePriceUsd?: { toString(): string } | number };
+  const value = toNumber(anyRow.pagePriceUsd ?? 0);
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 async function persistMaterializedJob(job: OcrSimulationJob) {
@@ -163,6 +171,12 @@ export async function createOcrJobForTenant(
   const ocrCachedInputTokens = 0;
   const ocrCacheWriteTokens = 0;
 
+  const ocrPricingUnitRaw = selectedOcrRow
+    ? String((selectedOcrRow as { pricingUnit?: string | null }).pricingUnit ?? 'TOKEN').toUpperCase()
+    : 'TOKEN';
+  const ocrPricingUnit = ocrPricingUnitRaw === 'PAGE' ? 'PAGE' : ocrPricingUnitRaw;
+  const isOcrPagePriced = ocrPricingUnit === 'PAGE';
+
   const ocrTokenPrices = selectedOcrRow ? readModelTokenPrices(selectedOcrRow) : { inputTokenPriceUsd: 0, outputTokenPriceUsd: 0 };
   const ocrCachePrices = selectedOcrRow ? readModelCachePrices(selectedOcrRow) : { cacheReadTokenPriceUsd: 0, cacheWriteTokenPriceUsd: 0 };
 
@@ -171,18 +185,19 @@ export async function createOcrJobForTenant(
         accountId: selectedOcrRow.accountId,
         provider: (selectedOcrRow.account.provider as AiProviderType) ?? 'OPENAI',
         providerLabel: ocrProviderLabel,
-        inputTokenPriceUsd: ocrTokenPrices.inputTokenPriceUsd,
-        outputTokenPriceUsd: ocrTokenPrices.outputTokenPriceUsd,
-        cacheReadTokenPriceUsd: ocrCachePrices.cacheReadTokenPriceUsd,
-        cacheWriteTokenPriceUsd: ocrCachePrices.cacheWriteTokenPriceUsd,
+        inputTokenPriceUsd: isOcrPagePriced ? 0 : ocrTokenPrices.inputTokenPriceUsd,
+        outputTokenPriceUsd: isOcrPagePriced ? 0 : ocrTokenPrices.outputTokenPriceUsd,
+        cacheReadTokenPriceUsd: isOcrPagePriced ? 0 : ocrCachePrices.cacheReadTokenPriceUsd,
+        cacheWriteTokenPriceUsd: isOcrPagePriced ? 0 : ocrCachePrices.cacheWriteTokenPriceUsd,
+        pagePriceUsd: readModelPagePriceUsd(selectedOcrRow),
       }
     : null;
 
   const ocrUsageCost = buildOcrUsageCost({
-    inputTokens: ocrInputTokens,
-    outputTokens: ocrOutputTokens,
-    cachedInputTokens: ocrCachedInputTokens,
-    cacheWriteTokens: ocrCacheWriteTokens,
+    inputTokens: isOcrPagePriced ? 0 : ocrInputTokens,
+    outputTokens: isOcrPagePriced ? 0 : ocrOutputTokens,
+    cachedInputTokens: isOcrPagePriced ? 0 : ocrCachedInputTokens,
+    cacheWriteTokens: isOcrPagePriced ? 0 : ocrCacheWriteTokens,
     pricing: ocrPricing,
     usdToToman: globalSettings.usdToToman,
     providerLabel: ocrProviderLabel,
@@ -228,6 +243,7 @@ export async function createOcrJobForTenant(
         outputTokenPriceUsd: chatTokenPrices.outputTokenPriceUsd,
         cacheReadTokenPriceUsd: chatCachePrices.cacheReadTokenPriceUsd,
         cacheWriteTokenPriceUsd: chatCachePrices.cacheWriteTokenPriceUsd,
+        pagePriceUsd: 0,
       }
     : null;
   const chatUsageCost = buildOcrUsageCost({
@@ -240,8 +256,21 @@ export async function createOcrJobForTenant(
     providerLabel: chatProviderLabel,
   });
 
-  const totalCostUsd = ocrUsageCost.totalCostUsd + chatUsageCost.totalCostUsd;
-  const totalCostToman = ocrUsageCost.totalCostToman + chatUsageCost.totalCostToman;
+  const pageCount = Math.max(0, job.pageCount ?? 0);
+  const pagePriceUsd = selectedOcrRow ? readModelPagePriceUsd(selectedOcrRow) : 0;
+  const pageCostUsd = pageCount * pagePriceUsd;
+  const pageCostToman = usdToTomanCost(pageCostUsd, globalSettings.usdToToman);
+  // PAGE OCR: token bill is chat-only; OCR bill is page cost stored on OCR totals below.
+  const tokenCostUsd = isOcrPagePriced
+    ? chatUsageCost.totalCostUsd
+    : ocrUsageCost.totalCostUsd + chatUsageCost.totalCostUsd;
+  const tokenCostToman = isOcrPagePriced
+    ? chatUsageCost.totalCostToman
+    : ocrUsageCost.totalCostToman + chatUsageCost.totalCostToman;
+  const ocrBilledCostUsd = isOcrPagePriced ? pageCostUsd : ocrUsageCost.totalCostUsd;
+  const ocrBilledCostToman = isOcrPagePriced ? pageCostToman : ocrUsageCost.totalCostToman;
+  const totalCostUsd = tokenCostUsd + pageCostUsd;
+  const totalCostToman = tokenCostToman + pageCostToman;
 
   job = {
     ...job,
@@ -252,20 +281,21 @@ export async function createOcrJobForTenant(
       __ocrModelName: selectedOcrRow?.displayName ?? ocrModelKey,
       __ocrProviderLabel: ocrProviderLabel,
       __ocrProvider: ocrProvider,
-      __ocrInputTokens: String(ocrInputTokens),
-      __ocrOutputTokens: String(ocrOutputTokens),
-      __ocrCachedInputTokens: String(ocrCachedInputTokens),
-      __ocrCacheWriteTokens: String(ocrCacheWriteTokens),
-      __ocrInputTokenPriceUsd: String(ocrTokenPrices.inputTokenPriceUsd),
-      __ocrOutputTokenPriceUsd: String(ocrTokenPrices.outputTokenPriceUsd),
-      __ocrCacheReadTokenPriceUsd: String(ocrCachePrices.cacheReadTokenPriceUsd),
-      __ocrCacheWriteTokenPriceUsd: String(ocrCachePrices.cacheWriteTokenPriceUsd),
-      __ocrInputCostUsd: String(ocrUsageCost.inputCostUsd),
-      __ocrOutputCostUsd: String(ocrUsageCost.outputCostUsd),
-      __ocrCacheReadCostUsd: String(ocrUsageCost.cacheReadCostUsd),
-      __ocrCacheWriteCostUsd: String(ocrUsageCost.cacheWriteCostUsd),
-      __ocrTotalCostUsd: String(ocrUsageCost.totalCostUsd),
-      __ocrTotalCostToman: String(ocrUsageCost.totalCostToman),
+      __ocrPricingUnit: ocrPricingUnit,
+      __ocrInputTokens: String(isOcrPagePriced ? 0 : ocrInputTokens),
+      __ocrOutputTokens: String(isOcrPagePriced ? 0 : ocrOutputTokens),
+      __ocrCachedInputTokens: String(isOcrPagePriced ? 0 : ocrCachedInputTokens),
+      __ocrCacheWriteTokens: String(isOcrPagePriced ? 0 : ocrCacheWriteTokens),
+      __ocrInputTokenPriceUsd: String(isOcrPagePriced ? 0 : ocrTokenPrices.inputTokenPriceUsd),
+      __ocrOutputTokenPriceUsd: String(isOcrPagePriced ? 0 : ocrTokenPrices.outputTokenPriceUsd),
+      __ocrCacheReadTokenPriceUsd: String(isOcrPagePriced ? 0 : ocrCachePrices.cacheReadTokenPriceUsd),
+      __ocrCacheWriteTokenPriceUsd: String(isOcrPagePriced ? 0 : ocrCachePrices.cacheWriteTokenPriceUsd),
+      __ocrInputCostUsd: String(isOcrPagePriced ? 0 : ocrUsageCost.inputCostUsd),
+      __ocrOutputCostUsd: String(isOcrPagePriced ? 0 : ocrUsageCost.outputCostUsd),
+      __ocrCacheReadCostUsd: String(isOcrPagePriced ? 0 : ocrUsageCost.cacheReadCostUsd),
+      __ocrCacheWriteCostUsd: String(isOcrPagePriced ? 0 : ocrUsageCost.cacheWriteCostUsd),
+      __ocrTotalCostUsd: String(ocrBilledCostUsd),
+      __ocrTotalCostToman: String(ocrBilledCostToman),
 
       // Chat stage (namespaced)
       __chatModelId: selectedChatRow?.providerModelName ?? (chatModelKey || '—'),
@@ -287,12 +317,26 @@ export async function createOcrJobForTenant(
       __chatTotalCostUsd: String(chatUsageCost.totalCostUsd),
       __chatTotalCostToman: String(chatUsageCost.totalCostToman),
 
-      // Total (for list/reporting)
+      // Page + token + total (for list/reporting)
+      __pageCount: String(pageCount),
+      __pagePriceUsd: String(pagePriceUsd),
+      __pageCostUsd: String(pageCostUsd),
+      __pageCostToman: String(pageCostToman),
+      __tokenCostUsd: String(tokenCostUsd),
+      __tokenCostToman: String(tokenCostToman),
       __totalCostUsd: String(totalCostUsd),
       __totalCostToman: String(totalCostToman),
 
       // Keep backwards compatible keys for existing UI paths
-      ...buildOcrCostMeta({ ...ocrUsageCost, totalCostUsd, totalCostToman }),
+      ...buildOcrCostMeta({
+        ...ocrUsageCost,
+        totalCostUsd,
+        totalCostToman,
+        inputCostUsd: isOcrPagePriced ? 0 : ocrUsageCost.inputCostUsd,
+        outputCostUsd: isOcrPagePriced ? 0 : ocrUsageCost.outputCostUsd,
+        cacheReadCostUsd: isOcrPagePriced ? 0 : ocrUsageCost.cacheReadCostUsd,
+        cacheWriteCostUsd: isOcrPagePriced ? 0 : ocrUsageCost.cacheWriteCostUsd,
+      }),
     },
   };
 

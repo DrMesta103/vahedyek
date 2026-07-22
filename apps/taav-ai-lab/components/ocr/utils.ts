@@ -5,6 +5,8 @@ import {
   buildOcrUsageCost,
   readOcrCostFromMetaWithToman,
   resolveOcrModelPricing,
+  resolvePagePriceUsdFromAccounts,
+  type AiProviderAccountForPricing,
   type OcrAiUsageCost,
 } from '@/app/lib/ocr-ai-pricing';
 import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
@@ -93,8 +95,145 @@ export function buildOcrStats(jobs: OcrSimulationJob[]) {
   const avgConfidence =
     total === 0 ? 0 : Math.round(jobs.reduce((sum, job) => sum + job.confidence, 0) / total);
   const tokensUsed = jobs.reduce((sum, job) => sum + job.tokensUsed, 0);
+  const pagesUsed = jobs.reduce((sum, job) => sum + Math.max(0, job.pageCount ?? 0), 0);
 
-  return { total, completed, processing, failed, avgConfidence, tokensUsed };
+  return { total, completed, processing, failed, avgConfidence, tokensUsed, pagesUsed };
+}
+
+export type OcrJobUsageBreakdown = {
+  tokensUsed: number;
+  pagesUsed: number;
+  tokenCostUsd: number;
+  tokenCostToman: number;
+  pageCostUsd: number;
+  pageCostToman: number;
+  totalCostUsd: number;
+  totalCostToman: number;
+};
+
+export function getOcrJobUsageBreakdown(
+  job: OcrSimulationJob,
+  usdToToman: number,
+  accounts?: AiProviderAccountForPricing[],
+  legacyTokenCost?: OcrAiUsageCost | null,
+): OcrJobUsageBreakdown {
+  const extracted = (job.extractedJson ?? {}) as Record<string, string>;
+  const pagesUsed = Math.max(0, job.pageCount ?? readNumber(extracted.__pageCount));
+  const pagePriced = isOcrPagePriced(job, accounts);
+
+  const hasTokenCostSnapshot =
+    Object.prototype.hasOwnProperty.call(extracted, '__tokenCostUsd') ||
+    Object.prototype.hasOwnProperty.call(extracted, '__tokenCostToman');
+  const hasPageCostSnapshot =
+    Object.prototype.hasOwnProperty.call(extracted, '__pageCostUsd') ||
+    Object.prototype.hasOwnProperty.call(extracted, '__pageCostToman');
+
+  const ocrCost = getOcrStageCost(job, 'ocr', usdToToman);
+  const chatCost = getOcrStageCost(job, 'chat', usdToToman);
+  // When PAGE-priced, OCR stage totals may already hold page cost — never treat as token.
+  const stageTokenUsd = pagePriced ? chatCost.totalCostUsd : ocrCost.totalCostUsd + chatCost.totalCostUsd;
+  const stageTokenToman = pagePriced
+    ? chatCost.totalCostToman
+    : ocrCost.totalCostToman + chatCost.totalCostToman;
+
+  let tokenCostUsd = 0;
+  let tokenCostToman = 0;
+
+  if (hasTokenCostSnapshot) {
+    tokenCostUsd = readNumber(extracted.__tokenCostUsd);
+    tokenCostToman =
+      readNumber(extracted.__tokenCostToman) || usdToTomanCost(tokenCostUsd, usdToToman);
+  } else if (stageTokenUsd > 0 || stageTokenToman > 0) {
+    tokenCostUsd = stageTokenUsd;
+    tokenCostToman = stageTokenToman || usdToTomanCost(stageTokenUsd, usdToToman);
+  } else if (!pagePriced) {
+    const legacy =
+      legacyTokenCost ??
+      getOcrAiUsageCost(job, usdToToman, accounts as AiProviderAccountPublic[] | undefined);
+    // Legacy __totalCost was token-only when page snapshot is missing.
+    tokenCostUsd = legacy.totalCostUsd;
+    tokenCostToman = legacy.totalCostToman || usdToTomanCost(legacy.totalCostUsd, usdToToman);
+  }
+
+  let pageCostUsd = 0;
+  let pageCostToman = 0;
+
+  if (hasPageCostSnapshot) {
+    pageCostUsd = readNumber(extracted.__pageCostUsd);
+    pageCostToman =
+      readNumber(extracted.__pageCostToman) || usdToTomanCost(pageCostUsd, usdToToman);
+  } else if (pagePriced || readNumber(extracted.__pagePriceUsd) > 0) {
+    const pagePriceUsd =
+      readNumber(extracted.__pagePriceUsd) ||
+      (accounts
+        ? resolvePagePriceUsdFromAccounts(
+            String(extracted.__ocrModelId || getOcrAiUsage(job).modelId),
+            accounts,
+          )
+        : 0);
+    pageCostUsd = pagesUsed * pagePriceUsd;
+    pageCostToman = usdToTomanCost(pageCostUsd, usdToToman);
+  }
+
+  const hasExplicitTotal =
+    hasTokenCostSnapshot &&
+    (Object.prototype.hasOwnProperty.call(extracted, '__totalCostUsd') ||
+      Object.prototype.hasOwnProperty.call(extracted, '__totalCostToman'));
+
+  const totalCostUsd = hasExplicitTotal
+    ? readNumber(extracted.__totalCostUsd) || tokenCostUsd + pageCostUsd
+    : tokenCostUsd + pageCostUsd;
+  const totalCostToman = hasExplicitTotal
+    ? readNumber(extracted.__totalCostToman) ||
+      usdToTomanCost(totalCostUsd, usdToToman) ||
+      tokenCostToman + pageCostToman
+    : tokenCostToman + pageCostToman;
+
+  return {
+    tokensUsed: job.tokensUsed,
+    pagesUsed,
+    tokenCostUsd,
+    tokenCostToman,
+    pageCostUsd,
+    pageCostToman,
+    totalCostUsd,
+    totalCostToman,
+  };
+}
+
+export function buildOcrUsageTotals(
+  jobs: OcrSimulationJob[],
+  usdToToman: number,
+  accounts?: AiProviderAccountForPricing[],
+  jobCosts?: Record<string, OcrAiUsageCost>,
+): Omit<OcrJobUsageBreakdown, 'tokensUsed' | 'pagesUsed'> & {
+  tokensUsed: number;
+  pagesUsed: number;
+} {
+  return jobs.reduce(
+    (acc, job) => {
+      const breakdown = getOcrJobUsageBreakdown(job, usdToToman, accounts, jobCosts?.[job.id] ?? null);
+      acc.tokensUsed += breakdown.tokensUsed;
+      acc.pagesUsed += breakdown.pagesUsed;
+      acc.tokenCostUsd += breakdown.tokenCostUsd;
+      acc.tokenCostToman += breakdown.tokenCostToman;
+      acc.pageCostUsd += breakdown.pageCostUsd;
+      acc.pageCostToman += breakdown.pageCostToman;
+      acc.totalCostUsd += breakdown.totalCostUsd;
+      acc.totalCostToman += breakdown.totalCostToman;
+      return acc;
+    },
+    {
+      tokensUsed: 0,
+      pagesUsed: 0,
+      tokenCostUsd: 0,
+      tokenCostToman: 0,
+      pageCostUsd: 0,
+      pageCostToman: 0,
+      totalCostUsd: 0,
+      totalCostToman: 0,
+    },
+  );
 }
 
 export type OcrResultFormField = {
@@ -366,6 +505,74 @@ export function getOcrAiUsageCost(
     usdToToman,
     providerLabel: usage.providerLabel,
   });
+}
+
+export function isOcrPagePriced(
+  job: OcrSimulationJob,
+  accounts?: AiProviderAccountForPricing[],
+): boolean {
+  const extracted = (job.extractedJson ?? {}) as Record<string, string>;
+  const stored = String(extracted.__ocrPricingUnit ?? '').toUpperCase();
+  if (stored === 'PAGE') return true;
+  if (stored.length > 0) return false;
+
+  if (!accounts?.length) return false;
+
+  const modelId = String(extracted.__ocrModelId || getOcrAiUsage(job).modelId || '');
+  if (!modelId || modelId === '—') return false;
+
+  const model = accounts
+    .filter((account) => account.isActive)
+    .flatMap((account) =>
+      (account.models ?? []).map((item) => ({
+        ...item,
+        accountId: account.id,
+      })),
+    )
+    .find(
+      (item) =>
+        item.isActive &&
+        (item.providerModelName === modelId ||
+          item.id === modelId ||
+          `${item.accountId}:${item.providerModelName}` === modelId),
+    );
+
+  return model?.pricingUnit === 'PAGE';
+}
+
+export function getOcrHistoryStageDisplayCost(
+  job: OcrSimulationJob,
+  stage: OcrStageKey,
+  usdToToman: number,
+  accounts?: AiProviderAccountForPricing[],
+  legacyCost?: OcrAiUsageCost | null,
+): OcrAiUsageCost {
+  if (stage === 'ocr' && isOcrPagePriced(job, accounts)) {
+    const breakdown = getOcrJobUsageBreakdown(job, usdToToman, accounts, legacyCost);
+    const providerLabel = String(
+      ((job.extractedJson ?? {}) as Record<string, string>).__ocrProviderLabel ?? '—',
+    );
+    return {
+      accountId: null,
+      providerLabel,
+      inputCostUsd: 0,
+      outputCostUsd: 0,
+      cacheReadCostUsd: 0,
+      cacheWriteCostUsd: 0,
+      totalCostUsd: breakdown.pageCostUsd,
+      inputCostToman: 0,
+      outputCostToman: 0,
+      cacheReadCostToman: 0,
+      cacheWriteCostToman: 0,
+      totalCostToman: breakdown.pageCostToman,
+    };
+  }
+
+  const cost = getOcrStageCost(job, stage, usdToToman);
+  if (stage === 'ocr' && legacyCost && !hasOcrStageMeta(job, 'ocr')) {
+    return legacyCost;
+  }
+  return cost;
 }
 
 export function getOcrFormFields(job: OcrSimulationJob): OcrResultFormField[] {
