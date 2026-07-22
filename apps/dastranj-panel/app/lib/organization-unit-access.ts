@@ -30,6 +30,21 @@ export const JOB_CLASSIFICATION_PERMISSIONS = {
   archive: 'job.classification.archive',
 } as const;
 export const JOB_EVALUATION_PERMISSION = 'job.evaluation.manage' as const;
+export const EMPLOYEE_ASSESSMENT_PERMISSIONS = { view: 'employee.assessment.view', create: 'employee.assessment.create', manage: 'employee.assessment.manage', sensitive: 'employee.assessment.sensitive' } as const;
+
+export async function getEmployeeAssessmentAccess(employeeId: string) {
+  const session = await getSessionContext();
+  if (!session?.tenantId || !session.userId) return { tenantId: null, userId: null, canView: false, canCreate: false, canManageWorkflow: false, canViewSensitive: false, isSelf: false, isManager: false };
+  const membership = await prisma.userTenantMembership.findUnique({ where: { userId_tenantId: { userId: session.userId, tenantId: session.tenantId } }, include: { roles: { include: { role: { include: { permissions: { select: { permissionKey: true } } } } } }, employee: { select: { id: true } } } });
+  const roles = new Set([membership?.role?.toLowerCase(), ...(membership?.roles.map((item) => item.role.key.toLowerCase()) ?? [])].filter(Boolean));
+  const permissions = new Set(membership?.roles.flatMap((item) => item.role.permissions.map((permission) => permission.permissionKey)) ?? []);
+  const target = await prisma.employee.findFirst({ where: { id: employeeId, tenantId: session.tenantId }, select: { id: true, organizationUnits: { select: { organizationUnit: { select: { managerId: true } } } } } });
+  const isSelf = membership?.employee?.id === employeeId;
+  const isManager = Boolean(target?.organizationUnits.some((item) => item.organizationUnit.managerId === membership?.employee?.id));
+  const manages = [...roles].some((role) => MANAGE_ROLES.has(role as string));
+  const canView = manages || isSelf || isManager || permissions.has(EMPLOYEE_ASSESSMENT_PERMISSIONS.view);
+  return { tenantId: session.tenantId, userId: session.userId, canView, canCreate: manages || isManager || permissions.has(EMPLOYEE_ASSESSMENT_PERMISSIONS.create), canManageWorkflow: manages || permissions.has(EMPLOYEE_ASSESSMENT_PERMISSIONS.manage), canViewSensitive: manages || roles.has('hr_manager') || permissions.has(EMPLOYEE_ASSESSMENT_PERMISSIONS.sensitive), isSelf, isManager };
+}
 
 export async function getJobClassificationAccess() {
   const session = await getSessionContext();

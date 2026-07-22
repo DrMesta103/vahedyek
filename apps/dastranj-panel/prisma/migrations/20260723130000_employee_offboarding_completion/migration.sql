@@ -1,0 +1,16 @@
+ALTER TABLE "EmployeeTerminationIntent"
+  ADD COLUMN "terminationType" TEXT,
+  ADD COLUMN "description" TEXT,
+  ADD COLUMN "announcementDate" TEXT,
+  ADD COLUMN "processStartDate" TIMESTAMP(3),
+  ADD COLUMN "proposedLastWorkingDay" TEXT,
+  ADD COLUMN "effectiveTerminationDate" TEXT,
+  ADD COLUMN "accessDisableDate" TIMESTAMP(3),
+  ADD COLUMN "settlementCompletionDate" TIMESTAMP(3),
+  ADD COLUMN "archiveDate" TIMESTAMP(3),
+  ADD COLUMN "immediateAccessRevocation" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "nextAction" TEXT,
+  ADD COLUMN "stageOwner" TEXT,
+  ADD COLUMN "settlementStatus" TEXT NOT NULL DEFAULT 'PENDING',
+  ADD COLUMN "assetStatus" TEXT NOT NULL DEFAULT 'NOT_APPLICABLE',
+  ADD COLUMN "accessStatus" TEXT NOT NULL DEFAULT 'ACTIVE';

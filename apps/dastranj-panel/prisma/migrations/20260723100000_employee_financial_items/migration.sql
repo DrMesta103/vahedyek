@@ -1,0 +1,8 @@
+CREATE TYPE "EmployeeFinancialItemType" AS ENUM ('PAYMENT','BONUS','ALLOWANCE','MISSION_PAYMENT','WELFARE_PAYMENT','MEDICAL_SUPPORT','OTHER_PAYMENT','DEDUCTION','LOAN','ADVANCE','DAMAGE','FINE','OTHER_DEDUCTION');
+CREATE TYPE "EmployeeFinancialApplyMethod" AS ENUM ('THIS_PAYROLL','NEXT_PAYROLL','INSTALLMENT','DIRECT_PAYMENT','OUTSIDE_PAYROLL');
+CREATE TYPE "EmployeeFinancialItemStatus" AS ENUM ('DRAFT','PENDING_APPROVAL','APPROVED','APPLIED_TO_PAYROLL','PAID','SETTLED','REJECTED','CANCELLED');
+CREATE TABLE "EmployeeFinancialItem" ("id" TEXT NOT NULL,"tenantId" TEXT NOT NULL,"employeeId" TEXT NOT NULL,"type" "EmployeeFinancialItemType" NOT NULL,"title" TEXT NOT NULL,"amount" DECIMAL(18,2) NOT NULL,"description" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"effectiveDate" TIMESTAMP(3) NOT NULL,"applyMethod" "EmployeeFinancialApplyMethod" NOT NULL,"status" "EmployeeFinancialItemStatus" NOT NULL DEFAULT 'DRAFT',"sourceModule" TEXT NOT NULL,"referenceId" TEXT,"createdById" TEXT,"approvedById" TEXT,"payrollAppliedAt" TIMESTAMP(3),CONSTRAINT "EmployeeFinancialItem_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "EmployeeFinancialItem_tenantId_employeeId_effectiveDate_idx" ON "EmployeeFinancialItem"("tenantId","employeeId","effectiveDate");
+CREATE INDEX "EmployeeFinancialItem_tenantId_status_idx" ON "EmployeeFinancialItem"("tenantId","status");
+ALTER TABLE "EmployeeFinancialItem" ADD CONSTRAINT "EmployeeFinancialItem_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "EmployeeFinancialItem" ADD CONSTRAINT "EmployeeFinancialItem_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE CASCADE ON UPDATE CASCADE;

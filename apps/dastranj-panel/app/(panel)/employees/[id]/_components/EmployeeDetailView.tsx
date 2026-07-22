@@ -10,6 +10,7 @@ import {
   FileText,
   FolderOpen,
   Gauge,
+  ChartNoAxesCombined,
   LayoutGrid,
   Mail,
   MapPin,
@@ -32,7 +33,7 @@ import { computeSupplementalCompleteness } from '../../../../lib/employee-supple
 import type { EmployeeCurrentContractSummary } from '../../../../lib/employee-contracts';
 import type { EmployeeSupplementalProfile } from '../../../../lib/employee-contract-drafts';
 import { EditEmployeeFlow, type EditEmployeeData } from './EditEmployeeFlow';
-import { createEmployeeTerminationIntentAction, toggleEmployeeActiveAction } from '../../../../lib/actions';
+import { toggleEmployeeActiveAction } from '../../../../lib/actions';
 
 type EmployeeDetailSection = {
   title: string;
@@ -95,6 +96,27 @@ function buildSections(employeeId: string, canHistoryView: boolean): Array<{ tit
     {
       title: 'گزارشات و درخواست ها',
       cards: [
+        {
+          title: 'گزارش‌ها و تحلیل‌ها',
+          description: 'مشاهده گزارش‌ها، روندها و تحلیل‌های مرتبط با چرخه همکاری کارمند.',
+          href: `/employees/${employeeId}/reports`,
+          highlighted: true,
+          icon: ChartNoAxesCombined,
+        },
+        {
+          title: 'مرکز ارزیابی و توسعه',
+          description: 'مشاهده ارزیابی‌های عملکرد، روند امتیاز و اقدام‌های توسعه کارمند.',
+          href: `/employees/${employeeId}/assessment`,
+          highlighted: true,
+          icon: ChartNoAxesCombined,
+        },
+        {
+          title: 'حقوق، مزایا و تعهدات مالی',
+          description: 'مشاهده فیش‌های حقوقی، پرداخت‌ها، کسورات، وام‌ها، خسارت‌ها و سوابق مالی کارمند.',
+          href: `/employees/${employeeId}/compensation`,
+          highlighted: true,
+          icon: Wallet,
+        },
         ...(canHistoryView ? [{ title: 'تاریخچه تغییرات', description: 'تغییرات مهم پرونده با مقادیر حساس ماسک‌شده ثبت می‌شود.', href: `/employees/${employeeId}/history`, highlighted: true, icon: ClipboardList }] : []),
         {
           title: 'درخواست ها',
@@ -353,12 +375,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
                 </form>
               ) : null}
               {employee.permissions.canDisable ? (
-                <form action={createEmployeeTerminationIntentAction} onSubmit={(event) => {
-                  if (!window.confirm('فقط درخواست شروع فرآیند ثبت می‌شود و وضعیت کارمند تغییر نمی‌کند. ادامه می‌دهید؟')) event.preventDefault();
-                }}>
-                  <input type="hidden" name="employeeId" value={employee.id} />
-                  <button type="submit" className="employee-detail-action-btn">شروع فرآیند خاتمه همکاری</button>
-                </form>
+                <Link href={`/employees/${employee.id}/offboarding`} className="employee-detail-action-btn">خاتمه همکاری</Link>
               ) : null}
               <Link href={`/employees/${employee.id}/guarantee`} className="employee-detail-action-btn">
                 ضمانت‌ها

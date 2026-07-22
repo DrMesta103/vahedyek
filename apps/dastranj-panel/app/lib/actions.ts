@@ -52,6 +52,8 @@ import type { ContractDraftTemplate } from './contract-draft-templates';
 import { normalizeContractDraftTemplate } from './contract-draft-templates';
 import { requireEmployeeAccess, requireEmployeeChangeRequestManageAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
 import { createEmployeeAuditLog } from './employee-audit';
+import { requireOffboardingAccess } from './offboarding-access';
+import { handleEmployeeOffboardingAction } from './offboarding-workflow-actions';
 import { requireWorkGroupAccess } from './work-group-access';
 import { shouldApplyContextChangeNow, validateMembershipDates, validateWorkGroupTitle } from './work-group-rules';
 import { EMPLOYEE_CHANGE_REASON_CODES, getEmployeeEditPolicy } from './employee-edit-policy';
@@ -3595,18 +3597,65 @@ export async function toggleEmployeeActiveAction(formData: FormData) {
 
 /** Records only the request to start termination; the workflow deliberately remains out of scope. */
 export async function createEmployeeTerminationIntentAction(formData: FormData) {
-  await requireEmployeeAccess('disable');
   const tenantId = await getTenantId();
   const employeeId = value(formData, 'employeeId');
+  await requireOffboardingAccess(employeeId, 'canCreate');
   const reason = value(formData, 'reason') || null;
+  const terminationType = value(formData, 'terminationType') || null;
+  const announcementDate = value(formData, 'announcementDate') || null;
+  const proposedLastWorkingDay = value(formData, 'proposedLastWorkingDay') || null;
+  const effectiveTerminationDate = value(formData, 'effectiveTerminationDate') || null;
+  if (!terminationType || !reason || !announcementDate || !proposedLastWorkingDay || !effectiveTerminationDate) throw new Error('نوع خاتمه، دلیل و تاریخ‌های الزامی را وارد کنید.');
   const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId }, select: { id: true } });
   if (!employee) throw new Error('کارمند در کسب‌وکار فعال پیدا نشد.');
-  const existing = await prisma.employeeTerminationIntent.findFirst({ where: { tenantId, employeeId, status: 'DRAFT' }, select: { id: true } });
-  if (existing) throw new Error('درخواست شروع فرآیند خاتمه همکاری قبلاً ثبت شده است.');
+  const existing = await prisma.employeeTerminationIntent.findFirst({ where: { tenantId, employeeId, status: { in: ['DRAFT', 'SUBMITTED', 'APPROVAL_PENDING', 'SETTLEMENT', 'ACCESS_REVOCATION', 'READY_FOR_FINALIZATION'] } }, select: { id: true } });
+  if (existing) throw new Error('برای این کارمند یک فرآیند خاتمه همکاری فعال وجود دارد.');
   const session = await getSessionContext();
-  await prisma.employeeTerminationIntent.create({ data: { tenantId, employeeId, initiatedBy: session?.userId ?? null, reason } });
-  await createEmployeeAuditLog({ tenantId, employeeId, action: 'termination_intent_created', fieldKey: 'terminationIntent', newValue: 'DRAFT', reason });
+  const process = await prisma.employeeTerminationIntent.create({ data: { tenantId, employeeId, initiatedBy: session?.userId ?? null, reason, terminationType, announcementDate, proposedLastWorkingDay, effectiveTerminationDate, processStartDate: new Date(), nextAction: 'SUBMIT', stageOwner: 'HR' } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: 'CREATE_OFFBOARDING', fieldKey: 'terminationIntent', newValue: process.id, reason, source: `offboarding:${process.id}` });
   revalidatePath(`/employees/${employeeId}`);
+}
+
+export async function updateEmployeeOffboardingAction(formData: FormData) {
+  return handleEmployeeOffboardingAction(formData);
+  /* Legacy inline lifecycle retained temporarily for migration traceability.
+  await requireEmployeeAccess('disable');
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const process = await prisma.employeeTerminationIntent.findFirst({ where: { id, tenantId } });
+  if (!process) throw new Error('فرایند خاتمه همکاری پیدا نشد.');
+  const action = value(formData, 'action');
+  const transitions: Record<string, { status: string; nextAction: string; owner: string }> = {
+    SUBMIT: { status: 'SUBMITTED', nextAction: 'UNDER_REVIEW', owner: 'MANAGER' },
+    APPROVE: { status: 'APPROVAL_PENDING', nextAction: 'CLEARANCE', owner: 'HR' },
+    CLEAR: { status: 'SETTLEMENT', nextAction: 'SETTLEMENT', owner: 'FINANCE' },
+    SETTLE: { status: 'ACCESS_REVOCATION', nextAction: 'ACCESS_REVOCATION', owner: 'IT' },
+    ACCESS_DISABLE: { status: 'READY_FOR_FINALIZATION', nextAction: 'FINALIZE', owner: 'HR' },
+    FINALIZE: { status: 'COMPLETED', nextAction: 'ARCHIVE', owner: 'HR' },
+    ARCHIVE: { status: 'ARCHIVED', nextAction: 'DONE', owner: 'HR' },
+    CANCEL: { status: 'CANCELLED', nextAction: 'DONE', owner: 'HR' },
+  };
+  const transition = transitions[action];
+  if (!transition) throw new Error('عملیات فرایند معتبر نیست.');
+  if (action === 'FINALIZE') {
+    const [contracts, financialItems, requests, documents] = await Promise.all([
+      prisma.employeeContract.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['active', 'pending', 'approved'] } } }),
+      prisma.employeeFinancialItem.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'APPLIED_TO_PAYROLL'] } } }),
+      prisma.employeeRequest.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['pending', 'approved'] } } }),
+      prisma.employeeDocument.count({ where: { tenantId, employeeId: process.employeeId, status: 'PENDING_APPROVAL' } }),
+    ]);
+    const blockers = [contracts && `${contracts} قرارداد باز`, financialItems && `${financialItems} آیتم مالی باز`, requests && `${requests} درخواست باز`, documents && `${documents} سند در انتظار تأیید`].filter(Boolean);
+    if (blockers.length) throw new Error(`نهایی‌سازی ممکن نیست: ${blockers.join('، ')}`);
+  }
+  const data: Record<string, unknown> = { status: transition.status, nextAction: transition.nextAction, stageOwner: transition.owner };
+  if (action === 'SETTLE') data.settlementStatus = 'SETTLED';
+  if (action === 'ACCESS_DISABLE') { data.accessStatus = 'DISABLED'; data.accessDisableDate = new Date(); data.immediateAccessRevocation = true; await revokeEmployeeAccess({ tenantId, employeeId: process.employeeId, reason: 'OFFBOARDING_ACCESS_REVOCATION', actorUserId: (await getSessionContext())?.userId }); }
+  if (action === 'ARCHIVE') data.archiveDate = new Date();
+  await prisma.employeeTerminationIntent.update({ where: { id }, data });
+  await createEmployeeAuditLog({ tenantId, employeeId: process.employeeId, action: `${action === 'ACCESS_DISABLE' ? 'ACCESS_DISABLE' : action === 'FINALIZE' ? 'FINALIZE_OFFBOARDING' : action === 'ARCHIVE' ? 'ARCHIVE_OFFBOARDING' : `${action}_OFFBOARDING`}`, fieldKey: 'status', oldValue: process.status, newValue: transition.status });
+  revalidatePath(`/employees/${process.employeeId}`);
+  revalidatePath(`/employees/${process.employeeId}/offboarding`);
+  */
 }
 
 export async function saveEmployeeBankAccountsAction(formData: FormData) {

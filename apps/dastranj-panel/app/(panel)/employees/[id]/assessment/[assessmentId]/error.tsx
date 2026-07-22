@@ -1,0 +1,1 @@
+'use client'; export default function ErrorState({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="module-page"><div className="panel-card"><p>خطا در بارگذاری ارزیابی.</p><button className="button" onClick={reset}>تلاش دوباره</button></div></main>}

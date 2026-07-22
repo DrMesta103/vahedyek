@@ -28,7 +28,7 @@ export function validateContractDates(startDate: string, endDate: string | null,
   if (endDate && endDate < startDate) throw new Error('تاریخ پایان نمی‌تواند پیش از تاریخ شروع باشد.');
 }
 
-async function access(employeeId: string) {
+export async function getEmployeeContractAccess(employeeId: string) {
   const session = await getSessionContext();
   if (!session?.tenantId || !session.userId) throw new Error('برای دسترسی به قرارداد باید وارد سامانه شوید.');
   const membership = await prisma.userTenantMembership.findUnique({
@@ -70,7 +70,7 @@ async function audit(tx: Prisma.TransactionClient, input: {
 }
 
 export async function getEmployeeContractLifecycle(employeeId: string) {
-  const permission = await access(employeeId);
+  const permission = await getEmployeeContractAccess(employeeId);
   if (!permission.canView) throw new Error('دسترسی مشاهده قرارداد را ندارید.');
   const contracts = await prisma.employeeContract.findMany({
     where: { tenantId: permission.tenantId, employeeId },
@@ -83,7 +83,7 @@ export async function getEmployeeContractLifecycle(employeeId: string) {
 type DraftInput = { employeeId: string; operationType: ContractOperation; startDate: string; endDate?: string | null; effectiveDate: string; contractNumber?: string | null; contractType: string; reason: string; attachmentUrl?: string | null; parentContractId?: string | null };
 
 export async function createContractVersion(input: DraftInput) {
-  const permission = await access(input.employeeId);
+  const permission = await getEmployeeContractAccess(input.employeeId);
   const allowed = input.operationType === 'CREATE_CONTRACT' ? permission.canCreate : input.operationType === 'RENEW_CONTRACT' ? permission.canRenew : input.operationType === 'AMEND_CONTRACT' ? permission.canAmend : permission.canTerminate;
   if (!allowed) throw new Error('مجوز این عملیات قرارداد را ندارید.');
   if (!input.reason.trim()) throw new Error('دلیل عملیات الزامی است.');
@@ -115,7 +115,7 @@ export async function transitionContract(contractId: string, target: ContractLif
   if (!reason.trim()) throw new Error('دلیل تغییر وضعیت الزامی است.');
   const existing = await prisma.employeeContract.findUnique({ where: { id: contractId } });
   if (!existing) throw new Error('قرارداد پیدا نشد.');
-  const permission = await access(existing.employeeId);
+  const permission = await getEmployeeContractAccess(existing.employeeId);
   if (existing.tenantId !== permission.tenantId) throw new Error('دسترسی بین کسب‌وکارها مجاز نیست.');
   const current = existing.status as ContractLifecycleStatus;
   assertContractTransition(current, target);

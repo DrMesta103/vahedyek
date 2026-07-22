@@ -1,0 +1,10 @@
+CREATE TYPE "EmployeeDamageStatus" AS ENUM ('DRAFT','PENDING_REVIEW','APPROVED','REJECTED','APPLIED','CLOSED');
+CREATE TYPE "EmployeeDamageObjectionStatus" AS ENUM ('SUBMITTED','UNDER_REVIEW','APPROVED','REJECTED','CLOSED');
+CREATE TABLE "EmployeeDamage" ("id" TEXT NOT NULL,"tenantId" TEXT NOT NULL,"employeeId" TEXT NOT NULL,"title" TEXT NOT NULL,"description" TEXT NOT NULL,"amount" DECIMAL(18,2) NOT NULL,"incidentDate" TIMESTAMP(3) NOT NULL,"effectiveDate" TIMESTAMP(3) NOT NULL,"status" "EmployeeDamageStatus" NOT NULL DEFAULT 'DRAFT',"documentReference" TEXT,"createdBy" TEXT,"approvedBy" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL,CONSTRAINT "EmployeeDamage_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "EmployeeDamageObjection" ("id" TEXT NOT NULL,"damageId" TEXT NOT NULL,"employeeId" TEXT NOT NULL,"description" TEXT NOT NULL,"documents" TEXT,"status" "EmployeeDamageObjectionStatus" NOT NULL DEFAULT 'SUBMITTED',"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"reviewedAt" TIMESTAMP(3),"reviewedBy" TEXT,CONSTRAINT "EmployeeDamageObjection_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "EmployeeDamage_tenantId_employeeId_status_idx" ON "EmployeeDamage"("tenantId","employeeId","status");
+CREATE INDEX "EmployeeDamageObjection_employeeId_status_idx" ON "EmployeeDamageObjection"("employeeId","status");
+ALTER TABLE "EmployeeDamage" ADD CONSTRAINT "EmployeeDamage_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "EmployeeDamage" ADD CONSTRAINT "EmployeeDamage_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "EmployeeDamageObjection" ADD CONSTRAINT "EmployeeDamageObjection_damageId_fkey" FOREIGN KEY ("damageId") REFERENCES "EmployeeDamage"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "EmployeeDamageObjection" ADD CONSTRAINT "EmployeeDamageObjection_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE CASCADE ON UPDATE CASCADE;
