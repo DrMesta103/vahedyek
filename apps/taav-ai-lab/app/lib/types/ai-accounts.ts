@@ -5,6 +5,7 @@ export const AI_PROVIDER_TYPES = [
   'DEEPSEEK',
   'GEMINI',
   'GROK',
+  'MISTRAL',
   'AZURE_OPENAI',
   'OPENROUTER',
   'LOCAL_GATEWAY',
@@ -17,6 +18,7 @@ export const AI_ACCOUNT_PROVIDER_TYPES = [
   'GEMINI',
   'DEEPSEEK',
   'GROK',
+  'MISTRAL',
   'OPENROUTER',
 ] as const;
 
@@ -29,6 +31,7 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
   DEEPSEEK: 'DeepSeek',
   GEMINI: 'Google Gemini',
   GROK: 'Grok',
+  MISTRAL: 'Mistral',
   AZURE_OPENAI: 'Azure OpenAI',
   OPENROUTER: 'OpenRouter',
   LOCAL_GATEWAY: 'Local Gateway',
@@ -39,7 +42,13 @@ export function isAiAccountProviderType(value: string): value is AiAccountProvid
   return (AI_ACCOUNT_PROVIDER_TYPES as readonly string[]).includes(value);
 }
 
-export const SYSTEM_AI_PROVIDER_TYPES: AiProviderType[] = ['OPENAI', 'DEEPSEEK', 'GEMINI', 'GROK'];
+export const SYSTEM_AI_PROVIDER_TYPES: AiProviderType[] = [
+  'OPENAI',
+  'DEEPSEEK',
+  'GEMINI',
+  'GROK',
+  'MISTRAL',
+];
 
 export type AiProviderAccountPublic = {
   id: string;

@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Clock3,
   Database,
+  FileStack,
   FileText,
   Filter,
   Loader2,
@@ -27,13 +28,16 @@ import { formatToman } from '@/app/lib/global-settings-mock';
 import type { AiProviderAccountPublic } from '@/app/lib/types/ai-accounts';
 import {
   buildOcrStats,
+  buildOcrUsageTotals,
   formatConfidence,
   getOcrAiUsage,
   getOcrAiUsageCost,
-  getOcrStageCost,
+  getOcrHistoryStageDisplayCost,
+  getOcrJobUsageBreakdown,
   getOcrStageUsage,
   getOcrTransportMode,
   getStatusMeta,
+  isOcrPagePriced,
   type OcrAiUsageCost,
   type OcrStageKey,
 } from '@/components/ocr/utils';
@@ -56,14 +60,22 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'failed', label: 'ناموفق' },
 ];
 
-const KPI_ITEMS = [
+const STATUS_KPI_ITEMS = [
   { key: 'total', label: 'کل اجراها', icon: FileText, tone: 'cyan' },
   { key: 'completed', label: 'تکمیل شده', icon: CheckCircle2, tone: 'green' },
   { key: 'processing', label: 'در حال پردازش', icon: Loader2, tone: 'blue' },
-  { key: 'tokensUsed', label: 'توکن مصرفی', icon: Database, tone: 'cyan' },
-  { key: 'totalCost', label: 'هزینه مصرفی کل', icon: Wallet, tone: 'amber' },
   { key: 'avgConfidence', label: 'میانگین دقت', icon: Target, tone: 'teal' },
 ] as const;
+
+const USAGE_KPI_ITEMS = [
+  { key: 'tokensUsed', label: 'تعداد کل توکن', icon: Database, tone: 'cyan' },
+  { key: 'pagesUsed', label: 'تعداد کل صفحات', icon: FileStack, tone: 'blue' },
+  { key: 'tokenCost', label: 'هزینه کل توکن‌ها', icon: Wallet, tone: 'amber' },
+  { key: 'pageCost', label: 'هزینه کل صفحات', icon: Wallet, tone: 'teal' },
+  { key: 'totalCost', label: 'هزینه کل', icon: Wallet, tone: 'amber' },
+] as const;
+
+const COST_USAGE_KEYS = new Set(['tokenCost', 'pageCost', 'totalCost']);
 
 function matchesStatusFilter(job: OcrSimulationJob, filter: StatusFilter) {
   if (filter === 'all') return true;
@@ -104,23 +116,24 @@ function HistoryModelCostLine({
   stage,
   job,
   usdToToman,
+  aiAccounts,
   legacyUsage,
   legacyCost,
 }: {
   stage: OcrStageKey;
   job: OcrSimulationJob;
   usdToToman: number;
+  aiAccounts?: AiProviderAccountPublic[];
   legacyUsage?: ReturnType<typeof getOcrAiUsage>;
   legacyCost?: OcrAiUsageCost;
 }) {
   const usage = getOcrStageUsage(job, stage);
-  const cost = getOcrStageCost(job, stage, usdToToman);
+  const cost = getOcrHistoryStageDisplayCost(job, stage, usdToToman, aiAccounts, legacyCost);
   const hasStageMeta = usage.modelName !== '—' && usage.modelId !== '—';
   const effectiveUsage = !hasStageMeta && stage === 'ocr' && legacyUsage ? legacyUsage : usage;
-  const effectiveCost = !hasStageMeta && stage === 'ocr' && legacyCost ? legacyCost : cost;
   const providerLabel = effectiveUsage.providerLabel !== '—' ? effectiveUsage.providerLabel : '—';
   const modelName = effectiveUsage.modelName !== '—' ? effectiveUsage.modelName : '—';
-  const hasCost = effectiveCost.totalCostUsd > 0 || effectiveCost.totalCostToman > 0;
+  const hasCost = cost.totalCostUsd > 0 || cost.totalCostToman > 0;
 
   return (
     <div className={`ai-lab-ocr-dashboard-model-line ai-lab-ocr-dashboard-model-line--${stage}`}>
@@ -132,10 +145,10 @@ function HistoryModelCostLine({
       </span>
       <span className="ai-lab-ocr-dashboard-model-line__costs">
         <span className="ai-lab-ocr-dashboard-model-line__cost ai-lab-ocr-dashboard-model-line__cost--usd">
-          {hasCost ? formatCostUsd(effectiveCost.totalCostUsd) : '—'}
+          {hasCost ? formatCostUsd(cost.totalCostUsd) : '—'}
         </span>
         <span className="ai-lab-ocr-dashboard-model-line__cost ai-lab-ocr-dashboard-model-line__cost--toman">
-          {hasCost ? `${formatToman(effectiveCost.totalCostToman)} ت` : '—'}
+          {hasCost ? `${formatToman(cost.totalCostToman)} ت` : '—'}
         </span>
       </span>
     </div>
@@ -180,18 +193,9 @@ export function OcrHubClient({
 
   const processingCount = useMemo(() => jobs.filter((job) => job.status === 'processing').length, [jobs]);
   const stats = useMemo(() => buildOcrStats(jobs), [jobs]);
-  const totalUsageCost = useMemo(
-    () =>
-      jobs.reduce(
-        (acc, job) => {
-          const cost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts);
-          acc.usd += cost.totalCostUsd;
-          acc.toman += cost.totalCostToman;
-          return acc;
-        },
-        { usd: 0, toman: 0 },
-      ),
-    [jobs, jobCosts, usdToToman, aiAccounts],
+  const usageTotals = useMemo(
+    () => buildOcrUsageTotals(jobs, usdToToman, aiAccounts, jobCosts),
+    [jobs, usdToToman, aiAccounts, jobCosts],
   );
 
   useEffect(() => {
@@ -229,12 +233,22 @@ export function OcrHubClient({
       .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
   }, [jobs, searchQuery, statusFilter]);
 
-  const kpiValues: Record<Exclude<(typeof KPI_ITEMS)[number]['key'], 'totalCost'>, string | number> = {
+  const statusKpiValues: Record<(typeof STATUS_KPI_ITEMS)[number]['key'], string | number> = {
     total: stats.total,
     completed: stats.completed,
     processing: stats.processing,
-    tokensUsed: formatTokenCount(stats.tokensUsed),
     avgConfidence: stats.total > 0 ? formatConfidence(stats.avgConfidence) : '—',
+  };
+
+  const usageCountValues: Record<'tokensUsed' | 'pagesUsed', string> = {
+    tokensUsed: formatTokenCount(usageTotals.tokensUsed),
+    pagesUsed: new Intl.NumberFormat('fa-IR').format(usageTotals.pagesUsed),
+  };
+
+  const usageCostValues: Record<'tokenCost' | 'pageCost' | 'totalCost', { toman: number; usd: number }> = {
+    tokenCost: { toman: usageTotals.tokenCostToman, usd: usageTotals.tokenCostUsd },
+    pageCost: { toman: usageTotals.pageCostToman, usd: usageTotals.pageCostUsd },
+    totalCost: { toman: usageTotals.totalCostToman, usd: usageTotals.totalCostUsd },
   };
 
   return (
@@ -281,9 +295,10 @@ export function OcrHubClient({
         </div>
       </section>
 
-      <section className="ai-lab-ocr-dashboard-kpis" aria-label="شاخص‌های OCR">
-        {KPI_ITEMS.map((item) => {
+      <section className="ai-lab-ocr-dashboard-kpis ai-lab-ocr-dashboard-kpis--status" aria-label="شاخص‌های وضعیت OCR">
+        {STATUS_KPI_ITEMS.map((item) => {
           const Icon = item.icon;
+          const value = statusKpiValues[item.key];
           return (
             <article key={item.key} className={`ai-lab-ocr-dashboard-kpi ai-lab-ocr-dashboard-kpi--${item.tone}`}>
               <div className="ai-lab-ocr-dashboard-kpi-head">
@@ -293,19 +308,37 @@ export function OcrHubClient({
                 </span>
               </div>
               <strong>
-                {item.key === 'totalCost' ? (
+                {typeof value === 'number' ? new Intl.NumberFormat('fa-IR').format(value) : value}
+              </strong>
+              <span className="ai-lab-ocr-dashboard-kpi-wave" aria-hidden="true" />
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="ai-lab-ocr-dashboard-kpis ai-lab-ocr-dashboard-kpis--usage" aria-label="شاخص‌های مصرف و هزینه OCR">
+        {USAGE_KPI_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <article key={item.key} className={`ai-lab-ocr-dashboard-kpi ai-lab-ocr-dashboard-kpi--${item.tone}`}>
+              <div className="ai-lab-ocr-dashboard-kpi-head">
+                <span>{item.label}</span>
+                <span className="ai-lab-ocr-dashboard-kpi-icon">
+                  <Icon className="h-4 w-4" />
+                </span>
+              </div>
+              <strong>
+                {COST_USAGE_KEYS.has(item.key) ? (
                   <span className="ai-lab-ocr-dashboard-kpi-cost">
-                    <span>{formatToman(totalUsageCost.toman)} تومان</span>
-                    <small dir="ltr">{formatCostUsd(totalUsageCost.usd)}</small>
+                    <span>
+                      {formatToman(usageCostValues[item.key as 'tokenCost' | 'pageCost' | 'totalCost'].toman)} تومان
+                    </span>
+                    <small dir="ltr">
+                      {formatCostUsd(usageCostValues[item.key as 'tokenCost' | 'pageCost' | 'totalCost'].usd)}
+                    </small>
                   </span>
-                ) : item.key in kpiValues ? (
-                  typeof kpiValues[item.key as keyof typeof kpiValues] === 'number' ? (
-                    new Intl.NumberFormat('fa-IR').format(kpiValues[item.key as keyof typeof kpiValues] as number)
-                  ) : (
-                    kpiValues[item.key as keyof typeof kpiValues]
-                  )
                 ) : (
-                  '—'
+                  usageCountValues[item.key as 'tokensUsed' | 'pagesUsed']
                 )}
               </strong>
               <span className="ai-lab-ocr-dashboard-kpi-wave" aria-hidden="true" />
@@ -387,7 +420,9 @@ export function OcrHubClient({
                   const transportMode = getOcrTransportMode(job);
                   const durationMs = getJobDurationMs(job);
                   const legacyUsage = getOcrAiUsage(job, transportMode);
-                  const usageCost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts, transportMode);
+                  const legacyCost = jobCosts[job.id] ?? getOcrAiUsageCost(job, usdToToman, aiAccounts, transportMode);
+                  const breakdown = getOcrJobUsageBreakdown(job, usdToToman, aiAccounts, legacyCost);
+                  const pagePriced = isOcrPagePriced(job, aiAccounts);
 
                   return (
                     <Link
@@ -431,20 +466,36 @@ export function OcrHubClient({
                             stage="ocr"
                             job={job}
                             usdToToman={usdToToman}
+                            aiAccounts={aiAccounts}
                             legacyUsage={legacyUsage}
-                            legacyCost={usageCost}
+                            legacyCost={legacyCost}
                           />
-                          <HistoryModelCostLine stage="chat" job={job} usdToToman={usdToToman} />
+                          <HistoryModelCostLine
+                            stage="chat"
+                            job={job}
+                            usdToToman={usdToToman}
+                            aiAccounts={aiAccounts}
+                          />
                         </div>
 
                         <div className="ai-lab-ocr-dashboard-history-row__stats">
-                          <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
-                            <Database className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span className="ai-lab-ocr-dashboard-row-tokens">
-                              <span>{formatTokenCount(job.tokensUsed)}</span>
-                              <small>توکن</small>
-                            </span>
-                          </div>
+                          {pagePriced ? (
+                            <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--pages">
+                              <FileStack className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="ai-lab-ocr-dashboard-row-tokens">
+                                <span>{new Intl.NumberFormat('fa-IR').format(breakdown.pagesUsed)}</span>
+                                <small>صفحه</small>
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--tokens">
+                              <Database className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="ai-lab-ocr-dashboard-row-tokens">
+                                <span>{formatTokenCount(job.tokensUsed)}</span>
+                                <small>توکن</small>
+                              </span>
+                            </div>
+                          )}
                           <div
                             className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--duration"
                             aria-label="مدت زمان پردازش"
@@ -455,8 +506,8 @@ export function OcrHubClient({
                           <div className="ai-lab-ocr-dashboard-row-metric ai-lab-ocr-dashboard-row-metric--total">
                             <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
                             <span className="ai-lab-ocr-dashboard-row-tokens">
-                              <span>{formatCostUsd(usageCost.totalCostUsd)}</span>
-                              <small>{formatToman(usageCost.totalCostToman)} ت</small>
+                              <span>{formatCostUsd(breakdown.totalCostUsd)}</span>
+                              <small>{formatToman(breakdown.totalCostToman)} ت</small>
                             </span>
                           </div>
                         </div>

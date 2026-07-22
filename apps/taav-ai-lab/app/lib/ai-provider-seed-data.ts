@@ -1,7 +1,7 @@
 import { GLOBAL_SETTINGS_MOCK } from './global-settings-mock';
 import { getOcrModelById } from './ocr-models';
 import type { AiProviderType } from './types/ai-accounts';
-import type { AiProviderModelType } from './types/ai-provider-models';
+import type { AiProviderModelType, AiProviderPricingUnit } from './types/ai-provider-models';
 
 export type AiProviderSeedAccount = {
   id: string;
@@ -18,6 +18,8 @@ export type AiProviderSeedModel = {
   displayName: string;
   providerModelName: string;
   modelType: AiProviderModelType;
+  pricingUnit?: AiProviderPricingUnit;
+  pagePriceUsd?: number;
   inputRatio?: number;
   supportsPersian?: boolean;
   supportsEnglish?: boolean;
@@ -60,6 +62,13 @@ export const AI_PROVIDER_SEED_ACCOUNTS: AiProviderSeedAccount[] = [
     name: 'Grok Platform',
     provider: 'GROK',
     apiKey: 'sk-seed-grok-demo-key',
+    purchasedCreditUsd: 100,
+  },
+  {
+    id: 'seed-mistral',
+    name: 'Mistral Platform',
+    provider: 'MISTRAL',
+    apiKey: 'sk-seed-mistral-demo-key',
     purchasedCreditUsd: 100,
   },
 ];
@@ -171,6 +180,24 @@ export const AI_PROVIDER_SEED_MODELS: AiProviderSeedModel[] = [
     supportsStructuredExtraction: true,
     isDefaultForOcr: true,
   },
+  {
+    id: 'seed-model-mistral-ocr',
+    provider: 'MISTRAL',
+    pricingModelId: 'mistral-ocr-latest',
+    displayName: 'Mistral OCR',
+    providerModelName: 'mistral-ocr-latest',
+    modelType: 'OCR',
+    pricingUnit: 'PAGE',
+    // Official API: $4 / 1,000 pages => $0.004 per page
+    pagePriceUsd: 0.004,
+    supportsPersian: true,
+    supportsEnglish: true,
+    supportsVision: true,
+    supportsPdf: true,
+    supportsImage: true,
+    supportsStructuredExtraction: true,
+    isDefaultForOcr: true,
+  },
 ];
 
 const DEFAULT_INPUT_RATIO_BY_TYPE: Partial<Record<AiProviderModelType, number>> = {
@@ -187,7 +214,18 @@ export function buildModelSeedPrices(input: {
   pricingModelId: string;
   modelType: AiProviderModelType;
   inputRatio?: number;
+  pricingUnit?: AiProviderPricingUnit;
+  pagePriceUsd?: number;
 }) {
+  if (input.pricingUnit === 'PAGE') {
+    return {
+      inputTokenPriceUsd: 0,
+      outputTokenPriceUsd: 0,
+      pagePriceUsd: input.pagePriceUsd ?? 0,
+      pricingUnit: 'PAGE' as const,
+    };
+  }
+
   const pricingModel = getPricingModelById(input.pricingModelId);
   const ocrModel = getOcrModelById(input.pricingModelId);
   const pricePerTokenUsd = (pricingModel?.pricePer100TokensUsd ?? 1) / 100;
@@ -197,6 +235,8 @@ export function buildModelSeedPrices(input: {
   return {
     inputTokenPriceUsd: pricePerTokenUsd * inputRatio,
     outputTokenPriceUsd: pricePerTokenUsd * (1 - inputRatio),
+    pagePriceUsd: input.pagePriceUsd ?? 0,
+    pricingUnit: (input.pricingUnit ?? 'TOKEN') as AiProviderPricingUnit,
   };
 }
 
