@@ -44,6 +44,7 @@ export type ShareholderAvatarMode = RepresentativeRecord['avatarMode'];
 export type NaturalShareholderRecord = {
   id: string;
   fullName: string;
+  nationalId?: string;
   mobile: string;
   email: string;
   avatarMode: ShareholderAvatarMode;

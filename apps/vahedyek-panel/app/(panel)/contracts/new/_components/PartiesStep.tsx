@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PencilLine, UsersRound } from 'lucide-react';
 import { FirstPartyMemberEditDialog } from './FirstPartyMemberEditDialog';
-import { FirstPartyRelationsDialog } from './FirstPartyRelationsDialog';
+import { FirstPartyRelationsDialog, type FirstPartyManagedRole } from './FirstPartyRelationsDialog';
 import { PartySection } from './PartySection';
 import { PartySelectionDialog } from './PartySelectionDialog';
 import { ShareholderSelectionDialog } from './ShareholderSelectionDialog';
@@ -206,6 +206,7 @@ function mapProfileRelatedParticipantOptions(profileStore: ProfileStore) {
       description: getOptionDescription([item.mobile, item.email]),
       snapshot: {
         fullName: normalizeName(item.fullName),
+        nationalId: normalizeName(item.nationalId),
         mobile: normalizeName(item.mobile),
         email: normalizeName(item.email),
       },
@@ -306,9 +307,44 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
   const [partyOneDialogInitialTab, setPartyOneDialogInitialTab] = useState<PartyOneMemberKind>('natural_shareholder');
   const [editingPartyOneId, setEditingPartyOneId] = useState<string | null>(null);
   const [managingRelationsParentId, setManagingRelationsParentId] = useState<string | null>(null);
+  const [relationDialogInitialRole, setRelationDialogInitialRole] = useState<FirstPartyManagedRole>('representative');
   const [directoryLoading, setDirectoryLoading] = useState(false);
   const [inlineHint, setInlineHint] = useState('');
   const [businessProfile, setBusinessProfile] = useState<{ store: ProfileStore; meta: ProfileMeta; auth: AuthMePayload } | null>(null);
+  const handledReturnDialogRef = useRef<string | null>(null);
+
+  const closePartyOneShareholderDialog = () => {
+    setShareholderDialogOpen(false);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('returnDialog');
+    nextParams.delete('returnTab');
+    nextParams.delete('returnSection');
+    const query = nextParams.toString();
+    router.replace(query ? `${basePath}?${query}` : basePath);
+  };
+
+  const closeManagedRelationsDialog = () => {
+    setManagingRelationsParentId(null);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('returnDialog');
+    nextParams.delete('returnTab');
+    nextParams.delete('returnSection');
+    nextParams.delete('parentSourceId');
+    const query = nextParams.toString();
+    router.replace(query ? `${basePath}?${query}` : basePath);
+  };
+
+  const closePartyTwoDialog = () => {
+    setPartyTwoDialogOpen(false);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('returnDialog');
+    nextParams.delete('returnTab');
+    nextParams.delete('returnSection');
+    nextParams.delete('parentSourceId');
+    nextParams.delete('buyerDialog');
+    const query = nextParams.toString();
+    router.replace(query ? `${basePath}?${query}` : basePath);
+  };
 
   const applyReferenceData = (referenceData: ReferenceDataResponse, profileStore?: ProfileStore | null) => {
     const profileBuyers = profileStore ? mapProfileBuyersToDirectoryItems(profileStore) : { buyerNaturals: [], buyerLegals: [] };
@@ -453,9 +489,34 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
 
   useEffect(() => {
     if (loading || searchParams.get('returnDialog') !== 'partyOne') return;
+    const returnDialogKey = [searchParams.get('returnDialog'), searchParams.get('returnTab'), searchParams.get('draftId')].join(':');
+    if (handledReturnDialogRef.current === returnDialogKey) return;
+    handledReturnDialogRef.current = returnDialogKey;
+    let mounted = true;
     const requestedTab = searchParams.get('returnTab');
     setPartyOneDialogInitialTab(requestedTab === 'legal_shareholder' || requestedTab === 'legal-shareholder' ? 'legal_shareholder' : 'natural_shareholder');
     setShareholderDialogOpen(true);
+
+    void Promise.all([fetchProfilePayload(), getReferenceData()])
+      .then(([profilePayload, referenceData]) => {
+        if (!mounted) return;
+        setBusinessProfile((current) => (current ? { ...current, store: profilePayload.store, meta: profilePayload.meta } : current));
+        applyReferenceData(referenceData, profilePayload.store);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, [loading, searchParams]);
+
+  useEffect(() => {
+    if (loading || searchParams.get('returnDialog') !== 'relations') return;
+    const parentId = searchParams.get('parentSourceId');
+    if (!parentId) return;
+    const requestedRole = searchParams.get('returnTab');
+    setRelationDialogInitialRole(requestedRole === 'board_member' ? 'board_member' : 'representative');
+    setManagingRelationsParentId(parentId);
   }, [loading, searchParams]);
 
   useEffect(() => {
@@ -710,7 +771,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       ...current.filter((participant) => participant.parentSourceId !== managingRelationsRow.id),
       ...nextScopedParticipants.map((participant) => ({ ...participant, parentSourceId: managingRelationsRow.id })),
     ]);
-    setManagingRelationsParentId(null);
+    closeManagedRelationsDialog();
   };
 
   const handleRegisterShareholder = async (kind: 'natural' | 'legal') => {
@@ -736,6 +797,29 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
     }
   };
 
+  const handleRegisterManagedParticipant = async (role: FirstPartyManagedRole) => {
+    if (!draftId || !managingRelationsRow) return;
+    setSaving(true);
+    setFormError('');
+    try {
+      await saveStepData(draftId, 'parties', payload);
+      setActiveDraftId(draftId);
+      const returnParams = new URLSearchParams({
+        section: 'parties',
+        draftId,
+        returnSection: 'parties',
+        returnDialog: 'relations',
+        returnTab: role,
+        parentSourceId: managingRelationsRow.id,
+      });
+      const returnTo = `/contracts/new?${returnParams.toString()}`;
+      const path = role === 'board_member' ? '/business-settings/profile/board-members/new' : '/business-settings/profile/representatives/new';
+      router.push(`${path}?returnTo=${encodeURIComponent(returnTo)}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!draftId) return;
     if (!businessProfile) return;
@@ -745,6 +829,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
       .filter((item) => item.missing.length > 0);
     if (incompletePartyOne.length) {
       setShowValidation(true);
+      setEditingPartyOneId(incompletePartyOne[0].row.id);
       setFormError(
         `اطلاعات طرف اول کامل نیست: ${incompletePartyOne
           .map((item) => `${item.row.name} (${item.missing.join('، ')})`)
@@ -995,16 +1080,20 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           parentSourceId={managingRelationsRow.id}
           parentName={managingRelationsRow.name}
           roles={managingRelationsRow.partyOneMemberKind === 'business' ? ['representative', 'board_member'] : ['representative']}
+          initialRole={relationDialogInitialRole}
           participants={managedParticipants}
           candidates={relationCandidates}
-          onClose={() => setManagingRelationsParentId(null)}
+          onRegisterNew={(role) => {
+            void handleRegisterManagedParticipant(role);
+          }}
+          onClose={closeManagedRelationsDialog}
           onSave={saveManagedParticipants}
         />
       ) : null}
 
       <ShareholderSelectionDialog
         open={shareholderDialogOpen}
-        onClose={() => setShareholderDialogOpen(false)}
+        onClose={closePartyOneShareholderDialog}
         naturalItems={relatedParticipantOptions.naturalShareholders}
         legalItems={relatedParticipantOptions.legalShareholders}
         businessItems={businessOptions}
@@ -1018,13 +1107,13 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         }}
         onAddSelected={(items) => {
           addPartyOneRows(items);
-          setShareholderDialogOpen(false);
+          closePartyOneShareholderDialog();
         }}
       />
 
       <PartySelectionDialog
         open={partyTwoDialogOpen}
-        onClose={() => setPartyTwoDialogOpen(false)}
+        onClose={closePartyTwoDialog}
         kind="buyer"
         rows={partyTwoRows}
         naturalItems={buyerNaturals}
@@ -1032,7 +1121,7 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
         onCreateItem={(personType, name) => createDirectoryItem('buyer', personType, name)}
         onAddSelected={(items) => {
           setPartyTwoRows((current) => addRowsWithoutPrimary(current, items));
-          setPartyTwoDialogOpen(false);
+          closePartyTwoDialog();
         }}
         loading={directoryLoading}
       />

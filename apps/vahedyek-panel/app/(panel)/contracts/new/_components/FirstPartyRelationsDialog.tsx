@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, UserRound } from 'lucide-react';
+import { Plus, Search, Trash2, UserRound } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { ContractModal } from './ContractModal';
 import type {
@@ -12,6 +12,7 @@ import type {
 } from './partiesTypes';
 
 type ManagedRole = Extract<FirstPartyRelatedParticipantRole, 'representative' | 'board_member'>;
+export type FirstPartyManagedRole = ManagedRole;
 
 const ROLE_LABELS: Record<ManagedRole, string> = {
   representative: 'نماینده',
@@ -29,6 +30,8 @@ export function FirstPartyRelationsDialog({
   roles,
   participants,
   candidates,
+  initialRole,
+  onRegisterNew,
   onClose,
   onSave,
 }: {
@@ -38,27 +41,57 @@ export function FirstPartyRelationsDialog({
   roles: ManagedRole[];
   participants: FirstPartyRelatedParticipant[];
   candidates: Record<ManagedRole, RelatedParticipantOption[]>;
+  initialRole?: ManagedRole;
+  onRegisterNew?: (role: ManagedRole) => void;
   onClose: () => void;
   onSave: (participants: FirstPartyRelatedParticipant[]) => void;
 }) {
   const firstRole = roles[0] ?? 'representative';
-  const [activeRole, setActiveRole] = useState<ManagedRole>(firstRole);
+  const [activeRole, setActiveRole] = useState<ManagedRole>(initialRole ?? firstRole);
   const [draftItems, setDraftItems] = useState<FirstPartyRelatedParticipant[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [query, setQuery] = useState('');
+  const [quickEditItem, setQuickEditItem] = useState<FirstPartyRelatedParticipant | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    setActiveRole(firstRole);
+    setActiveRole(initialRole && roles.includes(initialRole) ? initialRole : firstRole);
     setDraftItems(participants);
     setSubmitted(false);
-  }, [firstRole, open, participants]);
+    setQuery('');
+    setQuickEditItem(null);
+  }, [firstRole, initialRole, open, participants]);
 
   const activeItems = draftItems.filter((item) => item.role === activeRole);
   const selectedSourceIds = useMemo(() => new Set(draftItems.map((item) => `${item.role}:${item.sourceId}`)), [draftItems]);
-  const availableCandidates = candidates[activeRole].filter((item) => !selectedSourceIds.has(`${activeRole}:${item.sourceId}`));
+  const filteredCandidates = candidates[activeRole].filter((item) => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('fa-IR');
+    if (!normalizedQuery) return true;
+    return `${item.name} ${item.description ?? ''}`.toLocaleLowerCase('fa-IR').includes(normalizedQuery);
+  });
+  const toggleCandidate = (candidate: RelatedParticipantOption) => {
+    if (selectedSourceIds.has(`${activeRole}:${candidate.sourceId}`)) {
+      setDraftItems((current) => current.filter((item) => !(item.role === activeRole && item.sourceId === candidate.sourceId)));
+      return;
+    }
+    setDraftItems((current) => [
+      ...current,
+      {
+        id: createParticipantId(),
+        sourceId: candidate.sourceId,
+        sourceDirectoryId: candidate.sourceDirectoryId ?? null,
+        personType: 'natural',
+        role: activeRole,
+        name: candidate.name,
+        parentParticipantId: null,
+        parentSourceId,
+        snapshot: candidate.snapshot ?? { fullName: candidate.name },
+      },
+    ]);
+  };
   const invalidItems = draftItems.filter((item) => {
     const snapshot = item.snapshot ?? {};
-    return !snapshot.fullName?.trim() || !snapshot.nationalId?.trim() || (!snapshot.mobile?.trim() && !snapshot.email?.trim());
+    return !snapshot.fullName?.trim() || !snapshot.nationalId?.trim();
   });
 
   const updateSnapshot = (id: string, key: keyof FirstPartySnapshot, value: string) => {
@@ -76,6 +109,7 @@ export function FirstPartyRelationsDialog({
   };
 
   return (
+    <>
     <ContractModal
       open={open}
       onClose={onClose}
@@ -95,7 +129,10 @@ export function FirstPartyRelationsDialog({
             type="button"
             onClick={() => {
               setSubmitted(true);
-              if (invalidItems.length) return;
+              if (invalidItems.length) {
+                setQuickEditItem(activeItems.find((item) => invalidItems.some((invalid) => invalid.id === item.id)) ?? invalidItems[0]);
+                return;
+              }
               onSave(draftItems);
             }}
             className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)] transition-colors hover:bg-[var(--theme-action-bg-hover)]"
@@ -127,7 +164,7 @@ export function FirstPartyRelationsDialog({
           </div>
         ) : null}
 
-        <div className="space-y-3" role="tabpanel">
+        <div className="hidden" role="tabpanel" aria-hidden="true">
           {activeItems.length ? (
             activeItems.map((item) => {
               const snapshot = item.snapshot ?? {};
@@ -166,36 +203,32 @@ export function FirstPartyRelationsDialog({
           )}
         </div>
 
-        {availableCandidates.length ? (
+        <div className="space-y-3 border-t border-slate-100 pt-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`جست‌وجوی ${ROLE_LABELS[activeRole]}`} className="h-11 rounded-[8px] pr-10 text-sm" />
+          </div>
+          {onRegisterNew ? <button type="button" onClick={() => onRegisterNew(activeRole)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-3 py-2 text-sm font-extrabold text-[var(--theme-action-text)]"><Plus className="h-4 w-4" aria-hidden />ثبت {ROLE_LABELS[activeRole]} جدید</button> : null}
+        </div>
+
+        {filteredCandidates.length ? (
           <div className="space-y-2 border-t border-slate-100 pt-4">
             <div className="text-sm font-extrabold text-slate-700">افزودن از پروفایل کسب‌وکار</div>
-            {availableCandidates.map((candidate) => (
+            {filteredCandidates.map((candidate) => {
+              const selected = selectedSourceIds.has(`${activeRole}:${candidate.sourceId}`);
+              return (
               <button
                 key={candidate.sourceId}
                 type="button"
-                onClick={() =>
-                  setDraftItems((current) => [
-                    ...current,
-                    {
-                      id: createParticipantId(),
-                      sourceId: candidate.sourceId,
-                      sourceDirectoryId: candidate.sourceDirectoryId ?? null,
-                      personType: 'natural',
-                      role: activeRole,
-                      name: candidate.name,
-                      parentParticipantId: null,
-                      parentSourceId,
-                      snapshot: candidate.snapshot ?? { fullName: candidate.name },
-                    },
-                  ])
-                }
-                className="flex min-h-11 w-full items-center gap-3 rounded-[8px] border border-slate-200 bg-white px-3 py-2 text-right text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-action-border)]"
+                onClick={() => toggleCandidate(candidate)}
+                className={`flex min-h-11 w-full items-center gap-3 rounded-[8px] border px-3 py-2 text-right text-sm font-bold text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-action-border)] ${selected ? 'border-[var(--theme-action-border)] bg-[var(--theme-action-bg)]' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
               >
-                <Plus className="h-4 w-4 text-emerald-700" aria-hidden />
+                <span className={`inline-flex h-5 w-5 items-center justify-center rounded border text-xs ${selected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 text-transparent'}`}>✓</span>
                 <span className="min-w-0 flex-1 truncate">{candidate.name}</span>
                 <span className="text-xs font-semibold text-slate-500">{candidate.description}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
         ) : null}
 
@@ -204,6 +237,196 @@ export function FirstPartyRelationsDialog({
             نام، کد ملی و حداقل یک راه ارتباطی برای افراد وابسته الزامی است.
           </div>
         ) : null}
+      </div>
+    </ContractModal>
+    <RelationQuickEditDialogV3
+      open={quickEditItem !== null}
+      item={quickEditItem}
+      onClose={() => setQuickEditItem(null)}
+      onSave={(itemId, snapshot) => {
+        setDraftItems((current) => current.map((item) => (item.id === itemId ? { ...item, name: snapshot.fullName || item.name, snapshot } : item)));
+        setQuickEditItem(null);
+        setSubmitted(false);
+      }}
+    />
+    </>
+  );
+}
+
+function RelationQuickEditDialog({
+  open,
+  item,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  item: FirstPartyRelatedParticipant | null;
+  onClose: () => void;
+  onSave: (itemId: string, snapshot: FirstPartySnapshot) => void;
+}) {
+  const [snapshot, setSnapshot] = useState<FirstPartySnapshot>({});
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!open || !item) return;
+    const fullName = item.snapshot?.fullName ?? item.name;
+    const nameParts = fullName.trim().split(/\s+/);
+    setSnapshot(item.snapshot ?? { fullName });
+    setFirstName(nameParts[0] ?? '');
+    setLastName(nameParts.slice(1).join(' '));
+    setSubmitted(false);
+  }, [item, open]);
+
+  if (!item) return null;
+  const missingName = !firstName.trim() || !lastName.trim();
+  const missingNationalId = !snapshot.nationalId?.trim();
+  const missingContact = !snapshot.mobile?.trim() && !snapshot.email?.trim();
+
+  return (
+    <>
+    <ContractModal
+      open={open}
+      onClose={onClose}
+      title="تکمیل اطلاعات فرد"
+      description={`برای ادامه، اطلاعات ${item.name} را کامل کنید.`}
+       maxWidthClass="max-w-xl"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600">بازگشت به فهرست</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSubmitted(true);
+              if (missingName || missingNationalId) return;
+              onSave(item.id, { ...snapshot, fullName: `${firstName.trim()} ${lastName.trim()}` });
+            }}
+            className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)]"
+          >
+            تأیید اطلاعات
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2" dir="rtl" lang="fa">
+        <RelationField label="نام و نام خانوادگی" required value={snapshot.fullName ?? ''} invalid={submitted && missingName} onChange={(value) => setSnapshot((current) => ({ ...current, fullName: value }))} />
+        <RelationField label="کد ملی" required value={snapshot.nationalId ?? ''} invalid={submitted && missingNationalId} onChange={(value) => setSnapshot((current) => ({ ...current, nationalId: value }))} />
+        <RelationField label="شماره موبایل" value={snapshot.mobile ?? ''} invalid={submitted && missingContact} onChange={(value) => setSnapshot((current) => ({ ...current, mobile: value }))} />
+        <RelationField label="ایمیل" value={snapshot.email ?? ''} invalid={submitted && missingContact} onChange={(value) => setSnapshot((current) => ({ ...current, email: value }))} />
+        {submitted && (missingName || missingNationalId || missingContact) ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 sm:col-span-2">نام، کد ملی و حداقل یک راه ارتباطی الزامی است.</div> : null}
+      </div>
+    </ContractModal>
+    </>
+  );
+}
+
+function RelationQuickEditDialogV2({
+  open,
+  item,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  item: FirstPartyRelatedParticipant | null;
+  onClose: () => void;
+  onSave: (itemId: string, snapshot: FirstPartySnapshot) => void;
+}) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!open || !item) return;
+    const fullName = item.snapshot?.fullName ?? item.name;
+    const parts = fullName.trim().split(/\s+/);
+    setFirstName(parts[0] ?? '');
+    setLastName(parts.slice(1).join(' '));
+    setNationalId(item.snapshot?.nationalId ?? '');
+    setSubmitted(false);
+  }, [item, open]);
+
+  if (!item) return null;
+  const missingName = !firstName.trim() || !lastName.trim();
+  const missingNationalId = !nationalId.trim();
+
+  return (
+    <ContractModal
+      open={open}
+      onClose={onClose}
+       title="تکمیل اطلاعات فرد"
+       description="نام و نام خانوادگی و کد ملی را کامل کنید."
+      maxWidthClass="max-w-xl"
+      footer={
+        <>
+           <button type="button" onClick={onClose} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600">بازگشت به فهرست</button>
+           <button type="button" onClick={() => { setSubmitted(true); if (missingName || missingNationalId) return; onSave(item.id, { ...(item.snapshot ?? {}), fullName: `${firstName.trim()} ${lastName.trim()}`, nationalId }); }} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)]">تایید اطلاعات</button>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2" dir="rtl" lang="fa">
+         <RelationField label="نام" required value={firstName} invalid={submitted && !firstName.trim()} onChange={setFirstName} />
+         <RelationField label="نام خانوادگی" required value={lastName} invalid={submitted && !lastName.trim()} onChange={setLastName} />
+         <RelationField label="کد ملی" required value={nationalId} invalid={submitted && !nationalId.trim()} onChange={setNationalId} />
+         {submitted && (missingName || missingNationalId) ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 sm:col-span-2">نام، نام خانوادگی و کد ملی الزامی است.</div> : null}
+      </div>
+    </ContractModal>
+  );
+}
+
+function RelationQuickEditDialogV3({
+  open,
+  item,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  item: FirstPartyRelatedParticipant | null;
+  onClose: () => void;
+  onSave: (itemId: string, snapshot: FirstPartySnapshot) => void;
+}) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!open || !item) return;
+    const parts = (item.snapshot?.fullName ?? item.name).trim().split(/\s+/);
+    setFirstName(parts[0] ?? '');
+    setLastName(parts.slice(1).join(' '));
+    setNationalId(item.snapshot?.nationalId ?? '');
+    setSubmitted(false);
+  }, [item, open]);
+
+  if (!item) return null;
+  const missingName = !firstName.trim() || !lastName.trim();
+  const missingNationalId = !nationalId.trim();
+
+  return (
+    <ContractModal
+      open={open}
+      onClose={onClose}
+      title={'\u062a\u06a9\u0645\u06cc\u0644 \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0641\u0631\u062f'}
+      description={'\u0646\u0627\u0645 \u0648 \u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc \u0648 \u06a9\u062f \u0645\u0644\u06cc \u0631\u0627 \u06a9\u0627\u0645\u0644 \u06a9\u0646\u06cc\u062f.'}
+      maxWidthClass="max-w-xl"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600">
+            {'\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0641\u0647\u0631\u0633\u062a'}
+          </button>
+          <button type="button" onClick={() => { setSubmitted(true); if (missingName || missingNationalId) return; onSave(item.id, { ...(item.snapshot ?? {}), fullName: firstName.trim() + ' ' + lastName.trim(), nationalId }); }} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)]">
+            {'\u062a\u0627\u06cc\u06cc\u062f \u0627\u0637\u0644\u0627\u0639\u0627\u062a'}
+          </button>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2" dir="rtl" lang="fa">
+        <RelationField label={'\u0646\u0627\u0645'} required value={firstName} invalid={submitted && !firstName.trim()} onChange={setFirstName} />
+        <RelationField label={'\u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc'} required value={lastName} invalid={submitted && !lastName.trim()} onChange={setLastName} />
+        <RelationField label={'\u06a9\u062f \u0645\u0644\u06cc'} required value={nationalId} invalid={submitted && !nationalId.trim()} onChange={setNationalId} />
+        {submitted && (missingName || missingNationalId) ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 sm:col-span-2">{'\u0646\u0627\u0645\u060c \u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc \u0648 \u06a9\u062f \u0645\u0644\u06cc \u0627\u0644\u0632\u0627\u0645\u06cc \u0627\u0633\u062a.'}</div> : null}
       </div>
     </ContractModal>
   );

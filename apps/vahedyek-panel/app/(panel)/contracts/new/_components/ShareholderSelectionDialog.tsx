@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Building2, Check, Search, UserPlus, UserRound } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { ContractModal } from './ContractModal';
-import type { PartyOneMemberKind, RelatedParticipantOption } from './partiesTypes';
+import type { FirstPartySnapshot, PartyOneMemberKind, RelatedParticipantOption } from './partiesTypes';
 
 type SelectionTab = PartyOneMemberKind;
 
@@ -42,12 +42,17 @@ export function ShareholderSelectionDialog({
   const [activeTab, setActiveTab] = useState<SelectionTab>('natural_shareholder');
   const [searchTerm, setSearchTerm] = useState('');
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
+  const [quickEditItem, setQuickEditItem] = useState<RelatedParticipantOption | null>(null);
+  const [quickEditKind, setQuickEditKind] = useState<SelectionTab>('natural_shareholder');
+  const [editedSnapshots, setEditedSnapshots] = useState<Record<string, FirstPartySnapshot>>({});
 
   useEffect(() => {
     if (!open) return;
     setActiveTab(initialTab);
     setSearchTerm('');
     setPendingKeys([]);
+    setQuickEditItem(null);
+    setEditedSnapshots({});
   }, [initialTab, open]);
 
   const currentItems =
@@ -74,7 +79,53 @@ export function ShareholderSelectionDialog({
     setPendingKeys((current) => (current.includes(key) ? current.filter((itemKey) => itemKey !== key) : [...current, key]));
   };
 
+  const getItemKind = (item: RelatedParticipantOption): SelectionTab =>
+    businessItems.some((candidate) => candidate.sourceId === item.sourceId)
+      ? 'business'
+      : legalItems.some((candidate) => candidate.sourceId === item.sourceId)
+        ? 'legal_shareholder'
+        : 'natural_shareholder';
+  const selectedItems = () =>
+    allItems
+      .filter((item) => pendingKeys.includes(optionKey(item)))
+      .map((item) => (editedSnapshots[item.sourceId] ? { ...item, snapshot: editedSnapshots[item.sourceId] } : item));
+  const hasMissingPrimaryData = (item: RelatedParticipantOption, kind: SelectionTab) => {
+    const snapshot = item.snapshot ?? {};
+    const required =
+      kind === 'natural_shareholder'
+        ? ['fullName', 'nationalId']
+        : kind === 'legal_shareholder'
+          ? ['legalName', 'nationalId', 'registrationNumber', 'registrationDate', 'economicCode']
+          : ['legalName', 'tradeName', 'nationalId', 'contactName'];
+    return required.some((key) => !String(snapshot[key as keyof FirstPartySnapshot] ?? '').trim());
+  };
+  const handleAddSelected = () => {
+    const items = selectedItems();
+    const incomplete = items.find((item) => hasMissingPrimaryData(item, getItemKind(item)));
+    if (incomplete) {
+      setQuickEditKind(getItemKind(incomplete));
+      setQuickEditItem(incomplete);
+      return;
+    }
+    onAddSelected(items);
+  };
+  const handleQuickEditSave = (snapshot: FirstPartySnapshot) => {
+    if (!quickEditItem) return;
+    setEditedSnapshots((current) => ({ ...current, [quickEditItem.sourceId]: snapshot }));
+    const updatedItems = selectedItems().map((item) =>
+      item.sourceId === quickEditItem.sourceId ? { ...item, name: snapshot.fullName || snapshot.legalName || item.name, snapshot } : item,
+    );
+    const nextIncomplete = updatedItems.find((item) => hasMissingPrimaryData(item, getItemKind(item)));
+    if (nextIncomplete) {
+      setQuickEditItem(nextIncomplete);
+      return;
+    }
+    setQuickEditItem(null);
+    onAddSelected(updatedItems);
+  };
+
   return (
+    <>
     <ContractModal
       open={open}
       onClose={onClose}
@@ -93,7 +144,7 @@ export function ShareholderSelectionDialog({
           <button
             type="button"
             disabled={!pendingKeys.length}
-            onClick={() => onAddSelected(allItems.filter((item) => pendingKeys.includes(optionKey(item))))}
+            onClick={handleAddSelected}
             className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)] transition-colors hover:bg-[var(--theme-action-bg-hover)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             افزودن انتخاب‌شده‌ها{pendingKeys.length ? ` (${pendingKeys.length})` : ''}
@@ -216,6 +267,83 @@ export function ShareholderSelectionDialog({
             </div>
           )}
         </div>
+      </div>
+    </ContractModal>
+    <ShareholderPrimaryDataDialog
+      open={quickEditItem !== null}
+      item={quickEditItem}
+      kind={quickEditKind}
+      onClose={() => setQuickEditItem(null)}
+      onSave={handleQuickEditSave}
+    />
+    </>
+  );
+}
+
+function ShareholderPrimaryDataDialog({
+  open,
+  item,
+  kind,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  item: RelatedParticipantOption | null;
+  kind: SelectionTab;
+  onClose: () => void;
+  onSave: (snapshot: FirstPartySnapshot) => void;
+}) {
+  const [snapshot, setSnapshot] = useState<FirstPartySnapshot>({});
+  const [naturalFirstName, setNaturalFirstName] = useState('');
+  const [naturalLastName, setNaturalLastName] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const fields = kind === 'natural_shareholder'
+    ? [['fullName', '\u0646\u0627\u0645 \u0648 \u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc'], ['nationalId', '\u06a9\u062f \u0645\u0644\u06cc']]
+    : kind === 'legal_shareholder'
+      ? [['legalName', '\u0646\u0627\u0645 \u0642\u0627\u0646\u0648\u0646\u06cc \u0634\u0631\u06a9\u062a'], ['tradeName', '\u0646\u0627\u0645 \u062a\u062c\u0627\u0631\u06cc'], ['nationalId', '\u0634\u0646\u0627\u0633\u0647 \u0645\u0644\u06cc'], ['registrationNumber', '\u0634\u0645\u0627\u0631\u0647 \u062b\u0628\u062a \u0634\u0631\u06a9\u062a'], ['registrationDate', '\u062a\u0627\u0631\u06cc\u062e \u062b\u062b\u062a \u0634\u0631\u06a9\u062a'], ['economicCode', '\u06a9\u062f \u0627\u0642\u062a\u0635\u0627\u062f\u06cc']]
+      : [['legalName', '\u0646\u0627\u0645 \u0642\u0627\u0646\u0648\u0646\u06cc \u06a9\u0633\u0628\u200c\u0648\u06a9\u0627\u0631'], ['tradeName', '\u0646\u0627\u0645 \u062a\u062c\u0627\u0631\u06cc'], ['nationalId', '\u0634\u0646\u0627\u0633\u0647 \u0645\u0644\u06cc'], ['contactName', '\u0646\u0645\u0627\u06cc\u0646\u062f\u0647 \u06a9\u0633\u0628\u200c\u0648\u06a9\u0627\u0631']];
+
+  useEffect(() => {
+    if (!open || !item) return;
+    const nextSnapshot = item.snapshot ?? {};
+    const nameParts = (nextSnapshot.fullName ?? item.name).trim().split(/\s+/);
+    setSnapshot(nextSnapshot);
+    setNaturalFirstName(nameParts[0] ?? '');
+    setNaturalLastName(nameParts.slice(1).join(' '));
+    setSubmitted(false);
+  }, [item, open]);
+
+  if (!item) return null;
+  const missing =
+    kind === 'natural_shareholder'
+      ? [
+          ...(!naturalFirstName.trim() ? ['firstName'] : []),
+          ...(!naturalLastName.trim() ? ['lastName'] : []),
+          ...(!String(snapshot.nationalId ?? '').trim() ? ['nationalId'] : []),
+        ]
+      : fields.filter(([key]) => !String(snapshot[key as keyof FirstPartySnapshot] ?? '').trim());
+  return (
+    <ContractModal
+      open={open}
+      onClose={onClose}
+      title={'\u062a\u06a9\u0645\u06cc\u0644 \u0627\u0637\u0644\u0627\u0639\u0627\u062a'}
+      description={'\u0628\u0631\u0627\u06cc \u0627\u062f\u0627\u0645\u0647\u060c \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0627\u0635\u0644\u06cc \u0627\u06cc\u0646 \u0645\u0648\u0631\u062f \u0631\u0627 \u06a9\u0627\u0645\u0644 \u06a9\u0646\u06cc\u062f.'}
+      maxWidthClass="max-w-xl"
+      footer={<><button type="button" onClick={onClose} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600">{'\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0641\u0647\u0631\u0633\u062a'}</button><button type="button" onClick={() => { setSubmitted(true); if (missing.length) return; onSave(kind === 'natural_shareholder' ? { ...snapshot, fullName: naturalFirstName.trim() + ' ' + naturalLastName.trim() } : snapshot); }} className="inline-flex h-11 items-center justify-center rounded-[8px] border border-[var(--theme-action-border)] bg-[var(--theme-action-bg)] px-4 text-sm font-bold text-[var(--theme-action-text)]">{'\u062a\u0627\u06cc\u06cc\u062f \u0627\u0637\u0644\u0627\u0639\u0627\u062a'}</button></>}
+    >
+      <div className="grid gap-4 sm:grid-cols-2" dir="rtl" lang="fa">
+        {kind === 'natural_shareholder' ? (
+          <>
+            <label className="block text-right text-sm font-bold text-slate-700">{'\u0646\u0627\u0645'}<span className="mr-1 text-rose-600">*</span><Input value={naturalFirstName} onChange={(event) => setNaturalFirstName(event.target.value)} aria-invalid={submitted && !naturalFirstName.trim()} className={'mt-2 h-11 rounded-[8px] text-sm ' + (submitted && !naturalFirstName.trim() ? 'border-rose-400 ring-1 ring-rose-200' : '')} /></label>
+            <label className="block text-right text-sm font-bold text-slate-700">{'\u0646\u0627\u0645 \u062e\u0627\u0646\u0648\u0627\u062f\u06af\u06cc'}<span className="mr-1 text-rose-600">*</span><Input value={naturalLastName} onChange={(event) => setNaturalLastName(event.target.value)} aria-invalid={submitted && !naturalLastName.trim()} className={'mt-2 h-11 rounded-[8px] text-sm ' + (submitted && !naturalLastName.trim() ? 'border-rose-400 ring-1 ring-rose-200' : '')} /></label>
+            <label className="block text-right text-sm font-bold text-slate-700">{'\u06a9\u062f \u0645\u0644\u06cc'}<span className="mr-1 text-rose-600">*</span><Input value={String(snapshot.nationalId ?? '')} onChange={(event) => setSnapshot((current) => ({ ...current, nationalId: event.target.value }))} aria-invalid={submitted && !String(snapshot.nationalId ?? '').trim()} className={'mt-2 h-11 rounded-[8px] text-sm ' + (submitted && !String(snapshot.nationalId ?? '').trim() ? 'border-rose-400 ring-1 ring-rose-200' : '')} /></label>
+          </>
+        ) : fields.map(([key, label]) => {
+          const value = String(snapshot[key as keyof FirstPartySnapshot] ?? '');
+          const invalid = submitted && !value.trim();
+          return <label key={key} className="block text-right text-sm font-bold text-slate-700">{label}<span className="mr-1 text-rose-600">*</span><Input value={value} onChange={(event) => setSnapshot((current) => ({ ...current, [key]: event.target.value }))} aria-invalid={invalid} className={'mt-2 h-11 rounded-[8px] text-sm ' + (invalid ? 'border-rose-400 ring-1 ring-rose-200' : '')} /></label>;
+        })}
+        {submitted && missing.length ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 sm:col-span-2">{'\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0632\u0627\u0645\u06cc \u0631\u0627 \u06a9\u0627\u0645\u0644 \u06a9\u0646\u06cc\u062f.'}</div> : null}
       </div>
     </ContractModal>
   );

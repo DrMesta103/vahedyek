@@ -1130,7 +1130,9 @@ export function ContractFlowHub() {
 
       if (nextUrl.origin !== currentUrl.origin || nextHref === currentHref) return false;
 
-      setPendingLeave({ mode: 'route', href: nextHref });
+      window.setTimeout(() => {
+        if (!leavingRef.current) setPendingLeave({ mode: 'route', href: nextHref });
+      }, 0);
       return true;
     };
 

@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 export type ContractDraftReturnContext = {
   href: string;
   draftId: string;
-  tab: 'natural_shareholder' | 'legal_shareholder';
+  tab: 'natural_shareholder' | 'legal_shareholder' | 'representative' | 'board_member';
 };
 
 export function parseContractDraftReturnContext(rawReturnTo: string | null | undefined): ContractDraftReturnContext | null {
@@ -25,9 +25,14 @@ export function parseContractDraftReturnContext(rawReturnTo: string | null | und
         ? 'legal_shareholder'
         : requestedTab === 'natural_shareholder' || requestedTab === 'natural-shareholder'
           ? 'natural_shareholder'
+          : requestedTab === 'board_member' || requestedTab === 'board-member'
+            ? 'board_member'
+            : requestedTab === 'representative'
+              ? 'representative'
           : null;
 
-    if (!isContractFlowPath || !draftId || section !== 'parties' || returnSection !== 'parties' || returnDialog !== 'partyOne' || !tab) {
+    const validDialog = returnDialog === 'partyOne' ? tab === 'natural_shareholder' || tab === 'legal_shareholder' : returnDialog === 'relations' ? tab === 'representative' || tab === 'board_member' : false;
+    if (!isContractFlowPath || !draftId || section !== 'parties' || returnSection !== 'parties' || !validDialog || !tab) {
       return null;
     }
 
