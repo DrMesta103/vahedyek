@@ -123,13 +123,22 @@ export function resolveInstallmentDueScheduleHint(
   installments: SettingsRuleLike,
   dueItems: DueItemLike[],
 ): BusinessSettingsComparison {
-  if (!installments?.active) {
+  if (!installments) {
     return buildBusinessSettingsComparison({
-      status: dueItems.length ? 'different' : 'info',
+      status: 'missing',
+      helperText: 'برای اقساط تنظیم مرجعی در تنظیمات کسب‌وکار ثبت نشده است.',
+    });
+  }
+
+  if (!installments.active) {
+    return buildBusinessSettingsComparison({
+      status: dueItems.length ? 'different' : 'equal',
       referenceLines: [{ label: 'اقساط در تنظیمات', value: 'غیرفعال' }],
       currentLines: [{ label: 'سررسیدهای فعلی اقساط', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` }],
       differenceText: dueItems.length ? 'در تنظیمات کسب‌وکار، اقساط فعال نیست اما در پیش‌نویس سررسید اقساط ثبت شده است.' : null,
-      helperText: 'این Hint از تنظیمات اقساط کسب‌وکار خوانده می‌شود.',
+      helperText: dueItems.length
+        ? 'در تنظیمات کسب‌وکار، اقساط فعال نیست اما در پیش‌نویس سررسید ثبت شده است.'
+        : 'در تنظیمات کسب‌وکار، اقساط فعال نیست.',
     });
   }
 

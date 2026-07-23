@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  resolveInstallmentDueScheduleHint,
   resolveInstallmentHintReference,
   resolvePrepaymentHintReference,
   resolveDomainRuleHint,
@@ -38,6 +39,19 @@ test('installment hint exposes mode and balloon breakdown', () => {
   const hint = resolveInstallmentHintReference(installments, true, 3);
   assert.equal(hint.status, 'equal');
   assert.ok(hint.breakdownLines.some((line) => line.label.includes('بالونی')));
+  assert.ok(hint.referenceLines.some((line) => line.label === 'حالت تنظیمات اقساط' && line.value === 'منظم'));
+});
+
+test('installment due schedule hint shows concrete inactive copy like prepayment', () => {
+  const installments = normalizeRuleState('installments', {
+    active: false,
+    activeTab: 'regular',
+    values: {},
+  });
+  const hint = resolveInstallmentDueScheduleHint(installments, []);
+  assert.equal(hint.status, 'equal');
+  assert.equal(hint.helperText, 'در تنظیمات کسب‌وکار، اقساط فعال نیست.');
+  assert.ok(hint.referenceLines.some((line) => line.value === 'غیرفعال'));
 });
 
 test('domain discount hint reports missing settings', () => {

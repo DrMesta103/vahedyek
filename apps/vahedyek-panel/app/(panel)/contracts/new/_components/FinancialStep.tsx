@@ -1552,16 +1552,8 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
         />
       );
     }
-    const installment = categories.find((item) => item.id === 'installment');
-    if (installment) {
-      hints.installment = <BusinessSettingsHint unitLabel="تومان" comparison={compareBusinessSetting(snapshot?.rules?.installments?.active, Boolean(installment.capAmount > 0 || dueItems.some((item) => item.categoryId === 'installment')))} />;
-    }
-    const loan = categories.find((item) => item.id === 'loan');
-    if (loan) {
-      hints.loan = <BusinessSettingsHint unitLabel="تومان" comparison={compareBusinessSetting(snapshot?.loanSettings?.enabled, Boolean(loan.capAmount > 0 || dueItems.some((item) => item.categoryId === 'loan')))} />;
-    }
     return hints;
-  }, [categories, dueItems, snapshot]);
+  }, [categories, snapshot]);
 
   const resolvedFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
     const hints: Record<string, React.ReactNode> = { ...financialCategoryHints };
@@ -1589,10 +1581,13 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   const businessFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
     const hints: Record<string, React.ReactNode> = { ...resolvedFinancialCategoryHints };
+    delete hints.loan;
+
     const advance = categories.find((item) => item.id === 'advance');
     if (advance) {
       hints.advance = <BusinessSettingsHint comparison={resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance.capAmount)} />;
     }
+
     const installment = categories.find((item) => item.id === 'installment');
     if (installment) {
       const installmentDueCount = dueItems.filter((item) => item.categoryId === 'installment').length;
@@ -1602,7 +1597,10 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           comparison={resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount)}
         />
       );
+    } else {
+      delete hints.installment;
     }
+
     return hints;
   }, [categories, dueItems, resolvedFinancialCategoryHints, snapshot, totalContractAmount]);
 
