@@ -31,6 +31,95 @@ function MainSwitchPreview() {
   );
 }
 
+function CompactSwitchToken({ initialValue }: { initialValue: 'active' | 'inactive' }) {
+  const [value, setValue] = useState(initialValue);
+  const active = value === 'active';
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={active ? 'سوییچ فعال' : 'سوییچ غیرفعال'}
+      onClick={() => setValue(active ? 'inactive' : 'active')}
+      className="group relative inline-flex h-10 w-12 items-center justify-center rounded-[2px] bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#89939a]"
+    >
+      <span className={`pointer-events-none absolute top-0 z-0 h-10 w-10 rounded-full bg-[#d9edef] opacity-0 transition-opacity group-hover:opacity-100 ${active ? 'left-0' : 'right-0'}`} aria-hidden />
+      <span className={`relative block h-4 w-9 rounded-full transition-colors ${active ? 'bg-[#079ba0]' : 'bg-[#9da3aa]'}`}>
+        <span className={`absolute top-[-2px] z-10 h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.14)] transition-transform ${active ? 'left-[-1px]' : 'right-[-1px]'}`} />
+      </span>
+    </button>
+  );
+}
+
+function AmountModeToken() {
+  const [value, setValue] = useState<'active' | 'inactive'>('active');
+
+  return (
+    <TaavActivationSwitch
+      value={value}
+      onValueChange={setValue}
+      activeLabel="درصد"
+      inactiveLabel="مبلغ ثابت"
+      size="md"
+      tone="brand"
+      ariaLabel="شیوه نمایش مبلغ"
+    />
+  );
+}
+
+function PermissionStatusToken() {
+  const [value, setValue] = useState<'active' | 'inactive'>('active');
+
+  return (
+    <div dir="ltr">
+      <TaavActivationSwitch
+        value={value}
+        onValueChange={setValue}
+        activeLabel="غیرمجاز"
+        inactiveLabel="مجاز"
+        size="md"
+        tone="brand"
+        ariaLabel="وضعیت مجوز"
+      />
+    </div>
+  );
+}
+
+function ContractVisibilityToken() {
+  const [value, setValue] = useState<'active' | 'inactive'>('active');
+
+  return (
+    <TaavActivationSwitch
+      value={value}
+      onValueChange={setValue}
+      activeLabel="عدم نمایش قرارداد"
+      inactiveLabel="نمایش قرارداد"
+      size="md"
+      tone="brand"
+      ariaLabel="وضعیت نمایش قرارداد"
+    />
+  );
+}
+
+function YesNoToken() {
+  const [value, setValue] = useState<'active' | 'inactive'>('active');
+
+  return (
+    <div dir="ltr">
+      <TaavActivationSwitch
+        value={value}
+        onValueChange={setValue}
+        activeLabel="خیر"
+        inactiveLabel="بله"
+        size="md"
+        tone="brand"
+        ariaLabel="انتخاب بله یا خیر"
+      />
+    </div>
+  );
+}
+
 export default function ComponentsSwitchDocPage() {
   return (
     <DocPageShell breadcrumbs={[{ label: 'خانه', href: '/' }, { label: 'Components', href: '/business-components' }, { label: 'switch' }]}>
@@ -43,6 +132,81 @@ export default function ComponentsSwitchDocPage() {
 
       <DocSection title="کامپوننت اصلی">
         <MainSwitchPreview />
+      </DocSection>
+
+      <DocSection title="توکن compact">
+        <div dir="rtl" data-taav-theme="light" className="flex items-center justify-center bg-white p-3">
+          <CompactSwitchToken initialValue="active" />
+        </div>
+      </DocSection>
+
+      <DocSection title="ساختار توکن compact">
+        <DocCodeBlock>{`<CompactSwitchToken value="active" />
+<CompactSwitchToken value="inactive" />`}</DocCodeBlock>
+      </DocSection>
+
+      <DocSection title="توکن amount-mode">
+        <div dir="rtl" data-taav-theme="light" className="flex items-center justify-center bg-white p-3">
+          <AmountModeToken />
+        </div>
+      </DocSection>
+
+      <DocSection title="ساختار توکن amount-mode">
+        <DocCodeBlock>{`<TaavActivationSwitch
+  defaultValue="active"
+  activeLabel="درصد"
+  inactiveLabel="مبلغ ثابت"
+  size="md"
+  tone="brand"
+/>`}</DocCodeBlock>
+      </DocSection>
+
+      <DocSection title="توکن permission-status">
+        <div dir="rtl" data-taav-theme="light" className="flex items-center justify-center bg-white p-3">
+          <PermissionStatusToken />
+        </div>
+      </DocSection>
+
+      <DocSection title="ساختار توکن permission-status">
+        <DocCodeBlock>{`<TaavActivationSwitch
+  defaultValue="active"
+  activeLabel="غیرمجاز"
+  inactiveLabel="مجاز"
+  size="md"
+  tone="brand"
+/>`}</DocCodeBlock>
+      </DocSection>
+
+      <DocSection title="توکن contract-visibility">
+        <div dir="rtl" data-taav-theme="light" className="flex items-center justify-center bg-white p-3">
+          <ContractVisibilityToken />
+        </div>
+      </DocSection>
+
+      <DocSection title="ساختار توکن contract-visibility">
+        <DocCodeBlock>{`<TaavActivationSwitch
+  defaultValue="active"
+  activeLabel="عدم نمایش قرارداد"
+  inactiveLabel="نمایش قرارداد"
+  size="md"
+  tone="brand"
+/>`}</DocCodeBlock>
+      </DocSection>
+
+      <DocSection title="توکن yes-no">
+        <div dir="rtl" data-taav-theme="light" className="flex items-center justify-center bg-white p-3">
+          <YesNoToken />
+        </div>
+      </DocSection>
+
+      <DocSection title="ساختار توکن yes-no">
+        <DocCodeBlock>{`<TaavActivationSwitch
+  defaultValue="active"
+  activeLabel="خیر"
+  inactiveLabel="بله"
+  size="md"
+  tone="brand"
+/>`}</DocCodeBlock>
       </DocSection>
 
       <DocApiNote />

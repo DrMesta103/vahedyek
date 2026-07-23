@@ -118,7 +118,7 @@ export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های
             const displayItem = sectionMode === 'components' && item.href === '/business/choice-chip'
               ? { ...item, href: '/business-components/badges', label: 'badges', badge: 'TaavBadge' }
               : sectionMode === 'components' && item.href === '/business/field-block'
-                ? { ...item, href: '/business-components/field-block', label: 'field', badge: 'TaavFieldBlock' }
+                ? { ...item, href: '/business-components/field-block', label: 'inputs', badge: 'TaavFieldBlock' }
               : sectionMode === 'components' && item.href === '/business/form-step-indicator'
                   ? { ...item, label: 'stepper' }
               : sectionMode === 'components' && item.href === '/business/module-link-grid'
@@ -131,7 +131,7 @@ export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های
             const copy = sectionMode === 'components' && item.href === '/business/choice-chip'
               ? { label: 'badges', description: 'Badgeهای نمایشی برای وضعیت، نوع کاربری، ویژگی‌های واحد و وضعیت معامله' }
               : sectionMode === 'components' && item.href === '/business/field-block'
-                ? { label: 'field', description: 'کامپوننت اصلی فیلد با برچسب، کنترل و متن راهنما' }
+                ? { label: 'inputs', description: 'کامپوننت اصلی فیلد با برچسب، کنترل و متن راهنما' }
                 : sectionMode === 'components' && item.href === '/business/form-step-indicator'
                   ? { label: 'stepper', description: 'نمایش مرحله‌های فرم با مشخص‌کردن مرحله فعال و مراحل تکمیل‌شده' }
                 : sectionMode === 'components' && item.href === '/business/module-link-grid'
