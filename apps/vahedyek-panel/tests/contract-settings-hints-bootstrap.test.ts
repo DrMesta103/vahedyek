@@ -8,10 +8,15 @@ import {
   resolveBuyerPenaltyTypeHint,
   resolveBuyerPenaltyFieldHints,
   resolveForgivenessFieldHints,
+  resolveForgivenessEntryHint,
   resolveInterestFieldHints,
   resolveDiscountFieldHints,
+  resolveDiscountTypeHint,
   resolveBuilderPenaltyFieldHints,
+  resolveBuilderPenaltySectionHint,
   resolveTerminationFieldHints,
+  canAlignWithSettings,
+  aggregateAlignmentStatuses,
 } from '../app/lib/contractSettingsHints';
 import {
   buildBootstrapDiscountsPayload,
@@ -285,7 +290,11 @@ test('buyer penalty field hints expose mode and amount labels', () => {
     extraFeeRoundRule: '100',
     progressiveRows: [],
   });
-  assert.deepEqual(otherType, {});
+  // Unconfigured type still gets field tags against inactive/empty settings template.
+  assert.equal(otherType.mode?.status, 'missing');
+  assert.equal(otherType.fixedAmount?.status, 'missing');
+  assert.equal(otherType.fixedAmount?.settingsLabel, null);
+  assert.equal(otherType.graceDays?.status, 'missing');
 });
 
 test('buyer penalty field hints stay isolated per valuesByType slice', () => {
@@ -357,7 +366,7 @@ test('buyer penalty field hints stay isolated per valuesByType slice', () => {
     progressiveRows: [],
   });
   assert.equal(advanceHints.fixedAmount?.status, 'equal');
-  assert.ok(advanceHints.fixedAmount?.settingsLabel?.includes('۹۹۹۹۹') || advanceHints.fixedAmount?.settingsLabel?.includes('99999'));
+  assert.equal(advanceHints.fixedAmount?.settingsLabel, null);
 
   // Changing installment root values must not affect advance slice hints.
   const mutated = {
@@ -398,7 +407,14 @@ test('buyer penalty field hints stay isolated per valuesByType slice', () => {
     extraFeeRoundRule: '100',
     progressiveRows: [],
   });
-  assert.deepEqual(unconfigured, {});
+  assert.equal(unconfigured.mode?.status, 'missing');
+  assert.equal(unconfigured.mode?.settingsLabel, null);
+  assert.equal(unconfigured.fixedAmount?.status, 'missing');
+  assert.equal(unconfigured.fixedAmount?.settingsLabel, null);
+  assert.equal(unconfigured.graceDays?.status, 'missing');
+  assert.equal(unconfigured.graceDays?.settingsLabel, null);
+  // Configured slices stay isolated — document must not pick installment amounts.
+  assert.equal(installmentHints.fixedAmount?.status, 'equal');
 });
 
 test('bootstrap penalties creates one rule per valuesByType slice', () => {
@@ -485,6 +501,7 @@ test('discount field hints map contract-base to on-contract tab', () => {
       discountContractTarget: 'مبلغ',
       discountContractValue: '500',
       discountContractNeedApproval: false,
+      discountScope: 'whole',
     },
   });
   const aligned = resolveDiscountFieldHints(
@@ -507,6 +524,7 @@ test('discount field hints map contract-base to on-contract tab', () => {
   assert.equal(aligned.valueMode?.status, 'equal');
   assert.equal(aligned.maxValue?.status, 'equal');
   assert.equal(aligned.managerApproval?.status, 'equal');
+  assert.notEqual(aligned.valueMode?.status, 'idle');
 
   const different = resolveDiscountFieldHints(
     reference,
@@ -527,7 +545,77 @@ test('discount field hints map contract-base to on-contract tab', () => {
   );
   assert.equal(different.valueMode?.status, 'different');
   assert.equal(different.managerApproval?.status, 'different');
+  assert.equal(different.maxValue?.status, 'different');
   assert.deepEqual(resolveDiscountFieldHints(null, null, true), {});
+
+  // Other type gets no field hints (card-level handles alignment).
+  assert.deepEqual(
+    resolveDiscountFieldHints(
+      reference,
+      {
+        id: 'd3',
+        discountTypeId: 'early-payment',
+        enabled: true,
+        valueMode: 'amount',
+        minValue: '',
+        maxValue: '1',
+        managerApproval: false,
+        approvalThreshold: '',
+        scope: 'whole',
+        entryId: '',
+        conditionConfigured: false,
+      },
+      true,
+    ),
+    {},
+  );
+});
+
+test('discount field hints map early-payment tab fields', () => {
+  const reference = normalizeRuleState('discount', {
+    active: true,
+    activeTab: 'early-payment',
+    values: {
+      discountEarlyTarget: 'درصد',
+      discountEarlyValue: '5',
+      discountManagerApproval: true,
+      discountApprovalThreshold: '10',
+      discountEarlyKeepOnDelay: true,
+      discountConditionMaxDelayCount: '3',
+      discountConditionGraceDays: '2',
+      discountScope: 'whole',
+    },
+  });
+  const hints = resolveDiscountFieldHints(
+    reference,
+    {
+      id: 'd-early',
+      discountTypeId: 'early-payment',
+      enabled: true,
+      valueMode: 'percent',
+      minValue: '',
+      maxValue: '5',
+      managerApproval: true,
+      approvalThreshold: '10',
+      scope: 'whole',
+      entryId: '',
+      conditionConfigured: true,
+      conditionMaxDelayCount: '3',
+      conditionGraceDays: '2',
+      conditionKeepOnDelay: true,
+      conditionPenaltyOnDiscount: false,
+      conditionSettlementTiming: 'unit-handover',
+      conditionDueBasis: ['all-payment-types'],
+    },
+    true,
+  );
+  assert.equal(hints.valueMode?.status, 'equal');
+  assert.equal(hints.maxValue?.status, 'equal');
+  assert.equal(hints.managerApproval?.status, 'equal');
+  assert.equal(hints.approvalThreshold?.status, 'equal');
+  assert.equal(hints.maxDelayCount?.status, 'equal');
+  assert.equal(hints.graceDays?.status, 'equal');
+  assert.equal(hints.keepOnDelay?.status, 'equal');
 });
 
 test('builder penalty field hints scope by section', () => {
@@ -601,4 +689,158 @@ test('termination field hints cover subsection enable and grace fields', () => {
   assert.equal(different['seller.lateInstallment.enabled']?.status, 'different');
   assert.equal(different['seller.lateInstallment.gracePreset']?.status, 'different');
   assert.deepEqual(resolveTerminationFieldHints(null, differentPayload), {});
+});
+
+test('builder penalty section hint treats unset settings section as inactive template', () => {
+  const reference = normalizeRuleState('builder-penalty', {
+    active: true,
+    activeTab: 'builder-penalty-overview',
+    values: {
+      unitDeliveryDelayEnabled: true,
+      unitDeliveryDelayMode: 'fixed',
+      unitDeliveryDelayPeriod: 'روزانه',
+      unitDeliveryDelayFixedAmount: '10000',
+      materialSpecsChangeEnabled: false,
+    },
+  });
+
+  const draftOff = {
+    active: true,
+    activeTab: 'builder-penalty-overview',
+    values: {
+      unitDeliveryDelayEnabled: false,
+      materialSpecsChangeEnabled: false,
+    },
+  };
+
+  const unitConfigured = resolveBuilderPenaltySectionHint(reference, draftOff, 'unit-delivery-delay');
+  assert.notEqual(unitConfigured.status, 'missing');
+  assert.notEqual(unitConfigured.status, 'equal');
+
+  const materialUnset = resolveBuilderPenaltySectionHint(reference, draftOff, 'material-specs-change');
+  assert.equal(materialUnset.status, 'equal');
+
+  const materialActiveAgainstUnset = resolveBuilderPenaltySectionHint(
+    reference,
+    {
+      ...draftOff,
+      values: { ...draftOff.values, materialSpecsChangeEnabled: true },
+    },
+    'material-specs-change',
+  );
+  assert.equal(materialActiveAgainstUnset.status, 'different');
+});
+
+test('discount type hint uses inactive template when settings tab does not match', () => {
+  const reference = normalizeRuleState('discount', {
+    active: true,
+    activeTab: 'on-contract',
+    values: {
+      discountContractTarget: 'مبلغ',
+      discountContractValue: '1000',
+      discountScope: 'whole',
+    },
+  });
+
+  const inactiveEarly = resolveDiscountTypeHint(reference, 'early-payment', false, null);
+  assert.equal(inactiveEarly.status, 'equal');
+
+  const activeEarly = resolveDiscountTypeHint(reference, 'early-payment', true, {
+    id: 'd-early',
+    discountTypeId: 'early-payment',
+    enabled: true,
+    valueMode: 'amount',
+    minValue: '1',
+    maxValue: '1',
+    managerApproval: false,
+    approvalThreshold: '',
+    scope: 'whole',
+    entryId: '',
+    conditionConfigured: false,
+  });
+  assert.equal(activeEarly.status, 'different');
+
+  const inactiveContract = resolveDiscountTypeHint(reference, 'contract-base', false, null);
+  assert.notEqual(inactiveContract.status, 'missing');
+  assert.notEqual(inactiveContract.status, 'equal');
+});
+
+test('forgiveness entry hint equals when inactive without matching settings entry', () => {
+  const reference = normalizeRuleState('forgiveness', {
+    active: true,
+    activeTab: 'forgiveness-overview',
+    values: {
+      forgiveAllowed: true,
+      forgiveScope: 'itemized',
+      forgiveEntryId: 'installment-delay',
+      forgiveEnabledEntryIds: JSON.stringify(['installment-delay']),
+    },
+  });
+
+  const unmatchedInactive = resolveForgivenessEntryHint(reference, 'document-delay', false, createInitialRuleState('forgiveness'));
+  assert.equal(unmatchedInactive.status, 'equal');
+
+  const unmatchedActive = resolveForgivenessEntryHint(reference, 'document-delay', true, {
+    ...createInitialRuleState('forgiveness'),
+    active: true,
+    values: {
+      forgiveScope: 'itemized',
+      forgiveEntryId: 'document-delay',
+    },
+  });
+  assert.equal(unmatchedActive.status, 'different');
+});
+
+test('termination buyer physicalProgressDelay gets enable hint from cancellation fallback', () => {
+  const buyerRule = normalizeRuleState('buyer-cancellation', {
+    active: true,
+    activeTab: 'buyer-cancellation-overview',
+    values: {
+      buyerCancellationLateDeliveryEnabled: true,
+    },
+  });
+  const current = normalizeTerminationPayload({
+    terminationEnabled: true,
+    buyerTerminationEngaged: true,
+    buyerTerms: {
+      physicalProgressDelay: {
+        ruleEnabled: false,
+      },
+      lateDelivery: {
+        ruleEnabled: true,
+      },
+    },
+  });
+  const hints = resolveTerminationFieldHints(null, current, { buyer: buyerRule });
+  assert.equal(hints['buyer.physicalProgressDelay.enabled']?.status, 'equal');
+  assert.equal(hints['buyer.lateDelivery.enabled']?.status, 'equal');
+
+  const enabledProgress = normalizeTerminationPayload({
+    ...current,
+    buyerTerms: {
+      ...current.buyerTerms,
+      physicalProgressDelay: {
+        ...current.buyerTerms.physicalProgressDelay,
+        ruleEnabled: true,
+      },
+    },
+  });
+  const different = resolveTerminationFieldHints(null, enabledProgress, { buyer: buyerRule });
+  assert.equal(different['buyer.physicalProgressDelay.enabled']?.status, 'different');
+});
+
+test('canAlignWithSettings enables only different/info statuses', () => {
+  assert.equal(canAlignWithSettings('different'), true);
+  assert.equal(canAlignWithSettings('info'), true);
+  assert.equal(canAlignWithSettings('equal'), false);
+  assert.equal(canAlignWithSettings('missing'), false);
+  assert.equal(canAlignWithSettings(null), false);
+  assert.equal(canAlignWithSettings(undefined), false);
+});
+
+test('aggregateAlignmentStatuses prefers different then info then equal', () => {
+  assert.equal(aggregateAlignmentStatuses(['equal', 'info', 'different']), 'different');
+  assert.equal(aggregateAlignmentStatuses(['equal', 'info']), 'info');
+  assert.equal(aggregateAlignmentStatuses(['equal', 'missing']), 'equal');
+  assert.equal(aggregateAlignmentStatuses([null, undefined]), null);
 });

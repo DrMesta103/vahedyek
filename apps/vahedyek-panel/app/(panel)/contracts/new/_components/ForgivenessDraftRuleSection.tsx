@@ -7,7 +7,8 @@ import { PENALTY_ITEMS } from './penaltiesConfig';
 import { TagPills, SettingsAlignedFieldBlock } from './ContractFormPrimitives';
 import type { ContractRuleState } from '../../../../lib/businessContractRules';
 import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
-import { getDomainFieldHint, type DomainFieldHint } from '../../../../lib/contractSettingsHints/domainFieldHints';
+import { buyerPenaltyAlignmentTag } from '../../../../lib/contractSettingsHints';
+import { getDomainFieldHint, resolveForgivenessEntryHint, type DomainFieldHint } from '../../../../lib/contractSettingsHints/forgivenessInterestFieldHints';
 
 type ForgivenessScope = 'whole' | 'itemized';
 type ForgivenessValueMode = 'amount' | 'percent';
@@ -173,11 +174,13 @@ export function ForgivenessDraftRuleSection({
   onValueChange,
   onSave,
   fieldHints = {},
+  settingsReference = null,
 }: {
   state: ContractRuleState;
   onValueChange: (key: string, value: string | boolean) => void;
   onSave: () => void;
   fieldHints?: Record<string, DomainFieldHint>;
+  settingsReference?: ContractRuleState | null;
 }) {
   const currentEntry = getEntry(state.values);
   const valueMode = getValueMode(state.values);
@@ -302,6 +305,9 @@ export function ForgivenessDraftRuleSection({
               const isExpanded = state.active && currentEntry.id === entry.id;
               const isEnabled = entry.scope === 'whole' ? wholeEnabled : enabledEntryIds.includes(entry.id);
               const isBlocked = Boolean(getSelectionConflictMessage(entry));
+              const entryAlignment = settingsReference
+                ? buyerPenaltyAlignmentTag(resolveForgivenessEntryHint(settingsReference, entry.id, isEnabled, state).status)
+                : null;
 
               return (
                 <div
@@ -341,6 +347,11 @@ export function ForgivenessDraftRuleSection({
                                 غیرفعال
                               </span>
                             )}
+                            {entryAlignment ? (
+                              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${entryAlignment.className}`}>
+                                {entryAlignment.label}
+                              </span>
+                            ) : null}
                           </div>
                           <p className="text-xs leading-6 text-slate-500">{entry.description}</p>
                         </div>

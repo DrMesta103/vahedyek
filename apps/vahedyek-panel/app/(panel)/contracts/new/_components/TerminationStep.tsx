@@ -28,6 +28,7 @@ import {
   getFrontendStepDraft,
   getStepData,
   saveTerminationStepData,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validateTerminationStep, validateTerminationSubsection, validateBuyerTerminationSubsection } from '../../../../lib/contractValidation';
@@ -65,12 +66,14 @@ import { normalizeTerminationPayload } from './termination/terminationDefaults';
 import { firstErrorMessage } from './termination/TerminationPrimitives';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
-import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
 import {
   buyerPenaltyAlignmentTag,
+  canAlignWithSettings,
+  aggregateAlignmentStatuses,
   getTerminationFieldHint,
   resolveTerminationFieldHints,
+  resolveTerminationHint,
 } from '../../../../lib/contractSettingsHints';
 
 function serializePayload(payload: ContractTerminationData) {
@@ -475,6 +478,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     setImportError('');
     try {
       const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
       const nextPayload = syncTerminationActivation(normalizeTerminationPayload(bootstrap.termination ?? null));
       setPayload(nextPayload);
       await saveTerminationStepData(draftId, nextPayload);
@@ -484,7 +488,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), nextPayload);
       setImportDialogOpen(false);
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'دریافت تنظیمات شرایط فسخ انجام نشد.');
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن تنظیمات شرایط فسخ انجام نشد.');
     } finally {
       setImportBusy(false);
     }
@@ -509,7 +513,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
       persistDraft(next, true);
       setSaveNotice('شرایط فسخ برای این پیش‌نویس ذخیره شد.');
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Ø«Ø¨Øª Ø´Ø±Ø§ÛŒØ· ÙØ³Ø® Ø§Ù†Ø¬Ø§Ù… Ù†Ø´Ø¯.');
+      setFormError(error instanceof Error ? error.message : 'ثبت شرایط فسخ انجام نشد.');
     } finally {
       setSaving(false);
     }
@@ -610,10 +614,23 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     return buyerPenaltyAlignmentTag(hint.status === 'idle' ? null : hint.status);
   }, [fieldHints]);
 
+  const stepAlignmentStatus = useMemo(() => {
+    const overall = resolveTerminationHint(snapshot?.termination, payload, cancellationRules).status;
+    const enabledStatuses = Object.entries(fieldHints)
+      .filter(([key]) => key.endsWith('.enabled') || key === 'sellerEngaged' || key === 'buyerEngaged')
+      .map(([, hint]) => (hint.status === 'idle' ? null : hint.status));
+    return aggregateAlignmentStatuses([overall, ...enabledStatuses]);
+  }, [cancellationRules, fieldHints, payload, snapshot?.termination]);
+  const canAlign =
+    Boolean(snapshot?.termination || cancellationRules.builder || cancellationRules.buyer) &&
+    canAlignWithSettings(stepAlignmentStatus);
+
   const subsectionAlignmentTag = (party: 'seller' | 'buyer', sectionId: string) => {
     const hint = getTerminationFieldHint(fieldHints, `${party}.${sectionId}.enabled`);
     if (hint.status === 'idle') return null;
-    return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+    const tag = buyerPenaltyAlignmentTag(hint.status);
+    if (!tag) return null;
+    return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${tag.className}`}>{tag.label}</span>;
   };
 
   const scopedHints = (party: 'seller' | 'buyer', sectionId: string) => {
@@ -719,6 +736,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, specificationChanges: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('specificationChanges')}
             saving={subsectionBuyerBusy === 'specificationChanges'}
+            fieldHints={scopedHints('buyer', 'specificationChanges')}
           />
         ) : null}
         {id === 'breachOfObligations' ? (
@@ -727,6 +745,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, breachOfObligations: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('breachOfObligations')}
             saving={subsectionBuyerBusy === 'breachOfObligations'}
+            fieldHints={scopedHints('buyer', 'breachOfObligations')}
           />
         ) : null}
         {id === 'physicalProgressDelay' ? (
@@ -735,6 +754,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, physicalProgressDelay: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('physicalProgressDelay')}
             saving={subsectionBuyerBusy === 'physicalProgressDelay'}
+            fieldHints={scopedHints('buyer', 'physicalProgressDelay')}
           />
         ) : null}
         {id === 'areaDiscrepancy' ? (
@@ -867,9 +887,10 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             <button
               type="button"
               onClick={() => setImportDialogOpen(true)}
-              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              دریافت از تنظیمات
+              سازگار کردن با تنظیمات
             </button>
             <button type="button" onClick={handleBackToHub} className="rounded-[8px] border px-3.5 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50">
               بازگشت به مراحل
@@ -883,9 +904,10 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
           <button
             type="button"
             onClick={() => setImportDialogOpen(true)}
-            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            دریافت از تنظیمات
+            سازگار کردن با تنظیمات
           </button>
         </div>
       ) : null}
@@ -1054,8 +1076,8 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
         open={importDialogOpen}
         loading={importBusy}
         error={importError}
-        title="دریافت تنظیمات فسخ"
-        description="در صورت تایید، تنظیمات ذخیره‌شده برای شرایط فسخ به‌عنوان مقدار اولیه این پیش‌نویس اعمال می‌شود."
+        title="سازگار کردن با تنظیمات فسخ"
+        description="شرایط فسخ از تنظیمات کسب‌وکار جایگزین مقادیر فعلی می‌شود."
         onConfirm={() => void applySettingsFromBusiness()}
         onClose={() => setImportDialogOpen(false)}
       />

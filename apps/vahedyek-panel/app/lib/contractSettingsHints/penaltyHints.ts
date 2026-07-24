@@ -7,8 +7,8 @@ import {
 import type { PenaltyMode, PenaltyRuleData } from '../../types/contract';
 import { PENALTY_ITEMS } from '../../(panel)/contracts/new/_components/penaltiesConfig';
 import { resolveDomainRuleHint } from './domainRuleHints';
+import { buildFieldHint } from './domainFieldHints';
 import {
-  compareBusinessSetting,
   formatBusinessSettingValue,
   type BusinessSettingsComparison,
   type BusinessSettingsHintStatus,
@@ -33,7 +33,7 @@ export type BuyerPenaltyFieldHintKey =
   | `progressiveRow${1 | 2 | 3 | 4}Rate`;
 
 export type BuyerPenaltyFieldHint = {
-  status: 'equal' | 'different' | 'idle';
+  status: 'equal' | 'different' | 'missing' | 'idle';
   settingsLabel: string | null;
 };
 
@@ -66,9 +66,9 @@ function normalizeHintComparable(fieldKey: string, value: unknown): string | boo
   return asString;
 }
 
-function formatHintSettingsLabel(fieldKey: string, value: unknown): string {
+function formatHintSettingsLabel(fieldKey: string, value: unknown): string | null {
   const normalized = normalizeHintComparable(fieldKey, value);
-  if (normalized === null) return 'ثبت نشده';
+  if (normalized === null) return null;
   if (typeof normalized === 'boolean') return formatBusinessSettingValue(String(normalized));
   return formatBusinessSettingValue(normalized);
 }
@@ -263,7 +263,9 @@ export function resolveBuyerPenaltiesPartyHint(
 
 /**
  * Per-field alignment hints for buyer penalty form fields.
- * Returns empty object when settings do not apply to this type.
+ * When settings have no active slice for this type, compares against an inactive/empty
+ * template (same idea as resolveBuyerPenaltyTypeHint) so every type still gets field tags.
+ * Returns {} only when the penalty domain itself is missing from settings.
  */
 export function resolveBuyerPenaltyFieldHints(
   reference: ContractRuleState | null | undefined,
@@ -271,18 +273,27 @@ export function resolveBuyerPenaltyFieldHints(
   typeActive: boolean,
   rule: PenaltyRuleData | null | undefined,
 ): Partial<Record<BuyerPenaltyFieldHintKey, BuyerPenaltyFieldHint>> {
-  const scoped = scopeBuyerPenaltySettingsToType(reference, typeId);
-  if (!scoped?.active) return {};
+  if (!reference) return {};
 
+  const scoped = scopeBuyerPenaltySettingsToType(reference, typeId);
   const current = buildBuyerPenaltyTypeRuleState(typeActive, rule);
-  const referenceTab = RULE_CONFIGS.penalty.tabs.find((tab) => tab.id === scoped.activeTab) ?? RULE_CONFIGS.penalty.tabs[0] ?? null;
+  const settingsConfigured = Boolean(scoped?.active);
+  const settingsValues = settingsConfigured ? (scoped!.values ?? {}) : {};
+  const settingsTabId = settingsConfigured ? scoped!.activeTab : current.activeTab;
+  const referenceTab =
+    RULE_CONFIGS.penalty.tabs.find((tab) => tab.id === settingsTabId) ?? RULE_CONFIGS.penalty.tabs[0] ?? null;
   const hints: Partial<Record<BuyerPenaltyFieldHintKey, BuyerPenaltyFieldHint>> = {};
 
-  const modeEqual = Boolean(referenceTab) && referenceTab?.id === current.activeTab;
-  hints.mode = {
-    status: modeEqual ? 'equal' : 'different',
-    settingsLabel: referenceTab?.title ?? null,
-  };
+  if (!settingsConfigured) {
+    hints.mode = { status: 'missing', settingsLabel: null };
+  } else if (referenceTab && referenceTab.id === current.activeTab) {
+    hints.mode = { status: 'equal', settingsLabel: null };
+  } else {
+    hints.mode = {
+      status: 'different',
+      settingsLabel: referenceTab?.title ?? null,
+    };
+  }
 
   if (!referenceTab) return hints;
 
@@ -290,14 +301,9 @@ export function resolveBuyerPenaltyFieldHints(
     const uiKey = settingsFieldKeyToUiKey(field.key);
     if (!uiKey) continue;
 
-    const refRaw = normalizeHintComparable(field.key, scoped.values[field.key]);
+    const refRaw = normalizeHintComparable(field.key, settingsValues[field.key]);
     const curRaw = normalizeHintComparable(field.key, current.values[field.key]);
-    const comparison = compareBusinessSetting(refRaw, curRaw);
-    const equal = comparison.status === 'equal' || (refRaw === null && curRaw === null);
-    hints[uiKey] = {
-      status: equal ? 'equal' : 'different',
-      settingsLabel: formatHintSettingsLabel(field.key, scoped.values[field.key]),
-    };
+    hints[uiKey] = buildFieldHint(refRaw, curRaw, formatHintSettingsLabel(field.key, settingsValues[field.key]));
   }
 
   return hints;

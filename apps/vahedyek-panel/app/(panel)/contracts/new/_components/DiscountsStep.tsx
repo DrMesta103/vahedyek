@@ -9,7 +9,9 @@ import { DiscountConditionPanel, type DiscountConditionValues } from './Discount
 import { FieldLabel } from './FieldLabel';
 import { SettingsAlignedFieldBlock, TagPills } from './ContractFormPrimitives';
 import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
-import { getDomainFieldHint, resolveDiscountFieldHints } from '../../../../lib/contractSettingsHints/discountFieldHints';
+import { buyerPenaltyAlignmentTag } from '../../../../lib/contractSettingsHints';
+import { canAlignWithSettings, aggregateAlignmentStatuses } from '../../../../lib/contractSettingsHints/alignWithSettings';
+import { getDomainFieldHint, resolveDiscountFieldHints, resolveDiscountTypeHint } from '../../../../lib/contractSettingsHints/discountFieldHints';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
 import {
   ensureActiveDraftId,
@@ -155,37 +157,30 @@ function Toggle({
   onDisabledClick?: () => void;
   onChange: (checked: boolean) => void;
 }) {
+  const handleToggle = () => {
+    if (checked) {
+      onChange(false);
+      return;
+    }
+    if (disabled) {
+      onDisabledClick?.();
+      return;
+    }
+    if (onInactiveClick) {
+      onInactiveClick();
+      return;
+    }
+    if (onDisabledClick) {
+      onDisabledClick();
+      return;
+    }
+    onChange(true);
+  };
+
   return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        if (checked) {
-          onChange(false);
-          return;
-        }
-        if (disabled) {
-          onDisabledClick?.();
-          return;
-        }
-        if (onInactiveClick) {
-          onInactiveClick();
-          return;
-        }
-        if (onDisabledClick) {
-          onDisabledClick();
-          return;
-        }
-        onChange(true);
-      }}
-      className={`inline-flex rounded-full transition ${disabled ? 'opacity-55 grayscale' : ''}`}
-      aria-pressed={checked}
-      aria-disabled={disabled}
-    >
-      <span aria-hidden className="pointer-events-none">
-        <BusinessSwitch checked={checked} onChange={() => {}} />
-      </span>
-    </button>
+    <div className={`inline-flex rounded-full transition ${disabled ? 'opacity-55 grayscale' : ''}`}>
+      <BusinessSwitch checked={checked} onChange={() => handleToggle()} />
+    </div>
   );
 }
 
@@ -316,6 +311,7 @@ function RuleEditor({
       <DiscountConditionPanel
         compact
         values={conditionValues}
+        fieldHints={fieldHints}
         onChange={(patch) => {
           const nextCondition = { ...conditionValues, ...patch };
           onChange({
@@ -371,6 +367,7 @@ function SectionShell({
   description,
   active,
   summary,
+  alignmentTag,
   onToggle,
   toggleDisabled = false,
   onInactiveToggle,
@@ -381,6 +378,7 @@ function SectionShell({
   description: string;
   active: boolean;
   summary?: string;
+  alignmentTag?: { label: string; className: string } | null;
   onToggle?: (checked: boolean) => void;
   toggleDisabled?: boolean;
   onInactiveToggle?: () => void;
@@ -397,6 +395,11 @@ function SectionShell({
               <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
                 {active ? 'فعال' : 'غیرفعال'}
               </span>
+              {alignmentTag ? (
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${alignmentTag.className}`}>
+                  {alignmentTag.label}
+                </span>
+              ) : null}
             </div>
             <p className="text-sm text-slate-500">{description}</p>
             {summary ? <p className="text-xs font-medium text-slate-500">{summary}</p> : null}
@@ -684,6 +687,31 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     return rule?.enabled === true;
   }).length;
   const hasAnyActiveDiscount = contractBaseActive || earlyPaymentActive || itemizedEnabledCount > 0;
+  const stepAlignmentStatus = aggregateAlignmentStatuses([
+    resolveDiscountTypeHint(
+      snapshot?.rules?.discount,
+      'contract-base',
+      contractBaseActive,
+      contractBaseWholeRule ?? makeEmptyRule('contract-base'),
+    ).status,
+    ...ITEMIZED_DISCOUNT_ENTRIES.map((entry) => {
+      const entryRule = typeRule('contract-base', 'itemized', entry.id);
+      const isEnabled = Boolean(entryRule && entryRule.enabled === true);
+      return resolveDiscountTypeHint(
+        snapshot?.rules?.discount,
+        'contract-base',
+        isEnabled,
+        entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+      ).status;
+    }),
+    resolveDiscountTypeHint(
+      snapshot?.rules?.discount,
+      'early-payment',
+      earlyPaymentActive,
+      earlyPaymentRule ?? makeEmptyRule('early-payment'),
+    ).status,
+  ]);
+  const canAlign = Boolean(snapshot?.rules?.discount) && canAlignWithSettings(stepAlignmentStatus);
   const activationDialogContent =
     activationDialog && !activationDialog.confirmable
       ? {
@@ -724,9 +752,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
             <button
               type="button"
               onClick={() => setImportDialogOpen(true)}
-              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              دریافت از تنظیمات
+              سازگار کردن با تنظیمات
             </button>
             <button
               type="button"
@@ -744,9 +773,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           <button
             type="button"
             onClick={() => setImportDialogOpen(true)}
-            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            دریافت از تنظیمات
+            سازگار کردن با تنظیمات
           </button>
         </div>
       ) : null}
@@ -757,6 +787,18 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           description="این بخش برای تنظیم تخفیف اصلی قرارداد استفاده می‌شود."
           active={contractBaseActive}
           summary={contractBaseWholeRule && contractBaseWholeRule.enabled === true ? formatRuleSummary(contractBaseWholeRule) : undefined}
+          alignmentTag={
+            snapshot?.rules?.discount
+              ? buyerPenaltyAlignmentTag(
+                  resolveDiscountTypeHint(
+                    snapshot.rules.discount,
+                    'contract-base',
+                    contractBaseActive,
+                    contractBaseWholeRule ?? makeEmptyRule('contract-base'),
+                  ).status,
+                )
+              : null
+          }
           toggleDisabled={itemizedEnabledCount > 0 && !contractBaseActive}
           onToggle={(checked) => {
             if (checked) {
@@ -821,6 +863,16 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
             {ITEMIZED_DISCOUNT_ENTRIES.map((entry) => {
               const entryRule = typeRule('contract-base', 'itemized', entry.id);
               const isEnabled = Boolean(entryRule && entryRule.enabled === true);
+              const itemizedAlignment = snapshot?.rules?.discount
+                ? buyerPenaltyAlignmentTag(
+                    resolveDiscountTypeHint(
+                      snapshot.rules.discount,
+                      'contract-base',
+                      isEnabled,
+                      entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+                    ).status,
+                  )
+                : null;
               return (
                 <section
                   key={entry.id}
@@ -834,6 +886,11 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isEnabled ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
                             {isEnabled ? 'فعال' : 'غیرفعال'}
                           </span>
+                          {itemizedAlignment ? (
+                            <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${itemizedAlignment.className}`}>
+                              {itemizedAlignment.label}
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-sm text-slate-500">{entry.description}</p>
                       </div>
@@ -914,6 +971,18 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           description="این بخش برای تخفیف‌های پرداخت زودتر از موعد به‌صورت جداگانه مدیریت می‌شود."
           active={earlyPaymentActive}
           summary={earlyPaymentRule && earlyPaymentRule.enabled === true ? formatRuleSummary(earlyPaymentRule) : undefined}
+          alignmentTag={
+            snapshot?.rules?.discount
+              ? buyerPenaltyAlignmentTag(
+                  resolveDiscountTypeHint(
+                    snapshot.rules.discount,
+                    'early-payment',
+                    earlyPaymentActive,
+                    earlyPaymentRule ?? makeEmptyRule('early-payment'),
+                  ).status,
+                )
+              : null
+          }
           onToggle={(checked) => {
             if (checked) {
               toggleRulesForType('early-payment', true);
@@ -974,8 +1043,8 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         open={importDialogOpen}
         loading={importBusy}
         error={importError}
-        title="دریافت تنظیمات تخفیف"
-        description="اگر تایید کنید، تنظیمات ثبت‌شده در بخش تخفیف به‌عنوان مقدار اولیه این پیش‌نویس اعمال می‌شود."
+        title="سازگار کردن با تنظیمات تخفیف"
+        description="تنظیمات تخفیف کسب‌وکار جایگزین مقادیر فعلی این بخش می‌شود."
         onConfirm={() => void applySettingsFromBusiness()}
         onClose={() => setImportDialogOpen(false)}
       />

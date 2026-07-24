@@ -30,8 +30,11 @@ import {
   resolveInterestFieldHints,
 } from '../../../../lib/contractSettingsHints/forgivenessInterestFieldHints';
 import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
-import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
-import { buyerPenaltyAlignmentTag, resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
+import {
+  buyerPenaltyAlignmentTag,
+  canAlignWithSettings,
+  resolveDomainRuleHint,
+} from '../../../../lib/contractSettingsHints';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 
@@ -123,9 +126,14 @@ export function ContractRuleDraftStep({
     return resolveInterestFieldHints(snapshot?.rules?.interest, state);
   }, [ruleId, snapshot?.rules?.forgiveness, snapshot?.rules?.interest, state]);
   const activationAlignmentTag = useMemo(() => {
-    if (!state || ruleId !== 'interest') return null;
+    if (!state) return null;
     return buyerPenaltyAlignmentTag(resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state).status);
   }, [rule, ruleId, snapshot?.rules, state]);
+  const stepAlignmentStatus = useMemo(() => {
+    if (!state) return null;
+    return resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state).status;
+  }, [rule, ruleId, snapshot?.rules, state]);
+  const canAlign = Boolean(snapshot?.rules?.[ruleId]) && canAlignWithSettings(stepAlignmentStatus);
 
   const applySettingsFromBusiness = async () => {
     if (!draftId || importBusy) return;
@@ -136,7 +144,7 @@ export function ContractRuleDraftStep({
       setBusinessSettingsReference(bootstrap);
       const bootstrapRule = bootstrap.rules[ruleId] ?? null;
       if (!bootstrapRule) {
-        throw new Error('انتخاب وضعیت قرارداد ناموفق بود.');
+        throw new Error('تنظیمات کسب‌وکار برای این بخش یافت نشد.');
       }
       const nextState = normalizeRuleState(ruleId, bootstrapRule);
       setState(nextState);
@@ -148,7 +156,7 @@ export function ContractRuleDraftStep({
       dispatchContractFlowSavedForDraft(draftId, stepId, Date.now(), nextState);
       setImportDialogOpen(false);
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'دریافت پیش‌نویس قرارداد ناموفق بود.');
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن با تنظیمات انجام نشد.');
     } finally {
       setImportBusy(false);
     }
@@ -242,30 +250,62 @@ export function ContractRuleDraftStep({
     return (
       <div className="space-y-5">
         {!embedded ? (
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
-            <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
-              ??????????? ???? ??????? ?? ??? ???????? ?? ????? ??? ????? ???? ? ????? ????.
-            </p>
+          <div className="flex flex-col gap-3 text-right sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-[color:var(--text-strong)]">{sectionTitle}</h1>
+              <p className="mt-1 text-sm leading-7 text-[color:var(--text-muted)]">
+                شرایط بخشودگی جرایم را برای این پیش‌نویس تنظیم کنید.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
           </div>
-        ) : null}
+        ) : (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
+          </div>
+        )}
 
         <ForgivenessDraftRuleSection
           state={state}
           onValueChange={(key, value) => applyPanelValue(setState, key, value)}
           onSave={() => void handleSubmit()}
           fieldHints={fieldHints}
+          settingsReference={snapshot?.rules?.forgiveness ?? null}
         />
 
         {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
         <StickySubmitBar
-          label={`??? ${sectionTitle}`}
+          label={`ثبت ${sectionTitle}`}
           loadingLabel={loading ? 'در حال دریافت...' : 'در حال ذخیره...'}
           disabled={loading || saving}
           onClick={handleSubmit}
           embedded={embedded}
           submitId={stepId}
+        />
+
+        <ContractSettingsImportDialog
+          open={importDialogOpen}
+          loading={importBusy}
+          error={importError}
+          title={`سازگار کردن با تنظیمات ${sectionTitle}`}
+          description={`مقادیر ${sectionTitle} از تنظیمات کسب‌وکار جایگزین می‌شود.`}
+          onConfirm={() => void applySettingsFromBusiness()}
+          onClose={() => setImportDialogOpen(false)}
         />
       </div>
     );
@@ -284,9 +324,10 @@ export function ContractRuleDraftStep({
           <button
             type="button"
             onClick={() => setImportDialogOpen(true)}
-            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ذخیره در پیش‌نویس
+            سازگار کردن با تنظیمات
           </button>
         </div>
       ) : null}
@@ -296,9 +337,10 @@ export function ContractRuleDraftStep({
           <button
             type="button"
             onClick={() => setImportDialogOpen(true)}
-            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            بارگذاری از پیش‌نویس
+            سازگار کردن با تنظیمات
           </button>
         </div>
       ) : null}
@@ -339,7 +381,7 @@ export function ContractRuleDraftStep({
       {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
       <StickySubmitBar
-        label={`??? ${sectionTitle}`}
+        label={`ثبت ${sectionTitle}`}
         loadingLabel={loading ? 'در حال دریافت...' : 'در حال ذخیره...'}
         disabled={loading || saving}
         onClick={handleSubmit}
@@ -351,8 +393,8 @@ export function ContractRuleDraftStep({
         open={importDialogOpen}
         loading={importBusy}
         error={importError}
-        title={`تنظیمات قرارداد ${sectionTitle}`}
-        description="در این بخش می‌توانید وضعیت قرارداد و قواعد وابسته را نهایی کنید."
+        title={`سازگار کردن با تنظیمات ${sectionTitle}`}
+        description={`مقادیر ${sectionTitle} از تنظیمات کسب‌وکار جایگزین می‌شود.`}
         onConfirm={() => void applySettingsFromBusiness()}
         onClose={() => setImportDialogOpen(false)}
       />

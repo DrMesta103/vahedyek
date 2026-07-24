@@ -1,12 +1,11 @@
 import type { ContractRuleState } from '../businessContractRules';
 import {
   buildBusinessSettingsComparison,
-  compareBusinessSetting,
   formatBusinessSettingValue,
   type BusinessSettingsComparison,
   type BusinessSettingsLine,
 } from '../contractSettingsReference';
-import { getDomainFieldHint, type DomainFieldHint } from './domainFieldHints';
+import { getDomainFieldHint, buildFieldHint, type DomainFieldHint } from './domainFieldHints';
 
 type TerminationTermsLike = Partial<Record<string, { ruleEnabled?: boolean }>> | null | undefined;
 
@@ -54,6 +53,7 @@ const BUYER_ENABLE_RULE_KEYS: Record<string, string> = {
   lateDelivery: 'buyerCancellationLateDeliveryEnabled',
   specificationChanges: 'buyerCancellationSpecificationChangesEnabled',
   breachOfObligations: 'buyerCancellationBreachEnabled',
+  physicalProgressDelay: 'buyerCancellationPhysicalProgressDelayEnabled',
   areaDiscrepancy: 'buyerCancellationAreaDiscrepancyEnabled',
   notification: 'buyerCancellationNotificationEnabled',
   draftTemplateUsage: 'buyerCancellationDraftTemplateUsageEnabled',
@@ -110,15 +110,19 @@ function normalizeGraceComparable(value: unknown): string | null {
 function makeHint(referenceValue: unknown, currentValue: unknown, normalize = normalizeComparable): DomainFieldHint {
   const refRaw = normalize(referenceValue);
   const curRaw = normalize(currentValue);
-  const comparison = compareBusinessSetting(refRaw, curRaw);
-  const equal = comparison.status === 'equal' || (refRaw === null && curRaw === null);
-  return {
-    status: equal ? 'equal' : 'different',
-    settingsLabel:
-      referenceValue === undefined || referenceValue === null || referenceValue === ''
-        ? 'ثبت نشده'
-        : formatBusinessSettingValue(String(referenceValue)),
-  };
+  const settingsLabel =
+    referenceValue === undefined || referenceValue === null || referenceValue === ''
+      ? null
+      : Array.isArray(referenceValue)
+        ? referenceValue.length
+          ? referenceValue.map(String).join('، ')
+          : null
+        : formatBusinessSettingValue(String(referenceValue));
+  return buildFieldHint(
+    refRaw === null || typeof refRaw === 'boolean' || typeof refRaw === 'string' ? refRaw : String(refRaw),
+    curRaw === null || typeof curRaw === 'boolean' || typeof curRaw === 'string' ? curRaw : String(curRaw),
+    settingsLabel,
+  );
 }
 
 function readTermField(terms: TerminationLike['constructorTerms'], sectionId: string, field: string): unknown {
@@ -244,10 +248,12 @@ export function resolveTerminationFieldHints(
 
   for (const sectionId of Object.keys(SELLER_LABELS)) {
     const key = `seller.${sectionId}.enabled`;
+    const ruleKey = SELLER_ENABLE_RULE_KEYS[sectionId];
+    // Settings present but section unconfigured → inactive template (false).
     const refEnabled = reference
       ? Boolean(readTermField(reference.constructorTerms, sectionId, 'ruleEnabled'))
       : builderRule
-        ? Boolean(builderRule.values?.[SELLER_ENABLE_RULE_KEYS[sectionId] ?? ''])
+        ? Boolean(ruleKey ? builderRule.values?.[ruleKey] : false)
         : null;
     if (refEnabled === null) continue;
     const curEnabled = Boolean(readTermField(current?.constructorTerms, sectionId, 'ruleEnabled'));
@@ -257,10 +263,11 @@ export function resolveTerminationFieldHints(
   for (const sectionId of Object.keys(BUYER_LABELS)) {
     const key = `buyer.${sectionId}.enabled`;
     const ruleKey = BUYER_ENABLE_RULE_KEYS[sectionId];
+    // Settings present but section unconfigured → inactive template (false).
     const refEnabled = reference
       ? Boolean(readTermField(reference.buyerTerms, sectionId, 'ruleEnabled'))
-      : buyerRule && ruleKey
-        ? Boolean(buyerRule.values?.[ruleKey])
+      : buyerRule
+        ? Boolean(ruleKey ? buyerRule.values?.[ruleKey] : false)
         : null;
     if (refEnabled === null) continue;
     const curEnabled = Boolean(readTermField(current?.buyerTerms, sectionId, 'ruleEnabled'));
@@ -272,8 +279,11 @@ export function resolveTerminationFieldHints(
     { sectionId: 'lateInstallment', field: 'graceDaysCustom' },
     { sectionId: 'lateInstallment', field: 'minDebtAmount' },
     { sectionId: 'lateInstallment', field: 'detectionBasis' },
+    { sectionId: 'lateInstallment', field: 'consecutiveInstallmentsCount' },
+    { sectionId: 'financialObligations', field: 'obligationTypes' },
     { sectionId: 'financialObligations', field: 'gracePreset', normalize: normalizeGraceComparable },
     { sectionId: 'financialObligations', field: 'graceDaysCustom' },
+    { sectionId: 'documentDeficiencies', field: 'mandatoryItems' },
     { sectionId: 'documentDeficiencies', field: 'completionDeadlineDays', normalize: normalizeGraceComparable },
     { sectionId: 'documentDeficiencies', field: 'completionDeadlineDaysCustom' },
     { sectionId: 'otherBreach', field: 'rectificationDays', normalize: normalizeGraceComparable },
@@ -294,12 +304,21 @@ export function resolveTerminationFieldHints(
   }
 
   const buyerFieldSpecs: Array<{ sectionId: string; field: string; normalize?: typeof normalizeComparable }> = [
+    { sectionId: 'lateDelivery', field: 'calculationBasis' },
     { sectionId: 'lateDelivery', field: 'gracePreset', normalize: normalizeGraceComparable },
     { sectionId: 'lateDelivery', field: 'graceMonthsCustom' },
+    { sectionId: 'specificationChanges', field: 'includedTypes' },
+    { sectionId: 'specificationChanges', field: 'priorApprovalRequired' },
+    { sectionId: 'breachOfObligations', field: 'obligationTypes' },
     { sectionId: 'breachOfObligations', field: 'rectificationPreset', normalize: normalizeGraceComparable },
     { sectionId: 'breachOfObligations', field: 'rectificationDaysCustom' },
+    { sectionId: 'physicalProgressDelay', field: 'milestoneTypes' },
     { sectionId: 'areaDiscrepancy', field: 'thresholdPreset', normalize: normalizeGraceComparable },
     { sectionId: 'areaDiscrepancy', field: 'thresholdPercentCustom' },
+    { sectionId: 'areaDiscrepancy', field: 'discrepancyScopes' },
+    { sectionId: 'areaDiscrepancy', field: 'referenceSources' },
+    { sectionId: 'areaDiscrepancy', field: 'financialSettlementInsteadOfTermination' },
+    { sectionId: 'areaDiscrepancy', field: 'settlementPricingBasis' },
   ];
 
   for (const spec of buyerFieldSpecs) {

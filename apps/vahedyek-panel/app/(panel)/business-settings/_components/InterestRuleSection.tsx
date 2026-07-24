@@ -9,8 +9,8 @@ import { getDomainFieldHint, type DomainFieldHint } from '../../../lib/contractS
 
 type InterestMode = 'simple-interest' | 'compound-interest' | 'remaining-debt-interest';
 
-const ROUND_RULE_OPTIONS = ['0.0', '0.00', 'تا 100', 'تا 1000'] as const;
-const COMPOUND_PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'فصلی', 'سالانه'] as const;
+const ROUND_RULE_OPTIONS = ['0.0', '0.00', 'کسر 100', 'کسر 1000'] as const;
+const COMPOUND_PERIOD_OPTIONS = ['روزانه', 'ماهانه', 'سه‌ماهه', 'سالانه'] as const;
 const MODE_OPTIONS: Array<{ value: InterestMode; label: string }> = [
   { value: 'simple-interest', label: 'سود ساده' },
   { value: 'compound-interest', label: 'سود مرکب' },

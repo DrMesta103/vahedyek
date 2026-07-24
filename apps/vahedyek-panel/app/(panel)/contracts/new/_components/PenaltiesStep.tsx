@@ -12,10 +12,12 @@ import { TagPills } from './ContractFormPrimitives';
 import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
   getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   getStepData,
   saveStepData,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validatePenaltiesStep } from '../../../../lib/contractValidation';
@@ -45,9 +47,11 @@ import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
 import { buildBootstrapPenaltiesPayload, normalizePenaltiesPayload } from '../../../../lib/contractSettingsBootstrap';
-import { RULE_CONFIGS } from '../../../../lib/businessContractRules';
+import { RULE_CONFIGS, normalizeRuleState } from '../../../../lib/businessContractRules';
 import {
+  aggregateAlignmentStatuses,
   buyerPenaltyAlignmentTag,
+  canAlignWithSettings,
   getBuyerPenaltyFieldHint,
   resolveBuyerPenaltiesPartyHint,
   resolveBuyerPenaltyFieldHints,
@@ -55,6 +59,7 @@ import {
   resolveBuyerPenaltyTypeHint,
   resolveDomainRuleHint,
 } from '../../../../lib/contractSettingsHints';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 
 type PenaltyPartyTab = 'buyer' | 'seller';
 
@@ -401,6 +406,9 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [expandedPenaltyTypeId, setExpandedPenaltyTypeId] = useState<string>('');
   const [ruleForm, setRuleForm] = useState<PenaltyRuleData>(makeEmptyRule(PENALTY_ITEMS[0]?.id ?? ''));
   const [dialogError, setDialogError] = useState('');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const payload = useMemo<ContractPenaltiesData>(
     () => ({
@@ -433,6 +441,49 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     const current = sellerStatus.state ?? reference ?? null;
     return buyerPenaltyAlignmentTag(resolveDomainRuleHint(RULE_CONFIGS['builder-penalty'], reference, current).status);
   }, [sellerStatus.state, snapshot?.rules]);
+
+  const stepAlignmentStatus = useMemo(() => {
+    const buyerStatus = resolveBuyerPenaltiesPartyHint(snapshot?.rules?.penalty, types, rules).status;
+    const sellerStatusValue = resolveDomainRuleHint(
+      RULE_CONFIGS['builder-penalty'],
+      snapshot?.rules?.['builder-penalty'],
+      sellerStatus.state ?? snapshot?.rules?.['builder-penalty'] ?? null,
+    ).status;
+    return aggregateAlignmentStatuses([buyerStatus, sellerStatusValue]);
+  }, [rules, sellerStatus.state, snapshot?.rules, types]);
+  const canAlign =
+    Boolean(snapshot?.rules?.penalty || snapshot?.rules?.['builder-penalty']) &&
+    canAlignWithSettings(stepAlignmentStatus);
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
+      const nextPayload = normalizePenaltiesPayload(buildBootstrapPenaltiesPayload(bootstrap.rules.penalty ?? null));
+      setTypes(nextPayload.types);
+      setRules(nextPayload.rules);
+      await saveStepData(draftId, 'penalties', nextPayload);
+      setFrontendStepDraft(draftId, 'penalties', nextPayload);
+      initialSnapshotRef.current = serializePayload(nextPayload);
+      setDirty(false);
+      dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), nextPayload);
+
+      const builderRule = bootstrap.rules['builder-penalty'];
+      if (builderRule) {
+        await sellerPenaltyRef.current?.applyFromSettings(normalizeRuleState('builder-penalty', builderRule));
+      }
+
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن تنظیمات جرایم انجام نشد.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!expandedPenaltyTypeId) {
@@ -625,15 +676,36 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
             <h1 className="text-2xl font-bold">{title}</h1>
             <p className="mt-1 text-gray-500">ابتدا نوع‌های جریمه را فعال کنید و برای هر نوع فعال، حداقل یک آیتم جریمه ثبت کنید.</p>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(basePath)}
+              className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              بازگشت به مراحل
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => router.push(basePath)}
-            className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            onClick={() => setImportDialogOpen(true)}
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            بازگشت به مراحل
+            سازگار کردن با تنظیمات
           </button>
         </div>
-      ) : null}
+      )}
 
       <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
         <PenaltiesPartyTabBar
@@ -1138,6 +1210,16 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         onClick={handleSubmit}
         embedded={embedded}
         submitId={stepId}
+      />
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="سازگار کردن با تنظیمات جرایم"
+        description="جرایم خریدار و سازنده از تنظیمات کسب‌وکار جایگزین می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
       />
     </div>
   );

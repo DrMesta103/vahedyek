@@ -14,11 +14,13 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
   getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   getReferenceData,
   getStepData,
   saveStepData,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
   type ReferenceUnit,
 } from '../../../../lib/contractDraftClient';
@@ -41,18 +43,35 @@ import {
 import type { AreaPricingMode, ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { buildValidationSummary } from './validationPresentation';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { compareBusinessSetting } from '../../../../lib/contractSettingsReference';
+import type { BusinessSettingsComparison } from '../../../../lib/contractSettingsReference';
 import {
+  aggregateAlignmentStatuses,
+  canAlignWithSettings,
   resolveInstallmentDueScheduleHint,
   resolveInstallmentHintReference,
-  resolvePrepaymentAmountReference,
   resolvePrepaymentDueScheduleHint,
   resolvePrepaymentHintReference,
 } from '../../../../lib/contractSettingsHints';
 import { buildBootstrapFinancialPayload as buildBootstrapFinancialPayloadFromSettings } from '../../../../lib/contractSettingsBootstrap';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
+
+function comparisonToFieldAlignmentTag(comparison: BusinessSettingsComparison): ReactNode {
+  if (comparison.status === 'missing') {
+    return <SettingsFieldAlignmentTag status="missing" />;
+  }
+  if (comparison.status === 'equal') {
+    return <SettingsFieldAlignmentTag status="equal" />;
+  }
+  const settingsLabel = comparison.referenceLines[0]?.value ?? comparison.reference ?? comparison.differenceText;
+  const trimmed = typeof settingsLabel === 'string' ? settingsLabel.trim() : '';
+  if (!trimmed) {
+    return <SettingsFieldAlignmentTag status="missing" />;
+  }
+  return <SettingsFieldAlignmentTag status="different" settingsLabel={trimmed} />;
+}
 
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
@@ -700,6 +719,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [principalExpanded, setPrincipalExpanded] = useState(true);
   const [expandedCustomCategoryId, setExpandedCustomCategoryId] = useState<string | null>(null);
   const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const editingCategory = editingId ? categories.find((item) => item.id === editingId) ?? null : null;
   const editingLockedCategory = editingCategory ? isStructuralLockedCategoryId(editingCategory.id) : false;
@@ -1532,86 +1554,93 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     await persistAdditionalCosts();
   };
 
-  const financialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
-    const hints: Record<string, React.ReactNode> = {};
-    const prepayment = snapshot?.rules?.prepayment;
-    const prepaymentAmount = prepayment?.activeTab === 'fixed'
-      ? Number(prepayment.values.preFixedAmount ?? 0)
-      : prepayment?.activeTab === 'combined'
-        ? Number(prepayment.values.preCombinedAmount ?? 0)
-        : null;
-    const advance = categories.find((item) => item.id === 'advance');
-    if (advance) {
-      hints.advance = (
-        <BusinessSettingsHint
-          unitLabel="تومان"
-          comparison={compareBusinessSetting(
-            prepaymentAmount && prepaymentAmount > 0 ? prepaymentAmount : prepayment?.active,
-            prepaymentAmount && prepaymentAmount > 0 ? advance.capAmount : Boolean(advance.capAmount > 0 || advance.dueAmount > 0),
-          )}
-        />
-      );
-    }
-    return hints;
-  }, [categories, snapshot]);
-
-  const resolvedFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
-    const hints: Record<string, React.ReactNode> = { ...financialCategoryHints };
-    const prepayment = snapshot?.rules?.prepayment;
-    const prepaymentReference = resolvePrepaymentAmountReference(prepayment, totalContractAmount);
-    const advance = categories.find((item) => item.id === 'advance');
-
-    if (advance) {
-      hints.advance = (
-        <BusinessSettingsHint
-          unitLabel="تومان"
-          referenceLabel="مبلغ مرجع تنظیمات"
-          currentLabel="مبلغ فعلی پیش‌پرداخت"
-          helperText={prepaymentReference.helperText}
-          comparison={compareBusinessSetting(
-            prepaymentReference.comparisonReference,
-            prepaymentReference.referenceAmount !== null ? advance.capAmount : Boolean(advance.capAmount > 0 || advance.dueAmount > 0),
-          )}
-        />
-      );
-    }
-
-    return hints;
-  }, [categories, financialCategoryHints, snapshot, totalContractAmount]);
-
   const businessFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
-    const hints: Record<string, React.ReactNode> = { ...resolvedFinancialCategoryHints };
-    delete hints.loan;
+    const hints: Record<string, React.ReactNode> = {};
 
     const advance = categories.find((item) => item.id === 'advance');
     if (advance) {
-      hints.advance = <BusinessSettingsHint comparison={resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance.capAmount)} />;
+      hints.advance = comparisonToFieldAlignmentTag(
+        resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance.capAmount),
+      );
     }
 
     const installment = categories.find((item) => item.id === 'installment');
     if (installment) {
       const installmentDueCount = dueItems.filter((item) => item.categoryId === 'installment').length;
       const hasInstallments = installment.capAmount > 0 || installmentDueCount > 0;
-      hints.installment = (
-        <BusinessSettingsHint
-          comparison={resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount)}
-        />
+      hints.installment = comparisonToFieldAlignmentTag(
+        resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount),
       );
-    } else {
-      delete hints.installment;
     }
 
     return hints;
-  }, [categories, dueItems, resolvedFinancialCategoryHints, snapshot, totalContractAmount]);
+  }, [categories, dueItems, snapshot, totalContractAmount]);
 
   const businessFinancialDueHints = useMemo<Record<string, React.ReactNode>>(() => {
     const hints: Record<string, React.ReactNode> = {};
     const advanceDueItems = dueItems.filter((item) => item.categoryId === 'advance');
     const installmentDueItems = dueItems.filter((item) => item.categoryId === 'installment');
-    hints.advance = <BusinessSettingsHint comparison={resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems)} />;
-    hints.installment = <BusinessSettingsHint comparison={resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems)} />;
+    hints.advance = comparisonToFieldAlignmentTag(resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems));
+    hints.installment = comparisonToFieldAlignmentTag(
+      resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems),
+    );
     return hints;
   }, [dueItems, snapshot]);
+
+  const stepAlignmentStatus = useMemo(() => {
+    const advance = categories.find((item) => item.id === 'advance');
+    const installment = categories.find((item) => item.id === 'installment');
+    const installmentDueCount = dueItems.filter((item) => item.categoryId === 'installment').length;
+    const hasInstallments = Boolean(installment && (installment.capAmount > 0 || installmentDueCount > 0));
+    const advanceDueItems = dueItems.filter((item) => item.categoryId === 'advance');
+    const installmentDueItems = dueItems.filter((item) => item.categoryId === 'installment');
+    return aggregateAlignmentStatuses([
+      resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance?.capAmount ?? 0).status,
+      resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount).status,
+      resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems).status,
+      resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems).status,
+    ]);
+  }, [categories, dueItems, snapshot?.rules?.installments, snapshot?.rules?.prepayment, totalContractAmount]);
+  const canAlign =
+    Boolean(snapshot?.rules?.prepayment || snapshot?.rules?.installments) && canAlignWithSettings(stepAlignmentStatus);
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
+      const bootstrapFinancial = buildBootstrapFinancialPayloadFromSettings(bootstrap.rules.prepayment ?? null);
+      const bootstrapAdvance = bootstrapFinancial?.categories.find((item) => item.id === 'advance');
+      const nextCategories = categories.map((category) => {
+        if (category.id === 'advance' && bootstrapAdvance) {
+          return { ...category, capAmount: bootstrapAdvance.capAmount };
+        }
+        return category;
+      });
+      if (!nextCategories.some((item) => item.id === 'advance') && bootstrapAdvance) {
+        nextCategories.push(bootstrapAdvance);
+      }
+      setCategories(nextCategories);
+      const nextPayload: ContractFinancialData = {
+        ...buildPayload(),
+        categories: nextCategories.map((item) => normalizeCategory(item)),
+      };
+      await saveStepData(draftId, 'financial', nextPayload);
+      setFrontendStepDraft(draftId, 'financial', nextPayload);
+      setSavedPayloadState(nextPayload);
+      initialSnapshotRef.current = serializeFinancialPayloadForDirty(nextPayload);
+      setDirty(false);
+      dispatchContractFlowDirty('financial', false);
+      dispatchContractFlowSavedForDraft(draftId, 'financial', Date.now(), nextPayload);
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن تنظیمات مالی انجام نشد.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   if (loading) {
       return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات مالی، لطفاً کمی صبر کنید..." />;
@@ -1619,15 +1648,38 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   return (
     <div className="space-y-5">
-      {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-          <p className="mt-1 text-sm text-gray-500">در این مرحله مبلغ‌گذاری، پرداخت‌ها و آیتم‌های سررسید را تنظیم می‌کنید.</p>
+      {!embedded ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+            <p className="mt-1 text-sm text-gray-500">در این مرحله مبلغ‌گذاری، پرداخت‌ها و آیتم‌های سررسید را تنظیم می‌کنید.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
+            <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+              بازگشت به مراحل
+            </button>
+          </div>
         </div>
-        <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-          بازگشت به مراحل
-        </button>
-      </div> : null}
+      ) : (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setImportDialogOpen(true)}
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            سازگار کردن با تنظیمات
+          </button>
+        </div>
+      )}
 
       <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-[8px] border border-rose-300 bg-rose-50/20 p-1' : ''}>
         <FinancialPricingBox
@@ -2020,6 +2072,16 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           {dueFormError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
         </div>
       </Modal>
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="سازگار کردن با تنظیمات مالی"
+        description="سقف پیش‌پرداخت از تنظیمات کسب‌وکار روی این پیش‌نویس اعمال می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
+      />
     </div>
   );
 }

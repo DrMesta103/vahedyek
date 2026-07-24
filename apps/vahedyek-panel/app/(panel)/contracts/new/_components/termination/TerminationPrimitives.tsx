@@ -8,16 +8,21 @@ export function ToggleRow({
   onChange,
   label,
   description,
+  alignmentTag,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   description?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-[8px] border border-slate-200 bg-slate-50/60 px-4 py-3">
       <div className="min-w-0 flex-1 text-right">
-        <p className="text-sm font-bold text-slate-900">{label}</p>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <p className="text-sm font-bold text-slate-900">{label}</p>
+          {alignmentTag}
+        </div>
         {description ? <p className="mt-1 text-xs leading-6 text-slate-500">{description}</p> : null}
       </div>
       <BusinessSwitch checked={checked} onChange={onChange} />

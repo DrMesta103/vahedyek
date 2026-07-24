@@ -234,7 +234,7 @@ function PaymentSection({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <MoneyInput value={category.capAmount} onChange={(value) => onAmountChange(category.id, formatInput(value))} />
-                {categoryHint ? <div className="w-full max-w-sm">{categoryHint}</div> : null}
+                {categoryHint}
               </div>
             </div>
           </div>
@@ -299,7 +299,7 @@ function PaymentSection({
                   </div>
                 </div>
               </div>
-              {categoryDueHint ? <div className="mt-3 max-w-xl">{categoryDueHint}</div> : null}
+              {categoryDueHint ? <div className="mt-3 flex flex-wrap justify-end gap-2">{categoryDueHint}</div> : null}
             </>
           ) : null}
         </div>

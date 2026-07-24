@@ -184,6 +184,7 @@ export function LateInstallmentPanel({
           label="تعداد اقساط متوالی مجاز"
           required
           hint="تعیین کنید چند قسط پشت‌سرهم باید پرداخت نشود تا اختیار فسخ فعال شود."
+          alignmentTag={alignmentTag(fieldHints.consecutiveInstallmentsCount)}
         >
           <FormTextInput
             value={value.consecutiveInstallmentsCount}
@@ -216,7 +217,11 @@ export function FinancialObligationsPanel({
 }) {
   return (
     <div className="space-y-5">
-      <FieldGroup label="انواع تعهدات مالی مشمول" hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد">
+      <FieldGroup
+        label="انواع تعهدات مالی مشمول"
+        hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد"
+        alignmentTag={alignmentTag(fieldHints.obligationTypes)}
+      >
         <MultiTagPills<C['financialObligations']['obligationTypes'][number]>
           values={value.obligationTypes}
           onChange={(values) => onChange({ ...value, obligationTypes: values })}
@@ -266,7 +271,7 @@ export function DocumentDeficienciesPanel({
 }) {
   return (
     <div className="space-y-5">
-      <FieldGroup label="موارد الزامی" hint="کدام مدارک یا تعهدات باید کامل باشند تا جریان ادامه یابد.">
+      <FieldGroup label="موارد الزامی" hint="کدام مدارک یا تعهدات باید کامل باشند تا جریان ادامه یابد." alignmentTag={alignmentTag(fieldHints.mandatoryItems)}>
         <MultiTagPills<C['documentDeficiencies']['mandatoryItems'][number]>
           values={value.mandatoryItems}
           onChange={(values) => onChange({ ...value, mandatoryItems: values })}
