@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, ChevronLeft, Save } from 'lucide-react';
 import { Input } from '@repo/ui';
 import { PENALTY_ITEMS } from './penaltiesConfig';
-import { TagPills } from './ContractFormPrimitives';
+import { TagPills, SettingsAlignedFieldBlock } from './ContractFormPrimitives';
 import type { ContractRuleState } from '../../../../lib/businessContractRules';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
+import { getDomainFieldHint, type DomainFieldHint } from '../../../../lib/contractSettingsHints/domainFieldHints';
 
 type ForgivenessScope = 'whole' | 'itemized';
 type ForgivenessValueMode = 'amount' | 'percent';
@@ -70,14 +72,9 @@ function Switch({ checked, disabled = false, onChange }: { checked: boolean; dis
   );
 }
 
-function FieldBlock({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="space-y-2 text-right">
-      <label className="block text-sm font-bold text-slate-700">{label}</label>
-      {children}
-      {hint ? <p className="text-xs leading-6 text-slate-500">{hint}</p> : null}
-    </div>
-  );
+function fieldTag(hints: Record<string, DomainFieldHint>, key: string) {
+  const hint = getDomainFieldHint(hints, key);
+  return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
 }
 
 function WarningDialog({ message, onClose }: { message: string; onClose: () => void }) {
@@ -175,10 +172,12 @@ export function ForgivenessDraftRuleSection({
   state,
   onValueChange,
   onSave,
+  fieldHints = {},
 }: {
   state: ContractRuleState;
   onValueChange: (key: string, value: string | boolean) => void;
   onSave: () => void;
+  fieldHints?: Record<string, DomainFieldHint>;
 }) {
   const currentEntry = getEntry(state.values);
   const valueMode = getValueMode(state.values);
@@ -186,6 +185,7 @@ export function ForgivenessDraftRuleSection({
   const wholeEnabled = state.active && currentEntry.scope === 'whole';
   const activeCount = wholeEnabled ? 1 : enabledEntryIds.length;
   const [selectionNotice, setSelectionNotice] = useState<string | null>(null);
+  const tag = (key: string) => fieldTag(fieldHints, key);
 
   const writeCurrentEntrySnapshot = () => {
     if (currentEntry.scope !== 'itemized') return parseEntryValuesMap(state.values.forgiveEntryValues);
@@ -365,22 +365,23 @@ export function ForgivenessDraftRuleSection({
                           <div className="text-xs font-semibold text-slate-500">{formatSummary(state)}</div>
                         </div>
 
-                        <FieldBlock label="حداکثر دفعات تاخیر قابل بخشودگی در یک قرارداد">
+                        <SettingsAlignedFieldBlock label="حداکثر دفعات تاخیر قابل بخشودگی در یک قرارداد" alignmentTag={tag('forgiveMaxDelayCount')}>
                           <Input
                             value={String(state.values.forgiveMaxDelayCount ?? '')}
                             onChange={(event) => updateEntryValue('forgiveMaxDelayCount', event.target.value)}
                             placeholder="مثال: 3"
                           />
-                        </FieldBlock>
+                        </SettingsAlignedFieldBlock>
 
-                        <FieldBlock label="نوع مقدار بخشودگی">
+                        <SettingsAlignedFieldBlock label="نوع مقدار بخشودگی" alignmentTag={tag('forgiveValueMode')}>
                           <TagPills options={VALUE_MODE_OPTIONS} value={valueMode} onChange={(value) => updateEntryValue('forgiveValueMode', value)} />
-                        </FieldBlock>
+                        </SettingsAlignedFieldBlock>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                          <FieldBlock
+                          <SettingsAlignedFieldBlock
                             label={valueMode === 'percent' ? 'حداقل درصد جریمه قابل بخشش' : 'حداقل مبلغ جریمه قابل بخشش'}
                             hint="حداقل مقداری که در صورت اعمال بخشودگی می‌تواند کاهش داده شود."
+                            alignmentTag={tag('forgiveMinValue')}
                           >
                             <Input
                               value={String(state.values.forgiveMinValue ?? '')}
@@ -389,11 +390,12 @@ export function ForgivenessDraftRuleSection({
                               }
                               placeholder={valueMode === 'percent' ? 'مثال: 10' : 'مثال: 1,000,000'}
                             />
-                          </FieldBlock>
+                          </SettingsAlignedFieldBlock>
 
-                          <FieldBlock
+                          <SettingsAlignedFieldBlock
                             label={valueMode === 'percent' ? 'حداکثر درصد جریمه قابل بخشش' : 'حداکثر مبلغ جریمه قابل بخشش'}
                             hint="حداکثر مقداری که مجاز به بخشودگی است."
+                            alignmentTag={tag('forgiveMaxValue')}
                           >
                             <Input
                               value={String(state.values.forgiveMaxValue ?? '')}
@@ -402,14 +404,17 @@ export function ForgivenessDraftRuleSection({
                               }
                               placeholder={valueMode === 'percent' ? 'مثال: 30' : 'مثال: 10,000,000'}
                             />
-                          </FieldBlock>
+                          </SettingsAlignedFieldBlock>
                         </div>
 
                         <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
                           <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <h4 className="text-sm font-bold text-slate-800">تاخیر خارج از اختیار خریدار</h4>
-                              <p className="mt-1 text-xs leading-6 text-slate-500">
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-800">تاخیر خارج از اختیار خریدار</h4>
+                                {tag('forgiveOutsideBuyerControl')}
+                              </div>
+                              <p className="text-xs leading-6 text-slate-500">
                                 اگر تاخیر خارج از اختیار خریدار تشخیص داده شود، امکان اعمال بخشودگی فراهم است.
                               </p>
                             </div>
@@ -422,9 +427,12 @@ export function ForgivenessDraftRuleSection({
 
                         <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
                           <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای بخشودگی‌های بزرگ</h4>
-                              <p className="mt-1 text-xs leading-6 text-slate-500">
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای بخشودگی‌های بزرگ</h4>
+                                {tag('forgiveManagerApproval')}
+                              </div>
+                              <p className="text-xs leading-6 text-slate-500">
                                 بخشودگی‌های بالاتر از حد مشخص فقط با تایید نقش‌های مدیریتی انجام می‌شود.
                               </p>
                             </div>

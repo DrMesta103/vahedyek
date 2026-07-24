@@ -65,9 +65,13 @@ import { normalizeTerminationPayload } from './termination/terminationDefaults';
 import { firstErrorMessage } from './termination/TerminationPrimitives';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { resolveTerminationHint } from '../../../../lib/contractSettingsHints';
+import {
+  buyerPenaltyAlignmentTag,
+  getTerminationFieldHint,
+  resolveTerminationFieldHints,
+} from '../../../../lib/contractSettingsHints';
 
 function serializePayload(payload: ContractTerminationData) {
   return JSON.stringify(payload);
@@ -183,6 +187,7 @@ function ConstructorMenuCard({
   onToggle,
   expanded,
   onExpand,
+  alignmentTag,
 }: {
   title: string;
   description: string;
@@ -191,6 +196,7 @@ function ConstructorMenuCard({
   onToggle: (next: boolean) => void;
   expanded: boolean;
   onExpand: () => void;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div
@@ -219,6 +225,7 @@ function ConstructorMenuCard({
                   <span className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden />
                   {enabled ? 'فعال' : 'غیرفعال'}
                 </span>
+                {alignmentTag}
               </div>
               <p className="text-xs leading-6 text-slate-600">{description}</p>
             </div>
@@ -245,6 +252,8 @@ function TerminationPartyTabBar({
   buyerLabel,
   constructorProgressLabel,
   buyerProgressLabel,
+  sellerAlignmentTag,
+  buyerAlignmentTag,
   onSelect,
 }: {
   activeTab: TerminationPartyTab;
@@ -252,6 +261,8 @@ function TerminationPartyTabBar({
   buyerLabel: string;
   constructorProgressLabel: string;
   buyerProgressLabel: string;
+  sellerAlignmentTag?: ReactNode;
+  buyerAlignmentTag?: ReactNode;
   onSelect: (tab: TerminationPartyTab) => void;
 }) {
   const tabBase =
@@ -286,12 +297,15 @@ function TerminationPartyTabBar({
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'seller' ? 'text-cyan-900' : 'text-slate-800'}`}>
               فسخ {sellerLabel}
             </span>
-            <span
-              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
-                activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
-              }`}
-            >
-              {constructorProgressLabel}
+            <span className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+                }`}
+              >
+                {constructorProgressLabel}
+              </span>
+              {sellerAlignmentTag}
             </span>
           </span>
           {activeTab === 'seller' ? (
@@ -321,12 +335,15 @@ function TerminationPartyTabBar({
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'buyer' ? 'text-cyan-900' : 'text-slate-800'}`}>
               فسخ {buyerLabel}
             </span>
-            <span
-              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
-                activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
-              }`}
-            >
-              {buyerProgressLabel}
+            <span className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+                }`}
+              >
+                {buyerProgressLabel}
+              </span>
+              {buyerAlignmentTag}
             </span>
           </span>
           {activeTab === 'buyer' ? (
@@ -570,6 +587,45 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
     return { done, total: 6 };
   }, [payload.buyerCompletion]);
 
+  const cancellationRules = useMemo(
+    () => ({
+      builder: snapshot?.rules?.['builder-cancellation'] ?? null,
+      buyer: snapshot?.rules?.['buyer-cancellation'] ?? null,
+    }),
+    [snapshot?.rules],
+  );
+
+  const fieldHints = useMemo(
+    () => resolveTerminationFieldHints(snapshot?.termination, payload, cancellationRules),
+    [snapshot?.termination, payload, cancellationRules],
+  );
+
+  const sellerPartyAlignment = useMemo(() => {
+    const hint = getTerminationFieldHint(fieldHints, 'sellerEngaged');
+    return buyerPenaltyAlignmentTag(hint.status === 'idle' ? null : hint.status);
+  }, [fieldHints]);
+
+  const buyerPartyAlignment = useMemo(() => {
+    const hint = getTerminationFieldHint(fieldHints, 'buyerEngaged');
+    return buyerPenaltyAlignmentTag(hint.status === 'idle' ? null : hint.status);
+  }, [fieldHints]);
+
+  const subsectionAlignmentTag = (party: 'seller' | 'buyer', sectionId: string) => {
+    const hint = getTerminationFieldHint(fieldHints, `${party}.${sectionId}.enabled`);
+    if (hint.status === 'idle') return null;
+    return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+  };
+
+  const scopedHints = (party: 'seller' | 'buyer', sectionId: string) => {
+    const prefix = `${party}.${sectionId}.`;
+    const scoped: Record<string, (typeof fieldHints)[string]> = {};
+    for (const [key, value] of Object.entries(fieldHints)) {
+      if (!key.startsWith(prefix) || key.endsWith('.enabled')) continue;
+      scoped[key.slice(prefix.length)] = value;
+    }
+    return scoped;
+  };
+
   const handleConfirmBuyerSubsection = async (subsection: BuyerTerminationSubsectionId) => {
     if (!draftId) return;
     setSubsectionBuyerBusy(subsection);
@@ -654,6 +710,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, lateDelivery: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('lateDelivery')}
             saving={subsectionBuyerBusy === 'lateDelivery'}
+            fieldHints={scopedHints('buyer', 'lateDelivery')}
           />
         ) : null}
         {id === 'specificationChanges' ? (
@@ -686,6 +743,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, buyerTerms: { ...p.buyerTerms, areaDiscrepancy: next } }))}
             onSubmit={() => void tryConfirmAndBackBuyer('areaDiscrepancy')}
             saving={subsectionBuyerBusy === 'areaDiscrepancy'}
+            fieldHints={scopedHints('buyer', 'areaDiscrepancy')}
           />
         ) : null}
         {id === 'notification' ? (
@@ -720,6 +778,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, constructorTerms: { ...p.constructorTerms, lateInstallment: next } }))}
             onSubmit={() => tryConfirmAndBackSeller('lateInstallment')}
             saving={subsectionBusy === 'lateInstallment'}
+            fieldHints={scopedHints('seller', 'lateInstallment')}
           />
         ) : null}
         {id === 'financialObligations' ? (
@@ -728,6 +787,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, constructorTerms: { ...p.constructorTerms, financialObligations: next } }))}
             onSubmit={() => tryConfirmAndBackSeller('financialObligations')}
             saving={subsectionBusy === 'financialObligations'}
+            fieldHints={scopedHints('seller', 'financialObligations')}
           />
         ) : null}
         {id === 'documentDeficiencies' ? (
@@ -736,6 +796,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, constructorTerms: { ...p.constructorTerms, documentDeficiencies: next } }))}
             onSubmit={() => tryConfirmAndBackSeller('documentDeficiencies')}
             saving={subsectionBusy === 'documentDeficiencies'}
+            fieldHints={scopedHints('seller', 'documentDeficiencies')}
           />
         ) : null}
         {id === 'otherBreach' ? (
@@ -744,6 +805,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
             onChange={(next) => updatePayload((p) => ({ ...p, constructorTerms: { ...p.constructorTerms, otherBreach: next } }))}
             onSubmit={() => tryConfirmAndBackSeller('otherBreach')}
             saving={subsectionBusy === 'otherBreach'}
+            fieldHints={scopedHints('seller', 'otherBreach')}
           />
         ) : null}
         {id === 'notifications' ? (
@@ -830,20 +892,26 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
 
       <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm">
         <div className="space-y-0">
-            <div className="px-5 pt-5 sm:px-8">
-              <BusinessSettingsHint
-                comparison={resolveTerminationHint(snapshot?.termination, payload, {
-                  builder: snapshot?.rules?.['builder-cancellation'] ?? null,
-                  buyer: snapshot?.rules?.['buyer-cancellation'] ?? null,
-                })}
-              />
-            </div>
             <TerminationPartyTabBar
               activeTab={payload.terminationPartyTab}
               sellerLabel={partyLabels.sellerLabel}
               buyerLabel={partyLabels.buyerLabel}
               constructorProgressLabel={progressLabel}
               buyerProgressLabel={buyerProgressLabel}
+              sellerAlignmentTag={
+                sellerPartyAlignment ? (
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${sellerPartyAlignment.className}`}>
+                    {sellerPartyAlignment.label}
+                  </span>
+                ) : null
+              }
+              buyerAlignmentTag={
+                buyerPartyAlignment ? (
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${buyerPartyAlignment.className}`}>
+                    {buyerPartyAlignment.label}
+                  </span>
+                ) : null
+              }
               onSelect={selectPartyTab}
             />
 
@@ -866,6 +934,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                           enabled={enabled}
                           icon={meta.icon}
                           expanded={expanded}
+                          alignmentTag={subsectionAlignmentTag('seller', sid)}
                           onExpand={() => setExpandedSellerId((current) => (current === sid ? null : sid))}
                           onToggle={(next) => {
                             updatePayload((p) =>
@@ -918,6 +987,7 @@ export function TerminationStep({ stepId, title, embedded = false }: { stepId: s
                           enabled={enabled}
                           icon={meta.icon}
                           expanded={expanded}
+                          alignmentTag={subsectionAlignmentTag('buyer', sid)}
                           onExpand={() => setExpandedBuyerId((current) => (current === sid ? null : sid))}
                           onToggle={(next) => {
                             updatePayload((p) =>

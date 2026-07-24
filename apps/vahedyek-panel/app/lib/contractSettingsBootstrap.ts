@@ -1,5 +1,7 @@
 import {
   normalizeRuleState,
+  getPenaltyTypeSettingsSlice,
+  listConfiguredPenaltyTypeIds,
   type ContractRuleId,
   type ContractRuleState,
 } from './businessContractRules';
@@ -180,13 +182,18 @@ export function normalizePenaltiesPayload(data: ContractPenaltiesData | null): C
   return { activeTab, types, rules };
 }
 
-export function buildBootstrapPenaltiesPayload(
-  ruleState: Pick<ContractRuleState, 'active' | 'activeTab' | 'values'> | null,
-): ContractPenaltiesData | null {
-  if (!ruleState) return null;
-  const typeId = 'installment-delay';
-  const active = Boolean(ruleState.active);
-  const rawTab = ruleState.activeTab;
+function mapSettingsPeriodToDraft(period: string): PenaltyPeriod {
+  const value = period.trim();
+  if (value === 'daily' || value === 'روزانه') return 'daily';
+  if (value === 'yearly' || value === 'سالانه') return 'yearly';
+  return 'monthly';
+}
+
+function buildPenaltyRuleFromSettingsSlice(
+  typeId: string,
+  slice: Pick<ContractRuleState, 'activeTab' | 'values'>,
+): PenaltyRuleData {
+  const rawTab = slice.activeTab;
   const draftMode: PenaltyMode =
     rawTab === 'debt-percent' || rawTab === 'overdue'
       ? 'overdue'
@@ -203,35 +210,65 @@ export function buildBootstrapPenaltiesPayload(
         : draftMode === 'progressive'
           ? 'penaltyProgressive'
           : 'penaltyFixed';
-  const get = (key: string) => String(ruleState.values[`${prefix}${key}`] ?? '');
+  const get = (key: string) => String(slice.values[`${prefix}${key}`] ?? '');
   const percent = draftMode === 'overdue' || draftMode === 'contract' ? get('Percent') : '';
 
-  const rule = normalizePenaltyRule({
-    id: 'penalty-bootstrap-installment-delay',
+  return normalizePenaltyRule({
+    id: `penalty-bootstrap-${typeId}`,
     penaltyTypeId: typeId,
     mode: draftMode,
-    period: (get('Period') || 'monthly') as PenaltyPeriod,
+    period: mapSettingsPeriodToDraft(get('Period') || 'monthly'),
     fixedAmount: get('Amount'),
     penaltyPercent: percent,
     bankInterestPercent: get('BankPercent'),
     graceDays: get('GraceDays') || '2',
     roundRule: (get('Round') || '100') as PenaltyRoundRule,
-    extraFeeEnabled: ruleState.values[`${prefix}ExtraFeeEnabled`] === true,
+    extraFeeEnabled: slice.values[`${prefix}ExtraFeeEnabled`] === true,
     extraFeeType: (get('ExtraFeeType') || 'percent') as PenaltyExtraFeeType,
     extraFeeAmount: get('ExtraFeeAmount'),
     extraFeeRoundRule: (get('ExtraFeeRound') || '100') as PenaltyRoundRule,
     progressiveRows: [1, 2, 3, 4].map((index) => ({
       id: `row-${index}`,
-      fromDay: String(ruleState.values[`penaltyProgressiveRow${index}From`] ?? ''),
-      toDay: String(ruleState.values[`penaltyProgressiveRow${index}To`] ?? ''),
-      rate: String(ruleState.values[`penaltyProgressiveRow${index}Rate`] ?? ''),
+      fromDay: String(slice.values[`penaltyProgressiveRow${index}From`] ?? ''),
+      toDay: String(slice.values[`penaltyProgressiveRow${index}To`] ?? ''),
+      rate: String(slice.values[`penaltyProgressiveRow${index}Rate`] ?? ''),
     })),
   });
+}
+
+export function buildBootstrapPenaltiesPayload(
+  ruleState: ContractRuleState | null,
+): ContractPenaltiesData | null {
+  if (!ruleState) return null;
+  const active = Boolean(ruleState.active);
+
+  const configuredIds = listConfiguredPenaltyTypeIds(ruleState);
+  const typeIds =
+    configuredIds.length > 0
+      ? configuredIds
+      : [
+          (() => {
+            const chip = typeof ruleState.activeChip === 'string' ? ruleState.activeChip.trim() : '';
+            return chip && PENALTY_ITEMS.some((item) => item.id === chip) ? chip : 'installment-delay';
+          })(),
+        ];
+
+  const rules = active
+    ? typeIds
+        .map((typeId) => {
+          const slice = getPenaltyTypeSettingsSlice(ruleState, typeId);
+          if (!slice) return null;
+          return buildPenaltyRuleFromSettingsSlice(typeId, slice);
+        })
+        .filter((rule): rule is PenaltyRuleData => Boolean(rule))
+    : [];
+
+  const activeTypeIds = new Set(rules.map((rule) => rule.penaltyTypeId));
 
   return normalizePenaltiesPayload({
-    activeTab: typeId,
-    types: PENALTY_ITEMS.map((item) => ({ ...item, active: active && item.id === typeId })),
-    rules: active ? [rule] : [],
+    activeTab: typeIds[0] ?? 'installment-delay',
+    types: PENALTY_ITEMS.map((item) => ({ ...item, active: active && activeTypeIds.has(item.id) })),
+    rules,
   });
 }
 

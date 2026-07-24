@@ -1,10 +1,18 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { ContractTerminationData } from '../../../../../types/contract';
+import type { DomainFieldHint } from '../../../../../lib/contractSettingsHints/domainFieldHints';
 import { FieldGroup, FormDateInput, FormTextInput, MultiTagPills, TagPills } from '../ContractFormPrimitives';
+import { SettingsFieldAlignmentTag } from '../SettingsFieldAlignmentTag';
 import { SubsectionSubmitRow, ToggleRow } from './TerminationPrimitives';
 
 type B = ContractTerminationData['buyerTerms'];
+
+function alignmentTag(hint: DomainFieldHint | undefined): ReactNode {
+  if (!hint || hint.status === 'idle') return null;
+  return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+}
 
 const LATE_GRACE: ReadonlyArray<{ value: B['lateDelivery']['gracePreset']; label: string }> = [
   { value: '1', label: '۱ ماه' },
@@ -205,11 +213,13 @@ export function BuyerLateDeliveryPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['lateDelivery'];
   onChange: (next: B['lateDelivery']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
@@ -228,7 +238,11 @@ export function BuyerLateDeliveryPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="بازه ارفاقی مجاز پس از سررسید" hint="اگر تأخیر از این بازه بیشتر شود، امکان فسخ بررسی می‌شود.">
+      <FieldGroup
+        label="بازه ارفاقی مجاز پس از سررسید"
+        hint="اگر تأخیر از این بازه بیشتر شود، امکان فسخ بررسی می‌شود."
+        alignmentTag={alignmentTag(fieldHints.gracePreset)}
+      >
         <TagPills
           value={value.gracePreset}
           onChange={(v) => onChange({ ...value, gracePreset: v, graceMonthsCustom: v === 'other' ? value.graceMonthsCustom : '' })}
@@ -237,7 +251,7 @@ export function BuyerLateDeliveryPanel({
       </FieldGroup>
 
       {value.gracePreset === 'other' ? (
-        <FieldGroup label="مدت سفارشی (ماه)" required>
+        <FieldGroup label="مدت سفارشی (ماه)" required alignmentTag={alignmentTag(fieldHints.graceMonthsCustom)}>
           <FormTextInput
             value={value.graceMonthsCustom}
             onChange={(v) => onChange({ ...value, graceMonthsCustom: normalizeDigits(v) })}
@@ -322,11 +336,13 @@ export function BuyerAreaDiscrepancyPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['areaDiscrepancy'];
   onChange: (next: B['areaDiscrepancy']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
@@ -337,6 +353,7 @@ export function BuyerAreaDiscrepancyPanel({
       <FieldGroup
         label="آستانه اختلاف متراژ برای فعال شدن فسخ"
         hint="اگر اختلاف نهایی کمتر از این مقدار باشد، فسخ فعال نمی‌شود."
+        alignmentTag={alignmentTag(fieldHints.thresholdPreset)}
       >
         <TagPills
           value={value.thresholdPreset}
@@ -352,7 +369,12 @@ export function BuyerAreaDiscrepancyPanel({
       </FieldGroup>
 
       {value.thresholdPreset === 'other' ? (
-        <FieldGroup label="آستانه سفارشی" required hint="اگر مقدار موردنظر شما در گزینه‌ها نیست، مقدار دلخواه را وارد کنید.">
+        <FieldGroup
+          label="آستانه سفارشی"
+          required
+          hint="اگر مقدار موردنظر شما در گزینه‌ها نیست، مقدار دلخواه را وارد کنید."
+          alignmentTag={alignmentTag(fieldHints.thresholdPercentCustom)}
+        >
           <FormTextInput
             value={value.thresholdPercentCustom}
             onChange={(v) => onChange({ ...value, thresholdPercentCustom: normalizeDecimal(v) })}

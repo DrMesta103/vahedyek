@@ -27,23 +27,53 @@ export function FieldGroup({
   label,
   required,
   hint,
+  alignmentTag,
   children,
   invalid = false,
 }: {
   label: string;
   required?: boolean;
   hint?: string;
+  alignmentTag?: ReactNode;
   children: ReactNode;
   invalid?: boolean;
 }) {
   return (
     <div className="space-y-2 text-right">
-      <label className="flex items-center justify-start gap-1 text-[14px] font-black text-slate-700">
-        {label}
-        {required ? <span className="text-rose-500">*</span> : null}
-      </label>
+      <div className="flex flex-wrap items-center justify-start gap-2">
+        <label className="flex items-center justify-start gap-1 text-[14px] font-black text-slate-700">
+          {label}
+          {required ? <span className="text-rose-500">*</span> : null}
+        </label>
+        {alignmentTag}
+      </div>
       <div className={invalid ? 'rounded-[8px] border border-rose-300 bg-rose-50/40 p-2' : ''}>{children}</div>
       {hint ? <p className="text-[12px] leading-6 text-slate-400">{hint}</p> : null}
+    </div>
+  );
+}
+
+export function SettingsAlignedFieldBlock({
+  label,
+  children,
+  hint,
+  alignmentTag,
+  className = '',
+}: {
+  label: string;
+  children: ReactNode;
+  hint?: string;
+  alignmentTag?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-2 text-right ${className}`.trim()}>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="block text-[13px] font-bold text-slate-700">{label}</label>
+        {alignmentTag}
+      </div>
+      {children}
+      {hint ? <p className="text-xs leading-6 text-slate-500">{hint}</p> : null}
     </div>
   );
 }

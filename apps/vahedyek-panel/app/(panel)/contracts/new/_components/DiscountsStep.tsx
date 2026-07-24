@@ -7,7 +7,9 @@ import { BusinessSwitch, Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { DiscountConditionPanel, type DiscountConditionValues } from './DiscountConditionPanel';
 import { FieldLabel } from './FieldLabel';
-import { TagPills } from './ContractFormPrimitives';
+import { SettingsAlignedFieldBlock, TagPills } from './ContractFormPrimitives';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
+import { getDomainFieldHint, resolveDiscountFieldHints } from '../../../../lib/contractSettingsHints/discountFieldHints';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
 import {
   ensureActiveDraftId,
@@ -25,7 +27,7 @@ import {
   normalizeDiscountRule,
   normalizeDiscountsPayload,
 } from '../../../../lib/contractSettingsBootstrap';
-import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
+import type { ContractRuleState } from '../../../../lib/businessContractRules';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
 import { buildValidationSummary } from './validationPresentation';
 import type {
@@ -39,9 +41,7 @@ import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 const SCOPE_OPTIONS: Array<{ value: DiscountScope; label: string }> = [
@@ -128,17 +128,17 @@ function FieldBlock({
   label,
   children,
   hint,
+  alignmentTag,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
-    <div className="space-y-2 text-right">
-      <FieldLabel label={label} />
+    <SettingsAlignedFieldBlock label={label} hint={hint} alignmentTag={alignmentTag}>
       {children}
-      {hint ? <p className="text-xs leading-6 text-slate-500">{hint}</p> : null}
-    </div>
+    </SettingsAlignedFieldBlock>
   );
 }
 
@@ -239,14 +239,20 @@ function RuleEditor({
   onChange,
   title,
   entryLabel,
+  fieldHints = {},
 }: {
   typeId: string;
   rule: DiscountRuleData;
   onChange: (patch: Partial<DiscountRuleData>) => void;
   title: string;
   entryLabel?: string;
+  fieldHints?: ReturnType<typeof resolveDiscountFieldHints>;
 }) {
   const valueMode = rule.valueMode === 'percent' ? 'percent' : 'amount';
+  const tag = (key: string) => {
+    const hint = getDomainFieldHint(fieldHints, key);
+    return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+  };
   const conditionValues = getConditionValues(rule);
 
   return (
@@ -263,7 +269,7 @@ function RuleEditor({
         </span>
       </div>
 
-      <FieldBlock label="نوع مقدار تخفیف">
+      <FieldBlock label="نوع مقدار تخفیف" alignmentTag={tag('valueMode')}>
         <TagPills
           options={VALUE_MODE_OPTIONS}
           value={valueMode}
@@ -275,6 +281,7 @@ function RuleEditor({
         <FieldBlock
           label={valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
           hint="در صورت نیاز می‌توانید مقدار حداقل را خالی بگذارید یا صفر ثبت کنید."
+          alignmentTag={tag('minValue')}
         >
           <Input
             value={rule.minValue}
@@ -291,6 +298,7 @@ function RuleEditor({
         <FieldBlock
           label={valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
           hint="این مقدار برای ثبت نهایی تخفیف الزامی است."
+          alignmentTag={tag('maxValue')}
         >
           <Input
             value={rule.maxValue}
@@ -326,9 +334,12 @@ function RuleEditor({
 
       <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
-            <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
+              {tag('managerApproval')}
+            </div>
+            <p className="text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
           </div>
           <Toggle
             checked={Boolean(rule.managerApproval)}
@@ -337,7 +348,7 @@ function RuleEditor({
         </div>
 
         {rule.managerApproval ? (
-          <FieldBlock label={valueMode === 'percent' ? 'آستانه تایید مدیر (درصد)' : 'آستانه تایید مدیر (مبلغ)'}>
+          <FieldBlock label={valueMode === 'percent' ? 'آستانه تایید مدیر (درصد)' : 'آستانه تایید مدیر (مبلغ)'} alignmentTag={tag('approvalThreshold')}>
             <Input
               value={rule.approvalThreshold}
               onChange={(event) =>
@@ -444,24 +455,6 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
-  const discountHintState = useMemo<ContractRuleState>(() => {
-    const firstRule = rules.find((item) => item.enabled);
-    return {
-      active: activeTypes.length > 0,
-      activeTab: firstRule?.discountTypeId ?? payload.activeTab,
-      activeChip: payload.activeTab,
-      values: {
-        discountScope: firstRule?.scope ?? '',
-        discountEntryId: firstRule?.entryId ?? '',
-        discountValueMode: firstRule?.valueMode ?? '',
-        discountMinValue: firstRule?.minValue ?? '',
-        discountMaxValue: firstRule?.maxValue ?? '',
-        discountConditionConfigured: Boolean(firstRule?.conditionConfigured),
-        discountManagerApproval: Boolean(firstRule?.managerApproval),
-        discountApprovalThreshold: firstRule?.approvalThreshold ?? '',
-      },
-    };
-  }, [activeTypes.length, payload.activeTab, rules]);
 
   const typeRule = (typeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id) =>
     rules.find((item) => item.discountTypeId === typeId && item.scope === scope && (scope === 'whole' || item.entryId === entryId));
@@ -758,10 +751,6 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         </div>
       ) : null}
 
-      <BusinessSettingsHint
-        comparison={resolveDomainRuleHint(RULE_CONFIGS.discount, snapshot?.rules?.discount, discountHintState)}
-      />
-
       <div className="space-y-4">
         <SectionShell
           title="تخفیف روی اصل قرارداد"
@@ -807,6 +796,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                 rule={contractBaseWholeRule ?? makeEmptyRule('contract-base')}
                 title="تنظیمات تخفیف اصل قرارداد"
                 entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+                fieldHints={resolveDiscountFieldHints(snapshot?.rules?.discount, contractBaseWholeRule, contractBaseActive)}
                 onChange={(patch) => patchRule('contract-base', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
               />
               {itemizedEnabledCount > 0 ? (
@@ -900,6 +890,11 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                         rule={entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id)}
                         title="تنظیمات این تخفیف موردی"
                         entryLabel={entry.title}
+                        fieldHints={resolveDiscountFieldHints(
+                          snapshot?.rules?.discount,
+                          entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+                          isEnabled,
+                        )}
                         onChange={(patch) => patchRule('contract-base', 'itemized', entry.id, patch)}
                       />
                     ) : contractBaseActive ? (
@@ -946,6 +941,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
               rule={earlyPaymentRule ?? makeEmptyRule('early-payment')}
               title="تنظیمات تخفیف مشوق پرداخت"
               entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+              fieldHints={resolveDiscountFieldHints(snapshot?.rules?.discount, earlyPaymentRule, earlyPaymentActive)}
               onChange={(patch) => patchRule('early-payment', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
             />
           ) : null}

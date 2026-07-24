@@ -1,9 +1,14 @@
 'use client';
 
 import { BadgePercent, ChevronLeft, CircleDollarSign, TrendingUp } from 'lucide-react';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ProfileAwareUnitInput } from '../../../../../components/ProfileAwareUnitInput';
 import type { ContractRuleState } from '../../../../../lib/businessContractRules';
+import {
+  getDomainFieldHint,
+  resolveBuilderPenaltyFieldHints,
+} from '../../../../../lib/contractSettingsHints/builderPenaltyFieldHints';
+import { SettingsFieldAlignmentTag } from '../SettingsFieldAlignmentTag';
 import {
   BUILDER_PENALTY_MODE_OPTIONS,
   BUILDER_PENALTY_PERCENT_BASIS_OPTIONS,
@@ -91,6 +96,7 @@ function AmountField({
   helper,
   suffix = '',
   disabled = false,
+  alignmentTag,
 }: {
   label: string;
   value: string;
@@ -98,10 +104,14 @@ function AmountField({
   helper?: string;
   suffix?: string;
   disabled?: boolean;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="space-y-3">
-      <FieldLabel label={label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel label={label} />
+        {alignmentTag}
+      </div>
       {disabled ? (
         <input value={value} disabled className="h-11 w-full rounded-[8px] border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
       ) : (
@@ -118,16 +128,21 @@ function TextField({
   onChange,
   helper,
   placeholder,
+  alignmentTag,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   helper?: string;
   placeholder?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="space-y-3">
-      <FieldLabel label={label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel label={label} />
+        {alignmentTag}
+      </div>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -415,12 +430,20 @@ export type BuilderPenaltyInFlowHandle = {
   saveIfDirty: () => Promise<void>;
 };
 
+export type BuilderPenaltyInFlowStatus = {
+  loading: boolean;
+  saving: boolean;
+  dirty: boolean;
+  state: ContractRuleState | null;
+};
+
 export const BuilderPenaltyInFlow = forwardRef<
   BuilderPenaltyInFlowHandle,
   {
-    onStatusChange?: (status: { loading: boolean; saving: boolean; dirty: boolean }) => void;
+    onStatusChange?: (status: BuilderPenaltyInFlowStatus) => void;
+    settingsReference?: ContractRuleState | null;
   }
->(function BuilderPenaltyInFlow({ onStatusChange }, ref) {
+>(function BuilderPenaltyInFlow({ onStatusChange, settingsReference = null }, ref) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -464,8 +487,8 @@ export const BuilderPenaltyInFlow = forwardRef<
   }, []);
 
   useEffect(() => {
-    onStatusChange?.({ loading, saving, dirty: dirtyRef.current });
-  }, [loading, saving, onStatusChange]);
+    onStatusChange?.({ loading, saving, dirty: dirtyRef.current, state: stateRef.current });
+  }, [loading, saving, state, onStatusChange]);
 
   const persist = async (nextState: ContractRuleState, options?: { silent?: boolean }) => {
     try {
@@ -487,7 +510,7 @@ export const BuilderPenaltyInFlow = forwardRef<
       initialSnapshotRef.current = serialize(normalizedState);
       dirtyRef.current = false;
       if (!options?.silent) setMessage('تنظیمات جرایم سازنده ذخیره شد.');
-      onStatusChange?.({ loading: false, saving: false, dirty: false });
+      onStatusChange?.({ loading: false, saving: false, dirty: false, state: normalizedState });
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات جریمه سازنده انجام نشد.');
     } finally {
@@ -509,7 +532,7 @@ export const BuilderPenaltyInFlow = forwardRef<
       };
       stateRef.current = next;
       dirtyRef.current = serialize(next) !== initialSnapshotRef.current;
-      onStatusChange?.({ loading: false, saving, dirty: dirtyRef.current });
+      onStatusChange?.({ loading: false, saving, dirty: dirtyRef.current, state: next });
       return next;
     });
   };
@@ -547,6 +570,19 @@ export const BuilderPenaltyInFlow = forwardRef<
         const violationOutcomes = parseStoredStringList(state.values.materialSpecsChangeViolationOutcomes);
         const requiredDocuments = parseStoredStringList(state.values.materialSpecsChangeRequiredDocuments);
         const isExpanded = expandedSectionId === item.id;
+        const fieldHints = resolveBuilderPenaltyFieldHints(settingsReference, state, item.id);
+        const modeHint = getDomainFieldHint(fieldHints, section.modeKey);
+        const periodHint = getDomainFieldHint(fieldHints, section.periodKey);
+        const fixedAmountHint = getDomainFieldHint(fieldHints, section.fixedAmountKey);
+        const graceHint = section.graceDaysKey ? getDomainFieldHint(fieldHints, section.graceDaysKey) : undefined;
+        const maxCapHint = getDomainFieldHint(fieldHints, section.capKey);
+        const unlimitedCapHint = section.unlimitedCapKey
+          ? getDomainFieldHint(fieldHints, section.unlimitedCapKey)
+          : undefined;
+        const fieldAlignmentTag = (hint: ReturnType<typeof getDomainFieldHint> | undefined) => {
+          if (!hint || hint.status === 'idle') return null;
+          return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+        };
 
         return (
           <div key={item.id} className={`overflow-hidden rounded-[8px] border transition ${sectionEnabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'}`}>
@@ -690,10 +726,15 @@ export const BuilderPenaltyInFlow = forwardRef<
                       </div>
                     ) : (
                       <div className="space-y-8 p-5 md:p-10">
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {BUILDER_PENALTY_MODE_OPTIONS.map((mode) => (
-                            <ModeCard key={mode.value} value={mode.value} active={activeMode === mode.value} onSelect={(value) => setValue(section.modeKey, value, item.id)} />
-                          ))}
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            {fieldAlignmentTag(modeHint)}
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-3">
+                            {BUILDER_PENALTY_MODE_OPTIONS.map((mode) => (
+                              <ModeCard key={mode.value} value={mode.value} active={activeMode === mode.value} onSelect={(value) => setValue(section.modeKey, value, item.id)} />
+                            ))}
+                          </div>
                         </div>
 
                         <p className="text-center text-base leading-8 text-slate-600">
@@ -701,7 +742,10 @@ export const BuilderPenaltyInFlow = forwardRef<
                         </p>
 
                         <section className="space-y-5">
-                          <h5 className="text-right text-[17px] font-black text-slate-800">دوره محاسبه جریمه</h5>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <h5 className="text-right text-[17px] font-black text-slate-800">دوره محاسبه جریمه</h5>
+                            {fieldAlignmentTag(periodHint)}
+                          </div>
                           <p className="text-right text-sm leading-7 text-slate-600">دوره را برای محاسبه جریمه انتخاب کنید.</p>
                           <TagPills
                             options={BUILDER_PENALTY_PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
@@ -717,6 +761,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             value={String(state.values[section.fixedAmountKey] ?? '')}
                             onChange={(value) => setValue(section.fixedAmountKey, value, item.id)}
                             helper="مبلغی که به ازای هر دوره تاخیر به عنوان جریمه درنظر گرفته می‌شود."
+                            alignmentTag={fieldAlignmentTag(fixedAmountHint)}
                           />
                         ) : null}
 
@@ -840,12 +885,16 @@ export const BuilderPenaltyInFlow = forwardRef<
                               value={String(state.values[section.graceDaysKey!] ?? '')}
                               onChange={(value) => setValue(section.graceDaysKey!, value, item.id)}
                               helper="اگر این مقدار ۱۰ باشد، جریمه از روز ۱۱ تاخیر شروع می‌شود."
+                              alignmentTag={fieldAlignmentTag(graceHint)}
                             />
 
                             <div className="space-y-5 rounded-[8px] border border-slate-200 bg-white p-5">
                               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="space-y-2 text-right">
-                                  <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
+                                  <div className="flex flex-wrap items-center justify-end gap-2">
+                                    <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
+                                    {fieldAlignmentTag(unlimitedCapHint)}
+                                  </div>
                                   <p className="text-xs leading-6 text-slate-500">در صورت فعال بودن، جریمه فقط تا سقف مشخص محاسبه می‌شود.</p>
                                 </div>
                                 <div className="self-start lg:self-auto">
@@ -855,7 +904,10 @@ export const BuilderPenaltyInFlow = forwardRef<
 
                               {!unlimitedCap ? (
                                 <div className="space-y-3">
-                                  <FieldLabel label="مبلغ سقف جریمه *" />
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <FieldLabel label="مبلغ سقف جریمه *" />
+                                    {fieldAlignmentTag(maxCapHint)}
+                                  </div>
                                   <FinancialAmountInput value={String(state.values[section.capKey] ?? '')} onChange={(value) => setValue(section.capKey, value, item.id)} suffix="" />
                                 </div>
                               ) : null}

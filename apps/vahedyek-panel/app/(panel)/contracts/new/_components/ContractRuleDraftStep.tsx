@@ -24,10 +24,14 @@ import {
 import { InterestRuleSection } from '../../../business-settings/_components/InterestRuleSection';
 import { ContractStepLoader } from './ContractStepLoader';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
+import {
+  resolveForgivenessFieldHints,
+  resolveInterestFieldHints,
+} from '../../../../lib/contractSettingsHints/forgivenessInterestFieldHints';
 import { ForgivenessDraftRuleSection } from './ForgivenessDraftRuleSection';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
+import { buyerPenaltyAlignmentTag, resolveDomainRuleHint } from '../../../../lib/contractSettingsHints';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft, type ContractFlowSectionId } from './contractFlowSignals';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 
@@ -113,6 +117,15 @@ export function ContractRuleDraftStep({
   const [importError, setImportError] = useState('');
 
   const sectionTitle = useMemo(() => title || rule.title, [rule.title, title]);
+  const fieldHints = useMemo(() => {
+    if (!state) return {};
+    if (ruleId === 'forgiveness') return resolveForgivenessFieldHints(snapshot?.rules?.forgiveness, state);
+    return resolveInterestFieldHints(snapshot?.rules?.interest, state);
+  }, [ruleId, snapshot?.rules?.forgiveness, snapshot?.rules?.interest, state]);
+  const activationAlignmentTag = useMemo(() => {
+    if (!state || ruleId !== 'interest') return null;
+    return buyerPenaltyAlignmentTag(resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state).status);
+  }, [rule, ruleId, snapshot?.rules, state]);
 
   const applySettingsFromBusiness = async () => {
     if (!draftId || importBusy) return;
@@ -241,9 +254,8 @@ export function ContractRuleDraftStep({
           state={state}
           onValueChange={(key, value) => applyPanelValue(setState, key, value)}
           onSave={() => void handleSubmit()}
+          fieldHints={fieldHints}
         />
-
-        <BusinessSettingsHint comparison={resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state)} />
 
         {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
@@ -294,9 +306,15 @@ export function ContractRuleDraftStep({
       <section className="rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:[direction:rtl]">
           <div className="flex min-w-0 flex-1 flex-col justify-center space-y-3 text-right [direction:rtl] lg:items-start">
-            <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-black text-[color:var(--text-strong)]">{rule.activationTitle}</h2>
+              {activationAlignmentTag ? (
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${activationAlignmentTag.className}`}>
+                  {activationAlignmentTag.label}
+                </span>
+              ) : null}
+            </div>
             <p className="w-full text-sm leading-7 text-[color:var(--text-muted)]">{rule.activationDescription}</p>
-            <BusinessSettingsHint comparison={resolveDomainRuleHint(rule, snapshot?.rules?.[ruleId], state)} />
             {!state.active ? (
               <p className="w-full text-sm text-[color:var(--text-muted)]">
                 برای ادامه، وضعیت‌های مالی و حقوقی را از همین بخش تنظیم کنید.
@@ -310,7 +328,13 @@ export function ContractRuleDraftStep({
         </div>
       </section>
 
-      {state.active ? <InterestRuleSection state={state} onValueChange={(key, value) => applyPanelValue(setState, key, value)} /> : null}
+      {state.active ? (
+        <InterestRuleSection
+          state={state}
+          onValueChange={(key, value) => applyPanelValue(setState, key, value)}
+          fieldHints={fieldHints}
+        />
+      ) : null}
 
       {formError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{formError}</div> : null}
 
