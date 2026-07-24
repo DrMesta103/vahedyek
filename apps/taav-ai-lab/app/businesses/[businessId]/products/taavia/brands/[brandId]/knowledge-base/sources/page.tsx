@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { getTaaviaBrandForTenant, getTenantForUser } from "@/app/lib/data";
-import { getTaaviaBrandDashboardReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
+import { getKnowledgeBaseSourcesReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
 import { getCurrentTenant, requireSession } from "@/app/lib/session";
 import { AiLabShell } from "@/components/AiLabShell";
-import { TaaviaBrandWorkspaceClient } from "@/components/taavia/TaaviaBrandWorkspaceClient";
+import { TaaviaKnowledgeBaseSourcesClient } from "@/components/taavia/knowledge-base/TaaviaKnowledgeBaseSourcesClient";
 
-export default async function TaaviaBrandDetailPage({ params }: { params: Promise<{ businessId: string; brandId: string }> }) {
+export default async function TaaviaBrandKnowledgeBaseSourcesPage({ params }: { params: Promise<{ businessId: string; brandId: string }> }) {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
   const { businessId, brandId } = await params;
@@ -22,12 +22,12 @@ export default async function TaaviaBrandDetailPage({ params }: { params: Promis
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
 
-  const overview = await getTaaviaBrandDashboardReadModel(session.userId, business.id, brand.id);
-  if (!overview) notFound();
+  const data = await getKnowledgeBaseSourcesReadModel(session.userId, business.id, brand.id);
+  if (!data) notFound();
 
   return (
-    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
-      <TaaviaBrandWorkspaceClient tenantId={business.id} brand={brand} overview={overview} />
+    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/knowledge-base/sources`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
+      <TaaviaKnowledgeBaseSourcesClient businessId={business.id} brandId={brand.id} brandName={brand.name} brandStatus={brand.status} brandIcon={brand.icon?.previewData ?? null} initialData={data} />
     </AiLabShell>
   );
 }

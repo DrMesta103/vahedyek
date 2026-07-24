@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { getTaaviaBrandForTenant, getTenantForUser } from "@/app/lib/data";
-import { getTaaviaBrandDashboardReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
+import { getKnowledgeBaseSnapshotDetailReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
 import { getCurrentTenant, requireSession } from "@/app/lib/session";
 import { AiLabShell } from "@/components/AiLabShell";
-import { TaaviaBrandWorkspaceClient } from "@/components/taavia/TaaviaBrandWorkspaceClient";
+import { TaaviaKnowledgeBaseSourceSnapshotDetailClient } from "@/components/taavia/knowledge-base/TaaviaKnowledgeBaseSourceSnapshotDetailClient";
 
-export default async function TaaviaBrandDetailPage({ params }: { params: Promise<{ businessId: string; brandId: string }> }) {
+export default async function TaaviaBrandKnowledgeBaseSourceSnapshotDetailPage({ params }: { params: Promise<{ businessId: string; brandId: string; snapshotId: string }> }) {
   const session = await requireSession();
   const currentTenant = await getCurrentTenant();
-  const { businessId, brandId } = await params;
+  const { businessId, brandId, snapshotId } = await params;
   const business = await getTenantForUser(session.userId, businessId);
 
   if (!business) {
@@ -21,13 +21,12 @@ export default async function TaaviaBrandDetailPage({ params }: { params: Promis
 
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
-
-  const overview = await getTaaviaBrandDashboardReadModel(session.userId, business.id, brand.id);
-  if (!overview) notFound();
+  const snapshot = await getKnowledgeBaseSnapshotDetailReadModel(session.userId, business.id, brand.id, snapshotId);
+  if (!snapshot) notFound();
 
   return (
-    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
-      <TaaviaBrandWorkspaceClient tenantId={business.id} brand={brand} overview={overview} />
+    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/knowledge-base/sources/${snapshot.snapshotId}`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
+      <TaaviaKnowledgeBaseSourceSnapshotDetailClient businessId={business.id} brandId={brand.id} brandName={brand.name} brandStatus={brand.status} brandIcon={brand.icon?.previewData ?? null} snapshot={snapshot} />
     </AiLabShell>
   );
 }

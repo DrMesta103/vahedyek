@@ -1,51 +1,43 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, BookText, Boxes, ChevronLeft, CircleHelp, FlaskConical, Sparkles } from 'lucide-react';
-import type { TaaviaUseCaseKey } from '@/app/lib/types/domain';
-import type { ProductCatalogSnapshot, ProductField, WorkspaceContentMessage } from '@/app/lib/types/taavia-workspace';
-import type { TestFaqItem, TestKnowledgeBaseDocument } from '@/app/lib/types/taavia-test-workspace';
-import type { BrandInfoDto } from '@/app/lib/brand-info/types';
-import { buildTestKnowledgeBaseDocument } from '@/app/lib/taavia-test-knowledge-builder';
-import {
-  getTestWorkspaceCounts,
-  hasAnyTestWorkspaceData,
-} from '@/app/lib/taavia-test-requirements';
-import { loadTestWorkspaceSnapshot, saveTestWorkspaceSnapshot } from '@/app/lib/taavia-test-storage';
-import { createFileMessage, createTextMessage } from '@/app/lib/taavia-workspace-knowledge';
-import { BrandInfoEditor } from '@/components/taavia/BrandInfoEditor';
-import { TestBuildKnowledgeBaseButton } from '@/components/taavia/test/TestBuildKnowledgeBaseButton';
-import { TestFaqEditor } from '@/components/taavia/test/TestFaqEditor';
-import { TestKnowledgeBaseCategoriesPreview } from '@/components/taavia/test/TestKnowledgeBaseCategoriesPreview';
-import { TestKnowledgeBaseEditor } from '@/components/taavia/test/TestKnowledgeBaseEditor';
-import { TestProductCatalogEditor } from '@/components/taavia/test/TestProductCatalogEditor';
-import {
-  TaavTabs,
-  TaavTabsContent,
-  TaavTabsList,
-  TaavTabsTrigger,
-} from '@repo/ui/taav/navigation';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, BookText, Boxes, ChevronLeft, CircleHelp, FlaskConical, Sparkles } from "lucide-react";
+import type { TaaviaUseCaseKey } from "@/app/lib/types/domain";
+import type { ProductCatalogSnapshot, ProductField, WorkspaceContentMessage } from "@/app/lib/types/taavia-workspace";
+import type { TestFaqItem, TestKnowledgeBaseDocument } from "@/app/lib/types/taavia-test-workspace";
+import type { BrandInfoDto } from "@/app/lib/brand-info/types";
+import { buildTestKnowledgeBaseDocument } from "@/app/lib/taavia-test-knowledge-builder";
+import { getTestWorkspaceCounts, hasAnyTestWorkspaceData } from "@/app/lib/taavia-test-requirements";
+import { loadTestWorkspaceSnapshot, saveTestWorkspaceSnapshot } from "@/app/lib/taavia-test-storage";
+import { createFileMessage, createTextMessage } from "@/app/lib/taavia-workspace-knowledge";
+import { BrandInfoEditor } from "@/components/taavia/BrandInfoEditor";
+import { TestBuildKnowledgeBaseButton } from "@/components/taavia/test/TestBuildKnowledgeBaseButton";
+import { TestFaqEditor } from "@/components/taavia/test/TestFaqEditor";
+import { TestKnowledgeBaseCategoriesPreview } from "@/components/taavia/test/TestKnowledgeBaseCategoriesPreview";
+import { TestKnowledgeBaseEditor } from "@/components/taavia/test/TestKnowledgeBaseEditor";
+import { TestProductCatalogEditor } from "@/components/taavia/test/TestProductCatalogEditor";
+import { TaavTabs, TaavTabsContent, TaavTabsList, TaavTabsTrigger } from "@repo/ui/taav/navigation";
 
 const INITIAL_PRODUCT_FIELDS: ProductField[] = [
-  { id: 'product-name', label: 'نام محصول', type: 'text' },
-  { id: 'product-type', label: 'نوع', type: 'text' },
-  { id: 'product-description', label: 'توضیحات', type: 'textarea' },
-  { id: 'product-price', label: 'قیمت', type: 'number' },
-  { id: 'product-active', label: 'فعال است؟', type: 'boolean' },
+  { id: "product-name", label: "نام محصول", type: "text" },
+  { id: "product-type", label: "نوع", type: "text" },
+  { id: "product-description", label: "توضیحات", type: "textarea" },
+  { id: "product-price", label: "قیمت", type: "number" },
+  { id: "product-active", label: "فعال است؟", type: "boolean" },
 ];
 
 const USE_CASE_LABELS: Partial<Record<TaaviaUseCaseKey, string>> = {
-  support: 'پشتیبانی',
-  sales: 'فروش',
-  marketing: 'بازاریابی',
-  operations: 'عملیات',
-  finance: 'مالی',
-  hr: 'منابع انسانی',
-  product: 'محصول',
-  management: 'مدیریت',
-  it: 'فناوری اطلاعات',
-  all: 'همه سناریوها',
+  support: "پشتیبانی",
+  sales: "فروش",
+  marketing: "بازاریابی",
+  operations: "عملیات",
+  finance: "مالی",
+  hr: "منابع انسانی",
+  product: "محصول",
+  management: "مدیریت",
+  it: "فناوری اطلاعات",
+  all: "همه سناریوها",
 };
 
 function createAutofillFaqItem(index: number, question: string, answer: string, category: string): TestFaqItem {
@@ -54,60 +46,64 @@ function createAutofillFaqItem(index: number, question: string, answer: string, 
     question,
     answer,
     category,
-    tags: [category, 'خودکار'],
-    priority: index === 1 ? 'high' : 'medium',
+    tags: [category, "خودکار"],
+    priority: index === 1 ? "high" : "medium",
     isActive: true,
-    supplementaryNote: 'این مورد به‌صورت خودکار برای راه‌اندازی سریع اولیه تولید شده است.',
+    supplementaryNote: "این مورد به‌صورت خودکار برای راه‌اندازی سریع اولیه تولید شده است.",
   };
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number) {
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('blob generation failed'));
-        return;
-      }
-      resolve(blob);
-    }, type, quality);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("blob generation failed"));
+          return;
+        }
+        resolve(blob);
+      },
+      type,
+      quality,
+    );
   });
 }
 
 async function createBrandPreviewImageFile(brandName: string, focusLabel: string) {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = 720;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('image context unavailable');
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("image context unavailable");
 
   const background = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-  background.addColorStop(0, '#0f1b33');
-  background.addColorStop(1, '#16345f');
+  background.addColorStop(0, "#0f1b33");
+  background.addColorStop(1, "#16345f");
   context.fillStyle = background;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = 'rgba(45,226,199,0.16)';
+  context.fillStyle = "rgba(45,226,199,0.16)";
   context.beginPath();
   context.arc(980, 120, 120, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = 'rgba(250,204,21,0.12)';
+  context.fillStyle = "rgba(250,204,21,0.12)";
   context.beginPath();
   context.arc(250, 560, 180, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = '#ffffff';
-  context.textAlign = 'center';
-  context.font = '700 64px Tahoma';
+  context.fillStyle = "#ffffff";
+  context.textAlign = "center";
+  context.font = "700 64px Tahoma";
   context.fillText(brandName, canvas.width / 2, 305);
-  context.font = '30px Tahoma';
-  context.fillStyle = '#cfe4ff';
-  context.fillText('Brand Cover Preview', canvas.width / 2, 380);
-  context.font = '24px Tahoma';
+  context.font = "30px Tahoma";
+  context.fillStyle = "#cfe4ff";
+  context.fillText("Brand Cover Preview", canvas.width / 2, 380);
+  context.font = "24px Tahoma";
   context.fillText(focusLabel, canvas.width / 2, 435);
 
-  const blob = await canvasToBlob(canvas, 'image/png');
-  return new File([blob], `${brandName}-cover.png`, { type: 'image/png' });
+  const blob = await canvasToBlob(canvas, "image/png");
+  return new File([blob], `${brandName}-cover.png`, { type: "image/png" });
 }
 
 function encodeWav(samples: Float32Array, sampleRate: number) {
@@ -120,10 +116,10 @@ function encodeWav(samples: Float32Array, sampleRate: number) {
     }
   };
 
-  writeString(0, 'RIFF');
+  writeString(0, "RIFF");
   view.setUint32(4, 36 + samples.length * 2, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
   view.setUint32(16, 16, true);
   view.setUint16(20, 1, true);
   view.setUint16(22, 1, true);
@@ -131,7 +127,7 @@ function encodeWav(samples: Float32Array, sampleRate: number) {
   view.setUint32(28, sampleRate * 2, true);
   view.setUint16(32, 2, true);
   view.setUint16(34, 16, true);
-  writeString(36, 'data');
+  writeString(36, "data");
   view.setUint32(40, samples.length * 2, true);
 
   let offset = 44;
@@ -161,54 +157,49 @@ function createBrandVoiceFile(brandName: string) {
   }
 
   const wav = encodeWav(samples, sampleRate);
-  return new File([wav], `${brandName}-voice-note.wav`, { type: 'audio/wav' });
+  return new File([wav], `${brandName}-voice-note.wav`, { type: "audio/wav" });
 }
 
 async function createBrandIntroVideoFile(brandName: string, focusLabel: string) {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 1280;
   canvas.height = 720;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('video context unavailable');
-  if (typeof canvas.captureStream !== 'function' || typeof MediaRecorder === 'undefined') {
-    throw new Error('video capture unsupported');
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("video context unavailable");
+  if (typeof canvas.captureStream !== "function" || typeof MediaRecorder === "undefined") {
+    throw new Error("video capture unsupported");
   }
 
-  const mimeType =
-    MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-      ? 'video/webm;codecs=vp9'
-      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
-        ? 'video/webm;codecs=vp8'
-        : 'video/webm';
+  const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : MediaRecorder.isTypeSupported("video/webm;codecs=vp8") ? "video/webm;codecs=vp8" : "video/webm";
 
   const drawFrame = (progress: number) => {
     const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, '#091221');
-    gradient.addColorStop(1, '#173d68');
+    gradient.addColorStop(0, "#091221");
+    gradient.addColorStop(1, "#173d68");
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    context.fillStyle = 'rgba(45,226,199,0.14)';
+    context.fillStyle = "rgba(45,226,199,0.14)";
     context.beginPath();
     context.arc(920 + Math.sin(progress * Math.PI * 2) * 45, 130, 130, 0, Math.PI * 2);
     context.fill();
 
-    context.fillStyle = 'rgba(250,204,21,0.12)';
+    context.fillStyle = "rgba(250,204,21,0.12)";
     context.beginPath();
     context.arc(250, 560 - Math.sin(progress * Math.PI) * 30, 175, 0, Math.PI * 2);
     context.fill();
 
-    context.fillStyle = '#ffffff';
-    context.textAlign = 'center';
-    context.font = '700 70px Tahoma';
+    context.fillStyle = "#ffffff";
+    context.textAlign = "center";
+    context.font = "700 70px Tahoma";
     context.fillText(brandName, canvas.width / 2, 310);
-    context.font = '30px Tahoma';
-    context.fillStyle = '#cfe4ff';
-    context.fillText('Autofill Brand Intro', canvas.width / 2, 380);
-    context.font = '24px Tahoma';
+    context.font = "30px Tahoma";
+    context.fillStyle = "#cfe4ff";
+    context.fillText("Autofill Brand Intro", canvas.width / 2, 380);
+    context.font = "24px Tahoma";
     context.fillText(focusLabel, canvas.width / 2, 430);
 
-    context.strokeStyle = 'rgba(45,226,199,0.65)';
+    context.strokeStyle = "rgba(45,226,199,0.65)";
     context.lineWidth = 4;
     context.beginPath();
     context.moveTo(260, 520);
@@ -223,11 +214,11 @@ async function createBrandIntroVideoFile(brandName: string, focusLabel: string) 
   const chunks: Blob[] = [];
 
   await new Promise<void>((resolve, reject) => {
-    recorder.addEventListener('dataavailable', (event) => {
+    recorder.addEventListener("dataavailable", (event) => {
       if (event.data.size > 0) chunks.push(event.data);
     });
-    recorder.addEventListener('stop', () => resolve(), { once: true });
-    recorder.addEventListener('error', () => reject(new Error('video recording failed')), { once: true });
+    recorder.addEventListener("stop", () => resolve(), { once: true });
+    recorder.addEventListener("error", () => reject(new Error("video recording failed")), { once: true });
 
     recorder.start();
     const startedAt = performance.now();
@@ -246,86 +237,48 @@ async function createBrandIntroVideoFile(brandName: string, focusLabel: string) 
   });
 
   stream.getTracks().forEach((track) => track.stop());
-  return new File(chunks, `${brandName}-intro.webm`, { type: mimeType.split(';')[0] });
+  return new File(chunks, `${brandName}-intro.webm`, { type: mimeType.split(";")[0] });
 }
 
 async function buildAutofillData(brandName: string, selectedUseCases: TaaviaUseCaseKey[]) {
-  const useCaseKeys = selectedUseCases.filter((item) => item !== 'all');
+  const useCaseKeys = selectedUseCases.filter((item) => item !== "all");
   const useCaseLabels = useCaseKeys.map((item) => USE_CASE_LABELS[item]).filter(Boolean);
-  const focusLabel = useCaseLabels.length > 0 ? useCaseLabels.join('، ') : 'پشتیبانی، فروش و راهنمایی مشتری';
-  const generatedAt = new Intl.DateTimeFormat('fa-IR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
+  const focusLabel = useCaseLabels.length > 0 ? useCaseLabels.join("، ") : "پشتیبانی، فروش و راهنمایی مشتری";
+  const generatedAt = new Intl.DateTimeFormat("fa-IR", {
+    dateStyle: "short",
+    timeStyle: "short",
   }).format(new Date());
 
-  const brandDocumentFile = new File(
-    [
-      [
-        `Brand: ${brandName}`,
-        `Focus: ${focusLabel}`,
-        `Generated At: ${generatedAt}`,
-        'Autofill document for quick brand onboarding.',
-      ].join('\n'),
-    ],
-    `${brandName}-brand-brief.txt`,
-    { type: 'text/plain' },
-  );
+  const brandDocumentFile = new File([[`Brand: ${brandName}`, `Focus: ${focusLabel}`, `Generated At: ${generatedAt}`, "Autofill document for quick brand onboarding."].join("\n")], `${brandName}-brand-brief.txt`, { type: "text/plain" });
 
   const brandImageFile = await createBrandPreviewImageFile(brandName, focusLabel);
   const brandVoiceFile = createBrandVoiceFile(brandName);
   const brandVideoFile = await createBrandIntroVideoFile(brandName, focusLabel);
 
-  const brandMessages: WorkspaceContentMessage[] = [
-    createTextMessage(`${brandName} یک برند در حال راه‌اندازی برای ارائه تجربه‌ای سریع، دقیق و حرفه‌ای است. لحن ارتباطی باید دوستانه، مطمئن و خلاصه باشد.`),
-    createTextMessage(`تمرکز اصلی ${brandName} روی ${focusLabel} است. پاسخ‌ها باید شفاف، عملیاتی و قابل اجرا باشند و در صورت نیاز کاربر را به گام بعدی هدایت کنند.`),
-    createTextMessage(`بسته خودکار در ${generatedAt} تولید شد تا همه تب‌ها برای ساخت Knowledge Base آماده باشند و فقط مرحله Set Knowledge باقی بماند.`),
-    createFileMessage(brandDocumentFile, 'file'),
-    createFileMessage(brandImageFile, 'image'),
-    createFileMessage(brandVoiceFile, 'audio'),
-    createFileMessage(brandVideoFile, 'video'),
-  ];
+  const brandMessages: WorkspaceContentMessage[] = [createTextMessage(`${brandName} یک برند در حال راه‌اندازی برای ارائه تجربه‌ای سریع، دقیق و حرفه‌ای است. لحن ارتباطی باید دوستانه، مطمئن و خلاصه باشد.`), createTextMessage(`تمرکز اصلی ${brandName} روی ${focusLabel} است. پاسخ‌ها باید شفاف، عملیاتی و قابل اجرا باشند و در صورت نیاز کاربر را به گام بعدی هدایت کنند.`), createTextMessage(`بسته خودکار در ${generatedAt} تولید شد تا همه تب‌ها برای ساخت Knowledge Base آماده باشند و فقط مرحله Set Knowledge باقی بماند.`), createFileMessage(brandDocumentFile, "file"), createFileMessage(brandImageFile, "image"), createFileMessage(brandVoiceFile, "audio"), createFileMessage(brandVideoFile, "video")];
 
-  const serviceSeeds = useCaseLabels.length > 0 ? useCaseLabels.slice(0, 3) : ['پشتیبانی', 'فروش', 'آنبوردینگ'];
+  const serviceSeeds = useCaseLabels.length > 0 ? useCaseLabels.slice(0, 3) : ["پشتیبانی", "فروش", "آنبوردینگ"];
 
   const productCatalog: ProductCatalogSnapshot = {
     fields: INITIAL_PRODUCT_FIELDS,
     rows: serviceSeeds.map((label, index) => ({
       id: `product-autofill-${Date.now()}-${index + 1}`,
       values: {
-        'product-name': `${brandName} ${label}`,
-        'product-type': index === 0 ? 'سرویس اصلی' : index === 1 ? 'پکیج تخصصی' : 'جریان کمکی',
-        'product-description': `${brandName} در بخش ${label} با تمرکز روی سرعت اجرا، شفافیت پاسخ و امکان پیگیری سناریوها طراحی شده است.`,
-        'product-price': `${(index + 1) * 2500000}`,
-        'product-active': 'yes',
+        "product-name": `${brandName} ${label}`,
+        "product-type": index === 0 ? "سرویس اصلی" : index === 1 ? "پکیج تخصصی" : "جریان کمکی",
+        "product-description": `${brandName} در بخش ${label} با تمرکز روی سرعت اجرا، شفافیت پاسخ و امکان پیگیری سناریوها طراحی شده است.`,
+        "product-price": `${(index + 1) * 2500000}`,
+        "product-active": "yes",
       },
     })),
   };
 
-  const faqItems: TestFaqItem[] = [
-    createAutofillFaqItem(
-      1,
-      `${brandName} چه کمکی به کاربر می‌کند؟`,
-      `${brandName} با تمرکز روی ${focusLabel} به کاربر کمک می‌کند سریع‌تر تصمیم بگیرد و پاسخ دقیق‌تری دریافت کند.`,
-      'شناخت برند',
-    ),
-    createAutofillFaqItem(
-      2,
-      `چگونه می‌توان از ${brandName} شروع کرد؟`,
-      `کافی است سناریو یا درخواست خود را ثبت کنید تا ${brandName} متناسب با نیاز شما پیشنهاد و مسیر اجرایی ارائه دهد.`,
-      'شروع کار',
-    ),
-    createAutofillFaqItem(
-      3,
-      `آیا اطلاعات ${brandName} قابل سفارشی‌سازی است؟`,
-      'بله، ساختار Knowledge Base، داده‌های محصول و FAQ همگی قابل ویرایش و شخصی‌سازی هستند.',
-      'تنظیمات',
-    ),
-  ];
+  const faqItems: TestFaqItem[] = [createAutofillFaqItem(1, `${brandName} چه کمکی به کاربر می‌کند؟`, `${brandName} با تمرکز روی ${focusLabel} به کاربر کمک می‌کند سریع‌تر تصمیم بگیرد و پاسخ دقیق‌تری دریافت کند.`, "شناخت برند"), createAutofillFaqItem(2, `چگونه می‌توان از ${brandName} شروع کرد؟`, `کافی است سناریو یا درخواست خود را ثبت کنید تا ${brandName} متناسب با نیاز شما پیشنهاد و مسیر اجرایی ارائه دهد.`, "شروع کار"), createAutofillFaqItem(3, `آیا اطلاعات ${brandName} قابل سفارشی‌سازی است؟`, "بله، ساختار Knowledge Base، داده‌های محصول و FAQ همگی قابل ویرایش و شخصی‌سازی هستند.", "تنظیمات")];
 
   return { brandMessages, productCatalog, faqItems };
 }
 
-type TestTab = 'brand' | 'products' | 'faq' | 'knowledge-base';
+type TestTab = "brand" | "products" | "faq" | "knowledge-base";
 
 type TaaviaTestWorkspaceClientProps = {
   businessId: string;
@@ -335,17 +288,11 @@ type TaaviaTestWorkspaceClientProps = {
   initialBrandInfo: BrandInfoDto[];
 };
 
-export function TaaviaTestWorkspaceClient({
-  businessId,
-  brandId,
-  brandName,
-  selectedUseCases = [],
-  initialBrandInfo,
-}: TaaviaTestWorkspaceClientProps) {
+export function TaaviaTestWorkspaceClient({ businessId, brandId, brandName, selectedUseCases = [], initialBrandInfo }: TaaviaTestWorkspaceClientProps) {
   const entryPath = `/businesses/${businessId}/products/taavia/brands/${brandId}/entry`;
 
-  const [activeTab, setActiveTab] = useState<TestTab>('brand');
-  const [lastInputTab, setLastInputTab] = useState<Exclude<TestTab, 'knowledge-base'>>('brand');
+  const [activeTab, setActiveTab] = useState<TestTab>("brand");
+  const [lastInputTab, setLastInputTab] = useState<Exclude<TestTab, "knowledge-base">>("brand");
   const [brandMessages, setBrandMessages] = useState<WorkspaceContentMessage[]>([]);
   const [productCatalog, setProductCatalog] = useState<ProductCatalogSnapshot>({
     fields: INITIAL_PRODUCT_FIELDS,
@@ -362,7 +309,7 @@ export function TaaviaTestWorkspaceClient({
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const saved = loadTestWorkspaceSnapshot(brandId);
+    const saved = loadTestWorkspaceSnapshot(businessId, brandId);
     if (saved) {
       setBrandMessages([]);
       setProductCatalog(saved.productCatalog);
@@ -374,7 +321,7 @@ export function TaaviaTestWorkspaceClient({
 
   useEffect(() => {
     if (!hydrated) return;
-    saveTestWorkspaceSnapshot(brandId, {
+    saveTestWorkspaceSnapshot(businessId, brandId, {
       brandMessages: [],
       productCatalog,
       faqItems,
@@ -383,10 +330,7 @@ export function TaaviaTestWorkspaceClient({
     });
   }, [brandId, brandMessages, productCatalog, faqItems, knowledgeBaseDocument, hydrated]);
 
-  const counts = useMemo(
-    () => getTestWorkspaceCounts({ brandMessages, productCatalog, faqItems }),
-    [brandMessages, productCatalog, faqItems],
-  );
+  const counts = useMemo(() => getTestWorkspaceCounts({ brandMessages, productCatalog, faqItems }), [brandMessages, productCatalog, faqItems]);
 
   const canBuild = hasAnyTestWorkspaceData({ brandMessages, productCatalog, faqItems });
 
@@ -396,35 +340,24 @@ export function TaaviaTestWorkspaceClient({
     if (!kbPreviewDocument) return { categories: [] as string[], subsectionHints: [] as string[] };
     return {
       categories: kbPreviewDocument.tabs.map((tab) => tab.title),
-      subsectionHints: kbPreviewDocument.tabs.flatMap((tab) =>
-        tab.subTabs.length > 0 ? tab.subTabs.map((sub) => sub.title) : [tab.title],
-      ),
+      subsectionHints: kbPreviewDocument.tabs.flatMap((tab) => (tab.subTabs.length > 0 ? tab.subTabs.map((sub) => sub.title) : [tab.title])),
     };
   }, [kbPreviewDocument]);
 
   const kbPreviewTabs = kbPreviewDocument?.tabs ?? [];
 
   const resolveKbSelection = useCallback(
-    (
-      previewTabId: string,
-      previewSubTabId?: string,
-      doc: TestKnowledgeBaseDocument | null = knowledgeBaseDocument,
-    ) => {
+    (previewTabId: string, previewSubTabId?: string, doc: TestKnowledgeBaseDocument | null = knowledgeBaseDocument) => {
       if (!doc) return null;
 
       const previewTab = kbPreviewTabs.find((tab) => tab.id === previewTabId);
       const previewSub = previewSubTabId ? previewTab?.subTabs.find((sub) => sub.id === previewSubTabId) : null;
 
-      const tab =
-        doc.tabs.find((item) => item.id === previewTabId) ??
-        doc.tabs.find((item) => item.title === previewTab?.title);
+      const tab = doc.tabs.find((item) => item.id === previewTabId) ?? doc.tabs.find((item) => item.title === previewTab?.title);
       if (!tab) return null;
 
       if (previewSubTabId || previewSub) {
-        const sub =
-          tab.subTabs.find((item) => item.id === previewSubTabId) ??
-          tab.subTabs.find((item) => item.title === previewSub?.title) ??
-          tab.subTabs[0];
+        const sub = tab.subTabs.find((item) => item.id === previewSubTabId) ?? tab.subTabs.find((item) => item.title === previewSub?.title) ?? tab.subTabs[0];
         return { tabId: tab.id, subTabId: sub?.id ?? null };
       }
 
@@ -444,41 +377,26 @@ export function TaaviaTestWorkspaceClient({
         return current;
       }
       const first = knowledgeBaseDocument.tabs[0];
-      return { tabId: first?.id ?? '', subTabId: null };
+      return { tabId: first?.id ?? "", subTabId: null };
     });
   }, [knowledgeBaseDocument]);
 
   useEffect(() => {
     if (!knowledgeBaseDocument || !pendingKbNavigation) return;
 
-    const selection = resolveKbSelection(
-      pendingKbNavigation.tabId,
-      pendingKbNavigation.subTabId,
-      knowledgeBaseDocument,
-    );
+    const selection = resolveKbSelection(pendingKbNavigation.tabId, pendingKbNavigation.subTabId, knowledgeBaseDocument);
     if (selection) setKbSelection(selection);
-    setActiveTab('knowledge-base');
+    setActiveTab("knowledge-base");
     setPendingKbNavigation(null);
   }, [knowledgeBaseDocument, pendingKbNavigation, resolveKbSelection]);
 
-  const previewLines = useMemo(
-    () => [
-      `${new Intl.NumberFormat('fa-IR').format(counts.brandItems)} آیتم در معرفی برند`,
-      `${new Intl.NumberFormat('fa-IR').format(counts.productRows)} محصول / خدمت`,
-      `${new Intl.NumberFormat('fa-IR').format(counts.faqItems)} FAQ فعال`,
-    ],
-    [counts],
-  );
+  const previewLines = useMemo(() => [`${new Intl.NumberFormat("fa-IR").format(counts.brandItems)} آیتم در معرفی برند`, `${new Intl.NumberFormat("fa-IR").format(counts.productRows)} محصول / خدمت`, `${new Intl.NumberFormat("fa-IR").format(counts.faqItems)} FAQ فعال`], [counts]);
 
   const handleAutofillWorkspace = useCallback(async () => {
-    const hasExistingData =
-      brandMessages.length > 0 ||
-      productCatalog.rows.length > 0 ||
-      faqItems.length > 0 ||
-      knowledgeBaseDocument !== null;
+    const hasExistingData = brandMessages.length > 0 || productCatalog.rows.length > 0 || faqItems.length > 0 || knowledgeBaseDocument !== null;
 
     if (hasExistingData) {
-      const confirmed = window.confirm('داده‌های فعلی جایگزین می‌شوند. ادامه می‌دهی؟');
+      const confirmed = window.confirm("داده‌های فعلی جایگزین می‌شوند. ادامه می‌دهی؟");
       if (!confirmed) return;
     }
 
@@ -490,14 +408,14 @@ export function TaaviaTestWorkspaceClient({
     setKbSelection(null);
     setPendingKbNavigation(null);
     setKbDirty(false);
-    setActiveTab('brand');
-    setFeedback('همه تب‌ها با موفقیت به‌صورت خودکار پر شدند. حالا می‌توانی روی Set Knowledge بزنی.');
+    setActiveTab("brand");
+    setFeedback("همه تب‌ها با موفقیت به‌صورت خودکار پر شدند. حالا می‌توانی روی Set Knowledge بزنی.");
   }, [brandMessages.length, productCatalog.rows.length, faqItems.length, knowledgeBaseDocument, brandName, selectedUseCases]);
 
   const handleBuildKnowledgeBase = useCallback(async () => {
     if (!canBuild) {
-      setFeedback('برای ساخت Knowledge Base، حداقل یک مورد اطلاعات وارد کن.');
-      throw new Error('no data');
+      setFeedback("برای ساخت Knowledge Base، حداقل یک مورد اطلاعات وارد کن.");
+      throw new Error("no data");
     }
 
     setIsBuilding(true);
@@ -515,14 +433,14 @@ export function TaaviaTestWorkspaceClient({
 
     if (document.tabs.length === 0) {
       setIsBuilding(false);
-      setFeedback('دسته‌ای برای ساخت Knowledge Base پیدا نشد.');
-      throw new Error('empty document');
+      setFeedback("دسته‌ای برای ساخت Knowledge Base پیدا نشد.");
+      throw new Error("empty document");
     }
 
     setKnowledgeBaseDocument(document);
     setKbDirty(false);
-    setActiveTab('knowledge-base');
-    setFeedback('Knowledge Base با موفقیت ساخته شد.');
+    setActiveTab("knowledge-base");
+    setFeedback("Knowledge Base با موفقیت ساخته شد.");
     setIsBuilding(false);
   }, [brandName, selectedUseCases, brandMessages, productCatalog, faqItems, canBuild]);
 
@@ -540,18 +458,18 @@ export function TaaviaTestWorkspaceClient({
       lastSavedAt: new Date().toISOString(),
     });
     setKbDirty(false);
-    setFeedback('تغییرات Knowledge Base ذخیره شد.');
+    setFeedback("تغییرات Knowledge Base ذخیره شد.");
     setIsSavingKb(false);
   }, [knowledgeBaseDocument]);
 
   const handleTabChange = useCallback(
     (value: string) => {
-      if (activeTab === 'knowledge-base' && kbDirty && value !== 'knowledge-base') {
-        const confirmed = window.confirm('تغییرات ذخیره نشده دارید. بدون ذخیره ادامه می‌دهی؟');
+      if (activeTab === "knowledge-base" && kbDirty && value !== "knowledge-base") {
+        const confirmed = window.confirm("تغییرات ذخیره نشده دارید. بدون ذخیره ادامه می‌دهی؟");
         if (!confirmed) return;
         setKbDirty(false);
       }
-      const nextTab = value as Exclude<TestTab, 'knowledge-base'>;
+      const nextTab = value as Exclude<TestTab, "knowledge-base">;
       setLastInputTab(nextTab);
       setActiveTab(nextTab);
     },
@@ -560,45 +478,45 @@ export function TaaviaTestWorkspaceClient({
 
   const handleBackToInput = useCallback(() => {
     if (kbDirty) {
-      const confirmed = window.confirm('تغییرات ذخیره نشده دارید. بدون ذخیره به ورود اطلاعات برمی‌گردی؟');
+      const confirmed = window.confirm("تغییرات ذخیره نشده دارید. بدون ذخیره به ورود اطلاعات برمی‌گردی؟");
       if (!confirmed) return;
       setKbDirty(false);
     }
-    setActiveTab('brand');
+    setActiveTab("brand");
   }, [kbDirty]);
 
   const handleKbCategoryNavigate = useCallback(
     async (previewTabId: string, previewSubTabId?: string) => {
-      if (activeTab === 'knowledge-base' && kbDirty) {
-        const confirmed = window.confirm('تغییرات ذخیره نشده دارید. بدون ذخیره ادامه می‌دهی؟');
+      if (activeTab === "knowledge-base" && kbDirty) {
+        const confirmed = window.confirm("تغییرات ذخیره نشده دارید. بدون ذخیره ادامه می‌دهی؟");
         if (!confirmed) return;
         setKbDirty(false);
       }
 
       if (!knowledgeBaseDocument) {
         if (!canBuild) {
-          setFeedback('برای ورود به این بخش، ابتدا داده وارد کن و Knowledge Base را بساز.');
+          setFeedback("برای ورود به این بخش، ابتدا داده وارد کن و Knowledge Base را بساز.");
           return;
         }
-        setFeedback('برای دیدن Knowledge Base، ابتدا روی دکمه Set Knowledge Base بزن.');
+        setFeedback("برای دیدن Knowledge Base، ابتدا روی دکمه Set Knowledge Base بزن.");
         return;
       }
 
       const selection = resolveKbSelection(previewTabId, previewSubTabId);
       if (!selection) return;
       setKbSelection(selection);
-      setActiveTab('knowledge-base');
+      setActiveTab("knowledge-base");
     },
     [activeTab, kbDirty, knowledgeBaseDocument, resolveKbSelection],
   );
 
-  const tabs: Array<{ value: Exclude<TestTab, 'knowledge-base'>; label: string; icon: typeof BookText }> = [
-    { value: 'brand', label: 'معرفی برند', icon: BookText },
-    { value: 'products', label: 'محصول / خدمات', icon: Boxes },
-    { value: 'faq', label: 'سوالات پرتکرار', icon: CircleHelp },
+  const tabs: Array<{ value: Exclude<TestTab, "knowledge-base">; label: string; icon: typeof BookText }> = [
+    { value: "brand", label: "معرفی برند", icon: BookText },
+    { value: "products", label: "محصول / خدمات", icon: Boxes },
+    { value: "faq", label: "سوالات پرتکرار", icon: CircleHelp },
   ];
 
-  const showCategoriesPreview = activeTab !== 'knowledge-base';
+  const showCategoriesPreview = activeTab !== "knowledge-base";
 
   return (
     <div className="relative isolate overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(11,22,43,0.95)_100%)] px-4 py-5 pb-0 md:px-5 md:py-6 lg:h-[calc(100vh-1rem)] lg:pb-0">
@@ -608,10 +526,10 @@ export function TaaviaTestWorkspaceClient({
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-white/8 bg-white/[0.03] px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
             <Link href={entryPath}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              بازگشت به انتخاب مسیر
-            </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-bold text-[var(--taav-text-strong)] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/10">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                بازگشت به انتخاب مسیر
+              </span>
             </Link>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(250,204,21,0.24)] bg-[rgba(250,204,21,0.10)] px-3 py-1.5 text-[11px] font-black text-[rgb(253,224,71)]">
@@ -622,16 +540,9 @@ export function TaaviaTestWorkspaceClient({
 
         <div className="text-right">
           <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.03)_100%)] px-4 py-3 shadow-[0_18px_55px_rgba(0,0,0,0.18)] backdrop-blur-2xl md:px-5 md:py-4">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(66,237,211,0.14)_0%,rgba(66,237,211,0)_55%),radial-gradient(circle_at_85%_100%,rgba(250,204,21,0.12)_0%,rgba(250,204,21,0)_58%)]"
-            />
+            <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(66,237,211,0.14)_0%,rgba(66,237,211,0)_55%),radial-gradient(circle_at_85%_100%,rgba(250,204,21,0.12)_0%,rgba(250,204,21,0)_58%)]" />
             <div className="relative flex flex-wrap items-center justify-between gap-3">
-              <Link
-                href={entryPath}
-                className="inline-flex items-center justify-center rounded-full p-1 text-[var(--taav-text-strong)] transition hover:bg-white/5"
-                aria-label="بازگشت"
-              >
+              <Link href={entryPath} className="inline-flex items-center justify-center rounded-full p-1 text-[var(--taav-text-strong)] transition hover:bg-white/5" aria-label="بازگشت">
                 <ChevronLeft className="h-5 w-5" />
               </Link>
 
@@ -642,11 +553,7 @@ export function TaaviaTestWorkspaceClient({
                 <div className="text-[13px] font-black text-[var(--taav-text-strong)] md:text-[14px]">پر کردن خودکار تب‌ها</div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleAutofillWorkspace}
-                className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-4 py-2 text-[12px] font-black text-[rgb(150,246,231)] transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]"
-              >
+              <button type="button" onClick={handleAutofillWorkspace} className="inline-flex items-center gap-2 rounded-full border border-[rgba(66,237,211,0.24)] bg-[rgba(66,237,211,0.12)] px-4 py-2 text-[12px] font-black text-[rgb(150,246,231)] transition hover:border-[rgba(66,237,211,0.36)] hover:bg-[rgba(66,237,211,0.18)]">
                 <Sparkles className="h-4 w-4" />
                 اجرا
               </button>
@@ -654,41 +561,16 @@ export function TaaviaTestWorkspaceClient({
           </div>
         </div>
 
-        {feedback ? (
-          <div
-            className={`rounded-[16px] border px-4 py-3 text-[12px] font-semibold ${
-              feedback.includes('موفقیت') || feedback.includes('ذخیره')
-                ? 'border-[rgba(66,237,211,0.22)] bg-[rgba(66,237,211,0.10)] text-[rgb(165,248,235)]'
-                : 'border-[rgba(248,113,113,0.22)] bg-[rgba(248,113,113,0.08)] text-[rgb(254,202,202)]'
-            }`}
-          >
-            {feedback}
-          </div>
-        ) : null}
+        {feedback ? <div className={`rounded-[16px] border px-4 py-3 text-[12px] font-semibold ${feedback.includes("موفقیت") || feedback.includes("ذخیره") ? "border-[rgba(66,237,211,0.22)] bg-[rgba(66,237,211,0.10)] text-[rgb(165,248,235)]" : "border-[rgba(248,113,113,0.22)] bg-[rgba(248,113,113,0.08)] text-[rgb(254,202,202)]"}`}>{feedback}</div> : null}
 
-        <div
-          className={`grid items-start gap-2 lg:min-h-0 lg:h-full lg:overflow-hidden ${
-            showCategoriesPreview
-              ? 'lg:h-full lg:grid-cols-[minmax(0,1fr)_minmax(200px,240px)]'
-              : 'lg:h-full lg:grid-cols-[minmax(0,1fr)]'
-          }`}
-        >
+        <div className={`grid items-start gap-2 lg:min-h-0 lg:h-full lg:overflow-hidden ${showCategoriesPreview ? "lg:h-full lg:grid-cols-[minmax(0,1fr)_minmax(200px,240px)]" : "lg:h-full lg:grid-cols-[minmax(0,1fr)]"}`}>
           <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1 lg:flex lg:min-h-0 lg:h-full lg:flex-col lg:overflow-hidden lg:rounded-[22px] lg:border lg:border-white/8 lg:bg-[rgba(7,15,29,0.45)] lg:p-2">
-            <TaavTabs
-              value={activeTab === 'knowledge-base' ? lastInputTab : activeTab}
-              onValueChange={handleTabChange}
-              dir="rtl"
-              className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"
-            >
+            <TaavTabs value={activeTab === "knowledge-base" ? lastInputTab : activeTab} onValueChange={handleTabChange} dir="rtl" className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
               <TaavTabsList className="sticky top-0 z-10 flex w-full flex-wrap justify-start gap-2 overflow-x-auto bg-[linear-gradient(180deg,rgba(9,16,33,0.98)_0%,rgba(9,16,33,0.88)_100%)] p-0 pb-2 backdrop-blur-xl">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
-                    <TaavTabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="shrink-0 gap-2 rounded-[16px] border border-white/8 bg-white/5 px-4 py-2.5 data-[state=active]:border-[rgba(66,237,211,0.24)] data-[state=active]:bg-[rgba(66,237,211,0.12)]"
-                    >
+                    <TaavTabsTrigger key={tab.value} value={tab.value} className="shrink-0 gap-2 rounded-[16px] border border-white/8 bg-white/5 px-4 py-2.5 data-[state=active]:border-[rgba(66,237,211,0.24)] data-[state=active]:bg-[rgba(66,237,211,0.12)]">
                       <Icon className="h-4 w-4" />
                       {tab.label}
                     </TaavTabsTrigger>
@@ -696,7 +578,7 @@ export function TaaviaTestWorkspaceClient({
                 })}
               </TaavTabsList>
 
-              {activeTab !== 'knowledge-base' ? (
+              {activeTab !== "knowledge-base" ? (
                 <>
                   <TaavTabsContent value="brand" className="m-0 lg:flex-1 lg:min-h-0">
                     <BrandInfoEditor businessId={businessId} brandId={brandId} initialItems={initialBrandInfo} />
@@ -721,19 +603,9 @@ export function TaaviaTestWorkspaceClient({
                 </>
               ) : null}
 
-              {activeTab === 'knowledge-base' && knowledgeBaseDocument ? (
+              {activeTab === "knowledge-base" && knowledgeBaseDocument ? (
                 <div className="mt-2 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
-                  <TestKnowledgeBaseEditor
-                    document={knowledgeBaseDocument}
-                    onChange={handleKnowledgeBaseChange}
-                    onSave={() => void handleKnowledgeBaseSave()}
-                    onBackToInput={handleBackToInput}
-                    isSaving={isSavingKb}
-                    isDirty={kbDirty}
-                    selectedTabId={kbSelection?.tabId ?? knowledgeBaseDocument.tabs[0]?.id}
-                    selectedSubTabId={kbSelection?.subTabId ?? null}
-                    onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })}
-                  />
+                  <TestKnowledgeBaseEditor document={knowledgeBaseDocument} onChange={handleKnowledgeBaseChange} onSave={() => void handleKnowledgeBaseSave()} onBackToInput={handleBackToInput} isSaving={isSavingKb} isDirty={kbDirty} selectedTabId={kbSelection?.tabId ?? knowledgeBaseDocument.tabs[0]?.id} selectedSubTabId={kbSelection?.subTabId ?? null} onSelectTab={(tabId, subTabId) => setKbSelection({ tabId, subTabId })} />
                 </div>
               ) : null}
             </TaavTabs>
@@ -741,29 +613,13 @@ export function TaaviaTestWorkspaceClient({
 
           {showCategoriesPreview ? (
             <div className="order-2 lg:col-start-2 lg:row-start-1 lg:min-h-0 lg:h-full">
-              <TestKnowledgeBaseCategoriesPreview
-                tabs={kbPreviewTabs}
-                isBuilt={knowledgeBaseDocument !== null}
-                activeTabId={kbSelection?.tabId}
-                activeSubTabId={kbSelection?.subTabId}
-                isNavigationActive={false}
-                onNavigate={(tabId, subTabId) => void handleKbCategoryNavigate(tabId, subTabId)}
-              />
+              <TestKnowledgeBaseCategoriesPreview tabs={kbPreviewTabs} isBuilt={knowledgeBaseDocument !== null} activeTabId={kbSelection?.tabId} activeSubTabId={kbSelection?.subTabId} isNavigationActive={false} onNavigate={(tabId, subTabId) => void handleKbCategoryNavigate(tabId, subTabId)} />
             </div>
           ) : null}
         </div>
       </div>
 
-      <TestBuildKnowledgeBaseButton
-        canBuild={canBuild}
-        previewLines={previewLines}
-        categoryHints={previewMeta.categories}
-        isBuilding={isBuilding}
-        hidden={activeTab === 'knowledge-base'}
-        onBuild={handleBuildKnowledgeBase}
-        onError={(message) => setFeedback(message)}
-      />
+      <TestBuildKnowledgeBaseButton canBuild={canBuild} previewLines={previewLines} categoryHints={previewMeta.categories} isBuilding={isBuilding} hidden={activeTab === "knowledge-base"} onBuild={handleBuildKnowledgeBase} onError={(message) => setFeedback(message)} />
     </div>
   );
 }
-
