@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PencilLine, UsersRound } from 'lucide-react';
+import { PencilLine, UserRound, UsersRound } from 'lucide-react';
 import { FirstPartyMemberEditDialog } from './FirstPartyMemberEditDialog';
 import { FirstPartyRelationsDialog, type FirstPartyManagedRole } from './FirstPartyRelationsDialog';
 import { PartySection } from './PartySection';
@@ -978,40 +978,39 @@ export function PartiesStep({ stepId, title, embedded = false }: { stepId: strin
           const representativeCount = related.filter((participant) => participant.role === 'representative').length;
           const boardMemberCount = related.filter((participant) => participant.role === 'board_member').length;
           const canManageRelations = row.partyOneMemberKind === 'business' || row.partyOneMemberKind === 'legal_shareholder';
+          const chipClassName =
+            'inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--dark-teal)_32%,transparent)] bg-[color-mix(in_srgb,var(--dark-teal)_5%,white)] px-2.5 py-1 text-[11px] font-bold text-[color-mix(in_srgb,var(--dark-teal)_92%,black)]';
+          const actionButtonClassName = missing.length
+            ? 'inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300'
+            : 'inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_30%,transparent)] bg-white px-3 text-xs font-bold text-[color-mix(in_srgb,var(--dark-teal)_92%,black)] transition-colors hover:bg-[color-mix(in_srgb,var(--dark-teal)_6%,white)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_25%,transparent)]';
           return (
-            <div className="space-y-2 border-t border-slate-100 pt-3">
+            <div className="space-y-3">
               {canManageRelations ? (
-                <div className="flex flex-wrap gap-2 text-[11px] font-bold text-slate-600">
-                  <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-sky-700">
+                <div className="flex flex-wrap gap-2">
+                  <span className={chipClassName}>
+                    <UserRound className="h-3.5 w-3.5" aria-hidden />
                     {formatPersianCount(representativeCount, 'نماینده')}
                   </span>
                   {row.partyOneMemberKind === 'business' ? (
-                    <span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-violet-700">
+                    <span className={chipClassName}>
+                      <UsersRound className="h-3.5 w-3.5" aria-hidden />
                       {formatPersianCount(boardMemberCount, 'عضو هیئت‌مدیره')}
                     </span>
                   ) : null}
                 </div>
               ) : null}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingPartyOneId(row.id)}
-                  className={`inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border px-3 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                    missing.length
-                      ? 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 focus-visible:ring-amber-300'
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 focus-visible:ring-slate-300'
-                  }`}
-                >
-                  <PencilLine className="h-4 w-4" aria-hidden />
+              <div className={`grid gap-2 ${canManageRelations ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                <button type="button" onClick={() => setEditingPartyOneId(row.id)} className={actionButtonClassName}>
+                  <PencilLine className="h-4 w-4 shrink-0" aria-hidden />
                   {missing.length ? 'تکمیل اطلاعات' : 'ویرایش اطلاعات'}
                 </button>
                 {canManageRelations ? (
                   <button
                     type="button"
                     onClick={() => setManagingRelationsParentId(row.id)}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-sky-200 bg-sky-50 px-3 text-xs font-bold text-sky-700 transition-colors hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--dark-teal)_30%,transparent)] bg-white px-3 text-xs font-bold text-[color-mix(in_srgb,var(--dark-teal)_92%,black)] transition-colors hover:bg-[color-mix(in_srgb,var(--dark-teal)_6%,white)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--dark-teal)_25%,transparent)]"
                   >
-                    <UsersRound className="h-4 w-4" aria-hidden />
+                    <UsersRound className="h-4 w-4 shrink-0" aria-hidden />
                     {row.partyOneMemberKind === 'business' ? 'مدیریت نمایندگان و هیئت‌مدیره' : 'مدیریت نمایندگان'}
                   </button>
                 ) : null}
