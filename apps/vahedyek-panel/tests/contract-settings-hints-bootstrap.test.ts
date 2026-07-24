@@ -548,27 +548,29 @@ test('discount field hints map contract-base to on-contract tab', () => {
   assert.equal(different.maxValue?.status, 'different');
   assert.deepEqual(resolveDiscountFieldHints(null, null, true), {});
 
-  // Other type gets no field hints (card-level handles alignment).
-  assert.deepEqual(
-    resolveDiscountFieldHints(
-      reference,
-      {
-        id: 'd3',
-        discountTypeId: 'early-payment',
-        enabled: true,
-        valueMode: 'amount',
-        minValue: '',
-        maxValue: '1',
-        managerApproval: false,
-        approvalThreshold: '',
-        scope: 'whole',
-        entryId: '',
-        conditionConfigured: false,
-      },
-      true,
-    ),
-    {},
+  // Other type gets missing field tags (settings do not target this card).
+  const untargeted = resolveDiscountFieldHints(
+    reference,
+    {
+      id: 'd3',
+      discountTypeId: 'early-payment',
+      enabled: true,
+      valueMode: 'amount',
+      minValue: '',
+      maxValue: '1',
+      managerApproval: false,
+      approvalThreshold: '',
+      scope: 'whole',
+      entryId: '',
+      conditionConfigured: false,
+    },
+    true,
   );
+  assert.equal(untargeted.valueMode?.status, 'missing');
+  assert.equal(untargeted.maxValue?.status, 'missing');
+  assert.equal(untargeted.minValue?.status, 'missing');
+  assert.equal(untargeted.managerApproval?.status, 'missing');
+  assert.equal(untargeted.graceDays?.status, 'missing');
 });
 
 test('discount field hints map early-payment tab fields', () => {

@@ -142,106 +142,93 @@ export function resolveDiscountTypeHint(
   });
 }
 
+const DISCOUNT_UI_FIELD_KEYS = [
+  'valueMode',
+  'minValue',
+  'maxValue',
+  'managerApproval',
+  'approvalThreshold',
+  'maxDelayCount',
+  'graceDays',
+  'dueBasis',
+  'keepOnDelay',
+  'penaltyOnDiscount',
+  'settlementTiming',
+] as const;
+
+function missingFieldHints(): Record<string, DomainFieldHint> {
+  return Object.fromEntries(DISCOUNT_UI_FIELD_KEYS.map((key) => [key, { status: 'missing' as const, settingsLabel: null }]));
+}
+
+function readOptionalBool(value: unknown): boolean | null {
+  if (value === true || value === false) return value;
+  return null;
+}
+
 /**
  * Per-field alignment for discount RuleEditor UI keys.
- * Emits hints only when settings target this type/entry (card tag covers the rest).
+ * Untargeted type/entry → all keys missing (same idea as buyer-penalty unconfigured types).
+ * Targeted → always emit UI keys via makeFieldHint (empty settings → missing).
  */
 export function resolveDiscountFieldHints(
   reference: ContractRuleState | null | undefined,
   rule: DiscountRuleData | null | undefined,
   typeActive: boolean,
 ): Record<string, DomainFieldHint> {
-  if (!reference || !settingsTargetsDiscountCard(reference, rule?.discountTypeId || '', rule)) {
-    return {};
-  }
+  if (!reference) return {};
   if (!typeActive || !rule) return {};
+
+  if (!settingsTargetsDiscountCard(reference, rule.discountTypeId || '', rule)) {
+    return missingFieldHints();
+  }
 
   const values = reference.values ?? {};
   const isEarly = draftTypeToSettingsTab(rule.discountTypeId) === 'early-payment';
 
-  const settingsValueModeLabel = isEarly
-    ? mapDraftValueModeToSettingsLabel(mapSettingsTargetToDraftValueMode(values.discountEarlyTarget) || String(values.discountValueMode ?? ''))
-    : mapDraftValueModeToSettingsLabel(mapSettingsTargetToDraftValueMode(values.discountContractTarget) || String(values.discountValueMode ?? ''));
-
+  const settingsValueModeRaw = isEarly
+    ? mapSettingsTargetToDraftValueMode(values.discountEarlyTarget) || String(values.discountValueMode ?? '')
+    : mapSettingsTargetToDraftValueMode(values.discountContractTarget) || String(values.discountValueMode ?? '');
+  const settingsValueModeLabel = settingsValueModeRaw
+    ? mapDraftValueModeToSettingsLabel(settingsValueModeRaw)
+    : '';
   const draftValueModeLabel = mapDraftValueModeToSettingsLabel(rule.valueMode);
 
   const settingsMax = isEarly
     ? stripNoise(values.discountEarlyValue || values.discountMaxValue)
     : stripNoise(values.discountContractValue || values.discountMaxValue);
   const settingsMin = stripNoise(values.discountMinValue);
-  const hasSettingsMin = Boolean(settingsMin);
 
   const settingsManagerApproval = isEarly
-    ? Boolean(values.discountManagerApproval)
-    : Boolean(values.discountContractNeedApproval ?? values.discountManagerApproval);
+    ? readOptionalBool(values.discountManagerApproval)
+    : readOptionalBool(values.discountContractNeedApproval) ?? readOptionalBool(values.discountManagerApproval);
   const settingsApprovalThreshold = stripNoise(values.discountApprovalThreshold);
 
-  const hints: Record<string, DomainFieldHint> = {
-    valueMode: makeFieldHint(settingsValueModeLabel, draftValueModeLabel),
-    maxValue: makeFieldHint(settingsMax, stripNoise(rule.maxValue)),
-    managerApproval: makeFieldHint(settingsManagerApproval, Boolean(rule.managerApproval)),
-  };
-
-  if (hasSettingsMin) {
-    hints.minValue = makeFieldHint(settingsMin, stripNoise(rule.minValue));
-  }
-
-  if (settingsManagerApproval || Boolean(rule.managerApproval) || settingsApprovalThreshold) {
-    hints.approvalThreshold = makeFieldHint(settingsApprovalThreshold, stripNoise(rule.approvalThreshold));
-  }
-
-  // Condition fields (stored as discountCondition* extras on settings)
   const settingsDueBasisRaw = values.discountConditionDueBasis;
-  const settingsDueBasis = typeof settingsDueBasisRaw === 'string' && settingsDueBasisRaw.trim()
-    ? settingsDueBasisRaw.split(',').map((item) => item.trim()).filter(Boolean)
-    : [];
+  const settingsDueBasis =
+    typeof settingsDueBasisRaw === 'string' && settingsDueBasisRaw.trim()
+      ? settingsDueBasisRaw.split(',').map((item) => item.trim()).filter(Boolean)
+      : [];
   const draftDueBasis = Array.isArray(rule.conditionDueBasis) ? rule.conditionDueBasis : [];
 
-  if (stripNoise(values.discountConditionMaxDelayCount) || stripNoise(rule.conditionMaxDelayCount)) {
-    hints.maxDelayCount = makeFieldHint(values.discountConditionMaxDelayCount, rule.conditionMaxDelayCount);
-  }
-  if (stripNoise(values.discountConditionGraceDays) || stripNoise(rule.conditionGraceDays)) {
-    hints.graceDays = makeFieldHint(values.discountConditionGraceDays, rule.conditionGraceDays);
-  }
-  if (settingsDueBasis.length || draftDueBasis.length) {
-    // Only compare when settings actually configure dueBasis.
-    if (settingsDueBasis.length) {
-      hints.dueBasis = makeFieldHint(settingsDueBasis, draftDueBasis);
-    }
-  }
-
-  if (isEarly) {
-    hints.keepOnDelay = makeFieldHint(Boolean(values.discountEarlyKeepOnDelay), Boolean(rule.conditionKeepOnDelay));
-  } else if (
-    values.discountConditionKeepOnDelay === true ||
-    values.discountConditionKeepOnDelay === false ||
-    rule.conditionKeepOnDelay !== undefined
-  ) {
-    // Prefer explicit condition key when present in settings input extras.
-    hints.keepOnDelay = makeFieldHint(Boolean(values.discountConditionKeepOnDelay), Boolean(rule.conditionKeepOnDelay));
-  }
-
-  if (
-    values.discountConditionPenaltyOnDiscount === true ||
-    values.discountConditionPenaltyOnDiscount === false ||
-    rule.conditionPenaltyOnDiscount !== undefined
-  ) {
-    if (stripNoise(values.discountConditionMaxDelayCount) || rule.conditionConfigured) {
-      hints.penaltyOnDiscount = makeFieldHint(
-        Boolean(values.discountConditionPenaltyOnDiscount),
-        Boolean(rule.conditionPenaltyOnDiscount),
-      );
-    }
-  }
-
+  const settingsKeepOnDelay = isEarly
+    ? readOptionalBool(values.discountEarlyKeepOnDelay)
+    : readOptionalBool(values.discountConditionKeepOnDelay);
+  const settingsPenaltyOnDiscount = readOptionalBool(values.discountConditionPenaltyOnDiscount);
   const settingsSettlement = stripNoise(values.discountConditionSettlementTiming);
-  if (settingsSettlement || stripNoise(rule.conditionSettlementTiming)) {
-    if (settingsSettlement) {
-      hints.settlementTiming = makeFieldHint(settingsSettlement, rule.conditionSettlementTiming);
-    }
-  }
 
-  return hints;
+  return {
+    valueMode: makeFieldHint(settingsValueModeLabel, draftValueModeLabel),
+    minValue: makeFieldHint(settingsMin, stripNoise(rule.minValue)),
+    maxValue: makeFieldHint(settingsMax, stripNoise(rule.maxValue)),
+    managerApproval: makeFieldHint(settingsManagerApproval, Boolean(rule.managerApproval)),
+    approvalThreshold: makeFieldHint(settingsApprovalThreshold, stripNoise(rule.approvalThreshold)),
+    maxDelayCount: makeFieldHint(values.discountConditionMaxDelayCount, rule.conditionMaxDelayCount),
+    graceDays: makeFieldHint(values.discountConditionGraceDays, rule.conditionGraceDays),
+    dueBasis: makeFieldHint(settingsDueBasis.length ? settingsDueBasis : null, draftDueBasis),
+    keepOnDelay: makeFieldHint(settingsKeepOnDelay, Boolean(rule.conditionKeepOnDelay)),
+    penaltyOnDiscount: makeFieldHint(settingsPenaltyOnDiscount, Boolean(rule.conditionPenaltyOnDiscount)),
+    settlementTiming: makeFieldHint(settingsSettlement, rule.conditionSettlementTiming),
+  };
 }
 
 export { getDomainFieldHint };
