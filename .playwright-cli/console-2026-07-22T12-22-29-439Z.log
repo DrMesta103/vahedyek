@@ -1,0 +1,9 @@
+[     126ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     477ms] [LOG] [Fast Refresh] done in 462ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    1043ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    1060ms] [LOG] [HMR] connected @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    1074ms] [INFO] %c%s%c [setup-health] background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   panel-layout {tenantId: cmrvvipw70000oyyo6123270j, userId: cmrvvipy90009oyyocqnstw83, score: 40, completedCount: 2, totalCriticalCount: 5} @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    4177ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    4428ms] [LOG] [Fast Refresh] done in 363ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   15468ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   15719ms] [LOG] [Fast Refresh] done in 364ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431

@@ -1,0 +1,264 @@
+- generic [active] [ref=f5e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f5e2] [cursor=pointer]
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - navigation "مسیر صفحه" [ref=f5e9]:
+        - list [ref=f5e10]:
+          - listitem [ref=f5e11]:
+            - button "خانه" [ref=f5e12] [cursor=pointer]
+          - listitem [ref=f5e353]
+          - listitem [ref=f5e357]:
+            - button "طبقه‌بندی مشاغل" [ref=f5e358] [cursor=pointer]
+          - listitem [ref=f5e360]
+          - listitem [ref=f5e364]:
+            - generic [ref=f5e365]: positions
+      - main [ref=f5e21]:
+        - main [ref=f5e366]:
+          - navigation "مسیر" [ref=f5e367]:
+            - link "واحدها" [ref=f5e368] [cursor=pointer]:
+              - /url: /organization-units
+            - link "Phase3 Runtime Unit" [ref=f5e371] [cursor=pointer]:
+              - /url: /organization-units/cmrvvipyq000koyyom1wfqi12?tab=positions
+            - generic [ref=f5e374]: Phase5 Used Position
+          - generic [ref=f5e375]:
+            - generic [ref=f5e376]:
+              - paragraph [ref=f5e377]: پروفایل سمت سازمانی
+              - heading "Phase5 Used Position" [level=1] [ref=f5e378]
+              - generic [ref=f5e379]:
+                - generic [ref=f5e380]: P5USED
+                - generic [ref=f5e381]: فعال
+                - generic [ref=f5e382]: Phase3 Runtime Unit
+                - generic [ref=f5e383]: "بازنگری شغل: —"
+              - paragraph [ref=f5e384]: اطلاعات جایگاه، ظرفیت، پروفایل شغلی و شرایط احراز
+            - generic [ref=f5e385]:
+              - link "بازگشت به واحد" [ref=f5e386] [cursor=pointer]:
+                - /url: /organization-units/cmrvvipyq000koyyom1wfqi12?tab=positions
+              - button "آرشیو سمت" [ref=f5e388] [cursor=pointer]
+          - generic [ref=f5e389]:
+            - article [ref=f5e390]:
+              - generic [ref=f5e391]: ظرفیت مصوب
+              - strong [ref=f5e392]: ۱
+            - article [ref=f5e393]:
+              - generic [ref=f5e394]: انتصاب فعال
+              - strong [ref=f5e395]: ۰
+            - article [ref=f5e396]:
+              - generic [ref=f5e397]: ظرفیت باقی‌مانده
+              - strong [ref=f5e398]: ۱
+            - article [ref=f5e399]:
+              - generic [ref=f5e400]: تکمیل پروفایل
+              - strong [ref=f5e401]: 1/6
+          - navigation "بخش‌های سمت" [ref=f5e402]:
+            - link "پروفایل" [ref=f5e403] [cursor=pointer]:
+              - /url: /positions/cmrw1ntxd0003oyxg4g88doro
+            - link "تاریخچه مستقل سمت" [ref=f5e404] [cursor=pointer]:
+              - /url: /positions/cmrw1ntxd0003oyxg4g88doro?tab=history
+          - generic [ref=f5e405]:
+            - article [ref=f5e406]:
+              - heading "اطلاعات پایه و گزارش‌دهی" [level=2] [ref=f5e407]
+              - generic [ref=f5e408]:
+                - generic [ref=f5e409]:
+                  - generic [ref=f5e410]: عنوان سمت *
+                  - textbox "عنوان سمت *" [ref=f5e411]: Phase5 Used Position
+                - generic [ref=f5e412]:
+                  - generic [ref=f5e413]: کد سمت
+                  - textbox "کد سمت" [ref=f5e414]: P5USED
+                - generic [ref=f5e415]:
+                  - generic [ref=f5e416]: ظرفیت سمت
+                  - spinbutton "ظرفیت سمت کمتر از 0 انتصاب فعال قابل ثبت نیست." [ref=f5e417]: "1"
+                  - generic [ref=f5e418]: کمتر از 0 انتصاب فعال قابل ثبت نیست.
+                - generic [ref=f5e419]:
+                  - generic [ref=f5e420]: وضعیت Lifecycle
+                  - combobox "وضعیت Lifecycle" [ref=f5e421]:
+                    - option "فعال" [selected]
+                    - option "غیرفعال"
+                - generic [ref=f5e422]:
+                  - generic [ref=f5e423]: پروفایل شغلی
+                  - combobox "پروفایل شغلی" [ref=f5e424]:
+                    - option "تعریف نشده" [selected]
+                - generic [ref=f5e425]:
+                  - generic [ref=f5e426]: گزارش به سمت
+                  - combobox "گزارش به سمت مدیر واحد با سمت بالادست یکی فرض نمی‌شود." [ref=f5e427]:
+                    - option "تعریف نشده" [selected]
+                  - generic [ref=f5e428]: مدیر واحد با سمت بالادست یکی فرض نمی‌شود.
+                - generic [ref=f5e429]:
+                  - generic [ref=f5e430]: توضیحات اختصاصی جایگاه
+                  - textbox "توضیحات اختصاصی جایگاه" [ref=f5e431]
+                - button "ذخیره اطلاعات سمت" [ref=f5e432] [cursor=pointer]
+            - article [ref=f5e433]:
+              - heading "وضعیت تکمیل" [level=2] [ref=f5e434]
+              - progressbar [ref=f5e435]
+              - list [ref=f5e437]:
+                - listitem [ref=f5e438]: پروفایل شغلی
+                - listitem [ref=f5e441]: سمت بالادست
+                - listitem [ref=f5e444]: هدف شغل
+                - listitem [ref=f5e447]: وظایف اصلی
+                - listitem [ref=f5e450]: شرایط احراز
+              - paragraph [ref=f5e453]: طبقه‌بندی، بازه حقوقی و تجهیزات به دلیل نبود Source واقعی در Completion اجباری لحاظ نشده‌اند.
+          - generic [ref=f5e454]:
+            - generic [ref=f5e456]:
+              - heading "شرح شغل و شرایط احراز" [level=2] [ref=f5e457]
+              - paragraph [ref=f5e458]: Job Profile مستقل و قابل استفاده مجدد؛ Assignment مستقیماً به Job متصل نیست.
+              - paragraph [ref=f5e459]: هر ذخیره شماره بازنگری را افزایش می‌دهد؛ تاریخچه Snapshot و قابلیت بازگردانی در زیرساخت فعلی وجود ندارد.
+            - generic [ref=f5e460]:
+              - generic [ref=f5e461]:
+                - generic [ref=f5e462]: عنوان شغلی *
+                - textbox "عنوان شغلی *" [ref=f5e463]: Phase5 Used Position
+              - generic [ref=f5e464]:
+                - generic [ref=f5e465]: کد شغلی
+                - textbox "کد شغلی" [ref=f5e466]
+              - generic [ref=f5e467]:
+                - generic [ref=f5e468]: هدف شغل
+                - textbox "هدف شغل" [ref=f5e469]
+              - generic [ref=f5e470]:
+                - generic [ref=f5e471]: شرح کلی مسئولیت
+                - textbox "شرح کلی مسئولیت" [ref=f5e472]
+              - group "وظایف اصلی" [ref=f5e473]:
+                - paragraph [ref=f5e475]: هنوز وظیفه‌ای ثبت نشده است.
+                - button "افزودن وظیفه" [ref=f5e476] [cursor=pointer]
+              - group "وظایف دوره‌ای" [ref=f5e478]:
+                - paragraph [ref=f5e480]: هنوز وظیفه‌ای ثبت نشده است.
+                - button "افزودن وظیفه" [ref=f5e481] [cursor=pointer]
+              - generic [ref=f5e483]:
+                - generic [ref=f5e484]: مسئولیت‌های گزارش‌دهی
+                - textbox "مسئولیت‌های گزارش‌دهی هر مورد را در یک خط وارد کنید." [ref=f5e485]
+                - generic [ref=f5e486]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e487]:
+                - generic [ref=f5e488]: خروجی‌های مورد انتظار
+                - textbox "خروجی‌های مورد انتظار هر مورد را در یک خط وارد کنید." [ref=f5e489]
+                - generic [ref=f5e490]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e491]:
+                - generic [ref=f5e492]: ارتباطات داخلی
+                - textbox "ارتباطات داخلی هر مورد را در یک خط وارد کنید." [ref=f5e493]
+                - generic [ref=f5e494]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e495]:
+                - generic [ref=f5e496]: ارتباطات خارجی
+                - textbox "ارتباطات خارجی هر مورد را در یک خط وارد کنید." [ref=f5e497]
+                - generic [ref=f5e498]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e499]:
+                - generic [ref=f5e500]: شاخص‌های عملکرد پیشنهادی
+                - textbox "شاخص‌های عملکرد پیشنهادی هر مورد را در یک خط وارد کنید." [ref=f5e501]
+                - generic [ref=f5e502]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e503]:
+                - generic [ref=f5e504]: محل خدمت پیشنهادی
+                - textbox "محل خدمت پیشنهادی" [ref=f5e505]
+              - generic [ref=f5e506]:
+                - generic [ref=f5e507]: محیط کاری
+                - textbox "محیط کاری" [ref=f5e508]
+              - generic [ref=f5e509]:
+                - generic [ref=f5e510]: ملاحظات
+                - textbox "ملاحظات" [ref=f5e511]
+              - heading "شرایط احراز" [level=3] [ref=f5e512]
+              - generic [ref=f5e513]:
+                - generic [ref=f5e514]: حداقل مدرک
+                - textbox "حداقل مدرک" [ref=f5e515]
+              - generic [ref=f5e516]:
+                - generic [ref=f5e517]: حداقل سابقه (ماه)
+                - spinbutton "حداقل سابقه (ماه)" [ref=f5e518]
+              - generic [ref=f5e519]:
+                - generic [ref=f5e520]: سطح تجربه
+                - textbox "سطح تجربه" [ref=f5e521]
+              - generic [ref=f5e522]:
+                - generic [ref=f5e523]: رشته‌های مرتبط
+                - textbox "رشته‌های مرتبط هر مورد را در یک خط وارد کنید." [ref=f5e524]
+                - generic [ref=f5e525]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e526]:
+                - generic [ref=f5e527]: مهارت‌های تخصصی
+                - textbox "مهارت‌های تخصصی هر مورد را در یک خط وارد کنید." [ref=f5e528]
+                - generic [ref=f5e529]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e530]:
+                - generic [ref=f5e531]: مهارت‌های نرم
+                - textbox "مهارت‌های نرم هر مورد را در یک خط وارد کنید." [ref=f5e532]
+                - generic [ref=f5e533]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e534]:
+                - generic [ref=f5e535]: گواهینامه‌ها
+                - textbox "گواهینامه‌ها هر مورد را در یک خط وارد کنید." [ref=f5e536]
+                - generic [ref=f5e537]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e538]:
+                - generic [ref=f5e539]: نرم‌افزارهای موردنیاز
+                - textbox "نرم‌افزارهای موردنیاز هر مورد را در یک خط وارد کنید." [ref=f5e540]
+                - generic [ref=f5e541]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e542]:
+                - generic [ref=f5e543]: زبان‌ها
+                - textbox "زبان‌ها هر مورد را در یک خط وارد کنید." [ref=f5e544]
+                - generic [ref=f5e545]: هر مورد را در یک خط وارد کنید.
+              - generic [ref=f5e546]:
+                - generic [ref=f5e547]: امکان مأموریت
+                - combobox "امکان مأموریت" [ref=f5e548]:
+                  - option "تعیین نشده" [selected]
+                  - option "بله"
+                  - option "خیر"
+              - generic [ref=f5e549]:
+                - generic [ref=f5e550]: شرایط محل خدمت
+                - textbox "شرایط محل خدمت" [ref=f5e551]
+              - generic [ref=f5e552]:
+                - generic [ref=f5e553]: ملاحظات خاص
+                - textbox "ملاحظات خاص" [ref=f5e554]
+              - button "ذخیره پروفایل شغلی" [ref=f5e555] [cursor=pointer]
+          - generic [ref=f5e556]:
+            - heading "افراد منصوب‌شده" [level=2] [ref=f5e557]
+            - paragraph [ref=f5e563]: هیچ انتصابی برای این سمت وجود ندارد.
+          - generic [ref=f5e564]:
+            - article [ref=f5e565]:
+              - heading "طبقه‌بندی شغلی" [level=2] [ref=f5e566]
+              - paragraph [ref=f5e567]: برای پروفایل شغلی این سمت هنوز طبقه‌بندی فعالی ثبت نشده است.
+            - article [ref=f5e568]:
+              - heading "اسناد، فرآیند و تاریخچه" [level=2] [ref=f5e569]
+              - paragraph [ref=f5e570]: Document Entity Link، Workflow Usage و Audit عمومی مرتبط وجود ندارد؛ این بخش داده ساختگی نمایش نمی‌دهد.
+    - complementary [ref=f5e120]:
+      - generic [ref=f5e121]:
+        - generic [ref=f5e122]: P
+        - generic [ref=f5e123]:
+          - generic [ref=f5e124]: Phase3 Owner
+          - generic [ref=f5e264]: phase3.owner@example.com
+      - generic [ref=f5e125]:
+        - generic [ref=f5e126]: DS
+        - generic [ref=f5e127]:
+          - generic [ref=f5e128]: Phase3 Runtime Test Tenant
+          - generic [ref=f5e265]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f5e129] [cursor=pointer]
+      - generic [ref=f5e132]:
+        - button "خروج" [ref=f5e133] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f5e138] [cursor=pointer]:
+          - generic [ref=f5e143]: "1"
+        - button "تنظیمات کلی" [ref=f5e144] [cursor=pointer]
+        - button "داشبورد" [ref=f5e149] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f5e154] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f5e162]:
+        - link "طبقه‌بندی مشاغل" [ref=f5e163] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f5e169] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f5e174] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f5e180] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f5e186] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f5e191] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f5e196] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f5e204] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f5e211] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f5e218] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f5e225] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f5e231] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f5e237] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f5e244] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f5e249] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f5e266] [cursor=pointer]:
+        - paragraph [ref=f5e256]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f5e267]
+      - generic [ref=f5e258]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f5e260] [cursor=pointer]
+        - generic [ref=f5e263]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f5e273] [cursor=pointer]
+  - alert [ref=f5e277]

@@ -1,0 +1,183 @@
+- generic [ref=f5e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f5e2] [cursor=pointer]
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - navigation "مسیر صفحه" [ref=f5e9]:
+        - list [ref=f5e10]:
+          - listitem [ref=f5e11]:
+            - button "خانه" [ref=f5e12] [cursor=pointer]
+          - listitem [ref=f5e14]
+          - listitem [ref=f5e18]:
+            - generic [ref=f5e19]: واحدهای سازمانی
+      - main [ref=f5e21]:
+        - generic [ref=f5e23]:
+          - generic [ref=f5e24]:
+            - generic [ref=f5e25]:
+              - heading "واحدها و سمت‌های سازمانی" [level=1] [ref=f5e26]
+              - paragraph [ref=f5e27]: ساختار سازمان، واحدها، زیرواحدها، سمت‌ها و افراد منصوب‌شده را مدیریت کنید.
+            - button "افزودن واحد سازمانی" [ref=f5e28] [cursor=pointer]:
+              - generic [ref=f5e29]: +
+              - text: افزودن واحد سازمانی
+          - region "آمار ساختار سازمانی" [ref=f5e30]:
+            - article [ref=f5e31]:
+              - generic [ref=f5e32]: کل واحدها
+              - strong [ref=f5e33]: ۱
+            - article [ref=f5e34]:
+              - generic [ref=f5e35]: واحد فعال
+              - strong [ref=f5e36]: ۱
+            - article [ref=f5e37]:
+              - generic [ref=f5e38]: زیرواحدها
+              - strong [ref=f5e39]: ۰
+            - article [ref=f5e40]:
+              - generic [ref=f5e41]: کل سمت‌ها
+              - strong [ref=f5e42]: ۰
+            - article [ref=f5e43]:
+              - generic [ref=f5e44]: سمت بدون متصدی
+              - strong [ref=f5e45]: ۰
+            - article [ref=f5e46]:
+              - generic [ref=f5e47]: سمت با ظرفیت خالی
+              - strong [ref=f5e48]: ۰
+            - article [ref=f5e49]:
+              - generic [ref=f5e50]: کارکنان منصوب‌شده
+              - strong [ref=f5e51]: ۲
+            - article [ref=f5e52]:
+              - generic [ref=f5e53]: واحد بدون مدیر
+              - strong [ref=f5e54]: ۱
+          - generic [ref=f5e55]:
+            - generic [ref=f5e56]:
+              - generic [ref=f5e60]: جستجو
+              - textbox "جستجو" [ref=f5e61]:
+                - /placeholder: جستجو بر اساس نام واحد، سمت، کد واحد یا مدیر واحد...
+            - combobox "وضعیت واحد" [ref=f5e62]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "فعال"
+              - option "غیرفعال"
+              - option "آرشیوی"
+            - combobox "نوع واحد" [ref=f5e63]:
+              - option "همه نوع‌ها" [selected]
+              - option "واحد"
+            - combobox "وضعیت سمت" [ref=f5e64]:
+              - option "همه سمت‌ها" [selected]
+              - option "دارای سمت"
+              - option "بدون سمت"
+              - option "بدون متصدی"
+              - option "ظرفیت خالی"
+              - option "تکمیل ظرفیت"
+            - combobox "مدیریت" [ref=f5e65]:
+              - option "همه مدیران" [selected]
+              - option "دارای مدیر"
+              - option "بدون مدیر"
+            - generic [ref=f5e66]:
+              - button "فهرست" [pressed] [ref=f5e67] [cursor=pointer]
+              - button "درخت" [ref=f5e70] [cursor=pointer]
+          - article [ref=f5e78]:
+            - generic [ref=f5e80]:
+              - link [ref=f5e81] [cursor=pointer]:
+                - /url: /organization-units/cmrvvipyq000koyyom1wfqi12
+                - strong [ref=f5e82]: Phase3 Runtime Unit
+              - generic [ref=f5e83]: P3RT · واحد
+            - generic [ref=f5e84]:
+              - generic [ref=f5e85]: واحد بالادست
+              - generic [ref=f5e86]: ریشه سازمان
+            - generic [ref=f5e87]:
+              - generic [ref=f5e88]: مدیر
+              - generic [ref=f5e89]: بدون مدیر
+            - generic [ref=f5e90]:
+              - generic "زیرواحد" [ref=f5e91]: "0"
+              - generic "سمت" [ref=f5e97]: "0"
+              - generic "کارمند فعال" [ref=f5e101]: "2"
+            - generic [ref=f5e106]: فعال
+            - time [ref=f5e107]: ۱۴۰۵/۴/۳۱
+            - generic [ref=f5e108]:
+              - button "افزودن زیرواحد" [ref=f5e109] [cursor=pointer]
+              - link "مشاهده پروفایل" [ref=f5e110] [cursor=pointer]:
+                - /url: /organization-units/cmrvvipyq000koyyom1wfqi12
+              - button "افزودن سمت" [ref=f5e111] [cursor=pointer]
+              - link "ویرایش Phase3 Runtime Unit" [ref=f5e112] [cursor=pointer]:
+                - /url: /organization-units/cmrvvipyq000koyyom1wfqi12/edit
+                - text: ویرایش
+              - button "غیرفعال" [ref=f5e114] [cursor=pointer]
+              - button "آرشیو" [ref=f5e116] [cursor=pointer]
+              - button "حذف" [ref=f5e118] [cursor=pointer]
+    - complementary [ref=f5e120]:
+      - generic [ref=f5e121]:
+        - generic [ref=f5e122]: P
+        - generic [ref=f5e123]:
+          - generic [ref=f5e124]: Phase3 Owner
+          - generic [ref=f5e264]: phase3.owner@example.com
+      - generic [ref=f5e125]:
+        - generic [ref=f5e126]: DS
+        - generic [ref=f5e127]:
+          - generic [ref=f5e128]: Phase3 Runtime Test Tenant
+          - generic [ref=f5e265]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f5e129] [cursor=pointer]
+      - generic [ref=f5e132]:
+        - button "خروج" [ref=f5e133] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f5e138] [cursor=pointer]:
+          - generic [ref=f5e143]: "1"
+        - button "تنظیمات کلی" [ref=f5e144] [cursor=pointer]
+        - button "داشبورد" [ref=f5e149] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f5e154] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f5e162]:
+        - link "طبقه‌بندی مشاغل" [ref=f5e163] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f5e169] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f5e174] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f5e180] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f5e186] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f5e191] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f5e196] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f5e204] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f5e211] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f5e218] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f5e225] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f5e231] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f5e237] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f5e244] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f5e249] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f5e266] [cursor=pointer]:
+        - paragraph [ref=f5e256]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f5e267]
+      - generic [ref=f5e258]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f5e260] [cursor=pointer]
+        - generic [ref=f5e263]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f5e273] [cursor=pointer]
+  - alert [ref=f5e277]
+  - dialog [ref=f5e312]:
+    - banner [ref=f5e313]:
+      - generic [ref=f5e314]:
+        - heading "افزودن سمت سازمانی" [level=2] [ref=f5e315]
+        - button "بستن" [ref=f5e316] [cursor=pointer]
+      - paragraph [ref=f5e320]: عنوان، کد، ظرفیت و وضعیت اولیه سمت را وارد کنید.
+    - generic [ref=f5e321]:
+      - generic [ref=f5e322]:
+        - text: عنوان سمت
+        - textbox "عنوان سمت" [active] [ref=f5e323]
+      - generic [ref=f5e324]:
+        - text: کد سمت
+        - textbox "کد سمت" [ref=f5e325]
+      - generic [ref=f5e326]:
+        - text: ظرفیت
+        - spinbutton "ظرفیت" [ref=f5e327]: "1"
+      - generic [ref=f5e328]:
+        - text: وضعیت اولیه
+        - combobox "وضعیت اولیه" [ref=f5e329]:
+          - option "فعال" [selected]
+          - option "غیرفعال"
+    - contentinfo [ref=f5e330]:
+      - button "ثبت سمت" [disabled] [ref=f5e331]
+      - button "انصراف" [ref=f5e332] [cursor=pointer]

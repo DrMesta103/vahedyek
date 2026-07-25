@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BriefcaseBusiness, ChevronLeft, CircleAlert, UsersRound } from "lucide-react";
+import { BriefcaseBusiness, ChevronLeft, CircleAlert, Clock3, UsersRound } from "lucide-react";
 import { saveJobProfileAction, setPositionStatusAction, updatePositionAction } from "../../../lib/actions";
-import { getPositionProfile } from "../../../lib/data";
+import { getPositionHistory, getPositionProfile } from "../../../lib/data";
 import { getPositionAccess } from "../../../lib/organization-unit-access";
 import { UnsavedChangesGuard } from "./_components/UnsavedChangesGuard";
 import { JobTaskItems } from "./_components/JobTaskItems";
@@ -11,7 +11,7 @@ import { ArchiveAction } from "../../organization-units/_components/ArchiveActio
 const list = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").join("\n") : "");
 const lifecycle: Record<string, string> = { ACTIVE: "فعال", INACTIVE: "غیرفعال", ARCHIVED: "آرشیوی" };
 
-export default async function PositionProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ success?: string }> }) {
+export default async function PositionProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ success?: string; tab?: string }> }) {
   const { id } = await params;
   const query = await searchParams;
   const routeAccess = await getPositionAccess();
@@ -26,6 +26,7 @@ export default async function PositionProfilePage({ params, searchParams }: { pa
   const position = await getPositionProfile(id);
   if (!position) notFound();
   const readOnly = position.status === "ARCHIVED" || !position.access.canUpdate;
+  const history = query.tab === "history" ? await getPositionHistory(id) : undefined;
   return (
     <main className="org-profile-page" dir="rtl" lang="fa">
       <UnsavedChangesGuard formIds={["position-basic-form", "job-profile-form"]} />
@@ -79,6 +80,8 @@ export default async function PositionProfilePage({ params, searchParams }: { pa
           </article>
         ))}
       </section>
+      <nav className="org-profile-tabs" aria-label="بخش‌های سمت"><Link href={`/positions/${id}`} className={query.tab !== "history" ? "is-active" : ""}>پروفایل</Link><Link href={`/positions/${id}?tab=history`} className={query.tab === "history" ? "is-active" : ""}>تاریخچه مستقل سمت</Link></nav>
+      {query.tab === "history" && <section className="org-profile-card"><h2>Timeline سمت</h2>{!history?.allowed ? <div className="org-section-empty"><CircleAlert /><p>مجوز مشاهده تاریخچه سازمانی را ندارید.</p></div> : history.events.length ? <ol className="org-timeline">{history.events.map((event) => <li key={event.id}><Clock3 /><div><strong>{event.description}</strong><span>{event.eventType} · {new Date(event.occurredAt).toLocaleString("fa-IR")}</span>{event.effectiveAt && <small>اثرگذاری: {new Date(event.effectiveAt).toLocaleDateString("fa-IR")}</small>}<details><summary>مقادیر و مرجع</summary><pre>{JSON.stringify({ before: event.previousValue, after: event.newValue, actor: event.actorUserId, role: event.actorRole, reason: event.reason, reference: event.referenceId }, null, 2)}</pre></details></div></li>)}</ol> : <div className="org-section-empty"><Clock3 /><p>هنوز رویداد واقعی برای این سمت ثبت نشده است.</p></div>}</section>}
       <section className="org-profile-grid">
         <article className="org-profile-card">
           <h2>اطلاعات پایه و گزارش‌دهی</h2>
@@ -167,6 +170,14 @@ export default async function PositionProfilePage({ params, searchParams }: { pa
             <p className="org-muted">هر ذخیره شماره بازنگری را افزایش می‌دهد؛ تاریخچه Snapshot و قابلیت بازگردانی در زیرساخت فعلی وجود ندارد.</p>
           </div>
         </header>
+        {position.jobProfile ? (
+          <div className="org-muted">
+            {position.jobProfile.classifications?.[0]
+              ? `${position.jobProfile.classifications[0].family.name} / ${position.jobProfile.classifications[0].category?.name ?? 'بدون دسته'} / ${position.jobProfile.classifications[0].level.name} / ${position.jobProfile.classifications[0].title}`
+              : 'برای این Job Profile طبقه‌بندی فعالی ثبت نشده است.'}
+            <Link href="/job-classifications" className="org-inline-action">مدیریت طبقه‌بندی شغلی</Link>
+          </div>
+        ) : null}
         <form id="job-profile-form" action={saveJobProfileAction} className="org-professional-form">
           <input type="hidden" name="positionId" value={position.id} />
           <label>
@@ -299,8 +310,8 @@ export default async function PositionProfilePage({ params, searchParams }: { pa
       </section>
       <section className="org-profile-grid">
         <article className="org-profile-card">
-          <h2>طبقه‌بندی، حقوق و تجهیزات</h2>
-          <p className="org-muted">Source واقعی Job Classification، Compensation و Asset Catalog وجود ندارد؛ داده آزاد یا Engine موازی ساخته نشده است.</p>
+          <h2>طبقه‌بندی شغلی</h2>
+          {position.jobProfile?.classifications?.[0] ? <div className="org-muted"><p>سمت</p><strong>{position.title}</strong><p>↓</p><p>پروفایل شغلی</p><strong>{position.jobProfile.title}</strong><p>↓</p><p>{position.jobProfile.classifications[0].family.name}{position.jobProfile.classifications[0].category ? ` / ${position.jobProfile.classifications[0].category.name}` : ''} / {position.jobProfile.classifications[0].level.name}</p><small>نسخه {position.jobProfile.classifications[0].version} — فقط خواندنی</small></div> : <p className="org-muted">برای پروفایل شغلی این سمت هنوز طبقه‌بندی فعالی ثبت نشده است.</p>}
         </article>
         <article className="org-profile-card">
           <h2>اسناد، فرآیند و تاریخچه</h2>

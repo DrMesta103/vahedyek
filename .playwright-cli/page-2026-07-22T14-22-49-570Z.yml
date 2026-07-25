@@ -1,0 +1,168 @@
+- generic [active] [ref=f6e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f6e2] [cursor=pointer]
+  - generic [ref=f6e6]:
+    - generic [ref=f6e7]:
+      - navigation "مسیر صفحه" [ref=f6e9]:
+        - list [ref=f6e10]:
+          - listitem [ref=f6e11]:
+            - button "خانه" [ref=f6e12] [cursor=pointer]
+          - listitem [ref=f6e14]
+          - listitem [ref=f6e18]:
+            - button "کارمندان" [ref=f6e19] [cursor=pointer]
+          - listitem [ref=f6e21]
+          - listitem [ref=f6e25]:
+            - button "final-delta-employee" [ref=f6e26] [cursor=pointer]
+          - listitem [ref=f6e28]
+          - listitem [ref=f6e32]:
+            - generic [ref=f6e33]: documents
+      - main [ref=f6e35]:
+        - main [ref=f6e37]:
+          - navigation [ref=f6e38]:
+            - link "پرونده Final Employee" [ref=f6e39] [cursor=pointer]:
+              - /url: /employees/final-delta-employee
+            - text: / مرکز اسناد
+          - generic [ref=f6e40]:
+            - generic [ref=f6e41]:
+              - heading "مرکز اسناد کارمند" [level=1] [ref=f6e42]
+              - paragraph [ref=f6e43]: مشاهده، جستجو و مدیریت تمام مدارک و مستندات مرتبط با کارمند
+            - generic [ref=f6e44]: فایل‌های حساس با دسترسی سمت سرور محافظت می‌شوند
+          - generic [ref=f6e49]:
+            - generic [ref=f6e50]:
+              - strong [ref=f6e55]: ۰
+              - text: اسناد جاری
+            - generic [ref=f6e56]:
+              - strong [ref=f6e62]: ۰
+              - text: اسناد سیستمی
+            - generic [ref=f6e63]:
+              - strong [ref=f6e67]: ۰
+              - text: آرشیوشده
+          - generic [ref=f6e68]:
+            - heading "دسته‌بندی اسناد" [level=2] [ref=f6e69]
+            - generic [ref=f6e70]:
+              - group [ref=f6e71]:
+                - generic "هویتی" [ref=f6e72] [cursor=pointer]
+              - group [ref=f6e73]:
+                - generic "آموزشی" [ref=f6e74] [cursor=pointer]
+              - group [ref=f6e75]:
+                - generic "استخدامی" [ref=f6e76] [cursor=pointer]
+              - group [ref=f6e77]:
+                - generic "درخواست‌ها" [ref=f6e78] [cursor=pointer]
+              - group [ref=f6e79]:
+                - generic "مالی" [ref=f6e80] [cursor=pointer]
+              - group [ref=f6e81]:
+                - generic "سلامت" [ref=f6e82] [cursor=pointer]
+              - group [ref=f6e83]:
+                - generic "سازمانی" [ref=f6e84] [cursor=pointer]
+              - group [ref=f6e85]:
+                - generic "سایر" [ref=f6e86] [cursor=pointer]
+          - generic [ref=f6e88]:
+            - generic [ref=f6e89]:
+              - generic [ref=f6e93]: جستجو
+              - textbox "جستجو" [ref=f6e94]:
+                - /placeholder: عنوان، شماره یا نوع سند
+            - combobox "دسته" [ref=f6e95]:
+              - option "همه دسته‌ها" [selected]
+              - option "هویتی"
+              - option "آموزشی"
+              - option "استخدامی"
+              - option "درخواست‌ها"
+              - option "مالی"
+              - option "سلامت"
+              - option "سازمانی"
+              - option "سایر"
+            - combobox "وضعیت" [ref=f6e96]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "پیش‌نویس"
+              - option "در انتظار تأیید"
+              - option "نهایی"
+              - option "ردشده"
+              - option "منقضی"
+              - option "جایگزین‌شده"
+              - option "آرشیوشده"
+              - option "باطل"
+            - combobox "ماژول منبع" [ref=f6e97]:
+              - option "همه منابع" [selected]
+              - option "قرارداد"
+              - option "حقوق و دستمزد"
+              - option "درخواست‌ها"
+              - option "خاتمه همکاری"
+              - option "ثبت مستقیم"
+            - generic [ref=f6e98]:
+              - text: از تاریخ
+              - textbox "از تاریخ" [ref=f6e99]
+            - generic [ref=f6e100]:
+              - text: تا تاریخ
+              - textbox "تا تاریخ" [ref=f6e101]
+            - combobox "ایجادکننده" [ref=f6e102]:
+              - option "همه ایجادکنندگان" [selected]
+              - option "کارمند"
+              - option "مدیر"
+              - option "منابع انسانی"
+              - option "سیستم"
+              - option "ماژول"
+            - button "اعمال فیلتر" [ref=f6e103] [cursor=pointer]
+          - generic [ref=f6e104]:
+            - generic [ref=f6e105]:
+              - heading "اسناد پرونده" [level=2] [ref=f6e106]
+              - paragraph [ref=f6e107]: نسخه‌های قبلی حذف نمی‌شوند و اسناد سیستمی فقط در ماژول مرجع ویرایش می‌شوند.
+            - button "افزودن سند" [ref=f6e108] [cursor=pointer]
+          - generic [ref=f6e112]:
+            - heading "هنوز سندی ثبت نشده است" [level=2] [ref=f6e116]
+            - paragraph [ref=f6e117]: اسناد مستقیم را اضافه کنید؛ مراجع ماژول‌ها نیز بدون کپی شدن اینجا ظاهر می‌شوند.
+    - complementary [ref=f6e119]:
+      - generic [ref=f6e120]:
+        - generic [ref=f6e121]: F
+        - generic [ref=f6e122]:
+          - generic [ref=f6e123]: Final Delta
+          - generic [ref=f6e124]: final.delta@local.test
+      - generic [ref=f6e125]:
+        - generic [ref=f6e126]: DS
+        - generic [ref=f6e127]:
+          - generic [ref=f6e128]: Phase3 Runtime Test Tenant
+          - generic [ref=f6e129]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f6e130] [cursor=pointer]
+      - generic [ref=f6e133]:
+        - button "خروج" [ref=f6e134] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f6e139] [cursor=pointer]:
+          - generic [ref=f6e144]: "1"
+        - button "تنظیمات کلی" [ref=f6e145] [cursor=pointer]
+        - button "داشبورد" [ref=f6e150] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f6e155] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f6e163]:
+        - link "طبقه‌بندی مشاغل" [ref=f6e164] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f6e170] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f6e175] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f6e181] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f6e187] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f6e192] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f6e197] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f6e205] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f6e212] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f6e219] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f6e226] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f6e232] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f6e238] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f6e245] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f6e250] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f6e256] [cursor=pointer]:
+        - paragraph [ref=f6e257]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f6e258]
+      - generic [ref=f6e259]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f6e261] [cursor=pointer]
+        - generic [ref=f6e264]: 0.8.0
+  - alert [ref=f6e265]

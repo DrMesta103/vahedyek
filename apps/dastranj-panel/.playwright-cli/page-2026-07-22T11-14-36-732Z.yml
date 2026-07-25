@@ -1,0 +1,114 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e34] [cursor=pointer]
+  - alert [ref=e38]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=e60] [cursor=pointer]
+  - generic [ref=e64]:
+    - generic [ref=e65]:
+      - navigation "مسیر صفحه" [ref=e67]:
+        - list [ref=e68]:
+          - listitem [ref=e69]:
+            - generic [ref=e70]: خانه
+      - main [ref=e72]:
+        - generic [ref=e75]:
+          - button " داشبورد" [ref=e76] [cursor=pointer]:
+            - generic [ref=e77]: 
+            - generic: داشبورد
+          - button " راه‌اندازی سریع" [ref=e78] [cursor=pointer]:
+            - generic [ref=e79]: 
+            - generic: راه‌اندازی سریع
+          - button " تنظیمات کسب و کار" [ref=e80] [cursor=pointer]:
+            - generic [ref=e81]: 
+            - generic: تنظیمات کسب و کار
+          - button " محل کار" [ref=e82] [cursor=pointer]:
+            - generic [ref=e83]: 
+            - generic: محل کار
+          - button " تقویم‌ها" [ref=e84] [cursor=pointer]:
+            - generic [ref=e85]: 
+            - generic: تقویم‌ها
+          - button " سیاست‌ها" [ref=e86] [cursor=pointer]:
+            - generic [ref=e87]: 
+            - generic: سیاست‌ها
+          - button " کارمندان" [ref=e88] [cursor=pointer]:
+            - generic [ref=e89]: 
+            - generic: کارمندان
+          - button " گروه‌های کاری" [ref=e90] [cursor=pointer]:
+            - generic [ref=e91]: 
+            - generic: گروه‌های کاری
+          - button " واحدهای سازمانی" [ref=e92] [cursor=pointer]:
+            - generic [ref=e93]: 
+            - generic: واحدهای سازمانی
+          - button " قالب‌های شیفت" [ref=e94] [cursor=pointer]:
+            - generic [ref=e95]: 
+            - generic: قالب‌های شیفت
+          - button " قالب پیش‌نویس" [ref=e96] [cursor=pointer]:
+            - generic [ref=e97]: 
+            - generic: قالب پیش‌نویس
+          - button " دلایل درخواست" [ref=e98] [cursor=pointer]:
+            - generic [ref=e99]: 
+            - generic: دلایل درخواست
+          - button " پروفایل کسب و کار" [ref=e100] [cursor=pointer]:
+            - generic [ref=e101]: 
+            - generic: پروفایل کسب و کار
+          - button " گفتگوی مستندات توسعه" [ref=e102] [cursor=pointer]:
+            - generic [ref=e103]: 
+            - generic: گفتگوی مستندات توسعه
+          - button " لاگ مستندات توسعه" [ref=e104] [cursor=pointer]:
+            - generic [ref=e105]: 
+            - generic: لاگ مستندات توسعه
+          - button " تنظیمات کلی" [disabled] [ref=e106] [cursor=pointer]:
+            - generic [ref=e107]: 
+            - generic: تنظیمات کلی
+    - complementary [ref=e109]:
+      - generic [ref=e110]:
+        - generic [ref=e111]: P
+        - generic [ref=e112]:
+          - generic [ref=e113]: Phase3 Owner
+          - generic [ref=e114]: phase3.owner@example.com
+      - generic [ref=e115]:
+        - generic [ref=e116]: DS
+        - generic [ref=e117]:
+          - generic [ref=e118]: Phase3 Runtime Test Tenant
+          - generic [ref=e119]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=e120] [cursor=pointer]
+      - generic [ref=e123]:
+        - button "خروج" [ref=e124] [cursor=pointer]
+        - button "اعلان‌ها" [ref=e129] [cursor=pointer]:
+          - generic [ref=e134]: "1"
+        - button "تنظیمات کلی" [ref=e135] [cursor=pointer]
+        - button "داشبورد" [ref=e140] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=e145] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=e153]:
+        - link "راه‌اندازی سریع" [ref=e154] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=e159] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=e165] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=e171] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=e176] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=e181] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=e189] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=e196] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=e203] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=e210] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=e216] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=e222] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=e229] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=e234] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=e240] [cursor=pointer]:
+        - paragraph [ref=e241]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=e242]
+      - generic [ref=e243]:
+        - button "جمع کردن سایدبار" [expanded] [ref=e245] [cursor=pointer]
+        - generic [ref=e248]: 0.8.0

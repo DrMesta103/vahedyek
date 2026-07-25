@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { Camera, ChevronRight, Layers, X } from 'lucide-react';
-import { updateEmployeeAction } from '../../../../lib/actions';
+import { submitEmployeeChangeRequestAction, updateEmployeeAction } from '../../../../lib/actions';
 import { isNationalIdValid } from '../../../../lib/parse-contact';
 
 type EditStep = 'basic' | 'additional';
@@ -102,6 +102,8 @@ export function EditEmployeeFlow({
   const [maritalStatus, setMaritalStatus] = useState(employee.maritalStatus ?? '');
   const [childrenCount, setChildrenCount] = useState(String(employee.childrenCount));
   const [canEditIdentityPhoto, setCanEditIdentityPhoto] = useState(employee.canEditIdentityPhoto);
+  const [changeRequestError, setChangeRequestError] = useState('');
+  const [changeRequestSuccess, setChangeRequestSuccess] = useState('');
 
   const nationalIdError = useMemo(
     () => (nationalId.trim() && !isNationalIdValid(nationalId) ? 'کد ملی باید ۱۰ رقم باشد.' : ''),
@@ -123,6 +125,21 @@ export function EditEmployeeFlow({
   const uploadIdentityPhoto = async (file: File | null) => {
     if (!file) return;
     setIdentityPhotoUrl(await readFileAsDataUrl(file));
+  };
+
+  const handleChangeRequestSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setChangeRequestError('');
+    setChangeRequestSuccess('');
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    startTransition(() => {
+      void submitEmployeeChangeRequestAction(data)
+        .then((result) => {
+          if (result.ok) { setChangeRequestSuccess('درخواست تغییر برای بررسی ثبت شد.'); form.reset(); }
+        })
+        .catch((error: unknown) => setChangeRequestError(error instanceof Error ? error.message : 'ثبت درخواست تغییر ناموفق بود.'));
+    });
   };
 
   return (
@@ -291,6 +308,24 @@ export function EditEmployeeFlow({
           <input name="childrenCount" value={childrenCount} readOnly />
           {canEditIdentityPhoto ? <input name="canEditIdentityPhoto" value="on" readOnly /> : null}
         </form>
+
+        {employee.canSensitiveUpdate ? (
+          <form onSubmit={handleChangeRequestSubmit} className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4 text-sm text-slate-200 [html[data-theme=light]_&]:text-slate-700">
+            <h3 className="m-0 text-sm font-bold">درخواست تغییر اطلاعات رسمی</h3>
+            <p className="mt-2">اطلاعات حساس و اثرگذار بر حقوق فقط پس از تأیید اعمال می‌شوند.</p>
+            <input type="hidden" name="employeeId" value={employee.id} />
+            <div className="employee-add-fields-grid">
+              <label className="employee-add-field"><span className="employee-add-field-label">فیلد</span><select name="fieldKey" defaultValue="nationalId"><option value="nationalId">کد ملی</option><option value="mobile1">موبایل اصلی</option><option value="mobile2">موبایل دوم</option><option value="email">ایمیل</option><option value="identityPhotoUrl">نشانی تصویر هویتی</option><option value="maritalStatus">وضعیت تأهل</option><option value="childrenCount">تعداد فرزندان</option></select></label>
+              <label className="employee-add-field"><span className="employee-add-field-label">مقدار جدید</span><input name="value" required /></label>
+              <label className="employee-add-field"><span className="employee-add-field-label">دلیل</span><select name="reasonCode" defaultValue="INITIAL_DATA_CORRECTION"><option value="INITIAL_DATA_CORRECTION">اصلاح ثبت اولیه</option><option value="LEGAL_CHANGE">تغییر قانونی</option><option value="NEW_DOCUMENT">ارائه مدرک جدید</option><option value="EMPLOYEE_REQUEST">درخواست کارمند</option><option value="HR_ORDER">دستور منابع انسانی</option><option value="OTHER">سایر</option></select></label>
+              <label className="employee-add-field"><span className="employee-add-field-label">تاریخ اثرگذاری</span><input name="effectiveDate" type="date" /></label>
+              <label className="employee-add-field employee-add-field-full"><span className="employee-add-field-label">توضیح / پیوست</span><input name="reasonText" placeholder="توضیح دلیل (برای سایر الزامی است)" /><input className="mt-2" name="attachmentUrl" placeholder="نشانی پیوست" /></label>
+            </div>
+            <button type="submit" className="module-page-add-btn mt-3">ارسال برای تأیید</button>
+            {changeRequestError ? <p className="employee-add-field-error mt-3" role="alert">{changeRequestError}</p> : null}
+            {changeRequestSuccess ? <p className="mt-3 text-emerald-400" role="status">{changeRequestSuccess}</p> : null}
+          </form>
+        ) : null}
       </div>
     </div>
   );

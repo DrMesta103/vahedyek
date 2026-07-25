@@ -1,0 +1,197 @@
+- generic [ref=f7e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f7e2] [cursor=pointer]
+  - generic [ref=f7e6]:
+    - generic [ref=f7e7]:
+      - navigation "مسیر صفحه" [ref=f7e9]:
+        - list [ref=f7e10]:
+          - listitem [ref=f7e11]:
+            - button "خانه" [ref=f7e12] [cursor=pointer]
+          - listitem [ref=f7e14]
+          - listitem [ref=f7e18]:
+            - button "کارمندان" [ref=f7e19] [cursor=pointer]
+          - listitem [ref=f7e21]
+          - listitem [ref=f7e25]:
+            - generic [ref=f7e26]: documents
+      - main [ref=f7e28]:
+        - main [ref=f7e30]:
+          - navigation [ref=f7e31]:
+            - link "پرونده سند آزمایشی" [ref=f7e32] [cursor=pointer]:
+              - /url: /employees/phase6-document-employee
+            - text: / مرکز اسناد
+          - generic [ref=f7e33]:
+            - generic [ref=f7e34]:
+              - heading "مرکز اسناد کارمند" [level=1] [ref=f7e35]
+              - paragraph [ref=f7e36]: مشاهده، جستجو و مدیریت تمام مدارک و مستندات مرتبط با کارمند
+            - generic [ref=f7e37]: فایل‌های حساس با دسترسی سمت سرور محافظت می‌شوند
+          - generic [ref=f7e42]:
+            - generic [ref=f7e43]:
+              - strong [ref=f7e48]: ۰
+              - text: اسناد جاری
+            - generic [ref=f7e49]:
+              - strong [ref=f7e55]: ۰
+              - text: اسناد سیستمی
+            - generic [ref=f7e56]:
+              - strong [ref=f7e60]: ۰
+              - text: آرشیوشده
+          - generic [ref=f7e62]:
+            - generic [ref=f7e63]:
+              - generic [ref=f7e67]: جستجو
+              - textbox "جستجو" [ref=f7e68]:
+                - /placeholder: عنوان، شماره یا نوع سند
+            - combobox "دسته" [ref=f7e69]:
+              - option "همه دسته‌ها" [selected]
+              - option "هویتی"
+              - option "آموزشی"
+              - option "استخدامی"
+              - option "درخواست‌ها"
+              - option "مالی"
+              - option "سلامت"
+              - option "سازمانی"
+              - option "سایر"
+            - combobox "وضعیت" [ref=f7e70]:
+              - option "همه وضعیت‌ها" [selected]
+              - option "پیش‌نویس"
+              - option "در انتظار تأیید"
+              - option "نهایی"
+              - option "ردشده"
+              - option "منقضی"
+              - option "جایگزین‌شده"
+              - option "آرشیوشده"
+              - option "باطل"
+            - combobox "ماژول منبع" [ref=f7e71]:
+              - option "همه منابع" [selected]
+              - option "قرارداد"
+              - option "حقوق و دستمزد"
+              - option "درخواست‌ها"
+              - option "خاتمه همکاری"
+              - option "ثبت مستقیم"
+            - button "اعمال فیلتر" [ref=f7e72] [cursor=pointer]
+          - generic [ref=f7e73]:
+            - generic [ref=f7e74]:
+              - heading "اسناد پرونده" [level=2] [ref=f7e75]
+              - paragraph [ref=f7e76]: نسخه‌های قبلی حذف نمی‌شوند و اسناد سیستمی فقط در ماژول مرجع ویرایش می‌شوند.
+            - button "افزودن سند" [ref=f7e77] [cursor=pointer]
+          - generic [ref=f7e81]:
+            - heading "هنوز سندی ثبت نشده است" [level=2] [ref=f7e85]
+            - paragraph [ref=f7e86]: اسناد مستقیم را اضافه کنید؛ مراجع ماژول‌ها نیز بدون کپی شدن اینجا ظاهر می‌شوند.
+          - dialog [ref=f7e271]:
+            - generic [ref=f7e272]:
+              - generic [ref=f7e273]:
+                - generic [ref=f7e274]:
+                  - heading "افزودن سند مستقیم" [level=2] [ref=f7e275]
+                  - paragraph [ref=f7e276]: فایل قبلی بازنویسی نمی‌شود و هر نسخه در تاریخچه باقی می‌ماند.
+                - button "بستن" [ref=f7e277] [cursor=pointer]
+              - generic [ref=f7e281]:
+                - generic [ref=f7e282]:
+                  - text: عنوان سند *
+                  - textbox "عنوان سند *" [ref=f7e283]: مدرک هویتی آزمایشی
+                - generic [ref=f7e284]:
+                  - text: دسته *
+                  - combobox "دسته *" [ref=f7e285]:
+                    - option "هویتی" [selected]
+                    - option "آموزشی"
+                    - option "استخدامی"
+                    - option "درخواست‌ها"
+                    - option "مالی"
+                    - option "سلامت"
+                    - option "سازمانی"
+                    - option "سایر"
+                - generic [ref=f7e286]:
+                  - text: نوع سند *
+                  - combobox "نوع سند *" [ref=f7e287]:
+                    - option "کارت ملی" [selected]
+                    - option "شناسنامه"
+                    - option "پاسپورت"
+                    - option "اقامت"
+                - generic [ref=f7e288]:
+                  - text: زیرگروه
+                  - textbox "زیرگروه" [ref=f7e289]
+                - generic [ref=f7e290]:
+                  - text: تاریخ سند *
+                  - textbox "تاریخ سند *" [ref=f7e291]: 2026-07-22
+                - generic [ref=f7e292]:
+                  - text: تاریخ انقضا
+                  - textbox "تاریخ انقضا" [ref=f7e293]
+                - generic [ref=f7e294]:
+                  - text: شماره سند
+                  - textbox "شماره سند" [ref=f7e295]: DOC-PHASE6-001
+                - generic [ref=f7e296]:
+                  - text: سطح دسترسی *
+                  - combobox "سطح دسترسی *" [ref=f7e297]:
+                    - option "فقط مدیر پرونده"
+                    - option "کارمند"
+                    - option "مدیر مستقیم"
+                    - option "منابع انسانی" [selected]
+                    - option "مالی"
+                - generic [ref=f7e298]:
+                  - text: برچسب‌ها
+                  - textbox "برچسب‌ها" [ref=f7e299]:
+                    - /placeholder: با ویرگول جدا کنید
+                    - text: فاز۶,پذیرش
+                - generic [ref=f7e300]:
+                  - text: توضیحات
+                  - textbox "توضیحات" [ref=f7e301]: سند آزمایشی E2E مرکز اسناد
+                - generic [ref=f7e302]:
+                  - text: فایل *
+                  - button "فایل * PDF یا تصویر، حداکثر ۱۰ مگابایت" [active] [ref=f7e303]
+                  - generic [ref=f7e304]: PDF یا تصویر، حداکثر ۱۰ مگابایت
+                - generic [ref=f7e305]:
+                  - button "ثبت سند" [ref=f7e306] [cursor=pointer]
+                  - button "انصراف" [ref=f7e307] [cursor=pointer]
+    - complementary [ref=f7e88]:
+      - generic [ref=f7e89]:
+        - generic [ref=f7e90]: P
+        - generic [ref=f7e91]:
+          - generic [ref=f7e92]: Phase6 Documents
+          - generic [ref=f7e233]: phase6.documents@local.test
+      - generic [ref=f7e93]:
+        - generic [ref=f7e94]: DS
+        - generic [ref=f7e95]:
+          - generic [ref=f7e96]: Phase3 Runtime Test Tenant
+          - generic [ref=f7e234]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f7e97] [cursor=pointer]
+      - generic [ref=f7e100]:
+        - button "خروج" [ref=f7e101] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f7e106] [cursor=pointer]:
+          - generic [ref=f7e111]: "1"
+        - button "تنظیمات کلی" [ref=f7e112] [cursor=pointer]
+        - button "داشبورد" [ref=f7e117] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f7e122] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f7e130]:
+        - link "طبقه‌بندی مشاغل" [ref=f7e131] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f7e137] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f7e142] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f7e148] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f7e154] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f7e159] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f7e164] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f7e172] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f7e179] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f7e186] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f7e193] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f7e199] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f7e205] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f7e212] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f7e217] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f7e235] [cursor=pointer]:
+        - paragraph [ref=f7e224]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f7e236]
+      - generic [ref=f7e226]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f7e228] [cursor=pointer]
+        - generic [ref=f7e231]: 0.8.0
+  - alert [ref=f7e232]

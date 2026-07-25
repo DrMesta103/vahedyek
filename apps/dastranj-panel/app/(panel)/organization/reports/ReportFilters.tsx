@@ -1,0 +1,3 @@
+'use client';
+import { useState, type FormEvent, type ReactNode } from 'react';
+export function ReportFilters({children}:{children:ReactNode}){const [error,setError]=useState<string|null>(null);function submit(event:FormEvent<HTMLFormElement>){const data=new FormData(event.currentTarget);const from=String(data.get('from')??'');const to=String(data.get('to')??'');if(from&&to&&from>to){event.preventDefault();setError('تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد.')}}return <><form className="org-memory-filters" onSubmit={submit}>{children}</form>{error&&<p role="alert" className="org-export-error">{error}</p>}</>}

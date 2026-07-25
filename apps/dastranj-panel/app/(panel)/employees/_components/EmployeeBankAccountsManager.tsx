@@ -42,6 +42,9 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
   const [sheba, setSheba] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [isPrimary, setIsPrimary] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState('');
+  const [requestError, setRequestError] = useState('');
+  const [requestSuccess, setRequestSuccess] = useState('');
 
   const resetForm = () => {
     setBankName('');
@@ -49,6 +52,8 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
     setSheba('');
     setAccountNumber('');
     setIsPrimary(false);
+    setAttachmentUrl('');
+    setRequestError('');
     setEditingId(null);
   };
 
@@ -68,12 +73,16 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
   };
 
   const persist = (nextAccounts: EmployeeBankAccount[]) => {
-    setAccounts(nextAccounts);
+    setRequestError(''); setRequestSuccess('');
     const formData = new FormData();
     formData.set('employeeId', employeeId);
     formData.set('accounts', JSON.stringify(nextAccounts));
+    formData.set('reasonCode', 'EMPLOYEE_REQUEST');
+    formData.set('attachmentUrl', attachmentUrl);
     startTransition(() => {
-      void saveEmployeeBankAccountsAction(formData);
+      void saveEmployeeBankAccountsAction(formData)
+        .then((result) => { if (result.ok) { setRequestSuccess('درخواست تغییر حساب بانکی برای تأیید ثبت شد.'); setModalOpen(false); resetForm(); } })
+        .catch((error: unknown) => setRequestError(error instanceof Error ? error.message : 'ثبت درخواست ناموفق بود.'));
     });
   };
 
@@ -95,8 +104,6 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
       next = next.map((item) => ({ ...item, isPrimary: item.id === payload.id }));
     }
     persist(next);
-    setModalOpen(false);
-    resetForm();
   };
 
   const handleDelete = (id: string) => {
@@ -231,6 +238,11 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
             <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} />
           </label>
 
+          <label className="employee-add-field employee-add-field-full">
+            <span className="employee-add-field-label">پیوست تغییر بانکی</span>
+            <input value={attachmentUrl} onChange={(event) => setAttachmentUrl(event.target.value)} placeholder="نشانی پیوست" />
+          </label>
+
           <label className="employee-add-toggle-row">
             <span>حساب اصلی</span>
             <span className="request-reason-toggle employee-card-toggle">
@@ -243,10 +255,12 @@ export function EmployeeBankAccountsManager({ employeeId, employeeName, initialA
             <button type="button" className="employee-modal-cancel" onClick={() => setModalOpen(false)}>
               انصراف
             </button>
-            <button type="button" className="employee-modal-submit" disabled={pending || !bankName.trim() || !cardValid} onClick={handleSubmit}>
+            <button type="button" className="employee-modal-submit" disabled={pending || !bankName.trim() || !cardValid || !attachmentUrl.trim()} onClick={handleSubmit}>
               ثبت
             </button>
           </div>
+          {requestError ? <p className="employee-add-field-error" role="alert">{requestError}</p> : null}
+          {requestSuccess ? <p className="text-sm text-emerald-500" role="status">{requestSuccess}</p> : null}
         </div>
       </EmployeeModal>
 

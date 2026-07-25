@@ -1,0 +1,49 @@
+- generic [ref=f17e1]:
+  - generic [active]:
+    - generic [ref=f17e4]:
+      - generic [ref=f17e5]:
+        - navigation [ref=f17e7]:
+          - button [disabled] [ref=f17e8]:
+            - img "previous" [ref=f17e9]
+          - generic [ref=f17e11]:
+            - generic [ref=f17e12]: 1/
+            - text: "1"
+          - button [disabled] [ref=f17e13]:
+            - img "next" [ref=f17e14]
+        - link "Next.js 16.2.4 (stale) Turbopack" [ref=f17e17] [cursor=pointer]:
+          - /url: https://nextjs.org/docs/messages/version-staleness
+          - generic "There is a newer version (16.2.11) available, upgrade recommended!" [ref=f17e20]: Next.js 16.2.4 (stale)
+          - generic [ref=f17e21]: Turbopack
+      - dialog "Runtime PrismaClientInitializationError" [ref=f17e23]:
+        - generic [ref=f17e27]:
+          - generic [ref=f17e28]:
+            - generic [ref=f17e29]:
+              - generic [ref=f17e30]: Runtime PrismaClientInitializationError
+              - generic [ref=f17e31]: Server
+            - generic [ref=f17e32]:
+              - button "Copy Error Info" [ref=f17e33] [cursor=pointer]
+              - button "No related documentation found" [disabled] [ref=f17e36]
+              - button "Attach Node.js inspector" [ref=f17e39] [cursor=pointer]
+          - generic [ref=f17e48]:
+            - generic [ref=f17e49]:
+              - text: "Invalid `prisma.appUser.findUnique()` invocation: Prisma Client could not locate the Query Engine for runtime \"windows\". This is likely caused by tooling that has not copied \"query_engine-windows.dll.node\" to the deployment folder. Ensure that you ran `prisma generate` and that \"query_engine-windows.dll.node\" has been copied to \"node_modules\\.prisma\\client\". We would appreciate if you could take the time to share some information with us. Please help us by answering a few questions:"
+              - link "https://pris.ly/engine-not-found-tooling-investigation" [ref=f17e50] [cursor=pointer]:
+                - /url: https://pris.ly/engine-not-found-tooling-investigation
+              - text: "The following locations have been searched: C:\\Users\\Administrator\\Desktop\\first-unit-next\\vahedyek\\apps\\dastranj-panel\\node_modules\\.prisma\\client C:\\ROOT\\Desktop\\first-unit-next\\vahedyek\\apps\\dastranj-panel\\node_modules\\.prisma\\client /tmp/prisma-engines C:\\Users\\Administrator\\Desktop\\first-unit-next\\vahedyek\\apps\\dastranj-panel\\prisma"
+            - button "Show More" [ref=f17e52] [cursor=pointer]
+        - generic [ref=f17e53]: "1"
+        - generic [ref=f17e54]: "2"
+    - generic [ref=f17e59] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=f17e60]
+      - generic [ref=f17e64]:
+        - button "Open issues overlay" [ref=f17e65]:
+          - generic [ref=f17e66]:
+            - generic [ref=f17e67]: "0"
+            - generic [ref=f17e68]: "1"
+          - generic [ref=f17e69]: Issue
+        - button "Collapse issues badge" [ref=f17e70]
+  - generic [ref=f17e74]:
+    - heading "This page couldn’t load" [level=1] [ref=f17e77]
+    - paragraph [ref=f17e78]: A server error occurred. Reload to try again.
+    - button "Reload" [ref=f17e81] [cursor=pointer]
+  - paragraph [ref=f17e82]: ERROR 5725560

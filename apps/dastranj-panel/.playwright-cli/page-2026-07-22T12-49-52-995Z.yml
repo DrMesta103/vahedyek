@@ -1,0 +1,25 @@
+- generic [ref=f1e3]:
+  - heading "ورود" [level=1] [ref=f1e5]
+  - generic [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - generic [ref=f1e8]:
+        - generic [ref=f1e9]: ایمیل یا شماره موبایل
+        - generic [ref=f1e10]:
+          - generic [ref=f1e11]: "*"
+          - generic [ref=f1e12]: الزامی
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: IR +98
+        - textbox "ایمیل یا شماره موبایل الزامی" [ref=f1e16]:
+          - /placeholder: "9352720114"
+    - generic [ref=f1e17]:
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]: رمز عبور
+        - generic [ref=f1e20]:
+          - generic [ref=f1e21]: "*"
+          - generic [ref=f1e22]: الزامی
+      - textbox "رمز عبور الزامی" [ref=f1e25]
+    - button "ورود" [ref=f1e26] [cursor=pointer]
+  - paragraph [ref=f1e27]:
+    - text: حساب ندارید؟
+    - link "ثبت‌نام کنید" [ref=f1e28] [cursor=pointer]:
+      - /url: /register

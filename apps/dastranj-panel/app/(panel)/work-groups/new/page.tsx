@@ -1,8 +1,10 @@
 import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { listEmployees, listLocations, listPolicies } from '../../../lib/data';
 import { WorkGroupStepperForm } from './_components/WorkGroupStepperForm';
+import { requireWorkGroupAccess } from '../../../lib/work-group-access';
 
 export default async function NewWorkGroupPage() {
+  await requireWorkGroupAccess('create');
   const [employees, locations, policies] = await Promise.all([listEmployees(), listLocations(), listPolicies({ activeOnly: true })]);
 
   return (

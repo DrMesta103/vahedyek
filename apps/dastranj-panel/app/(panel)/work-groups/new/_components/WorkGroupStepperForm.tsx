@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { PersianDatePicker } from '@repo/ui';
-import { AlertTriangle, Camera, Check, Grid3X3, MapPin, Plus, Search, Trash2, UserRound, UsersRound } from 'lucide-react';
+import { AlertTriangle, Check, Grid3X3, MapPin, Plus, Search, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveWorkGroupDraftAction } from '../../../../lib/actions';
@@ -123,8 +123,9 @@ function Stepper({
     { index: 2, label: 'محل های کار' },
     { index: 3, label: 'کارمندان' },
     { index: 4, label: 'سیاست های کاری' },
+    { index: 5, label: 'بازبینی' },
   ];
-  const accessibleUntil = Math.min(4, completedSteps.length + 1);
+  const accessibleUntil = Math.min(5, completedSteps.length + 1);
 
   return (
     <div className="work-group-stepper">
@@ -315,6 +316,7 @@ export function WorkGroupStepperForm({
   const [policySearch, setPolicySearch] = useState('');
   const [pendingEmployee, setPendingEmployee] = useState<EmployeeOption | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const availableEmployees = useMemo(() => {
     const selectedIds = new Set(selectedEmployees.map((item) => item.id));
@@ -335,7 +337,7 @@ export function WorkGroupStepperForm({
   }, [policies, policySearch]);
 
   const selectedPolicy = policies.find((item) => item.id === selectedPolicyId) ?? null;
-  const accessibleUntil = mode === 'edit' ? 4 : Math.min(4, completedSteps.length + 1);
+  const accessibleUntil = mode === 'edit' ? 5 : Math.min(5, completedSteps.length + 1);
   const submitLabel = mode === 'edit' ? 'ذخیره تغییرات' : 'ثبت نهایی';
 
   const buildFormData = () => {
@@ -357,12 +359,16 @@ export function WorkGroupStepperForm({
 
   const saveDraftStep = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       const result = await saveWorkGroupDraftAction(buildFormData());
       if (result?.id && result.id !== workGroupId) {
         setWorkGroupId(result.id);
       }
       return result;
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'ذخیره گروه کاری انجام نشد.');
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -450,14 +456,13 @@ export function WorkGroupStepperForm({
       <Stepper step={step} completedSteps={completedSteps} onStepClick={goToStep} />
 
       <div className="work-group-step-divider" />
+      {saveError ? <p className="calendar-create-error" role="alert">{saveError}</p> : null}
 
       {step === 1 ? (
         <section className="work-group-step-panel">
           <div className="work-group-logo-picker">
             <UsersRound />
-            <span>
-              <Camera />
-            </span>
+            <small>لوگو ثبت نشده است؛ بارگذاری لوگو در زیرساخت فعلی پشتیبانی نمی‌شود.</small>
           </div>
           <label className="work-group-field">
             <span>عنوان <b>*</b></span>
@@ -510,6 +515,7 @@ export function WorkGroupStepperForm({
       {step === 2 ? (
         <section className="work-group-step-panel">
           <h2>محل‌های کار گروه</h2>
+          <p>محل فعالیت گروه برای تعیین محدوده مجاز ثبت تردد اعضای گروه استفاده می‌شود.</p>
           <div className="work-group-location-grid">
             {locations.map((location) => (
               <button key={location.id} type="button" className={cn('work-group-location-card', locationId === location.id && 'is-selected')} onClick={() => setLocationId(location.id)}>
@@ -695,13 +701,26 @@ export function WorkGroupStepperForm({
             type="button"
             className="work-group-step-next"
             disabled={!canSubmit || saving}
-            onClick={async () => {
-              markStepCompleted(4);
-              await saveAndExit();
-            }}
+            onClick={async () => { await goToNextStep(5); }}
           >
-            {submitLabel}
+            بازبینی
             <Grid3X3 />
+          </button>
+        </section>
+      ) : null}
+
+      {step === 5 ? (
+        <section className="work-group-step-panel">
+          <h2>بازبینی و تأیید نهایی</h2>
+          <dl className="shift-template-detail-grid">
+            <div><dt>عنوان</dt><dd>{title}</dd></div>
+            <div><dt>محل کار</dt><dd>{locations.find((item) => item.id === locationId)?.title ?? 'انتخاب نشده'}</dd></div>
+            <div><dt>سیاست کاری</dt><dd>{selectedPolicy?.title ?? 'انتخاب نشده'}</dd></div>
+            <div><dt>تعداد اعضا</dt><dd>{selectedEmployees.length.toLocaleString('fa-IR')}</dd></div>
+          </dl>
+          <p>با تأیید نهایی، اطلاعات بالا به‌عنوان وضعیت عملیاتی گروه کاری ثبت می‌شود.</p>
+          <button type="button" className="work-group-step-next" disabled={!canSubmit || saving} onClick={async () => { markStepCompleted(5); await saveAndExit(); }}>
+            {saving ? 'در حال ذخیره...' : submitLabel}<Check />
           </button>
         </section>
       ) : null}

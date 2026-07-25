@@ -1,0 +1,102 @@
+- generic [active] [ref=f18e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f18e2] [cursor=pointer]
+  - generic [ref=f18e6]:
+    - generic [ref=f18e7]:
+      - navigation "مسیر صفحه" [ref=f18e9]:
+        - list [ref=f18e10]:
+          - listitem [ref=f18e11]:
+            - button "خانه" [ref=f18e12] [cursor=pointer]
+          - listitem [ref=f18e14]
+          - listitem [ref=f18e18]:
+            - button "طبقه‌بندی مشاغل" [ref=f18e19] [cursor=pointer]
+          - listitem [ref=f18e21]
+          - listitem [ref=f18e25]:
+            - generic [ref=f18e26]: reports
+      - main [ref=f18e28]:
+        - main [ref=f18e30]:
+          - generic [ref=f18e31]:
+            - generic [ref=f18e32]:
+              - paragraph [ref=f18e33]: گزارش معماری شغل
+              - heading "گزارش طبقه‌بندی‌های شغلی" [level=1] [ref=f18e34]
+              - paragraph [ref=f18e35]: طبقه‌بندی، ارزیابی و بازه‌های پیشنهادی جبران خدمت.
+            - link "بازگشت به طبقه‌بندی‌ها" [ref=f18e36] [cursor=pointer]:
+              - /url: /job-classifications
+          - generic [ref=f18e37]:
+            - article [ref=f18e38]:
+              - heading "خانواده" [level=2] [ref=f18e39]
+              - strong [ref=f18e40]: "1"
+            - article [ref=f18e41]:
+              - heading "دسته" [level=2] [ref=f18e42]
+              - strong [ref=f18e43]: "1"
+            - article [ref=f18e44]:
+              - heading "سطح" [level=2] [ref=f18e45]
+              - strong [ref=f18e46]: "1"
+            - article [ref=f18e47]:
+              - heading "طبقه‌بندی" [level=2] [ref=f18e48]
+              - strong [ref=f18e49]: "0"
+          - generic [ref=f18e50]:
+            - heading "گزارش طبقه‌بندی" [level=2] [ref=f18e51]
+            - paragraph [ref=f18e53]: طبقه‌بندی فعالی وجود ندارد.
+          - generic [ref=f18e54]:
+            - heading "گزارش ارزیابی" [level=2] [ref=f18e55]
+            - paragraph [ref=f18e57]: ارزیابی ثبت نشده است.
+          - generic [ref=f18e58]:
+            - heading "گزارش بازه جبران خدمت" [level=2] [ref=f18e59]
+            - paragraph [ref=f18e61]: بازه فعالی ثبت نشده است.
+          - generic [ref=f18e62]:
+            - heading "Missing Classification" [level=2] [ref=f18e63]
+            - list [ref=f18e64]:
+              - listitem [ref=f18e65]: Phase5 Used Position — 1 سمت
+    - complementary [ref=f18e67]:
+      - generic [ref=f18e68]:
+        - generic [ref=f18e69]: ؟
+        - generic [ref=f18e70]: در حال بارگذاری...
+      - generic [ref=f18e72]:
+        - generic [ref=f18e73]: TEN
+        - generic [ref=f18e74]: tenant
+        - button "تغییر کسب و کار" [ref=f18e76] [cursor=pointer]
+      - generic [ref=f18e79]:
+        - button "خروج" [ref=f18e80] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f18e85] [cursor=pointer]:
+          - generic [ref=f18e90]: "1"
+        - button "تنظیمات کلی" [ref=f18e91] [cursor=pointer]
+        - button "داشبورد" [ref=f18e96] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f18e101] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f18e109]:
+        - link "طبقه‌بندی مشاغل" [ref=f18e110] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f18e116] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f18e121] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f18e127] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f18e133] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f18e138] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f18e143] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f18e151] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f18e158] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f18e165] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f18e172] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f18e178] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f18e184] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f18e191] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f18e196] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f18e202] [cursor=pointer]:
+        - paragraph [ref=f18e203]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f18e204]
+      - generic [ref=f18e205]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f18e207] [cursor=pointer]
+        - generic [ref=f18e210]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f18e216] [cursor=pointer]

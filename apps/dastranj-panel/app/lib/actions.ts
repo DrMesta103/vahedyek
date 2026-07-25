@@ -50,8 +50,14 @@ import { buildRemoteWorkPolicyPayload } from './remote-work-policy';
 import { seedSampleData } from './seed';
 import type { ContractDraftTemplate } from './contract-draft-templates';
 import { normalizeContractDraftTemplate } from './contract-draft-templates';
-import { requireEmployeeAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
+import { requireEmployeeAccess, requireEmployeeChangeRequestManageAccess, requireOrganizationUnitAccess, requirePositionAccess } from './organization-unit-access';
 import { createEmployeeAuditLog } from './employee-audit';
+import { requireOffboardingAccess } from './offboarding-access';
+import { handleEmployeeOffboardingAction } from './offboarding-workflow-actions';
+import { requireWorkGroupAccess } from './work-group-access';
+import { shouldApplyContextChangeNow, validateMembershipDates, validateWorkGroupTitle } from './work-group-rules';
+import { EMPLOYEE_CHANGE_REASON_CODES, getEmployeeEditPolicy } from './employee-edit-policy';
+import { changedFields, recordOrganizationEvent } from './organization-memory';
 import * as XLSX from './xlsx';
 import type {
   QuickEmployeeImportJobDetails,
@@ -727,6 +733,7 @@ function mapOrganizationCreateError(error: unknown, usesAutoCode: boolean): Erro
 
 export async function createOrganizationUnitFromDialogAction(data: OrganizationUnitCreatePayload) {
   const { tenantId } = await requireOrganizationUnitAccess('create');
+  const auditSession = await getSessionContext();
   if (!data.units.length) throw new Error('حداقل یک واحد سازمانی برای ایجاد انتخاب کنید.');
   const allowedTypes = new Set(['DEPARTMENT', 'DIVISION', 'TEAM', 'BRANCH']);
   const clientIds = new Set(data.units.map((unit) => unit.clientId));
@@ -821,7 +828,11 @@ export async function createOrganizationUnitFromDialogAction(data: OrganizationU
       if (await tx.organizationUnit.findFirst({ where: { tenantId, parentId, title: { equals: unit.title.trim(), mode: 'insensitive' } }, select: { id: true } })) throw new Error(`واحد «${unit.title.trim()}» در همین سطح وجود دارد.`);
       const createdUnit = await tx.organizationUnit.create({ data: { tenantId, title: unit.title.trim(), code: resolvedCodes.get(unit.clientId), type: unit.type, status: unit.status, parentId, managerId: unit.managerId || null, description: unit.description?.trim() || null }, select: { id: true } });
       createdIds.set(unit.clientId, createdUnit.id);
-      if (unit.positions.length) await tx.position.createMany({ data: unit.positions.map((position) => ({ organizationUnitId: createdUnit.id, title: position.title.trim(), code: position.code?.trim() || null, capacity: position.capacity, status: position.status })) });
+      await tx.organizationEvent.create({ data: { tenantId, organizationUnitId: createdUnit.id, entityType: 'UNIT', eventType: 'UNIT_CREATED', description: `واحد «${unit.title.trim()}» ایجاد شد.`, newValue: { title: unit.title.trim(), code: resolvedCodes.get(unit.clientId), type: unit.type, status: unit.status, parentId, managerId: unit.managerId || null }, actorUserId: auditSession?.userId ?? null } });
+      for (const position of unit.positions) {
+        const createdPosition = await tx.position.create({ data: { organizationUnitId: createdUnit.id, title: position.title.trim(), code: position.code?.trim() || null, capacity: position.capacity, status: position.status } });
+        await tx.organizationEvent.create({ data: { tenantId, organizationUnitId: createdUnit.id, positionId: createdPosition.id, entityType: 'POSITION', eventType: 'POSITION_CREATED', description: `سمت «${createdPosition.title}» ایجاد شد.`, newValue: { title: createdPosition.title, code: createdPosition.code, capacity: createdPosition.capacity, status: createdPosition.status }, actorUserId: auditSession?.userId ?? null } });
+      }
       positionCount += unit.positions.length;
     }
     return { firstUnitId: createdIds.get(data.units[0].clientId)!, unitCount: data.units.length, positionCount };
@@ -836,7 +847,7 @@ export async function createOrganizationUnitFromDialogAction(data: OrganizationU
 export async function updateOrganizationUnitAction(formData: FormData) {
   const { tenantId } = await requireOrganizationUnitAccess('update');
   const id = value(formData, 'id');
-  const current = await prisma.organizationUnit.findFirst({ where: { id, tenantId }, select: { id: true, status: true } });
+  const current = await prisma.organizationUnit.findFirst({ where: { id, tenantId } });
   if (!current) throw new Error('Organization unit not found for active tenant.');
   if (current.status === 'ARCHIVED') throw new Error('واحد آرشیوی فقط قابل مشاهده است و امکان ویرایش ندارد.');
   const code = value(formData, 'code') || null;
@@ -867,7 +878,7 @@ export async function updateOrganizationUnitAction(formData: FormData) {
   if (description.length > ORGANIZATION_TEXT_LIMIT || mission.length > ORGANIZATION_TEXT_LIMIT) throw new Error('متن اطلاعات حرفه‌ای واحد بیش از حد مجاز است.');
   if (await prisma.organizationUnit.findFirst({ where: { tenantId, parentId, id: { not: id }, title: { equals: title, mode: 'insensitive' } }, select: { id: true } })) throw new Error('واحدی با این نام در همین سطح سازمانی وجود دارد.');
   try {
-    await prisma.organizationUnit.update({
+    const updatedUnit = await prisma.organizationUnit.update({
       where: { id },
       data: {
         title,
@@ -880,6 +891,11 @@ export async function updateOrganizationUnitAction(formData: FormData) {
         mainResponsibilities: responsibilities,
       },
     });
+    const tracked = ['title', 'code', 'type', 'parentId', 'managerId', 'description', 'mission', 'mainResponsibilities'] as const;
+    const before = Object.fromEntries(tracked.map((key) => [key, current[key]]));
+    const after = Object.fromEntries(tracked.map((key) => [key, updatedUnit[key]]));
+    const fields = changedFields(before, after);
+    if (fields.length) await recordOrganizationEvent({ tenantId, organizationUnitId: id, entityType: 'UNIT', eventType: fields.length === 1 ? `UNIT_${fields[0].toUpperCase()}_CHANGED` : 'UNIT_UPDATED', description: `اطلاعات واحد در فیلدهای ${fields.join('، ')} تغییر کرد.`, previousValue: before, newValue: after });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       const detail = JSON.stringify((error as Prisma.PrismaClientKnownRequestError).meta ?? {});
@@ -1002,7 +1018,6 @@ export async function setOrganizationStructureTemplateStatusAction(data: { id: s
   const updated = await prisma.organizationStructureTemplate.updateMany({ where: { id: data.id, tenantId, status: { not: 'ARCHIVED' } }, data: { status: data.status } });
   if (!updated.count) throw new Error('قالب قابل تغییر در کسب‌وکار جاری پیدا نشد.');
   revalidatePath('/business-settings/organization-templates'); revalidatePath('/organization-units');
-  return { ok: true as const };
 }
 
 export async function setOrganizationUnitStatusAction(formData: FormData) {
@@ -1022,6 +1037,7 @@ export async function setOrganizationUnitStatusAction(formData: FormData) {
     if (activeChildren || activePositions || activeAssignments) throw new Error(`آرشیو واحد ممکن نیست؛ ${activeChildren} زیرواحد فعال، ${activePositions} سمت فعال و ${activeAssignments} انتصاب فعال وجود دارد.`);
   }
   const updated = await prisma.organizationUnit.updateMany({ where: { id, tenantId, status: { not: 'ARCHIVED' } }, data: { status: status as never } });
+  if (updated.count && current.status !== status) await recordOrganizationEvent({ tenantId, organizationUnitId: id, entityType: 'UNIT', eventType: status === 'ARCHIVED' ? 'UNIT_ARCHIVED' : 'UNIT_STATUS_CHANGED', description: `وضعیت واحد از ${current.status} به ${status} تغییر کرد.`, previousValue: { status: current.status }, newValue: { status } });
   if (!updated.count) throw new Error('واحد سازمانی در کسب‌وکار فعال پیدا نشد.');
   revalidatePath('/organization-units');
 }
@@ -1039,7 +1055,8 @@ export async function createPositionAction(data: { organizationUnitId: string; t
   if (await prisma.position.findFirst({ where: { organizationUnitId: unit.id, title: { equals: data.title.trim(), mode: 'insensitive' } }, select: { id: true } })) throw new Error('عنوان سمت در این واحد قبلاً استفاده شده است.');
   if (code && await prisma.position.findFirst({ where: { organizationUnitId: unit.id, code: { equals: code, mode: 'insensitive' } }, select: { id: true } })) throw new Error('کد سمت در این واحد قبلاً استفاده شده است.');
   try {
-    await prisma.position.create({ data: { organizationUnitId: unit.id, title: data.title.trim(), code, capacity: data.capacity, status } });
+    const createdPosition = await prisma.position.create({ data: { organizationUnitId: unit.id, title: data.title.trim(), code, capacity: data.capacity, status } });
+    await recordOrganizationEvent({ tenantId, organizationUnitId: unit.id, positionId: createdPosition.id, entityType: 'POSITION', eventType: 'POSITION_CREATED', description: `سمت «${createdPosition.title}» ایجاد شد.`, newValue: { title: createdPosition.title, code: createdPosition.code, capacity: createdPosition.capacity, status: createdPosition.status } });
   } catch (error) {
     if (isUniqueConstraintError(error)) throw new Error('عنوان یا کد سمت در این واحد قبلاً استفاده شده است.');
     throw new Error('ثبت سمت سازمانی انجام نشد. لطفاً دوباره تلاش کنید.');
@@ -1054,13 +1071,14 @@ export async function setPositionStatusAction(formData: FormData) {
   const id = value(formData, 'id');
   const status = requestedStatus;
   if (!['ACTIVE', 'INACTIVE', 'ARCHIVED'].includes(status)) throw new Error('وضعیت سمت معتبر نیست.');
-  const position = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId } }, select: { status: true, assignments: { where: { status: 'ACTIVE', employee: { isActive: true } }, select: { id: true, startDate: true, endDate: true } } } });
+  const position = await prisma.position.findFirst({ where: { id, organizationUnit: { tenantId } }, select: { organizationUnitId: true, status: true, assignments: { where: { status: 'ACTIVE', employee: { isActive: true } }, select: { id: true, startDate: true, endDate: true } } } });
   if (!position) throw new Error('سمت سازمانی در کسب‌وکار فعال پیدا نشد.');
   if (position.status === 'ARCHIVED') throw new Error('وضعیت سمت آرشیوی قابل تغییر نیست.');
   const today = new Date().toISOString().slice(0, 10);
   const activeCount = position.assignments.filter((assignment) => (!assignment.startDate || assignment.startDate <= today) && (!assignment.endDate || assignment.endDate >= today)).length;
   if (status === 'ARCHIVED' && activeCount) throw new Error(`این سمت ${activeCount} انتصاب فعال دارد و قابل آرشیو نیست.`);
   await prisma.position.update({ where: { id }, data: { status: status as never } });
+  if (position.status !== status) await recordOrganizationEvent({ tenantId, organizationUnitId: position.organizationUnitId, positionId: id, entityType: 'POSITION', eventType: status === 'ARCHIVED' ? 'POSITION_ARCHIVED' : 'POSITION_STATUS_CHANGED', description: `وضعیت سمت از ${position.status} به ${status} تغییر کرد.`, previousValue: { status: position.status }, newValue: { status } });
   revalidatePath('/organization-units');
 }
 
@@ -1088,7 +1106,14 @@ export async function updatePositionAction(formData: FormData) {
     let cursor: string | null = reportsToPositionId; const visited = new Set<string>();
     while (cursor) { if (cursor === id || visited.has(cursor)) throw new Error('رابطه گزارش‌دهی چرخه ایجاد می‌کند.'); visited.add(cursor); const parent: { reportsToPositionId: string | null } | null = await prisma.position.findFirst({ where: { id: cursor, organizationUnit: { tenantId }, status: { not: 'ARCHIVED' } }, select: { reportsToPositionId: true } }); if (!parent) throw new Error('سمت بالادست معتبر نیست.'); cursor = parent.reportsToPositionId; }
   }
-  try { await prisma.position.update({ where: { id }, data: { title, code, capacity, status: status as never, description, jobProfileId, reportsToPositionId } }); }
+  try {
+    const updatedPosition = await prisma.position.update({ where: { id }, data: { title, code, capacity, status: status as never, description, jobProfileId, reportsToPositionId } });
+    const tracked = ['title', 'code', 'capacity', 'status', 'description', 'jobProfileId', 'reportsToPositionId'] as const;
+    const before = Object.fromEntries(tracked.map((key) => [key, current[key]]));
+    const after = Object.fromEntries(tracked.map((key) => [key, updatedPosition[key]]));
+    const fields = changedFields(before, after);
+    if (fields.length) await recordOrganizationEvent({ tenantId, organizationUnitId: current.organizationUnitId, positionId: id, entityType: 'POSITION', eventType: fields.length === 1 ? `POSITION_${fields[0].toUpperCase()}_CHANGED` : 'POSITION_UPDATED', description: `اطلاعات سمت در فیلدهای ${fields.join('، ')} تغییر کرد.`, previousValue: before, newValue: after });
+  }
   catch (error) { if (isUniqueConstraintError(error)) throw new Error('عنوان یا کد سمت در این واحد تکراری است.'); throw new Error('ویرایش سمت انجام نشد. لطفاً دوباره تلاش کنید.'); }
   revalidatePath('/organization-units'); revalidatePath(`/organization-units/${current.organizationUnitId}`); revalidatePath(`/positions/${id}`);
   redirect(`/positions/${id}?success=position`);
@@ -1108,9 +1133,38 @@ export async function saveJobProfileAction(formData: FormData) {
     if (position.jobProfileId && !(await prisma.jobProfile.findFirst({ where: { id: position.jobProfileId, tenantId }, select: { id: true } }))) throw new Error('پروفایل شغلی در کسب‌وکار جاری پیدا نشد.');
     const profile = position.jobProfileId ? await prisma.jobProfile.update({ where: { id: position.jobProfileId }, data: { ...payload, revision: { increment: 1 } } }) : await prisma.jobProfile.create({ data: { tenantId, ...payload } });
     if (!position.jobProfileId) await prisma.position.update({ where: { id: position.id }, data: { jobProfileId: profile.id } });
+    await recordOrganizationEvent({ tenantId, organizationUnitId: position.organizationUnitId, positionId: position.id, entityType: 'POSITION', eventType: 'POSITION_JOB_PROFILE_CHANGED', description: `پروفایل شغلی سمت به بازنگری ${profile.revision} رسید.`, previousValue: position.jobProfileId ? { jobProfileId: position.jobProfileId, revision: profile.revision - 1 } : null, newValue: { jobProfileId: profile.id, revision: profile.revision } });
   } catch (error) { if (isUniqueConstraintError(error)) throw new Error('کد پروفایل شغلی در این کسب‌وکار تکراری است.'); throw new Error('ذخیره پروفایل شغلی انجام نشد.'); }
   revalidatePath(`/positions/${positionId}`); revalidatePath(`/organization-units/${position.organizationUnitId}`);
   redirect(`/positions/${positionId}?success=job`);
+}
+
+const ROADMAP_STATUSES = new Set(['PLANNED', 'IN_PROGRESS', 'DONE', 'CANCELLED']);
+
+export async function saveOrganizationRoadmapAction(formData: FormData) {
+  const { tenantId } = await requireOrganizationUnitAccess('update');
+  const id = value(formData, 'id');
+  const organizationUnitId = value(formData, 'organizationUnitId');
+  const title = value(formData, 'title').trim();
+  const description = value(formData, 'description').trim() || null;
+  const targetDateRaw = value(formData, 'targetDate');
+  const status = value(formData, 'status');
+  if (!title || title.length > 200) throw new Error('عنوان برنامه ساختاری معتبر نیست.');
+  if (description && description.length > ORGANIZATION_TEXT_LIMIT) throw new Error('توضیحات برنامه ساختاری بیش از حد مجاز است.');
+  const targetDate = new Date(targetDateRaw);
+  if (!targetDateRaw || Number.isNaN(targetDate.getTime())) throw new Error('تاریخ هدف برنامه ساختاری معتبر نیست.');
+  if (!ROADMAP_STATUSES.has(status)) throw new Error('وضعیت برنامه ساختاری معتبر نیست.');
+  if (!(await prisma.organizationUnit.findFirst({ where: { id: organizationUnitId, tenantId }, select: { id: true } }))) throw new Error('واحد سازمانی در کسب‌وکار جاری یافت نشد.');
+  const session = await getSessionContext();
+  if (id) {
+    const existing = await prisma.organizationRoadmap.findFirst({ where: { id, tenantId }, select: { id: true } });
+    if (!existing) throw new Error('برنامه ساختاری در کسب‌وکار جاری یافت نشد.');
+    await prisma.organizationRoadmap.update({ where: { id }, data: { title, description, targetDate, status: status as never } });
+  } else {
+    await prisma.organizationRoadmap.create({ data: { tenantId, organizationUnitId, title, description, targetDate, status: status as never, createdBy: session?.userId ?? null } });
+  }
+  revalidatePath(`/organization-units/${organizationUnitId}`);
+  revalidatePath('/organization/dashboard');
 }
 
 export async function createShiftTemplateFromDialogAction(data: {
@@ -3340,6 +3394,17 @@ export async function updateEmployeeAction(formData: FormData) {
   const mobile2 = formData.has('mobile2') ? value(formData, 'mobile2') : (current.mobile2 ?? '');
   const personnelCode = value(formData, 'personnelCode');
   const childrenCount = parseChildrenCount(formData);
+  const protectedChanges = [
+    ['nationalId', current.nationalId ?? '', nationalId],
+    ['mobile1', current.mobile1 ?? '', mobile1],
+    ['mobile2', current.mobile2 ?? '', mobile2],
+    ['email', current.email ?? '', email],
+    ['personnelCode', current.personnelCode ?? '', personnelCode],
+    ['identityPhotoUrl', current.identityPhotoUrl ?? '', hasIdentityPhotoInput ? (value(formData, 'identityPhotoUrl') || '') : (current.identityPhotoUrl ?? '')],
+    ['maritalStatus', current.maritalStatus, value(formData, 'maritalStatus') || 'single'],
+    ['childrenCount', String(current.childrenCount), String(childrenCount)],
+  ].filter(([fieldKey, before, after]) => getEmployeeEditPolicy(fieldKey).operationType === 'CHANGE_REQUEST' && before !== after);
+  if (protectedChanges.length) throw new Error('تغییر اطلاعات رسمی باید از مسیر درخواست تغییر ثبت شود.');
   if (nationalId && !isNationalIdValid(nationalId)) throw new Error('کد ملی معتبر نیست.');
   if (email && normalizeEmail(email) !== email.toLowerCase()) throw new Error('فرمت ایمیل معتبر نیست.');
   if (mobile1 && !isValidIranMobile(sanitizeIranMobileInput(mobile1))) throw new Error('موبایل اصلی معتبر نیست.');
@@ -3397,6 +3462,127 @@ export async function deleteEmployeeAction(formData: FormData) {
   throw new Error('حذف کارمند از مسیر عملیاتی سیستم مجاز نیست؛ ابتدا وضعیت همکاری را غیرفعال یا خاتمه‌یافته کنید.');
 }
 
+export type EmployeeChangeRequestActionResult = { ok: true; requestId: string } | { ok: false; error: string };
+
+function parseRequestedBankAccounts(raw: string): Prisma.InputJsonValue | null {
+  try {
+    const accounts = JSON.parse(raw) as unknown;
+    return Array.isArray(accounts) && accounts.every((account) => account && typeof account === 'object') ? accounts as Prisma.InputJsonValue : null;
+  } catch { return null; }
+}
+
+export async function submitEmployeeChangeRequestAction(formData: FormData): Promise<EmployeeChangeRequestActionResult> {
+  const access = await requireEmployeeChangeRequestManageAccess();
+  const employeeId = value(formData, 'employeeId');
+  const fieldKey = value(formData, 'fieldKey');
+  const nextValue = value(formData, 'value');
+  const reasonCode = value(formData, 'reasonCode');
+  const reasonText = value(formData, 'reasonText') || null;
+  const attachmentUrl = value(formData, 'attachmentUrl') || null;
+  const effectiveDate = value(formData, 'effectiveDate') || null;
+  const policy = getEmployeeEditPolicy(fieldKey);
+  if (!access.canSensitiveUpdate && policy.sensitive) throw new Error('دسترسی ثبت درخواست تغییر اطلاعات حساس را ندارید.');
+  if (policy.operationType !== 'CHANGE_REQUEST') throw new Error('این فیلد نیازمند درخواست تغییر نیست.');
+  if (!EMPLOYEE_CHANGE_REASON_CODES.includes(reasonCode as never)) throw new Error('دلیل تغییر معتبر نیست.');
+  if (reasonCode === 'OTHER' && !reasonText) throw new Error('توضیح دلیل سایر الزامی است.');
+  if (policy.requiresAttachment && !attachmentUrl) throw new Error('پیوست برای این تغییر الزامی است.');
+  if (policy.requiresEffectiveDate && !/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate ?? '')) throw new Error('تاریخ اثرگذاری معتبر نیست.');
+  if (fieldKey === 'nationalId' && !isNationalIdValid(nextValue)) throw new Error('کد ملی معتبر نیست.');
+  if ((fieldKey === 'mobile1' || fieldKey === 'mobile2') && !isValidIranMobile(sanitizeIranMobileInput(nextValue))) throw new Error('شماره موبایل معتبر نیست.');
+  if (fieldKey === 'email' && normalizeEmail(nextValue) !== nextValue.toLowerCase()) throw new Error('ایمیل معتبر نیست.');
+  if (fieldKey === 'childrenCount' && (!/^\d+$/.test(nextValue) || Number(nextValue) > 30)) throw new Error('تعداد فرزندان معتبر نیست.');
+  if (fieldKey === 'maritalStatus' && !['single', 'married', 'divorced'].includes(nextValue)) throw new Error('وضعیت تأهل معتبر نیست.');
+  const bankAccounts = fieldKey === 'bankAccounts' ? parseRequestedBankAccounts(nextValue) : null;
+  if (fieldKey === 'bankAccounts' && !bankAccounts) throw new Error('اطلاعات حساب بانکی معتبر نیست.');
+  const { tenantId } = await requireEmployeeMutationTarget(employeeId);
+  const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId } });
+  if (!employee) throw new Error('کارمند در کسب‌وکار فعال پیدا نشد.');
+  if (fieldKey === 'nationalId') {
+    const duplicate = await prisma.employee.findFirst({ where: { tenantId, nationalId: nextValue, id: { not: employeeId } }, select: { id: true } });
+    if (duplicate) throw new Error('کد ملی برای کارمند دیگری ثبت شده است.');
+  }
+  const existing = await prisma.employeeChangeRequest.findFirst({ where: { tenantId, employeeId, fieldKey, status: { in: ['SUBMITTED', 'PENDING_APPROVAL', 'APPROVED'] } }, select: { id: true } });
+  if (existing) throw new Error('برای این فیلد درخواست تغییر باز وجود دارد.');
+  const oldValue = fieldKey === 'nationalId' ? employee.nationalId
+    : fieldKey === 'mobile1' ? employee.mobile1
+      : fieldKey === 'mobile2' ? employee.mobile2
+        : fieldKey === 'email' ? employee.email
+          : fieldKey === 'identityPhotoUrl' ? employee.identityPhotoUrl
+            : fieldKey === 'maritalStatus' ? employee.maritalStatus
+              : fieldKey === 'childrenCount' ? String(employee.childrenCount)
+                : fieldKey === 'personnelCode' ? employee.personnelCode
+                  : fieldKey === 'bankAccounts' ? employee.bankAccounts : null;
+  const session = await getSessionContext();
+  const request = await prisma.employeeChangeRequest.create({ data: {
+    tenantId, employeeId, fieldKey, category: policy.category, operationType: policy.operationType,
+    status: 'PENDING_APPROVAL', oldValue: oldValue == null ? Prisma.JsonNull : fieldKey === 'bankAccounts' ? oldValue as Prisma.InputJsonValue : { value: oldValue }, newValue: fieldKey === 'bankAccounts' ? bankAccounts! : { value: nextValue },
+    reasonCode, reasonText, attachmentUrl, effectiveDate, payrollImpact: policy.payrollImpact, contractImpact: policy.contractImpact,
+    requestedBy: session?.userId ?? null, otpStatus: policy.requireOtp ? 'NOT_CONFIGURED' : 'NOT_REQUIRED',
+  } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: 'change_request_submitted', fieldKey, oldValue: typeof oldValue === 'string' ? oldValue : JSON.stringify(oldValue), newValue: nextValue, reason: reasonText ?? reasonCode, source: `change-request:${request.id}` });
+  revalidatePath(`/employees/${employeeId}`);
+  revalidatePath(`/employees/${employeeId}/history`);
+  return { ok: true, requestId: request.id };
+}
+
+export async function reviewEmployeeChangeRequestAction(formData: FormData) {
+  await requireEmployeeChangeRequestManageAccess();
+  const requestId = value(formData, 'requestId');
+  const decision = value(formData, 'decision');
+  const reviewNote = value(formData, 'reviewNote') || null;
+  if (decision === 'REJECTED' && !reviewNote) throw new Error('دلیل رد درخواست الزامی است.');
+  if (!['APPROVED', 'REJECTED'].includes(decision)) throw new Error('تصمیم بررسی معتبر نیست.');
+  const tenantId = await getTenantId();
+  const request = await prisma.employeeChangeRequest.findFirst({ where: { id: requestId, tenantId, status: 'PENDING_APPROVAL' } });
+  if (!request) throw new Error('درخواست قابل بررسی نیست.');
+  const session = await getSessionContext();
+  await prisma.employeeChangeRequest.update({ where: { id: request.id }, data: { status: decision as 'APPROVED' | 'REJECTED', reviewedBy: session?.userId ?? null, reviewedAt: new Date(), reviewNote } });
+  await createEmployeeAuditLog({ tenantId, employeeId: request.employeeId, action: decision === 'APPROVED' ? 'change_request_approved' : 'change_request_rejected', fieldKey: request.fieldKey, oldValue: request.status, newValue: decision, reason: reviewNote ?? request.reasonCode, source: `change-request:${request.id}` });
+  revalidatePath(`/employees/${request.employeeId}`);
+}
+
+export async function applyEmployeeChangeRequestAction(formData: FormData) {
+  await requireEmployeeChangeRequestManageAccess();
+  const requestId = value(formData, 'requestId');
+  const tenantId = await getTenantId();
+  const request = await prisma.employeeChangeRequest.findFirst({ where: { id: requestId, tenantId, status: 'APPROVED' } });
+  if (!request) throw new Error('درخواست تأییدشده برای اعمال پیدا نشد.');
+  if (request.effectiveDate && request.effectiveDate > new Date().toISOString().slice(0, 10)) throw new Error('تاریخ اثرگذاری این تغییر هنوز نرسیده است.');
+  const payload = request.newValue as { value?: string };
+  const nextValue = payload.value ?? '';
+  const data = request.fieldKey === 'nationalId' ? { nationalId: nextValue }
+    : request.fieldKey === 'mobile1' ? { mobile1: sanitizeIranMobileInput(nextValue) }
+      : request.fieldKey === 'mobile2' ? { mobile2: sanitizeIranMobileInput(nextValue) }
+        : request.fieldKey === 'email' ? { email: normalizeEmail(nextValue) }
+          : request.fieldKey === 'identityPhotoUrl' ? { identityPhotoUrl: nextValue }
+    : request.fieldKey === 'maritalStatus' ? { maritalStatus: nextValue as never }
+      : request.fieldKey === 'childrenCount' ? { childrenCount: Number(nextValue) }
+        : request.fieldKey === 'personnelCode' ? { personnelCode: nextValue || null }
+          : request.fieldKey === 'bankAccounts' ? { bankAccounts: request.newValue }
+            : null;
+  if (!data) throw new Error('اعمال این نوع درخواست پشتیبانی نمی‌شود.');
+  const session = await getSessionContext();
+  await prisma.$transaction([
+    prisma.employee.update({ where: { id: request.employeeId }, data }),
+    prisma.employeeChangeRequest.update({ where: { id: request.id }, data: { status: 'APPLIED', appliedBy: session?.userId ?? null, appliedAt: new Date() } }),
+  ]);
+  await createEmployeeAuditLog({ tenantId, employeeId: request.employeeId, action: 'change_request_applied', fieldKey: request.fieldKey, oldValue: JSON.stringify(request.oldValue), newValue: nextValue, reason: request.reasonCode, source: `change-request:${request.id}` });
+  revalidatePath('/employees');
+  revalidatePath(`/employees/${request.employeeId}`);
+  revalidatePath(`/employees/${request.employeeId}/history`);
+}
+
+export async function cancelEmployeeChangeRequestAction(formData: FormData) {
+  await requireEmployeeChangeRequestManageAccess();
+  const requestId = value(formData, 'requestId');
+  const tenantId = await getTenantId();
+  const request = await prisma.employeeChangeRequest.findFirst({ where: { id: requestId, tenantId, status: { in: ['DRAFT', 'SUBMITTED', 'PENDING_APPROVAL'] } } });
+  if (!request) throw new Error('درخواست قابل لغو نیست.');
+  await prisma.employeeChangeRequest.update({ where: { id: request.id }, data: { status: 'CANCELLED' } });
+  await createEmployeeAuditLog({ tenantId, employeeId: request.employeeId, action: 'change_request_cancelled', fieldKey: request.fieldKey, oldValue: request.status, newValue: 'CANCELLED', reason: request.reasonCode, source: `change-request:${request.id}` });
+  revalidatePath(`/employees/${request.employeeId}`);
+}
+
 export async function toggleEmployeeActiveAction(formData: FormData) {
   await requireEmployeeAccess('disable');
   const tenantId = await getTenantId();
@@ -3411,21 +3597,77 @@ export async function toggleEmployeeActiveAction(formData: FormData) {
 
 /** Records only the request to start termination; the workflow deliberately remains out of scope. */
 export async function createEmployeeTerminationIntentAction(formData: FormData) {
-  await requireEmployeeAccess('disable');
   const tenantId = await getTenantId();
   const employeeId = value(formData, 'employeeId');
+  await requireOffboardingAccess(employeeId, 'canCreate');
   const reason = value(formData, 'reason') || null;
+  const terminationType = value(formData, 'terminationType') || null;
+  const announcementDate = value(formData, 'announcementDate') || null;
+  const proposedLastWorkingDay = value(formData, 'proposedLastWorkingDay') || null;
+  const effectiveTerminationDate = value(formData, 'effectiveTerminationDate') || null;
+  if (!terminationType || !reason || !announcementDate || !proposedLastWorkingDay || !effectiveTerminationDate) throw new Error('نوع خاتمه، دلیل و تاریخ‌های الزامی را وارد کنید.');
   const employee = await prisma.employee.findFirst({ where: { id: employeeId, tenantId }, select: { id: true } });
   if (!employee) throw new Error('کارمند در کسب‌وکار فعال پیدا نشد.');
-  const existing = await prisma.employeeTerminationIntent.findFirst({ where: { tenantId, employeeId, status: 'DRAFT' }, select: { id: true } });
-  if (existing) throw new Error('درخواست شروع فرآیند خاتمه همکاری قبلاً ثبت شده است.');
+  const existing = await prisma.employeeTerminationIntent.findFirst({ where: { tenantId, employeeId, status: { in: ['DRAFT', 'SUBMITTED', 'APPROVAL_PENDING', 'SETTLEMENT', 'ACCESS_REVOCATION', 'READY_FOR_FINALIZATION'] } }, select: { id: true } });
+  if (existing) throw new Error('برای این کارمند یک فرآیند خاتمه همکاری فعال وجود دارد.');
   const session = await getSessionContext();
-  await prisma.employeeTerminationIntent.create({ data: { tenantId, employeeId, initiatedBy: session?.userId ?? null, reason } });
-  await createEmployeeAuditLog({ tenantId, employeeId, action: 'termination_intent_created', fieldKey: 'terminationIntent', newValue: 'DRAFT', reason });
+  const process = await prisma.employeeTerminationIntent.create({ data: { tenantId, employeeId, initiatedBy: session?.userId ?? null, reason, terminationType, announcementDate, proposedLastWorkingDay, effectiveTerminationDate, processStartDate: new Date(), nextAction: 'SUBMIT', stageOwner: 'HR' } });
+  await createEmployeeAuditLog({ tenantId, employeeId, action: 'CREATE_OFFBOARDING', fieldKey: 'terminationIntent', newValue: process.id, reason, source: `offboarding:${process.id}` });
   revalidatePath(`/employees/${employeeId}`);
 }
 
+export async function updateEmployeeOffboardingAction(formData: FormData) {
+  return handleEmployeeOffboardingAction(formData);
+  /* Legacy inline lifecycle retained temporarily for migration traceability.
+  await requireEmployeeAccess('disable');
+  const tenantId = await getTenantId();
+  const id = value(formData, 'id');
+  const process = await prisma.employeeTerminationIntent.findFirst({ where: { id, tenantId } });
+  if (!process) throw new Error('فرایند خاتمه همکاری پیدا نشد.');
+  const action = value(formData, 'action');
+  const transitions: Record<string, { status: string; nextAction: string; owner: string }> = {
+    SUBMIT: { status: 'SUBMITTED', nextAction: 'UNDER_REVIEW', owner: 'MANAGER' },
+    APPROVE: { status: 'APPROVAL_PENDING', nextAction: 'CLEARANCE', owner: 'HR' },
+    CLEAR: { status: 'SETTLEMENT', nextAction: 'SETTLEMENT', owner: 'FINANCE' },
+    SETTLE: { status: 'ACCESS_REVOCATION', nextAction: 'ACCESS_REVOCATION', owner: 'IT' },
+    ACCESS_DISABLE: { status: 'READY_FOR_FINALIZATION', nextAction: 'FINALIZE', owner: 'HR' },
+    FINALIZE: { status: 'COMPLETED', nextAction: 'ARCHIVE', owner: 'HR' },
+    ARCHIVE: { status: 'ARCHIVED', nextAction: 'DONE', owner: 'HR' },
+    CANCEL: { status: 'CANCELLED', nextAction: 'DONE', owner: 'HR' },
+  };
+  const transition = transitions[action];
+  if (!transition) throw new Error('عملیات فرایند معتبر نیست.');
+  if (action === 'FINALIZE') {
+    const [contracts, financialItems, requests, documents] = await Promise.all([
+      prisma.employeeContract.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['active', 'pending', 'approved'] } } }),
+      prisma.employeeFinancialItem.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'APPLIED_TO_PAYROLL'] } } }),
+      prisma.employeeRequest.count({ where: { tenantId, employeeId: process.employeeId, status: { in: ['pending', 'approved'] } } }),
+      prisma.employeeDocument.count({ where: { tenantId, employeeId: process.employeeId, status: 'PENDING_APPROVAL' } }),
+    ]);
+    const blockers = [contracts && `${contracts} قرارداد باز`, financialItems && `${financialItems} آیتم مالی باز`, requests && `${requests} درخواست باز`, documents && `${documents} سند در انتظار تأیید`].filter(Boolean);
+    if (blockers.length) throw new Error(`نهایی‌سازی ممکن نیست: ${blockers.join('، ')}`);
+  }
+  const data: Record<string, unknown> = { status: transition.status, nextAction: transition.nextAction, stageOwner: transition.owner };
+  if (action === 'SETTLE') data.settlementStatus = 'SETTLED';
+  if (action === 'ACCESS_DISABLE') { data.accessStatus = 'DISABLED'; data.accessDisableDate = new Date(); data.immediateAccessRevocation = true; await revokeEmployeeAccess({ tenantId, employeeId: process.employeeId, reason: 'OFFBOARDING_ACCESS_REVOCATION', actorUserId: (await getSessionContext())?.userId }); }
+  if (action === 'ARCHIVE') data.archiveDate = new Date();
+  await prisma.employeeTerminationIntent.update({ where: { id }, data });
+  await createEmployeeAuditLog({ tenantId, employeeId: process.employeeId, action: `${action === 'ACCESS_DISABLE' ? 'ACCESS_DISABLE' : action === 'FINALIZE' ? 'FINALIZE_OFFBOARDING' : action === 'ARCHIVE' ? 'ARCHIVE_OFFBOARDING' : `${action}_OFFBOARDING`}`, fieldKey: 'status', oldValue: process.status, newValue: transition.status });
+  revalidatePath(`/employees/${process.employeeId}`);
+  revalidatePath(`/employees/${process.employeeId}/offboarding`);
+  */
+}
+
 export async function saveEmployeeBankAccountsAction(formData: FormData) {
+  const requestForm = new FormData();
+  requestForm.set('employeeId', value(formData, 'employeeId'));
+  requestForm.set('fieldKey', 'bankAccounts');
+  requestForm.set('value', value(formData, 'accounts'));
+  requestForm.set('reasonCode', value(formData, 'reasonCode') || 'EMPLOYEE_REQUEST');
+  requestForm.set('reasonText', value(formData, 'reasonText'));
+  requestForm.set('attachmentUrl', value(formData, 'attachmentUrl'));
+  return submitEmployeeChangeRequestAction(requestForm);
+  /* Legacy direct persistence intentionally removed; approved requests are applied above.
   await requireEmployeeAccess('bankUpdate');
   const tenantId = await getTenantId();
   const employeeId = value(formData, 'employeeId');
@@ -3439,6 +3681,7 @@ export async function saveEmployeeBankAccountsAction(formData: FormData) {
   await createEmployeeAuditLog({ tenantId, employeeId, action: 'bank_accounts_updated', fieldKey: 'bankAccounts', oldValue: JSON.stringify(employee.bankAccounts), newValue: JSON.stringify(accounts) });
   revalidatePath(`/employees/${employeeId}`);
   revalidatePath(`/employees/${employeeId}/bank-accounts`);
+  */
 }
 
 export async function saveEmployeeGuaranteesAction(formData: FormData) {
@@ -3586,7 +3829,8 @@ function parseJoinDate(raw: string) {
 
   const isoCandidate = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T12:00:00.000Z` : trimmed;
   const parsed = new Date(isoCandidate);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  if (Number.isNaN(parsed.getTime())) throw new Error('تاریخ اثرگذاری عضویت معتبر نیست.');
+  return parsed;
 }
 
 async function archiveCurrentMembershipsForEmployee(
@@ -3594,6 +3838,7 @@ async function archiveCurrentMembershipsForEmployee(
   employeeId: string,
   leftAt: Date,
   excludeWorkGroupId?: string,
+  reason = 'انتقال به گروه کاری دیگر',
 ) {
   const memberships = await tx.workGroupMember.findMany({
     where: {
@@ -3611,6 +3856,8 @@ async function archiveCurrentMembershipsForEmployee(
     data: {
       isCurrent: false,
       leftAt,
+      status: 'ENDED',
+      reason,
     },
   });
 }
@@ -3621,6 +3868,8 @@ async function syncWorkGroupMembers(
     workGroupId: string;
     assignments: WorkGroupMemberAssignment[];
     archiveRemovedMembers: boolean;
+    actorUserId: string;
+    reason: string;
   },
 ) {
   const now = new Date();
@@ -3639,7 +3888,8 @@ async function syncWorkGroupMembers(
   const selectedEmployeeIds = new Set(params.assignments.map((assignment) => assignment.employeeId));
 
   for (const assignment of params.assignments) {
-    await archiveCurrentMembershipsForEmployee(tx, assignment.employeeId, assignment.joinedAt, params.workGroupId);
+    validateMembershipDates(assignment.joinedAt);
+    if (assignment.joinedAt <= now) await archiveCurrentMembershipsForEmployee(tx, assignment.employeeId, assignment.joinedAt, params.workGroupId, params.reason);
   }
 
   for (const assignment of params.assignments) {
@@ -3654,32 +3904,7 @@ async function syncWorkGroupMembers(
         },
         data: {
           accessLevel: assignment.accessLevel,
-          joinedAt: assignment.joinedAt,
-          leftAt: null,
-          isCurrent: true,
-        },
-      });
-      continue;
-    }
-
-    const archivedInGroup = await tx.workGroupMember.findFirst({
-      where: {
-        workGroupId: params.workGroupId,
-        employeeId: assignment.employeeId,
-        isCurrent: false,
-      },
-      orderBy: { joinedAt: 'desc' },
-      select: { id: true },
-    });
-
-    if (archivedInGroup) {
-      await tx.workGroupMember.update({
-        where: { id: archivedInGroup.id },
-        data: {
-          accessLevel: assignment.accessLevel,
-          joinedAt: assignment.joinedAt,
-          leftAt: null,
-          isCurrent: true,
+          reason: params.reason,
         },
       });
       continue;
@@ -3691,7 +3916,11 @@ async function syncWorkGroupMembers(
         employeeId: assignment.employeeId,
         accessLevel: assignment.accessLevel,
         joinedAt: assignment.joinedAt,
-        isCurrent: true,
+        effectiveDate: assignment.joinedAt,
+        status: assignment.joinedAt > now ? 'FUTURE' : 'ACTIVE',
+        reason: params.reason,
+        createdBy: params.actorUserId,
+        isCurrent: assignment.joinedAt <= now,
       },
     });
   }
@@ -3708,8 +3937,29 @@ async function syncWorkGroupMembers(
     data: {
       isCurrent: false,
       leftAt: now,
+      status: 'ENDED',
+      reason: params.reason,
     },
   });
+}
+
+async function writeWorkGroupAudit(tx: Prisma.TransactionClient, input: {
+  tenantId: string; workGroupId: string; action: string; entity?: string; entityId?: string;
+  actorUserId: string; actorRole: string; before?: unknown; after?: unknown; reason?: string | null; effectiveDate?: Date | null;
+}) {
+  await tx.workGroupAuditLog.create({ data: {
+    tenantId: input.tenantId,
+    workGroupId: input.workGroupId,
+    action: input.action,
+    entity: input.entity ?? 'WorkGroup',
+    entityId: input.entityId ?? input.workGroupId,
+    actorUserId: input.actorUserId,
+    actorRole: input.actorRole,
+    before: input.before == null ? Prisma.JsonNull : input.before as Prisma.InputJsonValue,
+    after: input.after == null ? Prisma.JsonNull : input.after as Prisma.InputJsonValue,
+    reason: input.reason ?? null,
+    effectiveDate: input.effectiveDate ?? null,
+  } });
 }
 
 async function persistWorkGroupUpdate(
@@ -3718,16 +3968,19 @@ async function persistWorkGroupUpdate(
   formData: FormData,
   archiveRemovedMembers: boolean,
 ) {
+  const access = await requireWorkGroupAccess(workGroupId ? 'edit' : 'create');
+  if (access.tenantId !== tenantId) throw new Error('دسترسی بین کسب‌وکارها مجاز نیست.');
   const employeeIds = formData.getAll('employeeIds').map(String);
   const locationId = value(formData, 'locationId') || null;
   const policyId = value(formData, 'policyId') || null;
 
-  const title = value(formData, 'title');
-  if (!title.trim()) throw new Error('Work group title is required.');
+  const { title, normalizedTitle } = validateWorkGroupTitle(value(formData, 'title'));
+  const reason = value(formData, 'reason') || (workGroupId ? 'ویرایش گروه کاری' : 'ایجاد گروه کاری');
 
   if (locationId) {
-    const location = await prisma.location.findFirst({ where: { id: locationId, tenantId }, select: { id: true } });
+    const location = await prisma.location.findFirst({ where: { id: locationId, tenantId }, select: { id: true, isActive: true } });
     if (!location) throw new Error('Location not found for active tenant.');
+    if (!location.isActive) throw new Error('محل غیرفعال برای تخصیص جدید قابل انتخاب نیست.');
   }
   if (policyId) {
     const policy = await prisma.workPolicy.findFirst({ where: { id: policyId, tenantId }, select: { id: true, isActive: true } });
@@ -3742,6 +3995,9 @@ async function persistWorkGroupUpdate(
     ? await prisma.employee.findMany({ where: { id: { in: employeeIds }, tenantId }, select: { id: true } })
     : [];
   if (validEmployees.length !== employeeIds.length) throw new Error('Employee not found for active tenant.');
+  if (new Set(employeeIds).size !== employeeIds.length) throw new Error('هر کارمند فقط یک‌بار می‌تواند در فهرست اعضا باشد.');
+  const duplicate = await prisma.workGroup.findFirst({ where: { tenantId, normalizedTitle, ...(workGroupId ? { id: { not: workGroupId } } : {}) }, select: { id: true } });
+  if (duplicate) throw new Error('گروه کاری دیگری با همین عنوان وجود دارد.');
 
   const description = value(formData, 'description') || null;
   const tags = parseTagList(value(formData, 'tags'));
@@ -3750,12 +4006,17 @@ async function persistWorkGroupUpdate(
     accessLevel: normalizeWorkGroupAccessLevel(value(formData, `accessLevel:${employeeId}`)),
     joinedAt: value(formData, `joinedAt:${employeeId}`) ? parseJoinDate(value(formData, `joinedAt:${employeeId}`)) : new Date(),
   }));
+  const existingContext = workGroupId ? await prisma.workGroup.findFirst({ where: { id: workGroupId, tenantId }, select: { policyId: true, locationId: true } }) : null;
+  const priorMemberships = employeeIds.length ? await prisma.workGroupMember.findMany({ where: { employeeId: { in: employeeIds }, isCurrent: true, workGroup: { tenantId } }, select: { employeeId: true, workGroupId: true } }) : [];
+  if (existingContext?.policyId !== policyId) await requireWorkGroupAccess('policyChange');
+  if (existingContext?.locationId !== locationId) await requireWorkGroupAccess('locationChange');
+  if (workGroupId) await requireWorkGroupAccess('memberManage');
 
   const workGroup = await prisma.$transaction(async (tx) => {
     if (workGroupId) {
       const current = await tx.workGroup.findFirst({
         where: { id: workGroupId, tenantId },
-        select: { id: true },
+        include: { members: { where: { isCurrent: true }, select: { employeeId: true } } },
       });
       if (!current) throw new Error('Work group not found for active tenant.');
 
@@ -3763,6 +4024,7 @@ async function persistWorkGroupUpdate(
         where: { id: workGroupId },
         data: {
           title,
+          normalizedTitle,
           description,
           tags: jsonValue(tags),
           locationId,
@@ -3774,7 +4036,21 @@ async function persistWorkGroupUpdate(
         workGroupId,
         assignments,
         archiveRemovedMembers,
+        actorUserId: access.userId,
+        reason,
       });
+
+      const previousMemberIds = new Set(current.members.map((member) => member.employeeId));
+      for (const assignment of assignments.filter((item) => !previousMemberIds.has(item.employeeId))) {
+        const prior = priorMemberships.find((item) => item.employeeId === assignment.employeeId && item.workGroupId !== workGroupId);
+        await writeWorkGroupAudit(tx, { tenantId, workGroupId, action: prior ? 'TRANSFER_MEMBER' : 'ADD_MEMBER', entity: 'WorkGroupMember', entityId: assignment.employeeId, actorUserId: access.userId, actorRole: access.actorRole, before: prior ?? null, after: assignment, reason, effectiveDate: assignment.joinedAt });
+      }
+      for (const ended of current.members.filter((member) => !employeeIds.includes(member.employeeId))) await writeWorkGroupAudit(tx, { tenantId, workGroupId, action: 'END_MEMBERSHIP', entity: 'WorkGroupMember', entityId: ended.employeeId, actorUserId: access.userId, actorRole: access.actorRole, before: ended, after: { status: 'ENDED' }, reason, effectiveDate: new Date() });
+
+      if (current.policyId !== policyId) await tx.workGroupContextHistory.create({ data: { tenantId, workGroupId, type: 'POLICY', previousId: current.policyId, nextId: policyId, effectiveDate: new Date(), reason, createdBy: access.userId } });
+      if (current.locationId !== locationId) await tx.workGroupContextHistory.create({ data: { tenantId, workGroupId, type: 'LOCATION', previousId: current.locationId, nextId: locationId, effectiveDate: new Date(), reason, createdBy: access.userId } });
+
+      await writeWorkGroupAudit(tx, { tenantId, workGroupId, action: 'UPDATE_GROUP', actorUserId: access.userId, actorRole: access.actorRole, before: current, after: { title, description, tags, locationId, policyId, employeeIds }, reason });
 
       return { id: workGroupId, title };
     }
@@ -3783,6 +4059,7 @@ async function persistWorkGroupUpdate(
       data: {
         tenantId,
         title,
+        normalizedTitle,
         description,
         tags: jsonValue(tags),
         locationId,
@@ -3794,7 +4071,12 @@ async function persistWorkGroupUpdate(
       workGroupId: created.id,
       assignments,
       archiveRemovedMembers: false,
+      actorUserId: access.userId,
+      reason,
     });
+
+    await writeWorkGroupAudit(tx, { tenantId, workGroupId: created.id, action: 'CREATE_GROUP', actorUserId: access.userId, actorRole: access.actorRole, after: { title, description, tags, locationId, policyId, employeeIds }, reason });
+    for (const assignment of assignments) await writeWorkGroupAudit(tx, { tenantId, workGroupId: created.id, action: priorMemberships.some((item) => item.employeeId === assignment.employeeId) ? 'TRANSFER_MEMBER' : 'ADD_MEMBER', entity: 'WorkGroupMember', entityId: assignment.employeeId, actorUserId: access.userId, actorRole: access.actorRole, after: assignment, reason, effectiveDate: assignment.joinedAt });
 
     return { id: created.id, title: created.title };
   });
@@ -3812,6 +4094,10 @@ async function persistWorkGroupUpdate(
 }
 
 export async function createWorkGroupAction(formData: FormData) {
+  const { tenantId } = await requireWorkGroupAccess('create');
+  await persistWorkGroupUpdate(tenantId, null, formData, false);
+  redirect('/work-groups');
+  /* legacy path retained below only as unreachable reference during migration
   const tenantId = await getTenantId();
   const employeeIds = formData.getAll('employeeIds').map(String);
   const locationId = value(formData, 'locationId') || null;
@@ -3859,31 +4145,80 @@ export async function createWorkGroupAction(formData: FormData) {
   revalidatePath('/work-groups');
   revalidatePath('/quick-setup');
   redirect('/work-groups');
+  */
 }
 
 export async function updateWorkGroupAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const { tenantId } = await requireWorkGroupAccess('edit');
   const workGroupId = value(formData, 'id');
   await persistWorkGroupUpdate(tenantId, workGroupId, formData, true);
   redirect('/work-groups');
 }
 
 export async function saveWorkGroupDraftAction(formData: FormData) {
-  const tenantId = await getTenantId();
   const workGroupId = value(formData, 'id');
+  const { tenantId } = await requireWorkGroupAccess(workGroupId ? 'edit' : 'create');
   return persistWorkGroupUpdate(tenantId, workGroupId, formData, true);
 }
 
 export async function deleteWorkGroupAction(formData: FormData) {
-  const tenantId = await getTenantId();
+  const access = await requireWorkGroupAccess('disable');
+  const tenantId = access.tenantId;
   const id = value(formData, 'id');
-  const current = await prisma.workGroup.findFirst({ where: { id, tenantId }, select: { id: true } });
+  const reason = value(formData, 'reason');
+  if (!reason) throw new Error('دلیل غیرفعال‌سازی الزامی است.');
+  const current = await prisma.workGroup.findFirst({ where: { id, tenantId }, include: { members: { where: { isCurrent: true }, select: { id: true } }, policy: { select: { isActive: true } } } });
   if (!current) throw new Error('Work group not found for active tenant.');
-  await prisma.workGroup.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.workGroup.update({ where: { id }, data: { status: 'INACTIVE', disabledAt: new Date(), disabledReason: reason } });
+    await writeWorkGroupAudit(tx, { tenantId, workGroupId: id, action: 'DISABLE_GROUP', actorUserId: access.userId, actorRole: access.actorRole, before: current, after: { status: 'INACTIVE' }, reason, effectiveDate: new Date() });
+  });
   revalidatePath('/work-groups');
   revalidatePath('/quick-setup');
   redirect('/work-groups');
 }
+
+export async function restoreWorkGroupAction(formData: FormData) {
+  const access = await requireWorkGroupAccess('disable');
+  const id = value(formData, 'id');
+  const current = await prisma.workGroup.findFirst({ where: { id, tenantId: access.tenantId } });
+  if (!current) throw new Error('گروه کاری پیدا نشد.');
+  await prisma.$transaction(async (tx) => {
+    await tx.workGroup.update({ where: { id }, data: { status: 'ACTIVE', disabledAt: null, disabledReason: null } });
+    await writeWorkGroupAudit(tx, { tenantId: access.tenantId, workGroupId: id, action: 'RESTORE_GROUP', actorUserId: access.userId, actorRole: access.actorRole, before: current, after: { status: 'ACTIVE' }, reason: 'بازیابی گروه کاری' });
+  });
+  revalidatePath('/work-groups');
+}
+
+async function changeWorkGroupContext(formData: FormData, type: 'POLICY' | 'LOCATION') {
+  const access = await requireWorkGroupAccess(type === 'POLICY' ? 'policyChange' : 'locationChange');
+  const workGroupId = value(formData, 'id');
+  const nextId = value(formData, type === 'POLICY' ? 'policyId' : 'locationId');
+  const reason = value(formData, 'reason');
+  const effectiveDate = parseJoinDate(value(formData, 'effectiveDate'));
+  if (!reason) throw new Error('دلیل تغییر الزامی است.');
+  const group = await prisma.workGroup.findFirst({ where: { id: workGroupId, tenantId: access.tenantId }, include: { members: { where: { isCurrent: true }, select: { id: true } } } });
+  if (!group) throw new Error('گروه کاری پیدا نشد.');
+  if (type === 'POLICY') {
+    const policy = await prisma.workPolicy.findFirst({ where: { id: nextId, tenantId: access.tenantId, isActive: true }, select: { id: true } });
+    if (!policy) throw new Error('سیاست کاری فعال پیدا نشد.');
+  } else {
+    const location = await prisma.location.findFirst({ where: { id: nextId, tenantId: access.tenantId, isActive: true }, select: { id: true } });
+    if (!location) throw new Error('محل کار فعال پیدا نشد.');
+  }
+  const previousId = type === 'POLICY' ? group.policyId : group.locationId;
+  if (previousId === nextId) throw new Error('مقدار جدید با مقدار فعلی یکسان است.');
+  await prisma.$transaction(async (tx) => {
+    await tx.workGroupContextHistory.create({ data: { tenantId: access.tenantId, workGroupId, type, previousId, nextId, effectiveDate, reason, createdBy: access.userId } });
+    if (shouldApplyContextChangeNow(effectiveDate)) await tx.workGroup.update({ where: { id: workGroupId }, data: type === 'POLICY' ? { policyId: nextId } : { locationId: nextId } });
+    await writeWorkGroupAudit(tx, { tenantId: access.tenantId, workGroupId, action: type === 'POLICY' ? 'CHANGE_POLICY' : 'CHANGE_LOCATION', actorUserId: access.userId, actorRole: access.actorRole, before: { id: previousId }, after: { id: nextId, affectedMembers: group.members.length }, reason, effectiveDate });
+  });
+  revalidatePath('/work-groups');
+  revalidatePath(`/work-groups/${workGroupId}/edit`);
+}
+
+export async function changeWorkGroupPolicyAction(formData: FormData) { return changeWorkGroupContext(formData, 'POLICY'); }
+export async function changeWorkGroupLocationAction(formData: FormData) { return changeWorkGroupContext(formData, 'LOCATION'); }
 
 export async function createDraftTemplateAction(formData: FormData) {
   const tenantId = await getTenantId();
@@ -4500,8 +4835,10 @@ export async function createWorkGroupFromQuickSetupAction(data: {
   employeeIds: string[];
   policyIds: string[];
 }) {
-  const tenantId = await getTenantId();
-  const location = await prisma.location.findFirst({ where: { id: data.locationId, tenantId }, select: { id: true } });
+  const access = await requireWorkGroupAccess('create');
+  const tenantId = access.tenantId;
+  const { title, normalizedTitle } = validateWorkGroupTitle(data.title);
+  const location = await prisma.location.findFirst({ where: { id: data.locationId, tenantId, isActive: true }, select: { id: true } });
   if (!location) throw new Error('Location not found for active tenant.');
   const employees = await prisma.employee.findMany({ where: { id: { in: data.employeeIds }, tenantId }, select: { id: true } });
   if (employees.length !== data.employeeIds.length) throw new Error('Employee not found for active tenant.');
@@ -4512,7 +4849,8 @@ export async function createWorkGroupFromQuickSetupAction(data: {
     const created = await tx.workGroup.create({
       data: {
         tenantId,
-        title: data.title,
+        title,
+        normalizedTitle,
         tags: jsonValue(data.tags),
         locationId: data.locationId,
         policyId: data.policyIds[0] ?? null,
@@ -4527,7 +4865,11 @@ export async function createWorkGroupFromQuickSetupAction(data: {
         joinedAt: new Date(),
       })),
       archiveRemovedMembers: false,
+      actorUserId: access.userId,
+      reason: 'ایجاد گروه کاری از راه‌اندازی سریع',
     });
+
+    await writeWorkGroupAudit(tx, { tenantId, workGroupId: created.id, action: 'CREATE_GROUP', actorUserId: access.userId, actorRole: access.actorRole, after: { title, locationId: data.locationId, policyId: data.policyIds[0] ?? null, employeeIds: data.employeeIds }, reason: 'ایجاد گروه کاری از راه‌اندازی سریع' });
 
     return created;
   });

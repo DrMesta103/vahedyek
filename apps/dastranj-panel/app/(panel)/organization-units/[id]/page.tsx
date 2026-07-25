@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BriefcaseBusiness, Building2, ChevronLeft, CircleAlert, Network, UsersRound } from "lucide-react";
-import { setOrganizationUnitStatusAction, setPositionStatusAction } from "../../../lib/actions";
-import { getOrganizationUnitProfile } from "../../../lib/data";
+import { BriefcaseBusiness, Building2, ChevronLeft, CircleAlert, Clock3, Network, UsersRound } from "lucide-react";
+import { saveOrganizationRoadmapAction, setOrganizationUnitStatusAction, setPositionStatusAction } from "../../../lib/actions";
+import { getOrganizationMemory, getOrganizationUnitProfile } from "../../../lib/data";
 import { getOrganizationUnitAccess } from "../../../lib/organization-unit-access";
 import { ArchiveAction } from "../_components/ArchiveAction";
 
@@ -10,7 +10,7 @@ const unitType: Record<string, string> = { DEPARTMENT: "واحد", DIVISION: "م
 const lifecycle: Record<string, string> = { ACTIVE: "فعال", INACTIVE: "غیرفعال", ARCHIVED: "آرشیوی" };
 const capacityLabel: Record<string, string> = { WITHOUT_ASSIGNEE: "بدون متصدی", HAS_AVAILABLE_CAPACITY: "ظرفیت خالی", FULL: "تکمیل ظرفیت", OVER_CAPACITY: "بیش از ظرفیت", INACTIVE: "غیرفعال", ARCHIVED: "آرشیوی" };
 
-export default async function OrganizationUnitProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; success?: string }> }) {
+export default async function OrganizationUnitProfilePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; success?: string; from?: string; to?: string; eventType?: string; employeeId?: string }> }) {
   const { id } = await params;
   const query = await searchParams;
   const routeAccess = await getOrganizationUnitAccess();
@@ -25,6 +25,7 @@ export default async function OrganizationUnitProfilePage({ params, searchParams
   const unit = await getOrganizationUnitProfile(id);
   if (!unit) notFound();
   const tab = ["overview", "children", "positions", "employees", "authority", "history"].includes(query.tab ?? "") ? query.tab! : "overview";
+  const memory = tab === "history" ? await getOrganizationMemory(id, query) : null;
   const responsibilities = Array.isArray(unit.mainResponsibilities) ? unit.mainResponsibilities.filter((item): item is string => typeof item === "string") : [];
   const managerHasAssignment = unit.managerId ? unit.employees.some((assignment) => assignment.employeeId === unit.managerId) : true;
   const defects = [!unit.manager && "مدیر یا مسئول واحد تعیین نشده است.", !unit.mission && "مأموریت واحد تکمیل نشده است.", !responsibilities.length && "وظایف اصلی واحد ثبت نشده‌اند.", !unit.positions.length && "سمتی تعریف نشده است.", unit.summary.unassignedCount > 0 && `${unit.summary.unassignedCount} سمت بدون متصدی است.`, unit.summary.overCapacityCount > 0 && `${unit.summary.overCapacityCount} سمت بیش از ظرفیت است.`].filter(Boolean) as string[];
@@ -308,20 +309,26 @@ export default async function OrganizationUnitProfilePage({ params, searchParams
         </section>
       )}
       {tab === "history" && (
-        <section className="org-profile-grid">
+        <section className="org-memory-stack">
           <article className="org-profile-card">
-            <h2>اسناد</h2>
-            <div className="org-section-empty">
-              <CircleAlert />
-              <p>Document Center با Entity Link معتبر برای واحدها وجود ندارد.</p>
-            </div>
+            <header><div><h2>تاریخچه و گزارش‌ها</h2><p>رویدادهای واقعی ثبت‌شده از زمان فعال‌شدن حافظه سازمانی؛ داده گذشته به‌صورت ساختگی بازسازی نشده است.</p></div></header>
+            <form className="org-memory-filters" method="get"><input type="hidden" name="tab" value="history" /><label>از تاریخ<input type="date" name="from" defaultValue={query.from} /></label><label>تا تاریخ<input type="date" name="to" defaultValue={query.to} /></label><label>نوع رویداد<select name="eventType" defaultValue={query.eventType || ""}><option value="">همه رویدادها</option>{memory?.eventTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label><button type="submit">اعمال فیلتر</button></form>
           </article>
           <article className="org-profile-card">
-            <h2>تاریخچه</h2>
-            <div className="org-section-empty">
-              <CircleAlert />
-              <p>Audit framework عمومی Unit/Position وجود ندارد؛ زمان آخرین تغییر جایگزین تاریخچه نیست.</p>
-            </div>
+            <h2>Timeline کسب‌وکار</h2>
+            {!memory?.access.canViewHistory ? <div className="org-section-empty"><CircleAlert /><p>مجوز مشاهده تاریخچه سازمانی را ندارید.</p></div> : memory.events.length ? <ol className="org-timeline">{memory.events.map((event) => <li key={event.id}><Clock3 /><div><strong>{event.description}</strong><span>{event.eventType} · {new Date(event.occurredAt).toLocaleString("fa-IR")}</span>{event.effectiveAt && <small>تاریخ اثرگذاری: {new Date(event.effectiveAt).toLocaleDateString("fa-IR")}</small>}<details><summary>جزئیات تغییر</summary><pre>{JSON.stringify({ before: event.previousValue, after: event.newValue, actor: event.actorUserId, role: event.actorRole, reason: event.reason, reference: event.referenceId }, null, 2)}</pre></details></div></li>)}</ol> : <div className="org-section-empty"><Clock3 /><p>هنوز تغییر مهمی برای این واحد ثبت نشده است.</p></div>}
+          </article>
+          <article className="org-profile-card"><h2>تاریخچه مدیریت واحد</h2>{!memory?.access.canViewHistory ? <div className="org-section-empty"><CircleAlert /><p>مجوز مشاهده تاریخچه را ندارید.</p></div> : memory.managerHistory.length ? <div className="org-memory-table">{memory.managerHistory.map((item) => <div key={item.id}><strong>{item.employee ? `${item.employee.firstName} ${item.employee.lastName}` : "مدیر حذف‌شده"}</strong><span>{item.managementType}</span><span>{new Date(item.startDate).toLocaleDateString("fa-IR")}</span><span>{item.endDate ? new Date(item.endDate).toLocaleDateString("fa-IR") : "ادامه‌دار"}</span><span>{item.current ? "جاری" : "پایان‌یافته"}</span></div>)}</div> : <div className="org-section-empty"><UsersRound /><p>تغییر مدیر واقعی از زمان فعال‌شدن تاریخچه ثبت نشده است.</p></div>}</article>
+          <article className="org-profile-card">
+            <h2>گزارش ظرفیت و کارکنان</h2>
+            {!memory?.access.canViewReports ? <div className="org-section-empty"><CircleAlert /><p>مجوز مشاهده گزارش‌های سازمانی را ندارید.</p></div> : <><div className="org-profile-summary"><article><span>کارکنان جاری</span><strong>{memory.reports.currentEmployees}</strong></article><article><span>کارکنان سابق</span><strong>{memory.reports.formerEmployees}</strong></article><article><span>کل ظرفیت</span><strong>{memory.reports.positions.reduce((sum, item) => sum + item.capacity, 0)}</strong></article><article><span>ظرفیت خالی</span><strong>{memory.reports.positions.reduce((sum, item) => sum + item.emptyCapacity, 0)}</strong></article></div><div className="org-memory-table">{memory.reports.positions.map((position) => <div key={position.id}><strong>{position.title}</strong><span>ظرفیت {position.capacity}</span><span>منصوب {position.activeAssignments}</span><span>خالی {position.emptyCapacity}</span><span>{position.status}</span></div>)}</div></>}
+          </article>
+          <article className="org-profile-card">
+            <h2>Roadmap مبتنی بر واقعیت</h2>
+            {!memory?.access.canViewRoadmap ? <div className="org-section-empty"><CircleAlert /><p>مجوز مشاهده Roadmap سازمانی را ندارید.</p></div> : <div className="org-roadmap-grid"><section><h3>برنامه ساختاری آینده</h3>{memory.roadmapItems.length ? memory.roadmapItems.map((item) => <form key={item.id} action={saveOrganizationRoadmapAction} className="org-roadmap-form"><input type="hidden" name="id" value={item.id}/><input type="hidden" name="organizationUnitId" value={unit.id}/><input name="title" defaultValue={item.title} disabled={!unit.access.canUpdateUnit}/><textarea name="description" defaultValue={item.description ?? ""} disabled={!unit.access.canUpdateUnit}/><input name="targetDate" type="date" defaultValue={item.targetDate.toISOString().slice(0,10)} disabled={!unit.access.canUpdateUnit}/><select name="status" defaultValue={item.status} disabled={!unit.access.canUpdateUnit}><option value="PLANNED">برنامه‌ریزی‌شده</option><option value="IN_PROGRESS">در حال اجرا</option><option value="DONE">انجام‌شده</option><option value="CANCELLED">لغوشده</option></select>{unit.access.canUpdateUnit && <button type="submit">ذخیره</button>}</form>) : <p className="org-muted">برنامه ساختاری واقعی ثبت نشده است.</p>}{unit.access.canUpdateUnit && <form action={saveOrganizationRoadmapAction} className="org-roadmap-form"><input type="hidden" name="organizationUnitId" value={unit.id}/><input name="title" required maxLength={200} placeholder="عنوان برنامه ساختاری"/><textarea name="description" placeholder="توضیحات"/><input name="targetDate" type="date" required/><select name="status" defaultValue="PLANNED"><option value="PLANNED">برنامه‌ریزی‌شده</option><option value="IN_PROGRESS">در حال اجرا</option><option value="DONE">انجام‌شده</option><option value="CANCELLED">لغوشده</option></select><button type="submit">افزودن برنامه</button></form>}</section><section><h3>مسیر شغلی کارکنان</h3>{memory.career.length ? memory.career.map((item) => <div key={item.employee.id}><strong>{item.employee.firstName} {item.employee.lastName}</strong><p>{item.steps.map((step) => step.position).join(" ← ")}</p></div>) : <p className="org-muted">سابقه انتساب واقعی برای ترسیم مسیر شغلی وجود ندارد.</p>}</section></div>}
+          </article>
+          <article className="org-profile-card">
+            <h2>منابع در دسترس نیست</h2><ul className="org-defect-list"><li><CircleAlert />{memory?.blockers.contractOrder}</li><li><CircleAlert />{memory?.blockers.document}</li></ul>
           </article>
         </section>
       )}

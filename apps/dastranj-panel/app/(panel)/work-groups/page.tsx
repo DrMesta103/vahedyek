@@ -4,6 +4,8 @@ import { ModulePageHeader } from '../../components/module-page/ModulePageHeader'
 import { listCalendars, listEmployees, listLocations, listPolicies, listWorkGroups } from '../../lib/data';
 import { WorkGroupFiltersSidebar } from './_components/WorkGroupFiltersSidebar';
 import { WorkGroupCardActions } from './_components/WorkGroupCardActions';
+import { getWorkGroupAccess } from '../../lib/work-group-access';
+import { formatPersianDate } from '../../lib/format-date';
 
 type WorkGroupsPageProps = {
   searchParams?: Promise<{
@@ -11,6 +13,8 @@ type WorkGroupsPageProps = {
     locationId?: string;
     policyId?: string;
     calendarId?: string;
+    q?: string;
+    status?: string;
   }>;
 };
 
@@ -28,11 +32,18 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
     locationId?: string;
     policyId?: string;
     calendarId?: string;
+    q?: string;
+    status?: string;
   };
   const employeeId = normalizeId(resolvedSearchParams.employeeId);
   const locationId = normalizeId(resolvedSearchParams.locationId);
   const policyId = normalizeId(resolvedSearchParams.policyId);
   const calendarId = normalizeId(resolvedSearchParams.calendarId);
+  const q = normalizeId(resolvedSearchParams.q);
+  const status = normalizeId(resolvedSearchParams.status);
+
+  const access = await getWorkGroupAccess();
+  if (!access.canView) return <div className="module-page" dir="rtl"><h1>دسترسی به گروه‌های کاری</h1><p>شما مجوز مشاهده گروه‌های کاری این کسب‌وکار را ندارید.</p></div>;
 
   const [items, employees, locations, calendars, policies] = await Promise.all([
     listWorkGroups(),
@@ -75,6 +86,8 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
     if (locationId && item.location?.id !== locationId) return false;
     if (policyId && item.policy?.id !== policyId) return false;
     if (calendarId && item.policy?.calendar?.id !== calendarId) return false;
+    if (q && !item.title.includes(q)) return false;
+    if (status && status !== 'ALL' && item.status !== status) return false;
     return true;
   });
 
@@ -92,12 +105,17 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
         <ModulePageHeader
           title="گروه‌های کاری"
           subtitle="مدیریت گروه‌های کاری، اعضا، سیاست‌ها و محل‌های کار"
-          addHref="/work-groups/new"
-          addLabel="افزودن گروه کاری"
+          addHref={access.canCreate ? "/work-groups/new" : undefined}
+          addLabel={access.canCreate ? "افزودن گروه کاری" : undefined}
         />
 
-        <div className="work-groups-list-toolbar" aria-hidden>
-          <Search className="work-groups-list-search-icon" />
+        <div className="work-groups-list-toolbar">
+          <form className="flex gap-2" method="get">
+            <Search className="work-groups-list-search-icon" aria-hidden />
+            <input name="q" defaultValue={q} placeholder="جست‌وجوی عنوان گروه کاری" />
+            <select name="status" defaultValue={status || 'ALL'}><option value="ALL">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option></select>
+            <button type="submit">اعمال</button>
+          </form>
         </div>
 
         <div className="work-groups-list">
@@ -114,6 +132,8 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
                     سیاست‌های کاری: {item.policy?.title ?? 'ثبت نشده است'}
                     {item.policy?.calendar?.yearLabel ? ` (تقویم ${item.policy.calendar.yearLabel})` : ''}
                   </p>
+                  <p>وضعیت: {item.status === 'ACTIVE' ? 'فعال' : 'غیرفعال'} · آخرین تغییر: {formatPersianDate(item.updatedAt)}</p>
+                  <p>تکمیل: {item.completion.percent.toLocaleString('fa-IR')}٪ · {item.completion.requirements.filter((requirement) => !requirement.complete).map((requirement) => requirement.label).join('، ') || 'کامل'}</p>
                 </div>
 
                 <WorkGroupCardActions
@@ -122,6 +142,7 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
                   members={item.members.map((member) => ({
                     id: member.id,
                     isCurrent: member.isCurrent,
+                    status: member.status,
                     joinedAt: member.joinedAt.toISOString(),
                     leftAt: member.leftAt ? member.leftAt.toISOString() : null,
                     accessLevel: member.accessLevel,
@@ -135,6 +156,9 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
                       personnelCode: member.employee.personnelCode ?? null,
                     },
                   }))}
+                  status={item.status}
+                  canEdit={access.canEdit}
+                  canDisable={access.canDisable}
                 />
 
                 <div className="work-group-card-avatar">
@@ -145,12 +169,12 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
             );
           })}
 
-          <Link href="/work-groups/new" className="work-group-add-card">
+          {access.canCreate ? <Link href="/work-groups/new" className="work-group-add-card">
             <span className="work-group-add-copy">برای افزودن گروه کاری کلیک کنید.</span>
             <span className="work-group-add-icon" aria-hidden>
               <Plus />
             </span>
-          </Link>
+          </Link> : null}
 
           {filteredItems.length === 0 ? <div className="work-groups-empty">گروه کاری مطابق فیلترهای انتخاب‌شده پیدا نشد.</div> : null}
         </div>

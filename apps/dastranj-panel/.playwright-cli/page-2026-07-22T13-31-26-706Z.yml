@@ -1,0 +1,140 @@
+- generic [active] [ref=f10e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f10e2] [cursor=pointer]
+  - generic [ref=f10e6]:
+    - generic [ref=f10e7]:
+      - navigation "مسیر صفحه" [ref=f10e9]:
+        - list [ref=f10e10]:
+          - listitem [ref=f10e11]:
+            - button "خانه" [ref=f10e12] [cursor=pointer]
+          - listitem [ref=f10e14]
+          - listitem [ref=f10e18]:
+            - button "کارمندان" [ref=f10e19] [cursor=pointer]
+          - listitem [ref=f10e21]
+          - listitem [ref=f10e25]:
+            - generic [ref=f10e26]: documents
+      - main [ref=f10e28]:
+        - main [ref=f10e30]:
+          - navigation [ref=f10e31]:
+            - link "مرکز اسناد" [ref=f10e32] [cursor=pointer]:
+              - /url: /employees/phase6-document-employee/documents
+            - text: / مدرک هویتی آزمایشی
+          - generic [ref=f10e33]:
+            - generic [ref=f10e34]:
+              - heading "مدرک هویتی آزمایشی" [level=1] [ref=f10e39]
+              - paragraph [ref=f10e40]: کارت ملی · نسخه ۲ · آرشیوشده
+            - link "دانلود" [ref=f10e42] [cursor=pointer]:
+              - /url: /api/employees/phase6-document-employee/documents/cmrw4afl0000boyag79u4h4yc/download
+          - generic [ref=f10e46]:
+            - article [ref=f10e47]:
+              - heading "مشخصات سند" [level=2] [ref=f10e48]
+              - generic [ref=f10e49]:
+                - generic [ref=f10e50]:
+                  - term [ref=f10e51]: دسته
+                  - definition [ref=f10e52]: IDENTITY
+                - generic [ref=f10e53]:
+                  - term [ref=f10e54]: زیرگروه
+                  - definition [ref=f10e55]: —
+                - generic [ref=f10e56]:
+                  - term [ref=f10e57]: شماره سند
+                  - definition [ref=f10e58]: DOC-PHASE6-001
+                - generic [ref=f10e59]:
+                  - term [ref=f10e60]: تاریخ سند
+                  - definition [ref=f10e61]: 2026-07-22
+                - generic [ref=f10e62]:
+                  - term [ref=f10e63]: انقضا
+                  - definition [ref=f10e64]: ندارد
+                - generic [ref=f10e65]:
+                  - term [ref=f10e66]: سطح دسترسی
+                  - definition [ref=f10e67]: HR
+                - generic [ref=f10e71]:
+                  - term [ref=f10e72]: توضیحات
+                  - definition [ref=f10e73]: —
+            - complementary [ref=f10e74]:
+              - heading "منبع" [level=2] [ref=f10e75]
+              - paragraph [ref=f10e76]: "نوع: ثبت مستقیم"
+              - paragraph [ref=f10e77]: "ماژول: سایر"
+              - paragraph [ref=f10e78]: "شناسه مرجع: —"
+              - button "بازیابی سند" [ref=f10e80] [cursor=pointer]
+          - generic [ref=f10e84]:
+            - heading "پیش‌نمایش فایل" [level=2] [ref=f10e85]
+            - iframe [ref=f10e86]:
+              - generic: This page has been blocked by Chrome
+          - generic [ref=f10e87]:
+            - article [ref=f10e88]:
+              - heading "تاریخچه نسخه‌ها" [level=2] [ref=f10e94]
+              - link "نسخه ۱ (نسخه مبنا)" [ref=f10e96] [cursor=pointer]:
+                - /url: /employees/phase6-document-employee/documents/cmrw498xx0005oyag0e5y10fe
+            - article [ref=f10e97]:
+              - heading "خلاصه Audit" [level=2] [ref=f10e98]
+              - generic [ref=f10e99]:
+                - generic [ref=f10e100]:
+                  - strong [ref=f10e101]: VIEW
+                  - generic [ref=f10e102]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۸:۵۸"
+                - generic [ref=f10e103]:
+                  - strong [ref=f10e104]: ARCHIVE
+                  - generic [ref=f10e105]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۸:۵۸"
+                - generic [ref=f10e106]:
+                  - strong [ref=f10e107]: DOWNLOAD
+                  - generic [ref=f10e108]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۸:۵۲"
+                - generic [ref=f10e109]:
+                  - strong [ref=f10e110]: VIEW_FILE
+                  - generic [ref=f10e111]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۸:۲۴"
+                - generic [ref=f10e112]:
+                  - strong [ref=f10e113]: VIEW
+                  - generic [ref=f10e114]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۸:۲۴"
+                - generic [ref=f10e115]:
+                  - strong [ref=f10e116]: CREATE_VERSION
+                  - generic [ref=f10e117]: "نقش: owner · ۱۴۰۵/۴/۳۱, ۱۶:۵۷:۳۶"
+    - complementary [ref=f10e119]:
+      - generic [ref=f10e120]:
+        - generic [ref=f10e121]: ؟
+        - generic [ref=f10e122]: در حال بارگذاری...
+      - generic [ref=f10e124]:
+        - generic [ref=f10e125]: TEN
+        - generic [ref=f10e126]: tenant
+        - button "تغییر کسب و کار" [ref=f10e128] [cursor=pointer]
+      - generic [ref=f10e131]:
+        - button "خروج" [ref=f10e132] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f10e137] [cursor=pointer]:
+          - generic [ref=f10e142]: "1"
+        - button "تنظیمات کلی" [ref=f10e143] [cursor=pointer]
+        - button "داشبورد" [ref=f10e148] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f10e153] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f10e161]:
+        - link "طبقه‌بندی مشاغل" [ref=f10e162] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f10e168] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f10e173] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f10e179] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f10e185] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f10e190] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f10e195] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f10e203] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f10e210] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f10e217] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f10e224] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f10e230] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f10e236] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f10e243] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f10e248] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f10e254] [cursor=pointer]:
+        - paragraph [ref=f10e255]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f10e256]
+      - generic [ref=f10e257]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f10e259] [cursor=pointer]
+        - generic [ref=f10e262]: 0.8.0
+  - alert [ref=f10e263]

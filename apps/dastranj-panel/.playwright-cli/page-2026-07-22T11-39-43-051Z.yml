@@ -1,0 +1,106 @@
+- generic [active] [ref=f12e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f12e2] [cursor=pointer]
+  - generic [ref=f12e6]:
+    - generic [ref=f12e7]:
+      - navigation "مسیر صفحه" [ref=f12e9]:
+        - list [ref=f12e10]:
+          - listitem [ref=f12e11]:
+            - button "خانه" [ref=f12e12] [cursor=pointer]
+          - listitem [ref=f12e14]
+          - listitem [ref=f12e18]:
+            - button "کارمندان" [ref=f12e19] [cursor=pointer]
+          - listitem [ref=f12e21]
+          - listitem [ref=f12e25]:
+            - button "phase3-runtime-empty" [ref=f12e26] [cursor=pointer]
+          - listitem [ref=f12e28]
+          - listitem [ref=f12e32]:
+            - generic [ref=f12e33]: حساب‌های بانکی
+      - main [ref=f12e35]:
+        - generic [ref=f12e38]:
+          - generic [ref=f12e40]:
+            - link "حساب‌های بانکی کارمند" [ref=f12e41] [cursor=pointer]:
+              - /url: /employees/phase3-runtime-empty
+            - paragraph [ref=f12e44]: مدیریت حساب‌های بانکی ثبت‌شده برای هر کارمند
+          - generic [ref=f12e45]:
+            - button "جستجو" [ref=f12e46] [cursor=pointer]
+            - button "افزودن حساب بانکی" [ref=f12e50] [cursor=pointer]:
+              - generic [ref=f12e51]: +
+              - text: افزودن حساب بانکی
+          - generic [ref=f12e52]:
+            - article [ref=f12e53]:
+              - generic [ref=f12e54]:
+                - generic [ref=f12e55]:
+                  - button "ویرایش" [ref=f12e56] [cursor=pointer]
+                  - button "حذف" [ref=f12e60] [cursor=pointer]
+                - button "تنظیم به عنوان حساب اصلی" [ref=f12e64] [cursor=pointer]
+                - strong [ref=f12e70]: بانک تست
+              - generic [ref=f12e71]:
+                - generic [ref=f12e72]:
+                  - generic [ref=f12e73]: "شماره کارت:"
+                  - generic [ref=f12e74]: 6037 9911 1111 1111
+                - generic [ref=f12e75]:
+                  - generic [ref=f12e76]: "شبا:"
+                  - generic [ref=f12e77]: "-"
+                - generic [ref=f12e78]:
+                  - generic [ref=f12e79]: "شماره حساب:"
+                  - generic [ref=f12e80]: "-"
+                - generic [ref=f12e81]:
+                  - generic [ref=f12e82]: "تاریخ ایجاد:"
+                  - generic [ref=f12e83]: ۱۴۰۵/۰۴/۳۱
+            - button "برای افزودن حساب بانکی کلیک کنید." [ref=f12e84] [cursor=pointer]
+    - complementary [ref=f12e92]:
+      - generic [ref=f12e93]:
+        - generic [ref=f12e94]: P
+        - generic [ref=f12e95]:
+          - generic [ref=f12e96]: Phase3 Owner
+          - generic [ref=f12e239]: phase3.owner@example.com
+      - generic [ref=f12e97]:
+        - generic [ref=f12e98]: DS
+        - generic [ref=f12e99]:
+          - generic [ref=f12e100]: Phase3 Runtime Test Tenant
+          - generic [ref=f12e240]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f12e101] [cursor=pointer]
+      - generic [ref=f12e104]:
+        - button "خروج" [ref=f12e105] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f12e110] [cursor=pointer]:
+          - generic [ref=f12e115]: "1"
+        - button "تنظیمات کلی" [ref=f12e116] [cursor=pointer]
+        - button "داشبورد" [ref=f12e121] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f12e126] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f12e134]:
+        - link "راه‌اندازی سریع" [ref=f12e135] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f12e140] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f12e146] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f12e152] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f12e157] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f12e162] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f12e170] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f12e177] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f12e184] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f12e191] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f12e197] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f12e203] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f12e210] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f12e215] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f12e241] [cursor=pointer]:
+        - paragraph [ref=f12e222]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f12e242]
+      - generic [ref=f12e224]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f12e226] [cursor=pointer]
+        - generic [ref=f12e229]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f12e235] [cursor=pointer]
+  - alert [ref=f12e243]

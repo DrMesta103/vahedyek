@@ -1,0 +1,3 @@
+ALTER TABLE "EmployeeChangeRequest"
+ADD COLUMN "otpStatus" TEXT NOT NULL DEFAULT 'NOT_REQUIRED',
+ADD COLUMN "otpVerifiedAt" TIMESTAMP(3);

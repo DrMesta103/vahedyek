@@ -1,0 +1,105 @@
+- generic [active] [ref=f3e1]:
+  - button "Open Next.js Dev Tools" [ref=f3e268] [cursor=pointer]:
+    - generic [ref=f3e277]:
+      - text: Rendering
+      - generic [ref=f3e278]:
+        - generic [ref=f3e279]: .
+        - generic [ref=f3e280]: .
+        - generic [ref=f3e281]: .
+  - alert [ref=f3e20]
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f3e21] [cursor=pointer]
+  - generic [ref=f3e25]:
+    - generic [ref=f3e26]:
+      - navigation "مسیر صفحه" [ref=f3e28]:
+        - list [ref=f3e29]:
+          - listitem [ref=f3e30]:
+            - button "خانه" [ref=f3e31] [cursor=pointer]
+          - listitem [ref=f3e33]
+          - listitem [ref=f3e37]:
+            - button "کارمندان" [ref=f3e38] [cursor=pointer]
+          - listitem [ref=f3e40]
+          - listitem [ref=f3e44]:
+            - button "phase3-runtime-empty" [ref=f3e45] [cursor=pointer]
+          - listitem [ref=f3e47]
+          - listitem [ref=f3e51]:
+            - generic [ref=f3e52]: change-requests
+      - main [ref=f3e54]:
+        - main [ref=f3e245]:
+          - link "بازگشت به درخواست‌ها" [ref=f3e246] [cursor=pointer]:
+            - /url: /employees/phase3-runtime-empty/change-requests
+          - generic [ref=f3e247]:
+            - generic [ref=f3e248]:
+              - heading "جزئیات درخواست تغییر" [level=2] [ref=f3e249]
+              - paragraph [ref=f3e250]: mobile1 · PENDING_APPROVAL
+            - generic [ref=f3e251]:
+              - article [ref=f3e252]:
+                - generic [ref=f3e253]:
+                  - heading "مقدار قبلی" [level=3] [ref=f3e254]
+                  - paragraph [ref=f3e255]: 091***01
+              - article [ref=f3e256]:
+                - generic [ref=f3e257]:
+                  - heading "مقدار جدید" [level=3] [ref=f3e258]
+                  - paragraph [ref=f3e259]: 091***02
+              - article [ref=f3e260]:
+                - generic [ref=f3e261]:
+                  - heading "دلیل و زمان" [level=3] [ref=f3e262]
+                  - paragraph [ref=f3e263]: INITIAL_DATA_CORRECTION · ۱۴۰۵/۰۴/۳۱
+                  - paragraph [ref=f3e264]: بدون توضیح
+            - generic [ref=f3e265]:
+              - button "تأیید" [disabled] [ref=f3e266] [cursor=pointer]
+              - button "رد درخواست" [disabled] [ref=f3e267] [cursor=pointer]
+              - status [ref=f3e282]: درخواست تأیید شد.
+    - complementary [ref=f3e67]:
+      - generic [ref=f3e68]:
+        - generic [ref=f3e69]: P
+        - generic [ref=f3e70]:
+          - generic [ref=f3e71]: Phase3 Owner
+          - generic [ref=f3e72]: phase3.owner@example.com
+      - generic [ref=f3e73]:
+        - generic [ref=f3e74]: DS
+        - generic [ref=f3e75]:
+          - generic [ref=f3e76]: Phase3 Runtime Test Tenant
+          - generic [ref=f3e77]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f3e78] [cursor=pointer]
+      - generic [ref=f3e81]:
+        - button "خروج" [ref=f3e82] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f3e87] [cursor=pointer]:
+          - generic [ref=f3e92]: "1"
+        - button "تنظیمات کلی" [ref=f3e93] [cursor=pointer]
+        - button "داشبورد" [ref=f3e98] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f3e103] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f3e111]:
+        - link "راه‌اندازی سریع" [ref=f3e112] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f3e117] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f3e123] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f3e129] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f3e134] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f3e139] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f3e147] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f3e154] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f3e161] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f3e168] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f3e174] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f3e180] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f3e187] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f3e192] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f3e198] [cursor=pointer]:
+        - paragraph [ref=f3e199]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f3e200]
+      - generic [ref=f3e201]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f3e203] [cursor=pointer]
+        - generic [ref=f3e206]: 0.8.0

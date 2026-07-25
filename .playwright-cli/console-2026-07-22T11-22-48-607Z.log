@@ -1,0 +1,13 @@
+[     755ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     860ms] [LOG] [HMR] connected @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[     901ms] [INFO] %c%s%c [setup-health] background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   panel-layout {tenantId: cmrvvipw70000oyyo6123270j, userId: cmrvvipy90009oyyocqnstw83, score: 40, completedCount: 2, totalCriticalCount: 5} @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    3831ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[    4697ms] [LOG] [Fast Refresh] done in 980ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   14711ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   14714ms] [LOG] [Fast Refresh] done in 104ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   15959ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   16164ms] [LOG] [Fast Refresh] done in 317ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   24152ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   24324ms] [LOG] [Fast Refresh] done in 276ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   26479ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431
+[   26747ms] [LOG] [Fast Refresh] done in 380ms @ http://localhost:3030/_next/static/chunks/04m2_next_dist_01d_w1-._.js:2431

@@ -1,0 +1,84 @@
+- generic [active] [ref=f5e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f5e2] [cursor=pointer]
+  - generic [ref=f5e6]:
+    - generic [ref=f5e7]:
+      - navigation "مسیر صفحه" [ref=f5e9]:
+        - list [ref=f5e10]:
+          - listitem [ref=f5e11]:
+            - button "خانه" [ref=f5e12] [cursor=pointer]
+          - listitem [ref=f5e14]
+          - listitem [ref=f5e18]:
+            - button "طبقه‌بندی مشاغل" [ref=f5e279] [cursor=pointer]
+          - listitem [ref=f5e281]
+          - listitem [ref=f5e285]:
+            - generic [ref=f5e286]: evaluation
+      - main [ref=f5e21]:
+        - main [ref=f5e287]:
+          - generic [ref=f5e288]:
+            - generic [ref=f5e289]:
+              - paragraph [ref=f5e290]: اجرای ارزیابی
+              - heading "Phase5 Used Position" [level=1] [ref=f5e291]
+              - paragraph [ref=f5e292]: امتیازدهی وزنی و تولید پیشنهاد سطح، گرید و رتبه
+            - link "بازگشت به جزئیات" [ref=f5e293] [cursor=pointer]:
+              - /url: /job-classifications/cmrw299x7000loy6gqtkfmfi5
+          - generic [ref=f5e294]:
+            - heading "معیار فعالی وجود ندارد" [level=2] [ref=f5e295]
+            - paragraph [ref=f5e296]: ابتدا معیارهای ارزیابی را در Workspace تعریف کنید.
+    - complementary [ref=f5e87]:
+      - generic [ref=f5e88]:
+        - generic [ref=f5e89]: P
+        - generic [ref=f5e90]:
+          - generic [ref=f5e91]: Phase3 Owner
+          - generic [ref=f5e231]: phase3.owner@example.com
+      - generic [ref=f5e92]:
+        - generic [ref=f5e93]: DS
+        - generic [ref=f5e94]:
+          - generic [ref=f5e95]: Phase3 Runtime Test Tenant
+          - generic [ref=f5e232]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f5e96] [cursor=pointer]
+      - generic [ref=f5e99]:
+        - button "خروج" [ref=f5e100] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f5e105] [cursor=pointer]:
+          - generic [ref=f5e110]: "1"
+        - button "تنظیمات کلی" [ref=f5e111] [cursor=pointer]
+        - button "داشبورد" [ref=f5e116] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f5e121] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f5e129]:
+        - link "طبقه‌بندی مشاغل" [ref=f5e130] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f5e136] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f5e141] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f5e147] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f5e153] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f5e158] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f5e163] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f5e171] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f5e178] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f5e185] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f5e192] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f5e198] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f5e204] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f5e211] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f5e216] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f5e233] [cursor=pointer]:
+        - paragraph [ref=f5e223]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f5e234]
+      - generic [ref=f5e225]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f5e227] [cursor=pointer]
+        - generic [ref=f5e230]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f5e240] [cursor=pointer]
+  - alert [ref=f5e244]

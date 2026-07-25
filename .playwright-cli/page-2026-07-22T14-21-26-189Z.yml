@@ -1,0 +1,464 @@
+- generic [active] [ref=f4e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f4e2] [cursor=pointer]
+  - generic [ref=f4e6]:
+    - generic [ref=f4e7]:
+      - navigation "مسیر صفحه" [ref=f4e9]:
+        - list [ref=f4e10]:
+          - listitem [ref=f4e11]:
+            - button "خانه" [ref=f4e12] [cursor=pointer]
+          - listitem [ref=f4e14]
+          - listitem [ref=f4e18]:
+            - generic [ref=f4e19]: کارمندان
+      - main [ref=f4e21]:
+        - generic [ref=f4e23]:
+          - generic [ref=f4e25]:
+            - heading "کارمندان" [level=1] [ref=f4e26]
+            - paragraph [ref=f4e29]: مدیریت اطلاعات کارکنان، فیلترهای سریع و دسترسی مستقیم به عملیات مرتبط با اعضای تیم.
+          - generic [ref=f4e30]:
+            - complementary "فیلتر کارکنان" [ref=f4e31]:
+              - generic [ref=f4e32]:
+                - generic [ref=f4e33]: فیلتر
+                - generic [ref=f4e34]:
+                  - generic [ref=f4e35]: وضعیت همکاری
+                  - generic [ref=f4e36]:
+                    - link "همه" [ref=f4e37] [cursor=pointer]:
+                      - /url: /employees
+                    - link "فعال" [ref=f4e41] [cursor=pointer]:
+                      - /url: "?status=active"
+                    - link "غیرفعال" [ref=f4e43] [cursor=pointer]:
+                      - /url: "?status=inactive"
+                - generic [ref=f4e45]:
+                  - generic [ref=f4e46]: وضعیت پرونده
+                  - generic [ref=f4e47]:
+                    - link "همه" [ref=f4e48] [cursor=pointer]:
+                      - /url: /employees
+                    - link "کامل" [ref=f4e52] [cursor=pointer]:
+                      - /url: "?profileStatus=complete"
+                    - link "ناقص" [ref=f4e54] [cursor=pointer]:
+                      - /url: "?profileStatus=incomplete"
+                - generic [ref=f4e56]:
+                  - generic [ref=f4e57]: تخصیص سازمانی
+                  - generic [ref=f4e58]:
+                    - generic [ref=f4e59]: گروه کاری
+                    - combobox "گروه کاری" [ref=f4e60]:
+                      - option "همه گروه‌های کاری" [selected]
+                  - generic [ref=f4e61]:
+                    - generic [ref=f4e62]: واحد سازمانی
+                    - combobox "واحد سازمانی" [ref=f4e63]:
+                      - option "همه واحدهای سازمانی" [selected]
+                      - option "Phase3 Runtime Unit"
+                  - generic [ref=f4e64]:
+                    - link "همه" [ref=f4e65] [cursor=pointer]:
+                      - /url: /employees
+                    - link "دارای تخصیص" [ref=f4e69] [cursor=pointer]:
+                      - /url: "?assignment=assigned"
+                    - link "بدون تخصیص" [ref=f4e71] [cursor=pointer]:
+                      - /url: "?assignment=unassigned"
+                - generic [ref=f4e73]:
+                  - generic [ref=f4e74]: تاریخ
+                  - generic [ref=f4e75]:
+                    - generic [ref=f4e76]: نوع تاریخ
+                    - combobox "نوع تاریخ" [ref=f4e77]:
+                      - option "شروع همکاری" [selected]
+                      - option "شروع قرارداد"
+                  - generic [ref=f4e78]:
+                    - generic [ref=f4e79]: بازه
+                    - combobox "بازه" [ref=f4e80]:
+                      - option "همه" [selected]
+                      - option "امروز"
+                      - option "این هفته"
+                      - option "این ماه"
+                      - option "سه ماه اخیر"
+                      - option "امسال"
+                      - option "دلخواه"
+                  - generic [ref=f4e81]:
+                    - generic [ref=f4e82]: از تاریخ
+                    - textbox "از تاریخ" [ref=f4e84]
+                  - generic [ref=f4e85]:
+                    - generic [ref=f4e86]: تا تاریخ
+                    - textbox "تا تاریخ" [ref=f4e88]
+                - generic [ref=f4e89]:
+                  - generic [ref=f4e90]: وضعیت قرارداد
+                  - generic [ref=f4e91]:
+                    - link "همه" [ref=f4e92] [cursor=pointer]:
+                      - /url: /employees
+                    - link "قرارداد فعال" [ref=f4e96] [cursor=pointer]:
+                      - /url: "?contractStatus=active"
+                    - link "بدون قرارداد فعال" [ref=f4e98] [cursor=pointer]:
+                      - /url: "?contractStatus=none"
+                    - link "رو به پایان" [ref=f4e100] [cursor=pointer]:
+                      - /url: "?contractStatus=expiring"
+                    - link "منقضی" [ref=f4e102] [cursor=pointer]:
+                      - /url: "?contractStatus=expired"
+                - generic [ref=f4e104]:
+                  - button "اعمال فیلتر" [ref=f4e105] [cursor=pointer]
+                  - link "پاک کردن" [ref=f4e106] [cursor=pointer]:
+                    - /url: /employees
+            - main [ref=f4e107]:
+              - generic [ref=f4e108]:
+                - searchbox "جستجو در کارکنان" [ref=f4e113]
+                - link "افزودن کارمند" [ref=f4e114] [cursor=pointer]:
+                  - /url: /employees/new
+              - paragraph [ref=f4e116]: ۶ کارمند · ۵ فعال
+              - generic [ref=f4e117]:
+                - article [ref=f4e118]:
+                  - generic [ref=f4e119]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e121] [cursor=pointer]:
+                      - generic [ref=f4e122]: ⋮
+                    - generic "قطع دسترسی":
+                      - checkbox [checked]
+                  - generic [ref=f4e128]:
+                    - strong [ref=f4e129]: Final Employee
+                    - generic [ref=f4e130]:
+                      - generic [ref=f4e131]: FINAL-DELTA
+                      - button "کپی اطلاعات تماس" [ref=f4e132] [cursor=pointer]
+                  - generic [ref=f4e136]:
+                    - generic [ref=f4e137]:
+                      - generic [ref=f4e138]: "وضعیت همکاری:"
+                      - generic [ref=f4e139]: فعال
+                      - link "مشاهده پرونده" [ref=f4e140] [cursor=pointer]:
+                        - /url: /employees/final-delta-employee
+                    - generic [ref=f4e145]:
+                      - generic [ref=f4e146]: "کد پرسنلی:"
+                      - generic [ref=f4e147]: FINAL-DELTA
+                    - generic [ref=f4e148]:
+                      - generic [ref=f4e149]: "موبایل:"
+                      - generic [ref=f4e152]: موبایل ثبت نشده
+                    - generic [ref=f4e153]:
+                      - generic [ref=f4e154]: "موبایل دوم:"
+                      - generic [ref=f4e157]: موبایل ثبت نشده
+                    - generic [ref=f4e158]:
+                      - generic [ref=f4e159]: "ایمیل:"
+                      - generic [ref=f4e160]: ایمیل ثبت نشده
+                    - generic [ref=f4e161]:
+                      - generic [ref=f4e162]: "واحد سازمانی:"
+                      - generic [ref=f4e167]: واحد سازمانی مشخص نشده
+                    - generic [ref=f4e168]:
+                      - generic [ref=f4e169]: "گروه کاری:"
+                      - generic [ref=f4e174]: گروه کاری مشخص نشده
+                    - generic [ref=f4e175]:
+                      - generic [ref=f4e176]: "سمت:"
+                      - generic [ref=f4e177]: سمت ثبت نشده
+                    - generic [ref=f4e178]:
+                      - generic [ref=f4e179]: "تاریخ ایجاد:"
+                      - generic [ref=f4e182]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e183]:
+                    - generic [ref=f4e184]:
+                      - generic [ref=f4e185]: پرونده ناقص
+                      - link "مشاهده نقص‌ها" [ref=f4e186] [cursor=pointer]:
+                        - /url: /employees/final-delta-employee/profile
+                    - generic [ref=f4e187]:
+                      - strong [ref=f4e188]: بدون قرارداد فعال
+                      - link "ثبت قرارداد" [ref=f4e189] [cursor=pointer]:
+                        - /url: /employees/final-delta-employee/contract-drafts
+                - article [ref=f4e190]:
+                  - generic [ref=f4e191]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e193] [cursor=pointer]:
+                      - generic [ref=f4e194]: ⋮
+                    - generic "قطع دسترسی":
+                      - checkbox [checked]
+                  - generic [ref=f4e200]:
+                    - strong [ref=f4e201]: Historical Contract
+                    - generic [ref=f4e202]:
+                      - generic [ref=f4e203]: "09120000002"
+                      - button "کپی اطلاعات تماس" [ref=f4e204] [cursor=pointer]
+                  - generic [ref=f4e208]:
+                    - generic [ref=f4e209]:
+                      - generic [ref=f4e210]: "وضعیت همکاری:"
+                      - generic [ref=f4e211]: پایان همکاری
+                      - link "مشاهده پرونده" [ref=f4e212] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-historical
+                    - generic [ref=f4e217]:
+                      - generic [ref=f4e218]: "کد پرسنلی:"
+                      - generic [ref=f4e219]: phase3-runtime-historical
+                    - generic [ref=f4e220]:
+                      - generic [ref=f4e221]: "موبایل:"
+                      - generic [ref=f4e224]: "09120000002"
+                    - generic [ref=f4e225]:
+                      - generic [ref=f4e226]: "موبایل دوم:"
+                      - generic [ref=f4e229]: موبایل ثبت نشده
+                    - generic [ref=f4e230]:
+                      - generic [ref=f4e231]: "ایمیل:"
+                      - generic [ref=f4e232]: phase3.historical@local.test
+                    - generic [ref=f4e233]:
+                      - generic [ref=f4e234]: "واحد سازمانی:"
+                      - generic [ref=f4e239]: واحد سازمانی مشخص نشده
+                    - generic [ref=f4e240]:
+                      - generic [ref=f4e241]: "گروه کاری:"
+                      - generic [ref=f4e246]: گروه کاری مشخص نشده
+                    - generic [ref=f4e247]:
+                      - generic [ref=f4e248]: "سمت:"
+                      - generic [ref=f4e249]: سمت ثبت نشده
+                    - generic [ref=f4e250]:
+                      - generic [ref=f4e251]: "تاریخ ایجاد:"
+                      - generic [ref=f4e254]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e255]:
+                    - generic [ref=f4e256]:
+                      - generic [ref=f4e257]: پرونده ناقص
+                      - link "مشاهده نقص‌ها" [ref=f4e258] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-historical/profile
+                    - generic [ref=f4e259]:
+                      - strong [ref=f4e260]: بدون قرارداد فعال
+                      - link "ثبت قرارداد" [ref=f4e261] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-historical/contract-drafts
+                - article [ref=f4e262]:
+                  - generic [ref=f4e263]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e265] [cursor=pointer]:
+                      - generic [ref=f4e266]: ⋮
+                    - generic "قطع دسترسی":
+                      - checkbox [checked]
+                  - generic [ref=f4e272]:
+                    - strong [ref=f4e273]: Complete Profile
+                    - generic [ref=f4e274]:
+                      - generic [ref=f4e275]: "09121110003"
+                      - button "کپی اطلاعات تماس" [ref=f4e276] [cursor=pointer]
+                  - generic [ref=f4e280]:
+                    - generic [ref=f4e281]:
+                      - generic [ref=f4e282]: "وضعیت همکاری:"
+                      - generic [ref=f4e283]: فعال
+                      - link "مشاهده پرونده" [ref=f4e284] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-complete
+                    - generic [ref=f4e289]:
+                      - generic [ref=f4e290]: "کد پرسنلی:"
+                      - generic [ref=f4e291]: P3-C
+                    - generic [ref=f4e292]:
+                      - generic [ref=f4e293]: "موبایل:"
+                      - generic [ref=f4e296]: "09121110003"
+                    - generic [ref=f4e297]:
+                      - generic [ref=f4e298]: "موبایل دوم:"
+                      - generic [ref=f4e301]: موبایل ثبت نشده
+                    - generic [ref=f4e302]:
+                      - generic [ref=f4e303]: "ایمیل:"
+                      - generic [ref=f4e304]: ایمیل ثبت نشده
+                    - generic [ref=f4e305]:
+                      - generic [ref=f4e306]: "واحد سازمانی:"
+                      - generic [ref=f4e311]: Phase3 Runtime Unit
+                    - generic [ref=f4e312]:
+                      - generic [ref=f4e313]: "گروه کاری:"
+                      - generic [ref=f4e318]: Phase3 Runtime Workgroup
+                    - generic [ref=f4e319]:
+                      - generic [ref=f4e320]: "سمت:"
+                      - generic [ref=f4e321]: سمت ثبت نشده
+                    - generic [ref=f4e322]:
+                      - generic [ref=f4e323]: "تاریخ ایجاد:"
+                      - generic [ref=f4e326]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e327]:
+                    - generic [ref=f4e328]: پرونده کامل
+                    - generic [ref=f4e330]: وضعیت مدت قرارداد
+                    - strong [ref=f4e335]: ۵۶%
+                    - generic [ref=f4e336]:
+                      - paragraph [ref=f4e337]:
+                        - generic [ref=f4e339]: "شروع: 2026-01-01 · پایان: 2026-12-29"
+                      - paragraph [ref=f4e340]:
+                        - generic [ref=f4e342]: "کل مدت: ۳۶۲ روز · سپری‌شده: ۲۰۲ روز"
+                      - paragraph [ref=f4e343]:
+                        - generic [ref=f4e345]: "باقی‌مانده: ۱۶۰ روز"
+                      - paragraph [ref=f4e346]:
+                        - generic [ref=f4e348]: ۵۶% سپری‌شده · ۴۴% باقی‌مانده
+                - article [ref=f4e349]:
+                  - generic [ref=f4e350]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e352] [cursor=pointer]:
+                      - generic [ref=f4e353]: ⋮
+                    - generic "قطع دسترسی":
+                      - checkbox [checked]
+                  - generic [ref=f4e359]:
+                    - strong [ref=f4e360]: Partial Profile
+                    - generic [ref=f4e361]:
+                      - generic [ref=f4e362]: "09121110002"
+                      - button "کپی اطلاعات تماس" [ref=f4e363] [cursor=pointer]
+                  - generic [ref=f4e367]:
+                    - generic [ref=f4e368]:
+                      - generic [ref=f4e369]: "وضعیت همکاری:"
+                      - generic [ref=f4e370]: فعال
+                      - link "مشاهده پرونده" [ref=f4e371] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-partial
+                    - generic [ref=f4e376]:
+                      - generic [ref=f4e377]: "کد پرسنلی:"
+                      - generic [ref=f4e378]: P3-P
+                    - generic [ref=f4e379]:
+                      - generic [ref=f4e380]: "موبایل:"
+                      - generic [ref=f4e383]: "09121110002"
+                    - generic [ref=f4e384]:
+                      - generic [ref=f4e385]: "موبایل دوم:"
+                      - generic [ref=f4e388]: موبایل ثبت نشده
+                    - generic [ref=f4e389]:
+                      - generic [ref=f4e390]: "ایمیل:"
+                      - generic [ref=f4e391]: ایمیل ثبت نشده
+                    - generic [ref=f4e392]:
+                      - generic [ref=f4e393]: "واحد سازمانی:"
+                      - generic [ref=f4e398]: Phase3 Runtime Unit
+                    - generic [ref=f4e399]:
+                      - generic [ref=f4e400]: "گروه کاری:"
+                      - generic [ref=f4e405]: Phase3 Runtime Workgroup
+                    - generic [ref=f4e406]:
+                      - generic [ref=f4e407]: "سمت:"
+                      - generic [ref=f4e408]: سمت ثبت نشده
+                    - generic [ref=f4e409]:
+                      - generic [ref=f4e410]: "تاریخ ایجاد:"
+                      - generic [ref=f4e413]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e414]:
+                    - generic [ref=f4e415]: پرونده کامل
+                    - generic [ref=f4e417]: وضعیت مدت قرارداد
+                    - strong [ref=f4e422]: ۵۶%
+                    - generic [ref=f4e423]:
+                      - paragraph [ref=f4e424]:
+                        - generic [ref=f4e426]: "شروع: 2026-01-01 · پایان: 2026-12-29"
+                      - paragraph [ref=f4e427]:
+                        - generic [ref=f4e429]: "کل مدت: ۳۶۲ روز · سپری‌شده: ۲۰۲ روز"
+                      - paragraph [ref=f4e430]:
+                        - generic [ref=f4e432]: "باقی‌مانده: ۱۶۰ روز"
+                      - paragraph [ref=f4e433]:
+                        - generic [ref=f4e435]: ۵۶% سپری‌شده · ۴۴% باقی‌مانده
+                - article [ref=f4e436]:
+                  - generic [ref=f4e437]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e439] [cursor=pointer]:
+                      - generic [ref=f4e440]: ⋮
+                    - generic "قطع دسترسی":
+                      - checkbox [checked]
+                  - generic [ref=f4e446]:
+                    - strong [ref=f4e447]: Empty Profile
+                    - generic [ref=f4e448]:
+                      - generic [ref=f4e449]: "9121110002"
+                      - button "کپی اطلاعات تماس" [ref=f4e450] [cursor=pointer]
+                  - generic [ref=f4e454]:
+                    - generic [ref=f4e455]:
+                      - generic [ref=f4e456]: "وضعیت همکاری:"
+                      - generic [ref=f4e457]: فعال
+                      - link "مشاهده پرونده" [ref=f4e458] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-empty
+                    - generic [ref=f4e463]:
+                      - generic [ref=f4e464]: "کد پرسنلی:"
+                      - generic [ref=f4e465]: P3-E
+                    - generic [ref=f4e466]:
+                      - generic [ref=f4e467]: "موبایل:"
+                      - generic [ref=f4e470]: "9121110002"
+                    - generic [ref=f4e471]:
+                      - generic [ref=f4e472]: "موبایل دوم:"
+                      - generic [ref=f4e475]: موبایل ثبت نشده
+                    - generic [ref=f4e476]:
+                      - generic [ref=f4e477]: "ایمیل:"
+                      - generic [ref=f4e478]: ایمیل ثبت نشده
+                    - generic [ref=f4e479]:
+                      - generic [ref=f4e480]: "واحد سازمانی:"
+                      - generic [ref=f4e485]: واحد سازمانی مشخص نشده
+                    - generic [ref=f4e486]:
+                      - generic [ref=f4e487]: "گروه کاری:"
+                      - generic [ref=f4e492]: گروه کاری مشخص نشده
+                    - generic [ref=f4e493]:
+                      - generic [ref=f4e494]: "سمت:"
+                      - generic [ref=f4e495]: سمت ثبت نشده
+                    - generic [ref=f4e496]:
+                      - generic [ref=f4e497]: "تاریخ ایجاد:"
+                      - generic [ref=f4e500]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e501]:
+                    - generic [ref=f4e502]:
+                      - generic [ref=f4e503]: پرونده ناقص
+                      - link "مشاهده نقص‌ها" [ref=f4e504] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-empty/profile
+                    - generic [ref=f4e505]:
+                      - strong [ref=f4e506]: بدون قرارداد فعال
+                      - link "ثبت قرارداد" [ref=f4e507] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-empty/contract-drafts
+                - article [ref=f4e508]:
+                  - generic [ref=f4e509]:
+                    - button "\\u0645\\u0646\\u0648\\u06cc \\u0639\\u0645\\u0644\\u06cc\\u0627\\u062a" [ref=f4e511] [cursor=pointer]:
+                      - generic [ref=f4e512]: ⋮
+                    - generic "فعال‌سازی دسترسی":
+                      - checkbox
+                  - generic [ref=f4e518]:
+                    - strong [ref=f4e519]: Disabled Profile
+                    - generic [ref=f4e520]:
+                      - generic [ref=f4e521]: "09120000001"
+                      - button "کپی اطلاعات تماس" [ref=f4e522] [cursor=pointer]
+                  - generic [ref=f4e526]:
+                    - generic [ref=f4e527]:
+                      - generic [ref=f4e528]: "وضعیت همکاری:"
+                      - generic [ref=f4e529]: غیرفعال
+                      - link "مشاهده پرونده" [ref=f4e530] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-disabled
+                    - generic [ref=f4e535]:
+                      - generic [ref=f4e536]: "کد پرسنلی:"
+                      - generic [ref=f4e537]: phase3-runtime-disabled
+                    - generic [ref=f4e538]:
+                      - generic [ref=f4e539]: "موبایل:"
+                      - generic [ref=f4e542]: "09120000001"
+                    - generic [ref=f4e543]:
+                      - generic [ref=f4e544]: "موبایل دوم:"
+                      - generic [ref=f4e547]: موبایل ثبت نشده
+                    - generic [ref=f4e548]:
+                      - generic [ref=f4e549]: "ایمیل:"
+                      - generic [ref=f4e550]: phase3.disabled@local.test
+                    - generic [ref=f4e551]:
+                      - generic [ref=f4e552]: "واحد سازمانی:"
+                      - generic [ref=f4e557]: واحد سازمانی مشخص نشده
+                    - generic [ref=f4e558]:
+                      - generic [ref=f4e559]: "گروه کاری:"
+                      - generic [ref=f4e564]: گروه کاری مشخص نشده
+                    - generic [ref=f4e565]:
+                      - generic [ref=f4e566]: "سمت:"
+                      - generic [ref=f4e567]: سمت ثبت نشده
+                    - generic [ref=f4e568]:
+                      - generic [ref=f4e569]: "تاریخ ایجاد:"
+                      - generic [ref=f4e572]: ۱۴۰۵/۰۴/۳۱
+                  - generic "وضعیت پرونده و قرارداد" [ref=f4e573]:
+                    - generic [ref=f4e574]:
+                      - generic [ref=f4e575]: پرونده ناقص
+                      - link "مشاهده نقص‌ها" [ref=f4e576] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-disabled/profile
+                    - generic [ref=f4e577]:
+                      - strong [ref=f4e578]: بدون قرارداد فعال
+                      - link "ثبت قرارداد" [ref=f4e579] [cursor=pointer]:
+                        - /url: /employees/phase3-runtime-disabled/contract-drafts
+    - complementary [ref=f4e581]:
+      - generic [ref=f4e582]:
+        - generic [ref=f4e583]: ؟
+        - generic [ref=f4e584]: در حال بارگذاری...
+      - generic [ref=f4e586]:
+        - generic [ref=f4e587]: TEN
+        - generic [ref=f4e588]: tenant
+        - button "تغییر کسب و کار" [ref=f4e590] [cursor=pointer]
+      - generic [ref=f4e593]:
+        - button "خروج" [ref=f4e594] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f4e599] [cursor=pointer]:
+          - generic [ref=f4e604]: "1"
+        - button "تنظیمات کلی" [ref=f4e605] [cursor=pointer]
+        - button "داشبورد" [ref=f4e610] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f4e615] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f4e623]:
+        - link "طبقه‌بندی مشاغل" [ref=f4e624] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f4e630] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f4e635] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f4e641] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f4e647] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f4e652] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f4e657] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f4e665] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f4e672] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f4e679] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f4e686] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f4e692] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f4e698] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f4e705] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f4e710] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f4e716] [cursor=pointer]:
+        - paragraph [ref=f4e717]: tenant فعال
+        - button "در حال بارگذاری..." [ref=f4e718]
+      - generic [ref=f4e719]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f4e721] [cursor=pointer]
+        - generic [ref=f4e724]: 0.8.0
+  - alert [ref=f4e725]

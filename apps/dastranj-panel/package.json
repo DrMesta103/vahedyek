@@ -9,6 +9,7 @@
     "start": "npm run migrate-and-start",
     "migrate-and-start": "node scripts/migrate-and-start.mjs",
     "lint": "eslint .",
+    "test:work-groups": "tsx --test app/lib/work-group-rules.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:generate:win": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1",
     "prisma:generate:win:hard": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/prisma-generate-win.ps1 -KillAllNode",

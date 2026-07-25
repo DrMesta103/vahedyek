@@ -1,0 +1,1 @@
+'use client'; export default function ErrorState({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main className="module-page" dir="rtl"><div className="panel-card"><p>بارگذاری مرکز ارزیابی ناموفق بود.</p><button className="button" onClick={reset}>تلاش دوباره</button></div></main>}

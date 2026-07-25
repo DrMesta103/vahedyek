@@ -1,0 +1,1 @@
+export default function Loading() { return <main className="employee-reports-page" dir="rtl"><div className="employee-reports-skeleton is-hero"/><div className="employee-reports-summary">{[1,2,3].map(item => <div className="employee-reports-skeleton" key={item}/>)}</div><div className="employee-reports-skeleton is-panel"/></main>; }

@@ -1,0 +1,251 @@
+- generic [ref=f19e1]:
+  - button "گفتگوی مستندات توسعه این صفحه" [ref=f19e2] [cursor=pointer]
+  - generic [ref=f19e6]:
+    - generic [ref=f19e7]:
+      - navigation "مسیر صفحه" [ref=f19e9]:
+        - list [ref=f19e10]:
+          - listitem [ref=f19e11]:
+            - button "خانه" [ref=f19e12] [cursor=pointer]
+          - listitem [ref=f19e14]
+          - listitem [ref=f19e18]:
+            - generic [ref=f19e19]: طبقه‌بندی مشاغل
+      - main [ref=f19e21]:
+        - generic [ref=f19e23]:
+          - generic [ref=f19e24]:
+            - generic [ref=f19e25]:
+              - paragraph [ref=f19e26]: معماری شغل
+              - heading "طبقه‌بندی‌های شغلی" [level=1] [ref=f19e27]
+              - paragraph [ref=f19e28]: خانواده، دسته، سطح و نسخه‌های طبقه‌بندی پروفایل‌های شغلی را مدیریت کنید.
+            - link "گزارش‌ها" [ref=f19e29] [cursor=pointer]:
+              - /url: /job-classifications/reports
+          - generic [ref=f19e30]:
+            - heading "جستجو و فیلتر" [level=2] [ref=f19e31]
+            - generic [ref=f19e32]:
+              - generic [ref=f19e33]:
+                - generic [ref=f19e34]: جستجو
+                - textbox "جستجو" [ref=f19e35]:
+                  - /placeholder: نام یا کد شغل
+              - generic [ref=f19e36]:
+                - generic [ref=f19e37]: خانواده
+                - combobox "خانواده" [ref=f19e38]:
+                  - option "همه" [selected]
+                  - option "فناوری اطلاعات"
+              - generic [ref=f19e39]:
+                - generic [ref=f19e40]: سطح
+                - combobox "سطح" [ref=f19e41]:
+                  - option "همه" [selected]
+                  - option "سطح یک"
+              - generic [ref=f19e42]:
+                - generic [ref=f19e43]: وضعیت
+                - combobox "وضعیت" [ref=f19e44]:
+                  - option "همه"
+                  - option "فعال" [selected]
+                  - option "آرشیو"
+          - generic [ref=f19e45]:
+            - heading "تعریف طبقه‌بندی جدید" [level=2] [ref=f19e46]
+            - generic [ref=f19e47]:
+              - generic [ref=f19e48]:
+                - generic [ref=f19e49]: پروفایل شغلی
+                - combobox "پروفایل شغلی" [ref=f19e50]:
+                  - option "انتخاب کنید" [selected]
+                  - option "Phase5 Used Position"
+              - generic [ref=f19e51]:
+                - generic [ref=f19e52]: خانواده
+                - combobox "خانواده" [ref=f19e53]:
+                  - option "انتخاب کنید" [selected]
+                  - option "فناوری اطلاعات"
+              - generic [ref=f19e54]:
+                - generic [ref=f19e55]: دسته
+                - combobox "دسته" [ref=f19e56]:
+                  - option "بدون دسته" [selected]
+                  - option "فناوری اطلاعات / توسعه نرم‌افزار"
+              - generic [ref=f19e57]:
+                - generic [ref=f19e58]: سطح
+                - combobox "سطح" [ref=f19e59]:
+                  - option "انتخاب کنید" [selected]
+                  - option "سطح یک"
+              - generic [ref=f19e60]:
+                - generic [ref=f19e61]: تاریخ اثرگذاری
+                - textbox "تاریخ اثرگذاری" [ref=f19e62]
+              - generic [ref=f19e63]:
+                - generic [ref=f19e64]: دلیل
+                - textbox "دلیل" [ref=f19e65]
+              - button "ایجاد نسخه ۱" [ref=f19e66] [cursor=pointer]
+          - generic [ref=f19e67]:
+            - heading "فهرست طبقه‌بندی‌ها" [level=2] [ref=f19e68]
+            - article [ref=f19e343]:
+              - generic [ref=f19e344]:
+                - heading "Phase5 Used Position" [level=3] [ref=f19e345]
+                - generic [ref=f19e346]: فعال
+              - paragraph [ref=f19e347]: فناوری اطلاعات / توسعه نرم‌افزار / سطح یک
+              - paragraph [ref=f19e348]: "نسخه 1 · اثرگذاری: ۱۴۰۵/۴/۳۱"
+              - paragraph [ref=f19e349]: "تعداد استفاده در سمت‌ها: 1"
+              - paragraph [ref=f19e350]: Runtime create version 1
+              - link "مشاهده جزئیات" [ref=f19e351] [cursor=pointer]:
+                - /url: /job-classifications/cmrw227l4000foy6g8ubhfzjd
+              - group [ref=f19e352]:
+                - generic "ایجاد نسخه جدید" [ref=f19e353]
+                - generic [ref=f19e356]:
+                  - generic [ref=f19e357]:
+                    - generic [ref=f19e358]: خانواده
+                    - combobox "خانواده" [ref=f19e359]:
+                      - option "فناوری اطلاعات" [selected]
+                  - generic [ref=f19e360]:
+                    - generic [ref=f19e361]: دسته
+                    - combobox "دسته" [ref=f19e362]:
+                      - option "بدون دسته"
+                      - option "فناوری اطلاعات / توسعه نرم‌افزار" [selected]
+                  - generic [ref=f19e363]:
+                    - generic [ref=f19e364]: سطح
+                    - combobox "سطح" [ref=f19e365]:
+                      - option "سطح یک" [selected]
+                  - generic [ref=f19e366]:
+                    - generic [ref=f19e367]: تاریخ اثرگذاری
+                    - textbox "تاریخ اثرگذاری" [ref=f19e368]: 2026-07-22
+                  - generic [ref=f19e369]:
+                    - generic [ref=f19e370]: دلیل
+                    - textbox "دلیل" [active] [ref=f19e371]
+                  - button "ایجاد نسخه 2" [ref=f19e372] [cursor=pointer]
+              - button "آرشیو" [ref=f19e355] [cursor=pointer]
+          - generic [ref=f19e72]:
+            - heading "مدیریت سلسله‌مراتب" [level=2] [ref=f19e73]
+            - generic [ref=f19e74]:
+              - generic [ref=f19e75]:
+                - heading "خانواده جدید" [level=3] [ref=f19e76]
+                - textbox "نام" [ref=f19e77]
+                - textbox "کد" [ref=f19e78]
+                - textbox "توضیح" [ref=f19e79]
+                - button "ایجاد" [ref=f19e80] [cursor=pointer]
+              - generic [ref=f19e81]:
+                - heading "دسته جدید" [level=3] [ref=f19e82]
+                - combobox [ref=f19e83]:
+                  - option "خانواده" [selected]
+                  - option "فناوری اطلاعات"
+                - textbox "نام" [ref=f19e84]
+                - textbox "کد" [ref=f19e85]
+                - button "ایجاد" [ref=f19e86] [cursor=pointer]
+              - generic [ref=f19e87]:
+                - heading "سطح جدید" [level=3] [ref=f19e88]
+                - textbox "نام" [ref=f19e89]
+                - textbox "کد" [ref=f19e90]
+                - spinbutton "ترتیب" [ref=f19e91]
+                - button "ایجاد" [ref=f19e92] [cursor=pointer]
+            - generic [ref=f19e93]:
+              - article [ref=f19e94]:
+                - heading "فناوری اطلاعات · IT" [level=3] [ref=f19e95]
+                - paragraph [ref=f19e96]: توسعه نرم‌افزار
+                - group [ref=f19e97]:
+                  - generic "ویرایش" [ref=f19e98]
+                - button "آرشیو" [ref=f19e100] [cursor=pointer]
+                - group [ref=f19e101]:
+                  - generic "توسعه نرم‌افزار" [ref=f19e102]
+              - article [ref=f19e103]:
+                - heading "سطح یک · L1" [level=3] [ref=f19e104]
+                - paragraph [ref=f19e105]: "ترتیب: 1"
+                - group [ref=f19e106]:
+                  - generic "ویرایش" [ref=f19e107]
+                - button "آرشیو" [ref=f19e109] [cursor=pointer]
+          - generic [ref=f19e110]:
+            - heading "معیارهای ارزیابی" [level=2] [ref=f19e111]
+            - paragraph [ref=f19e112]:
+              - text: "جمع وزن معیارهای فعال باید پیش از اجرای ارزیابی دقیقاً ۱۰۰ باشد. جمع فعلی:"
+              - strong [ref=f19e113]: "0"
+            - generic [ref=f19e114]:
+              - generic [ref=f19e115]:
+                - generic [ref=f19e116]: نام معیار
+                - textbox "نام معیار" [ref=f19e117]
+              - generic [ref=f19e118]:
+                - generic [ref=f19e119]: شرح
+                - textbox "شرح" [ref=f19e120]
+              - generic [ref=f19e121]:
+                - generic [ref=f19e122]: وزن
+                - spinbutton "وزن" [ref=f19e123]
+              - generic [ref=f19e124]:
+                - generic [ref=f19e125]: حداکثر امتیاز
+                - spinbutton "حداکثر امتیاز" [ref=f19e126]: "100"
+              - button "افزودن معیار" [ref=f19e127] [cursor=pointer]
+            - heading "آخرین نتایج" [level=3] [ref=f19e128]
+            - list
+          - generic [ref=f19e129]:
+            - heading "گرید و رتبه" [level=2] [ref=f19e130]
+            - generic [ref=f19e131]:
+              - generic [ref=f19e132]:
+                - heading "گرید جدید" [level=3] [ref=f19e133]
+                - textbox "نام گرید" [ref=f19e134]:
+                  - /placeholder: نام
+                - textbox "کد گرید" [ref=f19e135]:
+                  - /placeholder: کد
+                - spinbutton "ترتیب گرید" [ref=f19e136]
+                - textbox "شرح گرید" [ref=f19e137]:
+                  - /placeholder: شرح
+                - button "ایجاد گرید" [ref=f19e138] [cursor=pointer]
+              - generic [ref=f19e139]:
+                - heading "رتبه جدید" [level=3] [ref=f19e140]
+                - combobox "گرید" [ref=f19e141]:
+                  - option "انتخاب گرید" [selected]
+                - textbox "نام رتبه" [ref=f19e142]:
+                  - /placeholder: نام
+                - textbox "کد رتبه" [ref=f19e143]:
+                  - /placeholder: کد
+                - spinbutton "ترتیب رتبه" [ref=f19e144]
+                - textbox "شرح رتبه" [ref=f19e145]:
+                  - /placeholder: شرح
+                - button "ایجاد رتبه" [ref=f19e146] [cursor=pointer]
+    - complementary [ref=f19e148]:
+      - generic [ref=f19e149]:
+        - generic [ref=f19e150]: P
+        - generic [ref=f19e151]:
+          - generic [ref=f19e152]: Phase3 Owner
+          - generic [ref=f19e301]: phase3.owner@example.com
+      - generic [ref=f19e153]:
+        - generic [ref=f19e154]: DS
+        - generic [ref=f19e155]:
+          - generic [ref=f19e156]: Phase3 Runtime Test Tenant
+          - generic [ref=f19e302]: phase3-runtime
+        - button "تغییر کسب و کار" [ref=f19e157] [cursor=pointer]
+      - generic [ref=f19e160]:
+        - button "خروج" [ref=f19e161] [cursor=pointer]
+        - button "اعلان‌ها" [ref=f19e166] [cursor=pointer]:
+          - generic [ref=f19e171]: "1"
+        - button "تنظیمات کلی" [ref=f19e172] [cursor=pointer]
+        - button "داشبورد" [ref=f19e177] [cursor=pointer]
+        - button "تغییر به تم روشن" [ref=f19e182] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f19e190]:
+        - link "طبقه‌بندی مشاغل" [ref=f19e191] [cursor=pointer]:
+          - /url: /job-classifications
+        - link "راه‌اندازی سریع" [ref=f19e197] [cursor=pointer]:
+          - /url: /quick-setup
+        - link "تنظیمات کسب و کار" [ref=f19e202] [cursor=pointer]:
+          - /url: /business-settings
+        - link "محل کار" [ref=f19e208] [cursor=pointer]:
+          - /url: /locations
+        - link "تقویم‌ها" [ref=f19e214] [cursor=pointer]:
+          - /url: /calendars
+        - link "سیاست‌ها" [ref=f19e219] [cursor=pointer]:
+          - /url: /policies
+        - link "کارمندان" [ref=f19e224] [cursor=pointer]:
+          - /url: /employees
+        - link "گروه‌های کاری" [ref=f19e232] [cursor=pointer]:
+          - /url: /work-groups
+        - link "واحدهای سازمانی" [ref=f19e239] [cursor=pointer]:
+          - /url: /organization-units
+        - link "قالب‌های شیفت" [ref=f19e246] [cursor=pointer]:
+          - /url: /shift-templates
+        - link "قالب پیش‌نویس" [ref=f19e253] [cursor=pointer]:
+          - /url: /draft-templates
+        - link "دلایل درخواست" [ref=f19e259] [cursor=pointer]:
+          - /url: /request-reasons
+        - link "پروفایل کسب و کار" [ref=f19e265] [cursor=pointer]:
+          - /url: /business-settings/profile
+        - link "گفتگوی مستندات توسعه" [ref=f19e272] [cursor=pointer]:
+          - /url: /dev-doc-threads
+        - link "لاگ مستندات توسعه" [ref=f19e277] [cursor=pointer]:
+          - /url: /dev-doc-events
+      - button [ref=f19e303] [cursor=pointer]:
+        - paragraph [ref=f19e284]: tenant فعال
+        - button "Phase3 Runtime Test Tenant" [ref=f19e304]
+      - generic [ref=f19e286]:
+        - button "جمع کردن سایدبار" [expanded] [ref=f19e288] [cursor=pointer]
+        - generic [ref=f19e291]: 0.8.0
+  - button "Open Next.js Dev Tools" [ref=f19e297] [cursor=pointer]
+  - alert [ref=f19e305]
