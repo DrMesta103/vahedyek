@@ -749,6 +749,16 @@ function TaavFieldHint({
     }
   );
 }
+function TaavDivider({ unsafeClassName, ...props }) {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "hr",
+    {
+      "aria-orientation": "horizontal",
+      ...props,
+      className: cn("m-0 h-[2px] w-full shrink-0 border-0 bg-[#a6b9c1]", unsafeClassName)
+    }
+  );
+}
 function TaavRequiredMark({ tone = "danger", label = "\u0627\u0644\u0632\u0627\u0645\u06CC" }) {
   return /* @__PURE__ */ jsxRuntime.jsxs(
     "span",
@@ -2539,6 +2549,55 @@ function TaavOptionCard({
   }
   return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", disabled, onClick, className: cardClass, children: body });
 }
+var taavDialogShellBackdropClass = "fixed inset-0 z-[var(--taav-z-overlay)] bg-[rgba(22,25,27,0.42)] backdrop-blur-[1.5px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0";
+var taavDialogShellVariants = classVarianceAuthority.cva(
+  [
+    "fixed left-1/2 top-1/2 z-[calc(var(--taav-z-overlay)+1)] flex max-h-[calc(100dvh-32px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden",
+    "rounded-[30px] border-0 bg-[#f6f7f8] text-right text-[#55585b] shadow-[0_18px_38px_rgba(20,24,26,0.28)] outline-none",
+    "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+  ],
+  {
+    variants: {
+      size: {
+        sm: "w-[min(320px,calc(100vw-32px))]",
+        md: "w-[min(350px,calc(100vw-32px))]",
+        lg: "w-[min(480px,calc(100vw-32px))]"
+      },
+      variant: {
+        default: "",
+        form: "",
+        selection: "h-[min(516px,calc(100dvh-32px))]"
+      }
+    },
+    defaultVariants: {
+      size: "md",
+      variant: "default"
+    }
+  }
+);
+var taavDialogShellHeaderClass = "grid shrink-0 gap-[12px] px-[32px] pb-[14px] pt-[30px] text-center";
+var taavDialogShellTitleClass = "m-0 text-center text-[21px] font-bold leading-[1.45] text-[#55585b]";
+var taavDialogShellDescriptionClass = "m-0 text-center text-[12px] font-normal leading-[1.65] text-[#686b6e]";
+var taavDialogShellContentClass = "min-h-0 flex-1 overflow-y-auto px-[32px] pb-[30px]";
+var taavDialogShellFooterVariants = classVarianceAuthority.cva(
+  [
+    "flex min-h-[84px] shrink-0 flex-wrap items-center justify-start gap-[30px] px-[32px] py-[22px]",
+    "bg-[#fafbfc] text-[#009b9f]"
+  ],
+  {
+    variants: {
+      variant: {
+        default: "",
+        sticky: "sticky bottom-0 z-10",
+        separated: "shadow-[0_-5px_12px_rgba(42,49,52,0.05)]"
+      }
+    },
+    defaultVariants: {
+      variant: "separated"
+    }
+  }
+);
+var taavDialogShellActionClass = "inline-flex min-h-[32px] items-center justify-center border-0 bg-transparent p-0 text-[15px] font-bold leading-none text-[#009b9f] transition-colors hover:text-[#007f83] focus-visible:rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80cfd2] disabled:cursor-not-allowed disabled:opacity-45";
 var overlayVariantMap = {
   default: "bg-[var(--taav-overlay-surface)] border-[color:var(--taav-overlay-border)] shadow-[var(--taav-overlay-shadow)]",
   elevated: "bg-[var(--taav-overlay-surface)] border-[color:var(--taav-overlay-border-subtle)] shadow-[var(--taav-shadow-xl)]",
@@ -2687,7 +2746,99 @@ var taavOverlayHeaderClass = "grid gap-[var(--taav-space-2)] pe-10";
 var taavOverlayTitleClass = "text-[length:var(--taav-text-lg)] font-black leading-[var(--taav-leading-tight)] text-[var(--taav-text-strong)]";
 var taavOverlayDescriptionClass = "text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]";
 var taavOverlayFooterClass = "flex flex-wrap items-center justify-end gap-[var(--taav-space-2)]";
-var TaavDialog = DialogPrimitive__namespace.Root;
+function TaavDialogLoadingIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "span",
+    {
+      "aria-hidden": "true",
+      className: "h-[14px] w-[14px] animate-spin rounded-full border-2 border-current border-t-transparent"
+    }
+  );
+}
+function TaavDialog({
+  title,
+  description,
+  children,
+  confirmLabel = "\u062A\u0627\u06CC\u06CC\u062F",
+  cancelLabel = "\u0644\u063A\u0648",
+  onConfirm,
+  onCancel,
+  onOpenChange,
+  showFooter = true,
+  showCancel = true,
+  showConfirm = true,
+  confirmDisabled = false,
+  cancelDisabled = false,
+  loading = false,
+  size,
+  variant,
+  footerVariant,
+  className,
+  contentClassName,
+  footerClassName,
+  ...rootProps
+}) {
+  const usesComposedShell = title !== void 0 || description !== void 0 || size !== void 0 || variant !== void 0 || footerVariant !== void 0 || onConfirm !== void 0 || onCancel !== void 0 || showFooter === false || showCancel === false || showConfirm === false || confirmDisabled || cancelDisabled || loading || className !== void 0 || contentClassName !== void 0 || footerClassName !== void 0;
+  if (!usesComposedShell) {
+    return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Root, { onOpenChange, ...rootProps, children });
+  }
+  const closeDialog = () => {
+    if (loading || cancelDisabled) return;
+    onCancel?.();
+    onOpenChange?.(false);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Root, { onOpenChange, ...rootProps, children: /* @__PURE__ */ jsxRuntime.jsxs(DialogPrimitive__namespace.Portal, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Overlay, { className: taavDialogShellBackdropClass }),
+    /* @__PURE__ */ jsxRuntime.jsxs(
+      DialogPrimitive__namespace.Content,
+      {
+        dir: "rtl",
+        "aria-busy": loading || void 0,
+        className: cn(taavDialogShellVariants({ size, variant }), className),
+        onEscapeKeyDown: (event) => {
+          if (loading) event.preventDefault();
+        },
+        onPointerDownOutside: (event) => {
+          if (loading) event.preventDefault();
+        },
+        children: [
+          title || description ? /* @__PURE__ */ jsxRuntime.jsxs("header", { className: taavDialogShellHeaderClass, children: [
+            title ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Title, { className: taavDialogShellTitleClass, children: title }) : null,
+            description ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Description, { className: taavDialogShellDescriptionClass, children: description }) : null
+          ] }) : null,
+          !title ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Title, { className: "sr-only", children: "\u062F\u06CC\u0627\u0644\u0648\u06AF" }) : null,
+          !description ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Description, { className: "sr-only", children: "\u0645\u062D\u062A\u0648\u0627\u06CC \u067E\u0646\u062C\u0631\u0647 \u0645\u062D\u0627\u0648\u0631\u0647\u200C\u0627\u06CC" }) : null,
+          /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn(taavDialogShellContentClass, contentClassName), children }),
+          showFooter ? /* @__PURE__ */ jsxRuntime.jsxs("footer", { className: cn(taavDialogShellFooterVariants({ variant: footerVariant }), footerClassName), children: [
+            showConfirm ? /* @__PURE__ */ jsxRuntime.jsxs(
+              "button",
+              {
+                type: "button",
+                className: cn(taavDialogShellActionClass, "gap-[7px]"),
+                disabled: confirmDisabled || loading,
+                onClick: onConfirm,
+                children: [
+                  loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavDialogLoadingIcon, {}) : null,
+                  /* @__PURE__ */ jsxRuntime.jsx("span", { children: confirmLabel })
+                ]
+              }
+            ) : null,
+            showCancel ? /* @__PURE__ */ jsxRuntime.jsx(
+              "button",
+              {
+                type: "button",
+                className: taavDialogShellActionClass,
+                disabled: cancelDisabled || loading,
+                onClick: closeDialog,
+                children: cancelLabel
+              }
+            ) : null
+          ] }) : null
+        ]
+      }
+    )
+  ] }) });
+}
 var TaavDialogTrigger = DialogPrimitive__namespace.Trigger;
 var TaavDialogClose = DialogPrimitive__namespace.Close;
 var TaavDialogPortal = DialogPrimitive__namespace.Portal;
@@ -6495,7 +6646,7 @@ function TaavCommunicationChannels({
         isExpanded ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: "border-t border-[var(--taav-communication-divider)] px-[18px] py-[14px] text-center text-[14px] text-[var(--taav-communication-muted)]", children: channel.content ?? channel.emptyText ?? emptyText }) : null
       ] }, channel.id);
     }) }),
-    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex justify-center pt-[16px]", children: /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onBack, disabled: disabled || !onBack, className: "rounded-[8px] bg-[var(--taav-communication-button)] px-[10px] py-[6px] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--taav-communication-button-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: backLabel }) })
+    onBack ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex justify-center pt-[16px]", children: /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onBack, disabled, className: "rounded-[8px] bg-[var(--taav-communication-button)] px-[10px] py-[6px] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--taav-communication-button-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: backLabel }) }) : null
   ] });
 }
 var DEFAULT_ITEMS = [
@@ -8317,8 +8468,9 @@ function TaavBankCardNumberInput({ value, defaultValue = "", onValueChange, labe
     }, id: `${id}-${index}`, value: part, onChange: (event) => update(index, event.target.value), onPaste: paste, autoFocus: autoFocus && index === 0, disabled, readOnly, inputMode: "numeric", maxLength: 4, "aria-label": `${label} \u0628\u062E\u0634 ${index + 1}`, className: baseInputClass(invalid) }, index)) })
   ] }) });
 }
-function TaavShebaNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627", helperText, error, required = true, disabled, readOnly, autoFocus, placeholder = "", className }) {
+function TaavShebaNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627", helperText, error, required = true, disabled, readOnly, autoFocus, placeholder = "", showPrefixOnFocus = false, className }) {
   const [internal, setInternal] = React.useState(defaultValue);
+  const [focused, setFocused] = React.useState(false);
   const current = value ?? internal;
   const clean = current.toUpperCase().replace(/\s/g, "");
   const numeric = digits(clean.replace(/^IR/, ""));
@@ -8329,9 +8481,10 @@ function TaavShebaNumberInput({ value, defaultValue = "", onValueChange, label =
     if (value === void 0) setInternal(normalized);
     onValueChange?.(normalized);
   };
+  const visibleValue = clean || (showPrefixOnFocus && focused ? "IR" : "");
   return /* @__PURE__ */ jsxRuntime.jsx(FieldFrame, { id, label, error: invalid ? error ?? "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627 \u0648\u0627\u0631\u062F\u0634\u062F\u0647 \u0645\u0639\u062A\u0628\u0631 \u0646\u06CC\u0633\u062A." : void 0, helperText, required, className, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-end gap-2", children: [
     /* @__PURE__ */ jsxRuntime.jsx(BankIcon, {}),
-    /* @__PURE__ */ jsxRuntime.jsx("input", { id, value: clean, onChange: (event) => update(event.target.value), autoFocus, disabled, readOnly, inputMode: "text", placeholder, "aria-invalid": invalid || void 0, className: cn(baseInputClass(invalid), "flex-1") })
+    /* @__PURE__ */ jsxRuntime.jsx("input", { id, value: visibleValue, onChange: (event) => update(event.target.value), onFocus: () => setFocused(true), onBlur: () => setFocused(false), autoFocus, disabled, readOnly, inputMode: "text", placeholder, "aria-invalid": invalid || void 0, className: cn(baseInputClass(invalid), "flex-1") })
   ] }) });
 }
 function TaavBankAccountNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u062D\u0633\u0627\u0628", helperText = "\u06F0 / \u06F2\u06F0", error, required = true, disabled, readOnly, className, ...props }) {
@@ -8525,6 +8678,336 @@ function TaavProjectStructureCard({ token, title, subtitle, locationText, header
         onNavigate?.();
       }, className: "absolute bottom-3 left-4 text-[#5e8998]", children: /* @__PURE__ */ jsxRuntime.jsx(ChevronLeft, { className: "h-[19px] w-[19px]", strokeWidth: 2.1 }) })
     ] })
+  ] });
+}
+
+// src/business/shared/dialog-form.styles.ts
+var taavDialogFormFieldClass = "group grid gap-[7px]";
+var taavDialogFormLabelClass = "flex items-center gap-[4px] text-right text-[15px] font-semibold leading-6 text-[#55585b] transition-colors group-focus-within:text-[#009b9f]";
+var taavDialogFormRequiredClass = "text-[#e3262f]";
+var taavDialogFormInputClass = "!h-[38px] !min-h-0 !rounded-[9px] !border-[#6f7274] !bg-transparent !px-[12px] !shadow-none transition-colors group-focus-within:!border-[#009b9f]";
+var taavDialogFormInputTextClass = "!p-0 !text-right !text-[15px] !font-normal !leading-6 !text-[#55585b] placeholder:!text-[#a0a3a5]";
+var taavDialogFormHelperClass = "flex min-h-[16px] items-center justify-between gap-3 text-[10px] font-normal leading-4 text-[#8a8d90]";
+function PlateCheckIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "span",
+    {
+      "aria-hidden": "true",
+      className: "flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-[#009b9f] text-white",
+      children: /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 24 24", className: "h-[20px] w-[20px]", fill: "none", children: /* @__PURE__ */ jsxRuntime.jsx(
+        "path",
+        {
+          d: "m5.5 12.5 4 4 9-10",
+          stroke: "currentColor",
+          strokeWidth: "1.8",
+          strokeLinecap: "round",
+          strokeLinejoin: "round"
+        }
+      ) })
+    }
+  );
+}
+function TaavPlateForm({
+  mainPlateValue,
+  subPlateValue,
+  subPlateValues,
+  onMainPlateChange,
+  onSubPlateChange,
+  onSubPlateValuesChange,
+  mainPlateLabel = "\u067E\u0644\u0627\u06A9 \u0627\u0635\u0644\u06CC",
+  subPlateLabel = "\u067E\u0644\u0627\u06A9 \u0641\u0631\u0639\u06CC",
+  mainPlatePlaceholder,
+  subPlatePlaceholder,
+  mainPlateHelperText = "\u0644\u0637\u0641\u0627 \u0639\u062F\u062F \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F.",
+  subPlateHelperText = "\u0644\u0637\u0641\u0627 \u0639\u062F\u062F \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F.",
+  maxLength = 255,
+  required = true,
+  disabled = false,
+  className
+}) {
+  const generatedId = React.useId();
+  const [internalSubPlateValue, setInternalSubPlateValue] = React.useState("");
+  const [internalSubPlateValues, setInternalSubPlateValues] = React.useState([]);
+  const [subPlateInvalid, setSubPlateInvalid] = React.useState(false);
+  const mainId = `${generatedId}-main`;
+  const subId = `${generatedId}-sub`;
+  const mainCount = mainPlateValue?.length ?? 0;
+  const resolvedSubPlateValue = subPlateValue ?? internalSubPlateValue;
+  const resolvedSubPlateValues = subPlateValues ?? internalSubPlateValues;
+  const subCount = resolvedSubPlateValue.length;
+  const updateSubPlateValue = (value) => {
+    if (subPlateValue === void 0) setInternalSubPlateValue(value);
+    onSubPlateChange?.(value);
+    if (value.trim()) setSubPlateInvalid(false);
+  };
+  const updateSubPlateValues = (values) => {
+    if (subPlateValues === void 0) setInternalSubPlateValues(values);
+    onSubPlateValuesChange?.(values);
+  };
+  const addSubPlate = () => {
+    const normalizedValue = resolvedSubPlateValue.trim();
+    if (!normalizedValue) {
+      setSubPlateInvalid(true);
+      return;
+    }
+    if (!resolvedSubPlateValues.includes(normalizedValue)) {
+      updateSubPlateValues([...resolvedSubPlateValues, normalizedValue]);
+    }
+    updateSubPlateValue("");
+    setSubPlateInvalid(false);
+  };
+  const removeSubPlate = (value) => {
+    updateSubPlateValues(resolvedSubPlateValues.filter((item) => item !== value));
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("grid gap-[21px]", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: taavDialogFormFieldClass, children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("label", { htmlFor: mainId, className: taavDialogFormLabelClass, children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: mainPlateLabel }),
+        required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavDialogFormRequiredClass, children: "*" }) : null
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsx(
+        TaavInput,
+        {
+          id: mainId,
+          inputMode: "numeric",
+          value: mainPlateValue,
+          onChange: (event) => onMainPlateChange?.(event.target.value),
+          placeholder: mainPlatePlaceholder,
+          maxLength,
+          required,
+          disabled,
+          wrapperClassName: taavDialogFormInputClass,
+          inputClassName: taavDialogFormInputTextClass
+        }
+      ),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: taavDialogFormHelperClass, children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: mainPlateHelperText }),
+        /* @__PURE__ */ jsxRuntime.jsxs("span", { dir: "ltr", children: [
+          mainCount,
+          " / ",
+          maxLength
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "h-px w-full bg-[#d4d7d9]", role: "separator" }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: taavDialogFormFieldClass, children: [
+      /* @__PURE__ */ jsxRuntime.jsxs(
+        "label",
+        {
+          htmlFor: subId,
+          className: cn(taavDialogFormLabelClass, subPlateInvalid && "!text-[#e3262f]"),
+          children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { children: subPlateLabel }),
+            required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavDialogFormRequiredClass, children: "*" }) : null
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-center gap-[8px]", children: [
+        /* @__PURE__ */ jsxRuntime.jsx(
+          "button",
+          {
+            type: "button",
+            onClick: addSubPlate,
+            disabled,
+            className: "flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 transition-transform hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#70c5c9] disabled:cursor-not-allowed disabled:opacity-50",
+            "aria-label": "\u0627\u0641\u0632\u0648\u062F\u0646 \u067E\u0644\u0627\u06A9 \u0641\u0631\u0639\u06CC",
+            children: /* @__PURE__ */ jsxRuntime.jsx(PlateCheckIcon, {})
+          }
+        ),
+        /* @__PURE__ */ jsxRuntime.jsx(
+          TaavInput,
+          {
+            id: subId,
+            dir: "rtl",
+            inputMode: "numeric",
+            value: resolvedSubPlateValue,
+            onChange: (event) => updateSubPlateValue(event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addSubPlate();
+              }
+            },
+            placeholder: subPlatePlaceholder,
+            maxLength,
+            required,
+            disabled,
+            invalid: subPlateInvalid,
+            wrapperClassName: cn(
+              taavDialogFormInputClass,
+              "flex-1",
+              subPlateInvalid && "!border-[#e3262f] focus-within:!border-[#e3262f]"
+            ),
+            inputClassName: taavDialogFormInputTextClass
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(taavDialogFormHelperClass, subPlateInvalid && "!text-[#e3262f]"), children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: subPlateInvalid ? "\u067E\u0644\u0627\u06A9 \u0641\u0631\u0639\u06CC \u0627\u062C\u0628\u0627\u0631\u06CC \u0627\u0633\u062A." : subPlateHelperText }),
+        /* @__PURE__ */ jsxRuntime.jsxs("span", { dir: "ltr", children: [
+          subCount,
+          " / ",
+          maxLength
+        ] })
+      ] }),
+      resolvedSubPlateValues.length ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex flex-wrap items-center justify-start gap-[8px]", dir: "rtl", children: resolvedSubPlateValues.map((value) => /* @__PURE__ */ jsxRuntime.jsxs(
+        "button",
+        {
+          type: "button",
+          disabled,
+          onClick: () => removeSubPlate(value),
+          className: "inline-flex h-[37px] items-center gap-[7px] rounded-full border-0 bg-[#b8e3e7] px-[13px] text-[13px] font-medium text-[#187f84] transition-colors hover:bg-[#a9dadd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#70c5c9] disabled:opacity-50",
+          "aria-label": `\u062D\u0630\u0641 \u067E\u0644\u0627\u06A9 \u0641\u0631\u0639\u06CC ${value}`,
+          children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { children: value }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": "true", className: "text-[18px] font-light leading-none", children: "\xD7" })
+          ]
+        },
+        value
+      )) }) : null
+    ] })
+  ] });
+}
+function TaavProjectTechnicalInfoForm({
+  titleValue,
+  descriptionValue,
+  onTitleChange,
+  onDescriptionChange,
+  titleLabel = "\u0639\u0646\u0648\u0627\u0646",
+  descriptionLabel = "\u062A\u0648\u0636\u06CC\u062D\u0627\u062A",
+  titlePlaceholder,
+  descriptionPlaceholder,
+  required = true,
+  disabled = false,
+  formIntro,
+  className
+}) {
+  const generatedId = React.useId();
+  const titleId = `${generatedId}-title`;
+  const descriptionId = `${generatedId}-description`;
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("grid gap-[8px]", className), children: [
+    formIntro ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-right text-[12px] leading-5 text-[#686b6e]", children: formIntro }) : null,
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: taavDialogFormFieldClass, children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("label", { htmlFor: titleId, className: taavDialogFormLabelClass, children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: titleLabel }),
+        required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavDialogFormRequiredClass, children: "*" }) : null
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsx(
+        TaavInput,
+        {
+          id: titleId,
+          value: titleValue,
+          onChange: (event) => onTitleChange?.(event.target.value),
+          placeholder: titlePlaceholder,
+          required,
+          disabled,
+          wrapperClassName: taavDialogFormInputClass,
+          inputClassName: taavDialogFormInputTextClass
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: taavDialogFormFieldClass, children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("label", { htmlFor: descriptionId, className: taavDialogFormLabelClass, children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: descriptionLabel }),
+        required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: taavDialogFormRequiredClass, children: "*" }) : null
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsx(
+        TaavTextarea,
+        {
+          id: descriptionId,
+          value: descriptionValue,
+          onChange: (event) => onDescriptionChange?.(event.target.value),
+          placeholder: descriptionPlaceholder,
+          required,
+          disabled,
+          rows: 3,
+          wrapperClassName: "!min-h-[80px] !rounded-[9px] !border-[#6f7274] !bg-transparent !shadow-none transition-colors group-focus-within:!border-[#009b9f]",
+          inputClassName: "!min-h-[78px] !resize-none !p-[10px_12px] !text-right !text-[15px] !font-normal !leading-6 !text-[#55585b] placeholder:!text-[#a0a3a5]"
+        }
+      )
+    ] })
+  ] });
+}
+function SearchIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsxs("svg", { "aria-hidden": "true", viewBox: "0 0 24 24", className: "h-[21px] w-[21px]", fill: "none", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("circle", { cx: "10.5", cy: "10.5", r: "6.5", stroke: "currentColor", strokeWidth: "1.25" }),
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "m15.5 15.5 5 5", stroke: "currentColor", strokeWidth: "1.25", strokeLinecap: "round" })
+  ] });
+}
+function UserIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsxs("svg", { "aria-hidden": "true", viewBox: "0 0 24 24", className: "h-[26px] w-[26px]", fill: "none", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("circle", { cx: "12", cy: "8", r: "3.4", stroke: "currentColor", strokeWidth: "1.35" }),
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M5.8 19c.5-3.3 2.7-5.2 6.2-5.2s5.7 1.9 6.2 5.2", stroke: "currentColor", strokeWidth: "1.35", strokeLinecap: "round" })
+  ] });
+}
+function TaavApprovalUserForm({
+  users,
+  selectedUserId,
+  searchValue = "",
+  onSearchChange,
+  onUserSelect,
+  onAddUser,
+  addUserLabel = "\u062B\u0628\u062A \u06A9\u0627\u0631\u0628\u0631",
+  searchPlaceholder = "\u062C\u0633\u062A\u062C\u0648\u06CC \u06A9\u0627\u0631\u0628\u0631...",
+  emptyText = "\u06A9\u0627\u0631\u0628\u0631\u06CC \u0628\u0631\u0627\u06CC \u0646\u0645\u0627\u06CC\u0634 \u0648\u062C\u0648\u062F \u0646\u062F\u0627\u0631\u062F.",
+  disabled = false,
+  className
+}) {
+  const normalizedSearch = searchValue.trim();
+  const visibleUsers = normalizedSearch ? users.filter((user) => user.name.includes(normalizedSearch)) : users;
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("grid gap-[12px]", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "rtl", className: "flex items-center gap-[8px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: onAddUser,
+          disabled: disabled || !onAddUser,
+          className: "inline-flex h-[40px] shrink-0 items-center gap-[8px] rounded-full border-0 bg-[#009b9f] px-[15px] text-[15px] font-bold text-white transition-colors hover:bg-[#00878b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80cfd2] disabled:cursor-not-allowed disabled:opacity-60",
+          children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": "true", className: "text-[25px] font-light leading-none", children: "+" }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { children: addUserLabel })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntime.jsxs("label", { className: "relative min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: "sr-only", children: searchPlaceholder }),
+        /* @__PURE__ */ jsxRuntime.jsx(
+          "input",
+          {
+            type: "search",
+            value: searchValue,
+            onChange: (event) => onSearchChange?.(event.target.value),
+            placeholder: searchPlaceholder,
+            disabled,
+            className: "h-[40px] w-full appearance-none rounded-full border-0 bg-[#e3e8ee] pb-0 pl-[39px] pr-[14px] pt-0 text-right text-[12px] font-normal text-[#55585b] outline-none placeholder:text-[#767b80] focus:ring-2 focus:ring-[#80cfd2] disabled:opacity-60"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: "pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-[#92999e]", children: /* @__PURE__ */ jsxRuntime.jsx(SearchIcon, {}) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "grid", children: visibleUsers.length ? visibleUsers.map((user, index) => {
+      const selected = selectedUserId === user.id;
+      return /* @__PURE__ */ jsxRuntime.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: () => onUserSelect?.(user.id),
+          disabled: disabled || !onUserSelect,
+          "aria-pressed": selected,
+          className: cn(
+            "flex min-h-[48px] w-full items-center gap-[10px] border-0 bg-transparent px-[8px] py-[5px] text-right text-[13px] font-normal text-[#55585b] transition-colors hover:bg-[#eceeef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#aeb4b8] disabled:cursor-default",
+            selected && "bg-[#eceeef]",
+            index > 0 && "border-t border-solid border-[#d9dcde]"
+          ),
+          children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "flex h-[40px] w-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#d2edf0] text-white", children: user.avatarUrl ? /* @__PURE__ */ jsxRuntime.jsx("img", { src: user.avatarUrl, alt: "", className: "h-full w-full object-cover" }) : /* @__PURE__ */ jsxRuntime.jsx(UserIcon, {}) }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "min-w-0 flex-1 truncate", children: user.name })
+          ]
+        },
+        user.id
+      );
+    }) : /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 py-[72px] text-center text-[14px] font-semibold text-[#666a6d]", children: emptyText }) })
   ] });
 }
 var Input = React__namespace.forwardRef(
@@ -8948,7 +9431,7 @@ function TagPills({
 function cn4(...classes) {
   return classes.filter(Boolean).join(" ");
 }
-function SearchIcon({ className = "" }) {
+function SearchIcon2({ className = "" }) {
   return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true", className, children: /* @__PURE__ */ jsxRuntime.jsx(
     "path",
     {
@@ -9019,7 +9502,7 @@ function ExpandableTagGroup({
           onClick: openSearch,
           className: "relative top-[4px] flex h-4 w-4 items-center justify-center rounded text-slate-400 transition-colors hover:text-slate-600",
           "aria-label": `\u062C\u0633\u062A\u062C\u0648 \u062F\u0631 ${label}`,
-          children: /* @__PURE__ */ jsxRuntime.jsx(SearchIcon, { className: "h-3 w-3" })
+          children: /* @__PURE__ */ jsxRuntime.jsx(SearchIcon2, { className: "h-3 w-3" })
         }
       ) : null,
       showSearch ? /* @__PURE__ */ jsxRuntime.jsxs(
@@ -9031,7 +9514,7 @@ function ExpandableTagGroup({
           ),
           style: { height: "22px" },
           children: [
-            /* @__PURE__ */ jsxRuntime.jsx(SearchIcon, { className: "pointer-events-none absolute right-1.5 h-2.5 w-2.5 shrink-0 text-slate-400" }),
+            /* @__PURE__ */ jsxRuntime.jsx(SearchIcon2, { className: "pointer-events-none absolute right-1.5 h-2.5 w-2.5 shrink-0 text-slate-400" }),
             /* @__PURE__ */ jsxRuntime.jsx(
               "input",
               {
@@ -9846,6 +10329,7 @@ exports.TAAV_TOKEN_CATALOG = TAAV_TOKEN_CATALOG;
 exports.TAAV_TOKEN_SECTIONS = TAAV_TOKEN_SECTIONS;
 exports.TAAV_TONE_LABELS = TAAV_TONE_LABELS;
 exports.TaavActivationSwitch = TaavActivationSwitch;
+exports.TaavApprovalUserForm = TaavApprovalUserForm;
 exports.TaavBadge = TaavBadge;
 exports.TaavBankAccountInfoInputCard = TaavBankAccountInfoInputCard;
 exports.TaavBankAccountNumberInput = TaavBankAccountNumberInput;
@@ -9885,6 +10369,7 @@ exports.TaavDialogOverlay = TaavDialogOverlay;
 exports.TaavDialogPortal = TaavDialogPortal;
 exports.TaavDialogTitle = TaavDialogTitle;
 exports.TaavDialogTrigger = TaavDialogTrigger;
+exports.TaavDivider = TaavDivider;
 exports.TaavDrawer = TaavDrawer;
 exports.TaavDrawerClose = TaavDrawerClose;
 exports.TaavDrawerContent = TaavDrawerContent;
@@ -9924,6 +10409,7 @@ exports.TaavPageHeader = TaavPageHeader;
 exports.TaavPageShell = TaavPageShell;
 exports.TaavPagination = TaavPagination;
 exports.TaavPercentageInput = TaavPercentageInput;
+exports.TaavPlateForm = TaavPlateForm;
 exports.TaavPopover = TaavPopover;
 exports.TaavPopoverAnchor = TaavPopoverAnchor;
 exports.TaavPopoverClose = TaavPopoverClose;
@@ -9931,6 +10417,7 @@ exports.TaavPopoverContent = TaavPopoverContent;
 exports.TaavPopoverTrigger = TaavPopoverTrigger;
 exports.TaavProgressSummary = TaavProgressSummary;
 exports.TaavProjectStructureCard = TaavProjectStructureCard;
+exports.TaavProjectTechnicalInfoForm = TaavProjectTechnicalInfoForm;
 exports.TaavRadio = TaavRadio;
 exports.TaavRadioGroup = TaavRadioGroup;
 exports.TaavRequiredMark = TaavRequiredMark;

@@ -725,6 +725,16 @@ function TaavFieldHint({
     }
   );
 }
+function TaavDivider({ unsafeClassName, ...props }) {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "hr",
+    {
+      "aria-orientation": "horizontal",
+      ...props,
+      className: cn("m-0 h-[2px] w-full shrink-0 border-0 bg-[#a6b9c1]", unsafeClassName)
+    }
+  );
+}
 
 exports.TAAV_BUTTON_HEIGHT = TAAV_BUTTON_HEIGHT;
 exports.TAAV_DURATION = TAAV_DURATION;
@@ -737,6 +747,7 @@ exports.TAAV_TONE_LABELS = TAAV_TONE_LABELS;
 exports.TaavBadge = TaavBadge;
 exports.TaavButton = TaavButton;
 exports.TaavCard = TaavCard;
+exports.TaavDivider = TaavDivider;
 exports.TaavFieldHint = TaavFieldHint;
 exports.TaavTooltip = TaavTooltip;
 exports.TaavTooltipProvider = TaavTooltipProvider;
