@@ -39,3 +39,6 @@ next-env.d.ts
 old/
 dastranj-plus-proto-type/
 vahedyek/
+
+#packages
+package-lock.json

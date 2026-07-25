@@ -18,7 +18,7 @@ RUN if [ -f package-lock.json ]; then \
     sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json; \
     fi
 
-RUN npm i --include=dev --force --no-package-lock && \
+RUN npm install --include=dev --force --no-package-lock && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/vahedyek-panel run build
 
