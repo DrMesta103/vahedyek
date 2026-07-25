@@ -1185,7 +1185,7 @@ export function selectPenaltyTypeChip(state: ContractRuleState, nextTypeId: stri
 
 /** Type ids that have an explicit settings slice (for hints/bootstrap). */
 export function listConfiguredPenaltyTypeIds(
-  state: Pick<ContractRuleState, 'activeChip' | 'valuesByType' | 'values' | 'activeTab'> | null | undefined,
+  state: Pick<ContractRuleState, 'activeChip' | 'valuesByType'> | null | undefined,
 ): string[] {
   if (!state) return [];
   const fromMap = Object.keys(state.valuesByType ?? {}).filter((id) =>
