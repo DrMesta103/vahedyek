@@ -18,7 +18,7 @@ RUN if [ -f package-lock.json ]; then \
     sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json; \
     fi
 
-RUN npm ci --include=dev && \
+RUN npm install --include=dev --force && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/dastranj-panel run build
 
