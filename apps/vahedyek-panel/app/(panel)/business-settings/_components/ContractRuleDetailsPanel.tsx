@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import {
   RULE_CONFIGS,
+  selectPenaltyTypeChip,
+  syncPenaltyWorkingCopyToValuesByType,
   validateAdjustmentMultiIndicatorWeights,
   type ContractRuleId,
   type ContractRuleState,
@@ -1608,7 +1610,13 @@ export function ContractRuleDetailsPanel({
       setMessage('');
       const normalizedState =
         ruleId === 'penalty'
-          ? { ...state, values: normalizeKnownProgressivePenaltyValues(state.values) }
+          ? (() => {
+              const withNormalizedValues = {
+                ...state,
+                values: normalizeKnownProgressivePenaltyValues(state.values),
+              };
+              return syncPenaltyWorkingCopyToValuesByType(withNormalizedValues);
+            })()
           : state;
       setState(normalizedState);
 
@@ -1734,7 +1742,7 @@ export function ContractRuleDetailsPanel({
 
         {shouldShowRuleContent ? (
           <>
-            {rule.chips?.length && ruleId !== 'adjustment' ? (
+            {rule.chips?.length && ruleId !== 'adjustment' && ruleId !== 'penalty' ? (
               <section
                 className={cn(
                   'border border-[color:var(--border-soft)] bg-[color:var(--surface)]',
@@ -1764,6 +1772,12 @@ export function ContractRuleDetailsPanel({
               <PenaltyRuleSection
                 state={state}
                 onValueChange={(key, value) => applyPanelValue(setState, key, value, { normalizePenaltyRanges: true })}
+                onSelectPenaltyType={(typeId) => {
+                  setState((current) => (current ? selectPenaltyTypeChip(current, typeId) : current));
+                }}
+                onLeavePenaltyType={() => {
+                  setState((current) => (current ? syncPenaltyWorkingCopyToValuesByType(current) : current));
+                }}
               />
             ) : (
               <section

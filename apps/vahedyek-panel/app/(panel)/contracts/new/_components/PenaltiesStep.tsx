@@ -12,10 +12,12 @@ import { TagPills } from './ContractFormPrimitives';
 import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
   getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   getStepData,
   saveStepData,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
 } from '../../../../lib/contractDraftClient';
 import { validatePenaltiesStep } from '../../../../lib/contractValidation';
@@ -40,12 +42,24 @@ import type {
 } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import type { ContractFlowSectionId } from './contractFlowSignals';
-import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle } from './penalties/BuilderPenaltyInFlow';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { BuilderPenaltyInFlow, type BuilderPenaltyInFlowHandle, type BuilderPenaltyInFlowStatus } from './penalties/BuilderPenaltyInFlow';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
-import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
+import { buildBootstrapPenaltiesPayload, normalizePenaltiesPayload } from '../../../../lib/contractSettingsBootstrap';
+import { RULE_CONFIGS, normalizeRuleState } from '../../../../lib/businessContractRules';
+import {
+  aggregateAlignmentStatuses,
+  buyerPenaltyAlignmentTag,
+  canAlignWithSettings,
+  getBuyerPenaltyFieldHint,
+  resolveBuyerPenaltiesPartyHint,
+  resolveBuyerPenaltyFieldHints,
+  resolveBuyerPenaltySettingsTargetTypeId,
+  resolveBuyerPenaltyTypeHint,
+  resolveDomainRuleHint,
+} from '../../../../lib/contractSettingsHints';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
 
 type PenaltyPartyTab = 'buyer' | 'seller';
 
@@ -154,57 +168,6 @@ function normalizeRule(rule: PenaltyRuleData): PenaltyRuleData {
   };
 }
 
-function normalizePenaltiesPayload(data: ContractPenaltiesData | null): ContractPenaltiesData {
-  const typeMap = new Map((data?.types ?? []).map((item) => [item.id, item]));
-  const types = PENALTY_ITEMS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: typeMap.get(item.id)?.active ?? false,
-  }));
-  const validTypeIds = new Set(types.map((item) => item.id));
-  const rules = (data?.rules ?? []).filter((item) => validTypeIds.has(item.penaltyTypeId)).map(normalizeRule);
-  const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
-
-  return { activeTab, types, rules };
-}
-
-function buildBootstrapPenaltiesPayload(ruleState: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | null) {
-  if (!ruleState) return null;
-  const typeId = 'installment-delay';
-  const active = Boolean(ruleState.active);
-  const mode = ['fixed', 'overdue', 'contract', 'progressive'].includes(ruleState.activeTab) ? ruleState.activeTab : 'fixed';
-  const prefix = mode === 'overdue' ? 'penaltyDebt' : `penalty${mode[0].toUpperCase()}${mode.slice(1)}`;
-  const get = (key: string) => String(ruleState.values[`${prefix}${key}`] ?? '');
-  const percent = mode === 'overdue' ? get('Percent') : mode === 'contract' ? get('Percent') : '';
-  const rule = normalizeRule({
-    ...makeEmptyRule(typeId),
-    id: 'penalty-bootstrap-installment-delay',
-    mode: mode as PenaltyMode,
-    period: (get('Period') || 'monthly') as PenaltyPeriod,
-    fixedAmount: get('Amount'),
-    penaltyPercent: percent,
-    bankInterestPercent: get('BankPercent'),
-    graceDays: get('GraceDays') || '2',
-    roundRule: (get('Round') || '100') as PenaltyRoundRule,
-    extraFeeEnabled: ruleState.values[`${prefix}ExtraFeeEnabled`] === true,
-    extraFeeType: (get('ExtraFeeType') || 'percent') as PenaltyExtraFeeType,
-    extraFeeAmount: get('ExtraFeeAmount'),
-    extraFeeRoundRule: (get('ExtraFeeRound') || '100') as PenaltyRoundRule,
-    progressiveRows: [1, 2, 3, 4].map((index) => ({
-      id: `row-${index}`,
-      fromDay: String(ruleState.values[`penaltyProgressiveRow${index}From`] ?? ''),
-      toDay: String(ruleState.values[`penaltyProgressiveRow${index}To`] ?? ''),
-      rate: String(ruleState.values[`penaltyProgressiveRow${index}Rate`] ?? ''),
-    })),
-  });
-  return normalizePenaltiesPayload({
-    activeTab: typeId,
-    types: PENALTY_ITEMS.map((item) => ({ ...item, active: active && item.id === typeId })),
-    rules: active ? [rule] : [],
-  });
-}
-
 function formatInput(value: string) {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
@@ -290,14 +253,19 @@ function FieldBlock({
   label,
   children,
   hint,
+  alignmentTag,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="space-y-2">
-      <FieldLabel label={label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel label={label} />
+        {alignmentTag}
+      </div>
       {children}
       {hint ? <p className="text-xs text-gray-500">{hint}</p> : null}
     </div>
@@ -308,11 +276,15 @@ function PenaltiesPartyTabBar({
   activeTab,
   buyerProgressLabel,
   sellerProgressLabel,
+  buyerAlignmentTag,
+  sellerAlignmentTag,
   onSelect,
 }: {
   activeTab: PenaltyPartyTab;
   buyerProgressLabel: string;
   sellerProgressLabel: string;
+  buyerAlignmentTag: { label: string; className: string } | null;
+  sellerAlignmentTag: { label: string; className: string } | null;
   onSelect: (tab: PenaltyPartyTab) => void;
 }) {
   const tabBase =
@@ -341,12 +313,19 @@ function PenaltiesPartyTabBar({
           </span>
           <span className="min-w-0 flex-1 space-y-1.5">
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'seller' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم سازنده</span>
-            <span
-              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
-                activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
-              }`}
-            >
-              {sellerProgressLabel}
+            <span className="flex flex-wrap items-center gap-1.5">
+              <span
+                className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === 'seller' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+                }`}
+              >
+                {sellerProgressLabel}
+              </span>
+              {sellerAlignmentTag ? (
+                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${sellerAlignmentTag.className}`}>
+                  {sellerAlignmentTag.label}
+                </span>
+              ) : null}
             </span>
           </span>
           {activeTab === 'seller' ? (
@@ -374,12 +353,19 @@ function PenaltiesPartyTabBar({
           </span>
           <span className="min-w-0 flex-1 space-y-1.5">
             <span className={`block text-sm font-bold leading-tight ${activeTab === 'buyer' ? 'text-cyan-900' : 'text-slate-800'}`}>جرایم خریدار</span>
-            <span
-              className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
-                activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
-              }`}
-            >
-              {buyerProgressLabel}
+            <span className="flex flex-wrap items-center gap-1.5">
+              <span
+                className={`inline-flex rounded-[8px] border px-2 py-0.5 text-[11px] font-semibold ${
+                  activeTab === 'buyer' ? 'border-cyan-200 bg-cyan-50/80 text-cyan-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+                }`}
+              >
+                {buyerProgressLabel}
+              </span>
+              {buyerAlignmentTag ? (
+                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${buyerAlignmentTag.className}`}>
+                  {buyerAlignmentTag.label}
+                </span>
+              ) : null}
             </span>
           </span>
           {activeTab === 'buyer' ? (
@@ -405,10 +391,11 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [showValidation, setShowValidation] = useState(false);
   const [partyTab, setPartyTab] = useState<PenaltyPartyTab>('buyer');
   const sellerPenaltyRef = useRef<BuilderPenaltyInFlowHandle | null>(null);
-  const [sellerStatus, setSellerStatus] = useState<{ loading: boolean; saving: boolean; dirty: boolean }>({
+  const [sellerStatus, setSellerStatus] = useState<BuilderPenaltyInFlowStatus>({
     loading: true,
     saving: false,
     dirty: false,
+    state: null,
   });
 
   const [types, setTypes] = useState<PenaltyTypeStateData[]>(INITIAL_TYPES);
@@ -419,6 +406,9 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
   const [expandedPenaltyTypeId, setExpandedPenaltyTypeId] = useState<string>('');
   const [ruleForm, setRuleForm] = useState<PenaltyRuleData>(makeEmptyRule(PENALTY_ITEMS[0]?.id ?? ''));
   const [dialogError, setDialogError] = useState('');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const payload = useMemo<ContractPenaltiesData>(
     () => ({
@@ -436,44 +426,83 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
     () => activeTypes.filter((t) => rules.some((r) => r.penaltyTypeId === t.id)).length,
     [activeTypes, rules],
   );
-  const penaltyHintState = useMemo<ContractRuleState>(() => {
-    const firstRule = rules[0];
-    const activeTab = firstRule?.mode === 'overdue'
-      ? 'debt-percent'
-      : firstRule?.mode === 'contract'
-        ? 'contract-percent'
-        : firstRule?.mode ?? payload.activeTab;
-    return {
-      active: activeTypes.length > 0,
-      activeTab,
-      values: {
-        penaltyFixedPeriod: firstRule?.period ?? '',
-        penaltyFixedAmount: firstRule?.fixedAmount ?? '',
-        penaltyFixedGraceDays: firstRule?.graceDays ?? '',
-        penaltyDebtPeriod: firstRule?.period ?? '',
-        penaltyDebtPercent: firstRule?.penaltyPercent ?? '',
-        penaltyDebtGraceDays: firstRule?.graceDays ?? '',
-        penaltyContractPeriod: firstRule?.period ?? '',
-        penaltyContractPercent: firstRule?.penaltyPercent ?? '',
-        penaltyContractGraceDays: firstRule?.graceDays ?? '',
-        penaltyProgressivePeriod: firstRule?.period ?? '',
-        penaltyProgressiveGraceDays: firstRule?.graceDays ?? '',
-      },
-    };
-  }, [activeTypes.length, payload.activeTab, rules]);
+  const buyerPenaltySettingsTargetTypeId = useMemo(
+    () => resolveBuyerPenaltySettingsTargetTypeId(snapshot?.rules?.penalty),
+    [snapshot?.rules?.penalty],
+  );
+
+  const buyerPartyAlignmentTag = useMemo(
+    () => buyerPenaltyAlignmentTag(resolveBuyerPenaltiesPartyHint(snapshot?.rules?.penalty, types, rules).status),
+    [rules, snapshot?.rules?.penalty, types],
+  );
+
+  const sellerPartyAlignmentTag = useMemo(() => {
+    const reference = snapshot?.rules?.['builder-penalty'];
+    const current = sellerStatus.state ?? reference ?? null;
+    return buyerPenaltyAlignmentTag(resolveDomainRuleHint(RULE_CONFIGS['builder-penalty'], reference, current).status);
+  }, [sellerStatus.state, snapshot?.rules]);
+
+  const stepAlignmentStatus = useMemo(() => {
+    const buyerStatus = resolveBuyerPenaltiesPartyHint(snapshot?.rules?.penalty, types, rules).status;
+    const sellerStatusValue = resolveDomainRuleHint(
+      RULE_CONFIGS['builder-penalty'],
+      snapshot?.rules?.['builder-penalty'],
+      sellerStatus.state ?? snapshot?.rules?.['builder-penalty'] ?? null,
+    ).status;
+    return aggregateAlignmentStatuses([buyerStatus, sellerStatusValue]);
+  }, [rules, sellerStatus.state, snapshot?.rules, types]);
+  const canAlign =
+    Boolean(snapshot?.rules?.penalty || snapshot?.rules?.['builder-penalty']) &&
+    canAlignWithSettings(stepAlignmentStatus);
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
+      const nextPayload = normalizePenaltiesPayload(buildBootstrapPenaltiesPayload(bootstrap.rules.penalty ?? null));
+      setTypes(nextPayload.types);
+      setRules(nextPayload.rules);
+      await saveStepData(draftId, 'penalties', nextPayload);
+      setFrontendStepDraft(draftId, 'penalties', nextPayload);
+      initialSnapshotRef.current = serializePayload(nextPayload);
+      setDirty(false);
+      dispatchContractFlowDirty(stepId as ContractFlowSectionId, false);
+      dispatchContractFlowSavedForDraft(draftId, stepId as ContractFlowSectionId, Date.now(), nextPayload);
+
+      const builderRule = bootstrap.rules['builder-penalty'];
+      if (builderRule) {
+        await sellerPenaltyRef.current?.applyFromSettings(normalizeRuleState('builder-penalty', builderRule));
+      }
+
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن تنظیمات جرایم انجام نشد.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!expandedPenaltyTypeId) {
-      const firstActiveTypeId = types.find((item) => item.active)?.id ?? '';
-      if (firstActiveTypeId) setExpandedPenaltyTypeId(firstActiveTypeId);
+      const preferredTypeId =
+        types.find((item) => item.active && item.id === buyerPenaltySettingsTargetTypeId)?.id ??
+        types.find((item) => item.active)?.id ??
+        buyerPenaltySettingsTargetTypeId ??
+        '';
+      if (preferredTypeId && types.some((item) => item.id === preferredTypeId)) {
+        setExpandedPenaltyTypeId(preferredTypeId);
+      }
       return;
     }
 
-    const expandedTypeStillActive = types.some((item) => item.id === expandedPenaltyTypeId && item.active);
-    if (!expandedTypeStillActive) {
+    const expandedTypeExists = types.some((item) => item.id === expandedPenaltyTypeId);
+    if (!expandedTypeExists) {
       setExpandedPenaltyTypeId(types.find((item) => item.active)?.id ?? '');
     }
-  }, [expandedPenaltyTypeId, types]);
+  }, [buyerPenaltySettingsTargetTypeId, expandedPenaltyTypeId, types]);
 
   useEffect(() => {
     let mounted = true;
@@ -647,39 +676,51 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
             <h1 className="text-2xl font-bold">{title}</h1>
             <p className="mt-1 text-gray-500">ابتدا نوع‌های جریمه را فعال کنید و برای هر نوع فعال، حداقل یک آیتم جریمه ثبت کنید.</p>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(basePath)}
+              className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              بازگشت به مراحل
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => router.push(basePath)}
-            className="rounded-[8px] border border-gray-300 px-3.5 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            onClick={() => setImportDialogOpen(true)}
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            بازگشت به مراحل
+            سازگار کردن با تنظیمات
           </button>
         </div>
-      ) : null}
+      )}
 
       <div className="overflow-hidden rounded-[8px] border border-gray-200 bg-white text-right shadow-sm" dir="rtl">
         <PenaltiesPartyTabBar
           activeTab={partyTab}
           buyerProgressLabel={`${configuredActiveTypesCount}/${Math.max(activeTypes.length, 1)} ثبت‌شده`}
           sellerProgressLabel="تنظیمات"
+          buyerAlignmentTag={buyerPartyAlignmentTag}
+          sellerAlignmentTag={sellerPartyAlignmentTag}
           onSelect={setPartyTab}
         />
-
-        <div className="px-6 pt-5 sm:px-8">
-          <BusinessSettingsHint
-            comparison={buildRuleStateComparison(RULE_CONFIGS.penalty, snapshot?.rules?.penalty, penaltyHintState)}
-          />
-        </div>
 
         {/* Keep both tabs mounted to prevent layout "jump" on switch */}
         <div className={partyTab === 'seller' ? 'block' : 'hidden'} aria-hidden={partyTab !== 'seller'}>
           <div className="p-6 sm:p-8">
-            <div className="mb-5 rounded-[8px] border border-cyan-200 bg-cyan-50/70 px-4 py-3 text-right">
-              <p className="text-[12px] leading-6 text-slate-700">
-                این بخش از تنظیمات سازمانی جرایم سازنده استفاده می‌کند. اگر در اینجا گزینه‌ای را تغییر دهید، همان ساختار در قراردادهای بعدی و در صفحه تنظیمات کسب‌وکار نیز مبنای یکسان خواهد داشت.
-              </p>
-            </div>
-            <BuilderPenaltyInFlow ref={sellerPenaltyRef} onStatusChange={setSellerStatus} />
+            <BuilderPenaltyInFlow ref={sellerPenaltyRef} onStatusChange={setSellerStatus} settingsReference={snapshot?.rules?.['builder-penalty']} />
           </div>
         </div>
 
@@ -700,7 +741,19 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
               {types.map((type) => {
                 const typeRules = rules.filter((rule) => rule.penaltyTypeId === type.id);
                 const typeRule = typeRules[0] ?? null;
-                const isExpanded = type.active && expandedPenaltyTypeId === type.id;
+                const isExpanded = expandedPenaltyTypeId === type.id;
+                const liveRule =
+                  isExpanded && type.active && ruleForm.penaltyTypeId === type.id
+                    ? normalizeRule({ ...ruleForm, id: typeRule?.id || ruleForm.id || `rule-${type.id}` })
+                    : typeRule;
+                const typeHint = resolveBuyerPenaltyTypeHint(snapshot?.rules?.penalty, type.id, type.active, liveRule);
+                const fieldHints = resolveBuyerPenaltyFieldHints(snapshot?.rules?.penalty, type.id, type.active, liveRule);
+                const fieldTag = (key: Parameters<typeof getBuyerPenaltyFieldHint>[1]) => {
+                  const hint = getBuyerPenaltyFieldHint(fieldHints, key);
+                  return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+                };
+                const shouldShowAlignmentTag = Boolean(snapshot?.rules?.penalty);
+                const alignmentTag = shouldShowAlignmentTag ? buyerPenaltyAlignmentTag(typeHint.status) : null;
 
                 return (
                   <div
@@ -714,10 +767,9 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                         <button
                           type="button"
                           onClick={() => {
-                            if (!type.active) return;
                             setExpandedPenaltyTypeId((current) => {
                               const next = current === type.id ? '' : type.id;
-                              if (next) loadRuleFormForType(next);
+                              if (next && type.active) loadRuleFormForType(next);
                               return next;
                             });
                           }}
@@ -735,6 +787,13 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                   غیرفعال
                                 </span>
                               )}
+                              {alignmentTag ? (
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${alignmentTag.className}`}
+                                >
+                                  {alignmentTag.label}
+                                </span>
+                              ) : null}
                             </div>
                             <p className="text-xs leading-6 text-slate-500">{type.description}</p>
                           </div>
@@ -750,8 +809,6 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             if (checked) {
                               setExpandedPenaltyTypeId(type.id);
                               loadRuleFormForType(type.id);
-                            } else if (expandedPenaltyTypeId === type.id) {
-                              setExpandedPenaltyTypeId('');
                             }
                           }}
                         />
@@ -759,8 +816,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                     </div>
 
                     {isExpanded ? (
-                      <div className="border-t border-cyan-100 bg-white/80 p-4">
+                      <div className={`border-t p-4 ${type.active ? 'border-cyan-100 bg-white/80' : 'border-slate-100 bg-slate-50/60'}`}>
                         <div className="space-y-4">
+                          {!type.active ? (
+                            <p className="text-xs leading-6 text-slate-500">
+                              برای ثبت مقادیر جریمه و دیدن تگ هم‌راستایی کنار هر فیلد، این نوع را فعال کنید.
+                            </p>
+                          ) : (
+                            <>
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="text-xs font-semibold text-slate-500">
                               {typeRule ? `خلاصه: ${formatRuleSummary(typeRule)}` : 'هنوز جریمه‌ای ثبت نشده است.'}
@@ -768,7 +831,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                           </div>
 
                           <section className="space-y-3">
-                            <FieldBlock label="روش محاسبه جریمه">
+                            <FieldBlock label="روش محاسبه جریمه" alignmentTag={fieldTag('mode')}>
                               <TagPills
                                 options={MODE_OPTIONS.map((item) => ({ value: item.id, label: item.title }))}
                                 value={ruleForm.mode}
@@ -780,7 +843,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                             </FieldBlock>
                           </section>
 
-                          <FieldBlock label="دوره محاسبه جریمه">
+                          <FieldBlock label="دوره محاسبه جریمه" alignmentTag={fieldTag('period')}>
                             <TagPills
                               options={PERIOD_OPTIONS}
                               value={ruleForm.period}
@@ -789,7 +852,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                           </FieldBlock>
 
                           {ruleForm.mode === 'fixed' ? (
-                            <FieldBlock label="مبلغ ثابت جریمه" hint="مبلغی که برای هر دوره تاخیر اعمال می‌شود.">
+                            <FieldBlock label="مبلغ ثابت جریمه" hint="مبلغی که برای هر دوره تاخیر اعمال می‌شود." alignmentTag={fieldTag('fixedAmount')}>
                               <Input
                                 value={ruleForm.fixedAmount}
                                 onChange={(event) =>
@@ -802,14 +865,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
                           {ruleForm.mode === 'overdue' || ruleForm.mode === 'contract' ? (
                             <div className="grid gap-4 md:grid-cols-2">
-                              <FieldBlock label="درصد جریمه">
+                              <FieldBlock label="درصد جریمه" alignmentTag={fieldTag('penaltyPercent')}>
                                 <Input
                                   value={ruleForm.penaltyPercent}
                                   onChange={(event) => setRuleForm((current) => ({ ...current, penaltyPercent: event.target.value, penaltyTypeId: type.id }))}
                                   placeholder="مثال: 0.5"
                                 />
                               </FieldBlock>
-                              <FieldBlock label="درصد سود بانکی">
+                              <FieldBlock label="درصد سود بانکی" alignmentTag={fieldTag('bankInterestPercent')}>
                                 <Input
                                   value={ruleForm.bankInterestPercent}
                                   onChange={(event) =>
@@ -823,7 +886,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
                           {ruleForm.mode === 'progressive' ? (
                             <div className="space-y-4">
-                              <FieldBlock label="درصد سود بانکی">
+                              <FieldBlock label="درصد سود بانکی" alignmentTag={fieldTag('bankInterestPercent')}>
                                 <Input
                                   value={ruleForm.bankInterestPercent}
                                   onChange={(event) =>
@@ -864,12 +927,14 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                   </button>
                                 </div>
                                 <div className="space-y-3">
-                                  {normalizeProgressiveRows(ruleForm.progressiveRows).map((row, index) => (
+                                  {normalizeProgressiveRows(ruleForm.progressiveRows).map((row, index) => {
+                                    const rowNumber = Math.min(index + 1, 4) as 1 | 2 | 3 | 4;
+                                    return (
                                     <div key={row.id} className="grid gap-3 rounded-[8px] border border-slate-200 bg-white p-3 md:grid-cols-[110px_1fr_150px_140px_auto] md:items-end">
-                                      <FieldBlock label="از روز">
+                                      <FieldBlock label="از روز" alignmentTag={fieldTag(`progressiveRow${rowNumber}From`)}>
                                         <Input value={row.fromDay} disabled className="bg-slate-50 text-slate-500" />
                                       </FieldBlock>
-                                      <FieldBlock label="پایان بازه">
+                                      <FieldBlock label="پایان بازه" alignmentTag={fieldTag(`progressiveRow${rowNumber}To`)}>
                                         <div className="flex items-center gap-2">
                                           <Input
                                             value={row.toDay}
@@ -905,7 +970,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                           </label>
                                         </div>
                                       </FieldBlock>
-                                      <FieldBlock label="نرخ جریمه">
+                                      <FieldBlock label="نرخ جریمه" alignmentTag={fieldTag(`progressiveRow${rowNumber}Rate`)}>
                                         <Input
                                           value={row.rate}
                                           onChange={(event) =>
@@ -938,21 +1003,22 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                         حذف
                                       </button>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
                           ) : null}
 
                           <div className="grid gap-4 md:grid-cols-2">
-                            <FieldBlock label="مهلت تنفس (روز)">
+                            <FieldBlock label="مهلت تنفس (روز)" alignmentTag={fieldTag('graceDays')}>
                               <Input
                                 value={ruleForm.graceDays}
                                 onChange={(event) => setRuleForm((current) => ({ ...current, graceDays: event.target.value, penaltyTypeId: type.id }))}
                                 placeholder="مثال: 2"
                               />
                             </FieldBlock>
-                            <FieldBlock label="قاعده گرد کردن">
+                            <FieldBlock label="قاعده گرد کردن" alignmentTag={fieldTag('roundRule')}>
                               <TagPills
                                 options={ROUND_RULE_OPTIONS}
                                 value={ruleForm.roundRule}
@@ -963,9 +1029,12 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
                           <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
                             <div className="flex items-center justify-between gap-4">
-                              <div>
-                                <h4 className="text-sm font-bold text-slate-800">هزینه دیرکرد</h4>
-                                <p className="mt-1 text-xs text-slate-500">در صورت نیاز، علاوه بر جریمه اصلی یک هزینه دیرکرد هم ثبت کنید.</p>
+                              <div className="min-w-0 space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h4 className="text-sm font-bold text-slate-800">هزینه دیرکرد</h4>
+                                  {fieldTag('extraFeeEnabled')}
+                                </div>
+                                <p className="text-xs text-slate-500">در صورت نیاز، علاوه بر جریمه اصلی یک هزینه دیرکرد هم ثبت کنید.</p>
                               </div>
                               <PenaltySwitch
                                 checked={ruleForm.extraFeeEnabled}
@@ -975,7 +1044,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
 
                             {ruleForm.extraFeeEnabled ? (
                               <>
-                                <FieldBlock label="نوع هزینه دیرکرد">
+                                <FieldBlock label="نوع هزینه دیرکرد" alignmentTag={fieldTag('extraFeeType')}>
                                   <TagPills
                                     options={EXTRA_FEE_OPTIONS}
                                     value={ruleForm.extraFeeType}
@@ -983,7 +1052,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                   />
                                 </FieldBlock>
                                 <div className="grid gap-4 md:grid-cols-2">
-                                  <FieldBlock label="مقدار هزینه دیرکرد">
+                                  <FieldBlock label="مقدار هزینه دیرکرد" alignmentTag={fieldTag('extraFeeAmount')}>
                                     <Input
                                       value={ruleForm.extraFeeAmount}
                                       onChange={(event) =>
@@ -996,7 +1065,7 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                                       placeholder={ruleForm.extraFeeType === 'fixed' ? 'مثال: 100,000' : 'مثال: 0.6'}
                                     />
                                   </FieldBlock>
-                                  <FieldBlock label="قاعده گرد کردن هزینه دیرکرد">
+                                  <FieldBlock label="قاعده گرد کردن هزینه دیرکرد" alignmentTag={fieldTag('extraFeeRound')}>
                                     <TagPills
                                       options={ROUND_RULE_OPTIONS}
                                       value={ruleForm.extraFeeRoundRule}
@@ -1022,6 +1091,8 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
                               ذخیره جریمه
                             </button>
                           </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     ) : null}
@@ -1139,6 +1210,16 @@ export function PenaltiesStep({ stepId, title, embedded = false }: { stepId: str
         onClick={handleSubmit}
         embedded={embedded}
         submitId={stepId}
+      />
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="سازگار کردن با تنظیمات جرایم"
+        description="جرایم خریدار و سازنده از تنظیمات کسب‌وکار جایگزین می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
       />
     </div>
   );

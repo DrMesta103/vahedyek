@@ -79,8 +79,9 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     const contentType = response.headers.get('content-type') ?? '';
 
     if (contentType.includes('application/json')) {
-      const payload = (await response.json()) as { message?: string };
-      throw new Error(payload.message || 'پاسخی از سرور دریافت نشد.');
+      const payload = (await response.json()) as { message?: string; debug?: string };
+      const debugDetails = payload.debug ? ` (${payload.debug})` : '';
+      throw new Error(`${payload.message || `خطای سرور ${response.status}`}${debugDetails}`);
     }
 
     const message = await response.text();
@@ -222,10 +223,10 @@ export async function ensureActiveDraftId() {
   return result.id;
 }
 
-export async function createDraftId() {
+export async function createDraftId(options?: { applySettings?: boolean }) {
   const result = await readJson<{ id: string }>('/api/contracts/drafts', {
     method: 'POST',
-    body: JSON.stringify({}),
+    body: JSON.stringify({ applySettings: Boolean(options?.applySettings) }),
   });
 
   localStorage.setItem(ACTIVE_DRAFT_KEY, result.id);

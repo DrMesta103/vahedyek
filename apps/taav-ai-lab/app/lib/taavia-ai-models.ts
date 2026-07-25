@@ -1,19 +1,16 @@
-import {
-  AI_PROVIDER_MODEL_TYPE_LABELS_V2,
-  AI_PROVIDER_MODEL_TYPES_V2,
-  type AiProviderModelTypeV2,
-} from './types/ai-provider-v2';
+import type { AiProviderModelTypeV2 } from './types/ai-provider-v2';
 
-/** Brand assignment slots mirror admin `AiProviderModelTypeV2`. */
-export const TAAVIA_BRAND_AI_MODEL_PURPOSES = AI_PROVIDER_MODEL_TYPES_V2;
+/** Only OCR and chat/analysis are configurable for a Taavia brand. */
+export const TAAVIA_BRAND_AI_MODEL_PURPOSES = ['DOCUMENT_EXTRACTION', 'TEXT_GENERATION'] as const;
 
 export type TaaviaBrandAiModelPurpose = (typeof TAAVIA_BRAND_AI_MODEL_PURPOSES)[number];
 
 export const TAAVIA_PURPOSE_LABELS: Record<TaaviaBrandAiModelPurpose, string> = {
-  ...AI_PROVIDER_MODEL_TYPE_LABELS_V2,
+  DOCUMENT_EXTRACTION: 'OCR',
+  TEXT_GENERATION: 'چت (تحلیل)',
 };
 
-export const TAAVIA_PURPOSE_DESCRIPTIONS: Record<TaaviaBrandAiModelPurpose, string> = {
+export const TAAVIA_PURPOSE_DESCRIPTIONS: Record<string, string> = {
   TEXT_GENERATION: 'مدل تولید متن برای گفت‌وگو، ابزارها و خروجی ساختاریافته.',
   EMBEDDING: 'مدل بردارسازی برای جست‌وجوی معنایی.',
   RERANKING: 'مدل رتبه‌بندی نتایج بازیابی‌شده.',

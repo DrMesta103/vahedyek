@@ -113,14 +113,14 @@ export function PartySelectionDialog({
         </>
       }
     >
-      <div className="space-y-5" dir="rtl" lang="fa">
-        <div className="flex flex-col items-center justify-center gap-2 pt-1">
+      <div className="flex min-h-0 flex-col gap-5" dir="rtl" lang="fa">
+        <div className="flex shrink-0 flex-col items-center justify-center gap-2 pt-1">
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500">
             <UserRound className="h-7 w-7" aria-hidden />
           </span>
         </div>
 
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex shrink-0 items-center justify-center gap-6">
           <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
             <input
               type="radio"
@@ -143,7 +143,7 @@ export function PartySelectionDialog({
           </label>
         </div>
 
-        <div className="relative">
+        <div className="relative shrink-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={searchTerm}
@@ -153,7 +153,7 @@ export function PartySelectionDialog({
           />
         </div>
 
-        <div className="space-y-3">
+        <div className="min-h-0 max-h-[min(42vh,320px)] space-y-3 overflow-y-auto pe-1">
           {loading ? (
             <div className="rounded-[8px] border border-slate-200 bg-white p-8 text-center text-sm font-semibold text-slate-400">
               در حال بارگذاری…
@@ -209,7 +209,7 @@ export function PartySelectionDialog({
         </div>
 
         {newItemMode ? (
-          <div className="rounded-[8px] border border-slate-200 bg-white px-4 py-4">
+          <div className="shrink-0 rounded-[8px] border border-slate-200 bg-white px-4 py-4">
             <div className="text-right text-[12px] font-bold text-slate-700">
               نام {personTab === 'natural' ? 'شخص حقیقی' : 'شخص حقوقی'}
             </div>
@@ -232,7 +232,7 @@ export function PartySelectionDialog({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-start pt-2">
+        <div className="flex shrink-0 items-center justify-start pt-1">
           <button
             type="button"
             onClick={() => {

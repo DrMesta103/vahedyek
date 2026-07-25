@@ -482,29 +482,54 @@ model ContractSubject {
 }
 
 model ContractParties {
-  id           String                @id @default(cuid())
-  draftId      String                @unique
-  partyOneMode ShareMode             @default(dang)
-  partyTwoMode ShareMode             @default(dang)
-  draft        ContractDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  members      ContractPartyMember[]
+  id                     String                                 @id @default(cuid())
+  draftId                String                                 @unique
+  partyOneMode           ShareMode                              @default(dang)
+  partyTwoMode           ShareMode                              @default(dang)
+  draft                  ContractDraft                          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  members                ContractPartyMember[]
+  firstPartyParticipants ContractFirstPartyRelatedParticipant[]
 }
 
 model ContractPartyMember {
-  id          String           @id @default(cuid())
-  partiesId   String
-  side        PartySide
-  personId    String
-  directoryId String?
-  personType  PersonType
-  name        String
-  shareValue  Decimal          @db.Decimal(18, 2)
-  isPrimary   Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  directory   DirectoryPerson? @relation(fields: [directoryId], references: [id])
-  parties     ContractParties  @relation(fields: [partiesId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(cuid())
+  partiesId          String
+  side               PartySide
+  personId           String
+  directoryId        String?
+  personType         PersonType
+  name               String
+  shareValue         Decimal             @db.Decimal(18, 2)
+  isPrimary          Boolean             @default(false)
+  partyOneMemberKind PartyOneMemberKind?
+  snapshot           Json                @default("{}")
+  createdAt          DateTime            @default(now())
+  directory          DirectoryPerson?    @relation(fields: [directoryId], references: [id])
+  parties            ContractParties     @relation(fields: [partiesId], references: [id], onDelete: Cascade)
 
   @@index([partiesId, side])
+}
+
+model ContractFirstPartyRelatedParticipant {
+  id                  String                                 @id @default(uuid())
+  partiesId           String
+  sourceId            String
+  sourceDirectoryId   String?
+  personType          PersonType
+  role                FirstPartyRelatedParticipantRole
+  name                String
+  parentParticipantId String?
+  parentSourceId      String?
+  snapshot            Json                                   @default("{}")
+  createdAt           DateTime                               @default(now())
+  parties             ContractParties                        @relation(fields: [partiesId], references: [id], onDelete: Cascade)
+  parent              ContractFirstPartyRelatedParticipant?  @relation("ContractFirstPartyParticipantHierarchy", fields: [parentParticipantId], references: [id], onDelete: Cascade)
+  children            ContractFirstPartyRelatedParticipant[] @relation("ContractFirstPartyParticipantHierarchy")
+
+  @@unique([partiesId, parentSourceId, role, sourceId], map: "ContractFirstPartyRelatedParticipant_source_role_key")
+  @@index([partiesId, role], map: "ContractFirstPartyRelatedParticipant_parties_role_idx")
+  @@index([parentParticipantId], map: "ContractFirstPartyRelatedParticipant_parent_idx")
+  @@index([partiesId, parentSourceId], map: "ContractFirstPartyRelatedParticipant_parent_source_idx")
 }
 
 model ContractFinancial {
@@ -976,6 +1001,19 @@ enum PricingType {
 enum PartySide {
   party_one
   party_two
+}
+
+enum PartyOneMemberKind {
+  business
+  natural_shareholder
+  legal_shareholder
+}
+
+enum FirstPartyRelatedParticipantRole {
+  representative
+  board_member
+  natural_shareholder
+  legal_shareholder
 }
 
 enum DirectoryRole {

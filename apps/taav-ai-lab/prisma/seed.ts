@@ -1,23 +1,24 @@
-import { applyCurrentDatabaseUrl } from '../app/config/database';
-import { hashPassword } from '../app/lib/auth';
-import { ensureAiProviderSeedData } from '../app/lib/ai-provider-runtime-seed';
-import { ensureAiProviderV2SeedData } from '../app/lib/ai-provider-v2-runtime-seed';
-import { GLOBAL_SETTINGS_MOCK } from '../app/lib/global-settings-mock';
-import { prisma } from '../app/lib/prisma';
-import { calculateBrandInfoHash } from '../app/lib/brand-info/hash';
-import { storeBrandInfoMedia } from '../app/lib/brand-info/storage';
+import { applyCurrentDatabaseUrl } from "../app/config/database";
+import { createHash } from "node:crypto";
+import { hashPassword } from "../app/lib/auth";
+import { ensureAiProviderSeedData } from "../app/lib/ai-provider-runtime-seed";
+import { ensureAiProviderV2SeedData } from "../app/lib/ai-provider-v2-runtime-seed";
+import { GLOBAL_SETTINGS_MOCK } from "../app/lib/global-settings-mock";
+import { prisma } from "../app/lib/prisma";
+import { calculateBrandInfoHash } from "../app/lib/brand-info/hash";
+import { storeBrandInfoMedia } from "../app/lib/brand-info/storage";
 
 applyCurrentDatabaseUrl();
 
-const DEMO_TENANT_SLUG = 'azmayeshgah-kharidar';
-const DEMO_TENANT_NAME = 'آزمایشگاه نام و نام خانوادگی خریدار';
-const DEFAULT_PRODUCTS = ['ocr', 'taavia'] as const;
+const DEMO_TENANT_SLUG = "azmayeshgah-kharidar";
+const DEMO_TENANT_NAME = "آزمایشگاه نام و نام خانوادگی خریدار";
+const DEFAULT_PRODUCTS = ["ocr", "taavia"] as const;
 
 async function seedGlobalSettings() {
   await prisma.platformUsdRate.upsert({
-    where: { id: 'global' },
+    where: { id: "global" },
     update: {},
-    create: { id: 'global', usdToToman: GLOBAL_SETTINGS_MOCK.usdToToman },
+    create: { id: "global", usdToToman: GLOBAL_SETTINGS_MOCK.usdToToman },
   });
 
   for (const model of GLOBAL_SETTINGS_MOCK.models) {
@@ -60,31 +61,31 @@ async function seedGlobalSettings() {
     }
   }
 
-  const { passwordHash, passwordSalt } = hashPassword('123456');
+  const { passwordHash, passwordSalt } = hashPassword("123456");
   await prisma.platformAdminCredential.upsert({
-    where: { id: 'settings-admin' },
-    update: { username: 'admin', passwordHash, passwordSalt },
-    create: { id: 'settings-admin', username: 'admin', passwordHash, passwordSalt },
+    where: { id: "settings-admin" },
+    update: { username: "admin", passwordHash, passwordSalt },
+    create: { id: "settings-admin", username: "admin", passwordHash, passwordSalt },
   });
 }
 
 async function seedDemoUser() {
-  const { passwordHash, passwordSalt } = hashPassword('123456');
+  const { passwordHash, passwordSalt } = hashPassword("123456");
   return prisma.appUser.upsert({
-    where: { email: 'admin@local.dev' },
+    where: { email: "admin@local.dev" },
     update: {
-      firstName: 'Admin',
-      lastName: 'Local',
-      fullName: 'Admin Local',
+      firstName: "Admin",
+      lastName: "Local",
+      fullName: "Admin Local",
       passwordHash,
       passwordSalt,
       isActive: true,
     },
     create: {
-      firstName: 'Admin',
-      lastName: 'Local',
-      fullName: 'Admin Local',
-      email: 'admin@local.dev',
+      firstName: "Admin",
+      lastName: "Local",
+      fullName: "Admin Local",
+      email: "admin@local.dev",
       passwordHash,
       passwordSalt,
     },
@@ -98,10 +99,10 @@ async function seedDemoTenant(ownerUserId: string) {
     where: { slug: DEMO_TENANT_SLUG },
     update: {
       name: DEMO_TENANT_NAME,
-      brandCode: 'AZ',
-      packageKey: 'starter',
-      billingCycle: 'monthly',
-      logoUrl: '',
+      brandCode: "AZ",
+      packageKey: "starter",
+      billingCycle: "monthly",
+      logoUrl: "",
       tokenLimit: 250000,
       usedTokens: 0,
       ocrTestsCount: 0,
@@ -111,19 +112,19 @@ async function seedDemoTenant(ownerUserId: string) {
     create: {
       slug: DEMO_TENANT_SLUG,
       name: DEMO_TENANT_NAME,
-      brandCode: 'AZ',
-      packageKey: 'starter',
-      billingCycle: 'monthly',
-      logoUrl: '',
+      brandCode: "AZ",
+      packageKey: "starter",
+      billingCycle: "monthly",
+      logoUrl: "",
       tokenLimit: 250000,
       usedTokens: 0,
       ocrTestsCount: 0,
       lastActivity: now,
       memberships: {
-        create: { userId: ownerUserId, role: 'owner' },
+        create: { userId: ownerUserId, role: "owner" },
       },
       products: {
-        create: DEFAULT_PRODUCTS.map((productKey) => ({ productKey, status: 'active' })),
+        create: DEFAULT_PRODUCTS.map((productKey) => ({ productKey, status: "active" })),
       },
     },
   });
@@ -135,8 +136,8 @@ async function seedDemoTenant(ownerUserId: string) {
         tenantId: tenant.id,
       },
     },
-    update: { role: 'owner' },
-    create: { userId: ownerUserId, tenantId: tenant.id, role: 'owner' },
+    update: { role: "owner" },
+    create: { userId: ownerUserId, tenantId: tenant.id, role: "owner" },
   });
 
   for (const productKey of DEFAULT_PRODUCTS) {
@@ -147,8 +148,8 @@ async function seedDemoTenant(ownerUserId: string) {
           productKey,
         },
       },
-      update: { status: 'active' },
-      create: { tenantId: tenant.id, productKey, status: 'active' },
+      update: { status: "active" },
+      create: { tenantId: tenant.id, productKey, status: "active" },
     });
   }
 }
@@ -157,61 +158,101 @@ async function seedTaaviaBrandsAndAssignments(ownerUserId: string) {
   const tenant = await prisma.tenant.findUniqueOrThrow({ where: { slug: DEMO_TENANT_SLUG } });
   const now = new Date();
   const brands = [
-    { id: 'taavia-demo-brand-primary-000000000000', name: 'برند آزمایشی اصلی', description: 'برند نمونه برای بررسی جریان‌های تاویا.' },
-    { id: 'taavia-demo-brand-secondary-000000000000', name: 'برند خدمات سازمانی', description: 'نمونه دوم برای تست فیلترها و تاریخچه.' },
+    { id: "taavia-demo-brand-primary-000000000000", name: "برند آزمایشی اصلی", description: "برند نمونه برای بررسی جریان‌های تاویا." },
+    { id: "taavia-demo-brand-secondary-000000000000", name: "برند خدمات سازمانی", description: "نمونه دوم برای تست فیلترها و تاریخچه." },
   ];
 
   for (const seedBrand of brands) {
     await prisma.taaviaBrand.upsert({
       where: { id: seedBrand.id },
-      update: { name: seedBrand.name, description: seedBrand.description, status: 'ACTIVE', setupMode: 'NOT_SELECTED', updatedAt: now },
-      create: { id: seedBrand.id, tenantId: tenant.id, name: seedBrand.name, description: seedBrand.description, status: 'ACTIVE', setupMode: 'NOT_SELECTED', createdByUserId: ownerUserId, createdAt: now, updatedAt: now },
+      update: { name: seedBrand.name, description: seedBrand.description, status: "ACTIVE", setupMode: "NOT_SELECTED", updatedAt: now },
+      create: { id: seedBrand.id, tenantId: tenant.id, name: seedBrand.name, description: seedBrand.description, status: "ACTIVE", setupMode: "NOT_SELECTED", createdByUserId: ownerUserId, createdAt: now, updatedAt: now },
     });
     await prisma.taaviaConversation.upsert({
-      where: { brandId_type: { brandId: seedBrand.id, type: 'admin_agent' } },
+      where: { brandId_type: { brandId: seedBrand.id, type: "admin_agent" } },
       update: {},
-      create: { tenantId: tenant.id, brandId: seedBrand.id, type: 'admin_agent', createdByUserId: ownerUserId, messages: { create: { role: 'assistant', content: 'برند نمونه برای تست تاویا آماده است.', status: 'completed' } } },
+      create: { tenantId: tenant.id, brandId: seedBrand.id, type: "admin_agent", createdByUserId: ownerUserId, messages: { create: { role: "assistant", content: "برند نمونه برای تست تاویا آماده است.", status: "completed" } } },
     });
   }
 
   const primaryBrandId = brands[0].id;
   const existingBrandInfo = await prisma.taaviaBrandInfo.count({ where: { tenantId: tenant.id, brandId: primaryBrandId } });
   if (existingBrandInfo === 0) {
-    const imageFile = new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64')], 'brand.png', { type: 'image/png' });
-    const pdfFile = new File([Buffer.from('%PDF-1.4 taavia seed')], 'brand-brief.pdf', { type: 'application/pdf' });
+    const imageFile = new File([Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")], "brand.png", { type: "image/png" });
+    const pdfFile = new File([Buffer.from("%PDF-1.4 taavia seed")], "brand-brief.pdf", { type: "application/pdf" });
     const imageStorage = await storeBrandInfoMedia(imageFile);
     const pdfStorage = await storeBrandInfoMedia(pdfFile);
-    const imageMediaId = 'taavia-seed-media-image-000000000000';
-    const pdfMediaId = 'taavia-seed-media-pdf-0000000000000';
-    await prisma.mediaAsset.createMany({ data: [
-      { id: imageMediaId, tenantId: tenant.id, extension: 'png', sizeBytes: imageFile.size, mimeType: imageFile.type, storageKey: imageStorage.key, originalName: imageFile.name, createdAt: now, updatedAt: now },
-      { id: pdfMediaId, tenantId: tenant.id, extension: 'pdf', sizeBytes: pdfFile.size, mimeType: pdfFile.type, storageKey: pdfStorage.key, originalName: pdfFile.name, createdAt: now, updatedAt: now },
-    ] });
-    await prisma.taaviaBrandInfo.createMany({ data: [
-      { id: 'taavia-seed-info-text-000000000000', tenantId: tenant.id, brandId: primaryBrandId, type: 'TEXT', title: 'درباره برند', textContent: 'این یک منبع متنی نمونه برای معرفی برند است.', mediaAssetId: null, status: 'ACTIVE', displayOrder: 0, revision: BigInt(1), contentHash: calculateBrandInfoHash({ type: 'TEXT', title: 'درباره برند', textContent: 'این یک منبع متنی نمونه برای معرفی برند است.' }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now },
-      { id: 'taavia-seed-info-image-0000000000', tenantId: tenant.id, brandId: primaryBrandId, type: 'IMAGE', title: 'تصویر برند', textContent: null, mediaAssetId: imageMediaId, status: 'ACTIVE', displayOrder: 1, revision: BigInt(2), contentHash: calculateBrandInfoHash({ type: 'IMAGE', title: 'تصویر برند', mediaId: imageMediaId, extension: 'png', size: imageFile.size }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: new Date(now.getTime() - 86_400_000), updatedAt: now },
-      { id: 'taavia-seed-info-file-00000000000', tenantId: tenant.id, brandId: primaryBrandId, type: 'FILE', title: 'راهنمای برند', textContent: null, mediaAssetId: pdfMediaId, status: 'ACTIVE', displayOrder: 2, revision: BigInt(1), contentHash: calculateBrandInfoHash({ type: 'FILE', title: 'راهنمای برند', mediaId: pdfMediaId, extension: 'pdf', size: pdfFile.size }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now },
-      { id: 'taavia-seed-info-archived-00', tenantId: tenant.id, brandId: primaryBrandId, type: 'TEXT', title: 'منبع قدیمی', textContent: 'منبع آرشیوشده نمونه.', mediaAssetId: null, status: 'ARCHIVED', displayOrder: 3, revision: BigInt(3), contentHash: calculateBrandInfoHash({ type: 'TEXT', title: 'منبع قدیمی', textContent: 'منبع آرشیوشده نمونه.' }), createdBy: ownerUserId, updatedBy: ownerUserId, archivedAt: now, archivedBy: ownerUserId, createdAt: now, updatedAt: now },
-    ] });
+    const imageMediaId = "taavia-seed-media-image-000000000000";
+    const pdfMediaId = "taavia-seed-media-pdf-0000000000000";
+    await prisma.mediaAsset.createMany({
+      data: [
+        { id: imageMediaId, tenantId: tenant.id, extension: "png", sizeBytes: imageFile.size, mimeType: imageFile.type, storageKey: imageStorage.key, originalName: imageFile.name, createdAt: now, updatedAt: now },
+        { id: pdfMediaId, tenantId: tenant.id, extension: "pdf", sizeBytes: pdfFile.size, mimeType: pdfFile.type, storageKey: pdfStorage.key, originalName: pdfFile.name, createdAt: now, updatedAt: now },
+      ],
+    });
+    await prisma.taaviaBrandInfo.createMany({
+      data: [
+        { id: "taavia-seed-info-text-000000000000", tenantId: tenant.id, brandId: primaryBrandId, type: "TEXT", title: "درباره برند", textContent: "این یک منبع متنی نمونه برای معرفی برند است.", mediaAssetId: null, status: "ACTIVE", displayOrder: 0, revision: BigInt(1), contentHash: calculateBrandInfoHash({ type: "TEXT", title: "درباره برند", textContent: "این یک منبع متنی نمونه برای معرفی برند است." }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now },
+        { id: "taavia-seed-info-image-0000000000", tenantId: tenant.id, brandId: primaryBrandId, type: "IMAGE", title: "تصویر برند", textContent: null, mediaAssetId: imageMediaId, status: "ACTIVE", displayOrder: 1, revision: BigInt(2), contentHash: calculateBrandInfoHash({ type: "IMAGE", title: "تصویر برند", mediaId: imageMediaId, extension: "png", size: imageFile.size }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: new Date(now.getTime() - 86_400_000), updatedAt: now },
+        { id: "taavia-seed-info-file-00000000000", tenantId: tenant.id, brandId: primaryBrandId, type: "FILE", title: "راهنمای برند", textContent: null, mediaAssetId: pdfMediaId, status: "ACTIVE", displayOrder: 2, revision: BigInt(1), contentHash: calculateBrandInfoHash({ type: "FILE", title: "راهنمای برند", mediaId: pdfMediaId, extension: "pdf", size: pdfFile.size }), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now },
+        { id: "taavia-seed-info-archived-00", tenantId: tenant.id, brandId: primaryBrandId, type: "TEXT", title: "منبع قدیمی", textContent: "منبع آرشیوشده نمونه.", mediaAssetId: null, status: "ARCHIVED", displayOrder: 3, revision: BigInt(3), contentHash: calculateBrandInfoHash({ type: "TEXT", title: "منبع قدیمی", textContent: "منبع آرشیوشده نمونه." }), createdBy: ownerUserId, updatedBy: ownerUserId, archivedAt: now, archivedBy: ownerUserId, createdAt: now, updatedAt: now },
+      ],
+    });
   }
 
-  const models = await prisma.aiProviderModelV2.findMany({ where: { isActive: true }, orderBy: { createdAt: 'asc' } });
+  const models = await prisma.aiProviderModelV2.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" } });
   const accounts = await prisma.aiProviderAccountV2.findMany({ where: { isActive: true } });
   const accountById = new Map(accounts.map((account) => [account.id, account]));
-  const firstModel = models.find((model) => model.modelType === 'TextGeneration') ?? models[0];
+  const firstModel = models.find((model) => model.modelType === "TextGeneration") ?? models[0];
   if (!firstModel) return;
-  const existing = await prisma.taaviaBrandAiModelAssignment.findFirst({ where: { brandId: brands[0].id, purpose: 'TEXT_GENERATION', effectiveTo: null } });
+  const existing = await prisma.taaviaBrandAiModelAssignment.findFirst({ where: { brandId: brands[0].id, purpose: "TEXT_GENERATION", effectiveTo: null } });
   if (existing) return;
-  const previousId = 'taavia-demo-assignment-history-000000';
-  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: previousId, tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) } });
-  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: 'taavia-demo-assignment-active-000000', tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) } });
+  const previousId = "taavia-demo-assignment-history-000000";
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: previousId, tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: "TEXT_GENERATION", effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) } });
+  await prisma.taaviaBrandAiModelAssignment.create({ data: { id: "taavia-demo-assignment-active-000000", tenantId: tenant.id, brandId: brands[0].id, aiProviderAccountId: firstModel.aiProviderAccountId, aiProviderModelId: firstModel.id, purpose: "TEXT_GENERATION", effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) } });
   const account = accountById.get(firstModel.aiProviderAccountId);
   if (account) {
-    await prisma.aiProviderModelAssignment.createMany({ data: [
-      { id: 'taavia-demo-registry-history-000000', externalAssignmentId: previousId, consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) },
-      { id: 'taavia-demo-registry-active-000000', externalAssignmentId: 'taavia-demo-assignment-active-000000', consumerCode: 'taavia', tenantId: tenant.id, resourceType: 'brand', resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: 'TEXT_GENERATION', effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) },
-    ], skipDuplicates: true });
+    await prisma.aiProviderModelAssignment.createMany({
+      data: [
+        { id: "taavia-demo-registry-history-000000", externalAssignmentId: previousId, consumerCode: "taavia", tenantId: tenant.id, resourceType: "brand", resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: "TEXT_GENERATION", effectiveFrom: new Date(now.getTime() - 86400000 * 5), effectiveTo: new Date(now.getTime() - 86400000), assignedBy: ownerUserId, endedBy: ownerUserId, createdAt: new Date(now.getTime() - 86400000 * 5) },
+        { id: "taavia-demo-registry-active-000000", externalAssignmentId: "taavia-demo-assignment-active-000000", consumerCode: "taavia", tenantId: tenant.id, resourceType: "brand", resourceId: brands[0].id, aiProviderAccountId: account.id, aiProviderModelId: firstModel.id, purposeCode: "TEXT_GENERATION", effectiveFrom: new Date(now.getTime() - 86400000), effectiveTo: null, assignedBy: ownerUserId, endedBy: null, createdAt: new Date(now.getTime() - 86400000) },
+      ],
+      skipDuplicates: true,
+    });
   }
+}
+
+async function seedTaaviaKnowledgeBases() {
+  const tenant = await prisma.tenant.findUniqueOrThrow({ where: { slug: DEMO_TENANT_SLUG } });
+  const brand = await prisma.taaviaBrand.findFirstOrThrow({ where: { tenantId: tenant.id }, orderBy: { createdAt: "asc" } });
+  const existing = await prisma.taaviaKnowledgeBase.count({ where: { tenantId: tenant.id, brandId: brand.id } });
+  if (existing) return;
+  const now = new Date();
+  for (let version = 0; version < 5; version += 1) {
+    const isActive = version === 4;
+    const createdAt = new Date(now.getTime() - (4 - version) * 86_400_000);
+    const kb = await prisma.taaviaKnowledgeBase.create({ data: { tenantId: tenant.id, brandId: brand.id, versionNumber: version, versionLabel: `v${version}`, isActive, buildType: version < 2 ? "INITIAL" : "UPDATE", createdAt } });
+    await prisma.taaviaKnowledgeBaseBuild.create({ data: { tenantId: tenant.id, brandId: brand.id, knowledgeBaseId: kb.id, status: "SUCCEEDED", buildType: kb.buildType, description: version === 4 ? "بروزرسانی منابع محصول و سوالات متداول" : "ساخت نمونه دانشنامه", startedAt: kb.createdAt, finishedAt: kb.createdAt } });
+    const snapshot = await prisma.taaviaKnowledgeSourceSnapshot.create({ data: { tenantId: tenant.id, brandId: brand.id, knowledgeBaseId: kb.id, sourceType: "TEXT", title: "معرفی برند", content: "محتوای ثبت‌شده و immutable برند برای دانشنامه.", createdAt: kb.createdAt } });
+    const root = await prisma.taaviaKnowledgeCategory.create({ data: { tenantId: tenant.id, brandId: brand.id, knowledgeBaseId: kb.id, title: "درباره ما", slug: "about-us", level: 1, content: "محتوای تولیدشده دسته درباره ما.", createdAt: kb.createdAt } });
+    await prisma.taaviaKnowledgeCategory.create({ data: { tenantId: tenant.id, brandId: brand.id, knowledgeBaseId: kb.id, parentCategoryId: root.id, title: "ماموریت و چشم‌انداز", slug: "mission-vision", level: 2, content: "محتوای تولیدشده زیر‌دسته ماموریت و چشم‌انداز.", createdAt: kb.createdAt } });
+    await prisma.taaviaKnowledgeCategorySourceReference.create({ data: { categoryId: root.id, snapshotId: snapshot.id, usedAt: kb.createdAt } });
+  }
+}
+
+const sourceHash = (...values: string[]) =>
+  createHash("sha256")
+    .update(values.map((value) => value.trim().replace(/\s+/g, " ")).join("\n"))
+    .digest("hex");
+async function seedTaaviaCurrentSources(ownerUserId: string) {
+  const tenant = await prisma.tenant.findUniqueOrThrow({ where: { slug: DEMO_TENANT_SLUG } });
+  const brand = await prisma.taaviaBrand.findFirstOrThrow({ where: { tenantId: tenant.id }, orderBy: { createdAt: "asc" } });
+  const now = new Date();
+  if ((await prisma.taaviaBrandKnowledge.count({ where: { tenantId: tenant.id, brandId: brand.id } })) === 0) await prisma.taaviaBrandKnowledge.create({ data: { tenantId: tenant.id, brandId: brand.id, title: "راهنمای خدمات و پشتیبانی", content: "راهنمای پایدار برای معرفی خدمات، پشتیبانی و مسیر پاسخ‌گویی به مشتریان.", contentHash: sourceHash("راهنمای خدمات و پشتیبانی", "راهنمای پایدار برای معرفی خدمات، پشتیبانی و مسیر پاسخ‌گویی به مشتریان."), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now } });
+  if ((await prisma.taaviaBrandProduct.count({ where: { tenantId: tenant.id, brandId: brand.id } })) === 0) await prisma.taaviaBrandProduct.create({ data: { tenantId: tenant.id, brandId: brand.id, name: "سامانه مدیریت دانش", shortDescription: "مدیریت محتوای برند و دانش‌نامه", fullDescription: "سامانه مدیریت دانش برای ثبت، دسته‌بندی و استفاده از منابع برند در Knowledge Base.", contentHash: sourceHash("سامانه مدیریت دانش", "مدیریت محتوای برند و دانش‌نامه", "سامانه مدیریت دانش برای ثبت، دسته‌بندی و استفاده از منابع برند در Knowledge Base."), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now } });
+  if ((await prisma.taaviaBrandFaq.count({ where: { tenantId: tenant.id, brandId: brand.id } })) === 0) await prisma.taaviaBrandFaq.create({ data: { tenantId: tenant.id, brandId: brand.id, question: "Knowledge Base چه زمانی به‌روزرسانی می‌شود؟", answer: "پس از ثبت تغییرات منابع، با اجرای Build جدید نسخهٔ تازه‌ای ساخته می‌شود.", contentHash: sourceHash("Knowledge Base چه زمانی به‌روزرسانی می‌شود؟", "پس از ثبت تغییرات منابع، با اجرای Build جدید نسخهٔ تازه‌ای ساخته می‌شود."), createdBy: ownerUserId, updatedBy: ownerUserId, createdAt: now, updatedAt: now } });
+  const info = await prisma.taaviaBrandInfo.findFirst({ where: { tenantId: tenant.id, brandId: brand.id, status: "ACTIVE", type: "TEXT" } });
+  if (info) await prisma.taaviaKnowledgeSourceSnapshot.updateMany({ where: { tenantId: tenant.id, brandId: brand.id, originalBrandInfoId: null }, data: { originalBrandInfoId: info.id, originalSourceId: info.id, contentHash: info.contentHash } });
 }
 
 async function main() {
@@ -221,9 +262,11 @@ async function main() {
   const demoUser = await seedDemoUser();
   await seedDemoTenant(demoUser.id);
   await seedTaaviaBrandsAndAssignments(demoUser.id);
-  console.log('Seed completed: global settings, AI provider accounts/models (v1 + v2), platform admin credential, and demo app user.');
-  console.log('App login: admin@local.dev / 123456');
-  console.log('Settings admin gate: admin / 123456');
+  await seedTaaviaKnowledgeBases();
+  await seedTaaviaCurrentSources(demoUser.id);
+  console.log("Seed completed: global settings, AI provider accounts/models (v1 + v2), platform admin credential, and demo app user.");
+  console.log("App login: admin@local.dev / 123456");
+  console.log("Settings admin gate: admin / 123456");
 }
 
 main()

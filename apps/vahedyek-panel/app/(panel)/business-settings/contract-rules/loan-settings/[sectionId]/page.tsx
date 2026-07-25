@@ -24,8 +24,14 @@ const SECTION_CONTENT: Record<string, { title: string; description: string }> = 
   },
 };
 
-export default function LoanSettingsSectionPage({ params }: { params: { sectionId: string } }) {
-  if (params.sectionId === 'timing') {
+export default async function LoanSettingsSectionPage({
+  params,
+}: {
+  params: Promise<{ sectionId: string }>;
+}) {
+  const { sectionId } = await params;
+
+  if (sectionId === 'timing') {
     return (
       <PanelLayout>
         <LoanTimingSettingsPanel />
@@ -33,7 +39,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'amount') {
+  if (sectionId === 'amount') {
     return (
       <PanelLayout>
         <LoanAmountSettingsPanel />
@@ -41,7 +47,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'loan-interest') {
+  if (sectionId === 'loan-interest') {
     return (
       <PanelLayout>
         <LoanInterestSettingsPanel />
@@ -49,7 +55,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'bank-fee') {
+  if (sectionId === 'bank-fee') {
     return (
       <PanelLayout>
         <LoanBankFeeSettingsPanel />
@@ -57,7 +63,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'participation-profit') {
+  if (sectionId === 'participation-profit') {
     return (
       <PanelLayout>
         <LoanSharedResponsibilitySettingsPanel
@@ -81,7 +87,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'expert-cost') {
+  if (sectionId === 'expert-cost') {
     return (
       <PanelLayout>
         <LoanSharedResponsibilitySettingsPanel
@@ -105,7 +111,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'priority-bond-cost') {
+  if (sectionId === 'priority-bond-cost') {
     return (
       <PanelLayout>
         <LoanSharedResponsibilitySettingsPanel
@@ -129,7 +135,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  if (params.sectionId === 'repayment') {
+  if (sectionId === 'repayment') {
     return (
       <PanelLayout>
         <LoanRepaymentSettingsPanel />
@@ -137,7 +143,7 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     );
   }
 
-  const section = SECTION_CONTENT[params.sectionId];
+  const section = SECTION_CONTENT[sectionId];
 
   if (!section) {
     notFound();
@@ -166,4 +172,3 @@ export default function LoanSettingsSectionPage({ params }: { params: { sectionI
     </PanelLayout>
   );
 }
-

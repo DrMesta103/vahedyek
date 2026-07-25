@@ -1,9 +1,16 @@
 'use client';
 
 import { BadgePercent, ChevronLeft, CircleDollarSign, TrendingUp } from 'lucide-react';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ProfileAwareUnitInput } from '../../../../../components/ProfileAwareUnitInput';
 import type { ContractRuleState } from '../../../../../lib/businessContractRules';
+import {
+  getDomainFieldHint,
+  resolveBuilderPenaltyFieldHints,
+  resolveBuilderPenaltySectionHint,
+} from '../../../../../lib/contractSettingsHints/builderPenaltyFieldHints';
+import { buyerPenaltyAlignmentTag } from '../../../../../lib/contractSettingsHints';
+import { SettingsFieldAlignmentTag } from '../SettingsFieldAlignmentTag';
 import {
   BUILDER_PENALTY_MODE_OPTIONS,
   BUILDER_PENALTY_PERCENT_BASIS_OPTIONS,
@@ -91,6 +98,7 @@ function AmountField({
   helper,
   suffix = '',
   disabled = false,
+  alignmentTag,
 }: {
   label: string;
   value: string;
@@ -98,10 +106,14 @@ function AmountField({
   helper?: string;
   suffix?: string;
   disabled?: boolean;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="space-y-3">
-      <FieldLabel label={label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel label={label} />
+        {alignmentTag}
+      </div>
       {disabled ? (
         <input value={value} disabled className="h-11 w-full rounded-[8px] border border-slate-200 bg-slate-50 px-3 text-right text-slate-500" />
       ) : (
@@ -118,16 +130,21 @@ function TextField({
   onChange,
   helper,
   placeholder,
+  alignmentTag,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   helper?: string;
   placeholder?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="space-y-3">
-      <FieldLabel label={label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <FieldLabel label={label} />
+        {alignmentTag}
+      </div>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -180,11 +197,13 @@ function ProgressiveGrid({
   rows,
   values,
   periodLabel,
+  fieldHints,
   onValueChange,
 }: {
   rows: Array<{ fromKey: string; toKey: string; rateKey: string }>;
   values: ContractRuleState['values'];
   periodLabel: string;
+  fieldHints?: Record<string, ReturnType<typeof getDomainFieldHint>>;
   onValueChange: (key: string, value: string | boolean) => void;
 }) {
   const getOpenEndedKey = (toKey: string) => toKey.replace(/To$/, 'OpenEnded');
@@ -236,10 +255,20 @@ function ProgressiveGrid({
 
   return (
     <div className="space-y-4">
-      {visibleRows.map((row, index) => (
+      {visibleRows.map((row, index) => {
+        const rateHint = fieldHints ? getDomainFieldHint(fieldHints, row.rateKey) : undefined;
+        return (
         <div key={row.fromKey} className="grid gap-3 rounded-[8px] border border-slate-200 bg-slate-50 p-3 lg:grid-cols-[1.25fr_1.75fr]">
           <div className="space-y-2">
-            <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <FieldLabel label={`مبلغ جریمه ${periodLabel} - پله ${index + 1}`} />
+              {rateHint ? (
+                <SettingsFieldAlignmentTag
+                  status={rateHint.status === 'idle' ? 'idle' : rateHint.status}
+                  settingsLabel={rateHint.status === 'different' ? rateHint.settingsLabel : null}
+                />
+              ) : null}
+            </div>
             <FinancialAmountInput value={row.amount} onChange={(value) => onValueChange(row.rateKey, value)} suffix="تومان" />
           </div>
 
@@ -273,7 +302,8 @@ function ProgressiveGrid({
             </label>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -288,6 +318,7 @@ function MaterialSpecsMultiSelectField({
   emptyState,
   value,
   onToggle,
+  alignmentTag,
 }: {
   label: string;
   helper: string;
@@ -298,6 +329,7 @@ function MaterialSpecsMultiSelectField({
   emptyState: string;
   value: string[];
   onToggle: (item: string) => void;
+  alignmentTag?: ReactNode;
 }) {
   const selectedDetails = value
     .map((item) => (details[item] ? { label: item, meta: details[item] } : null))
@@ -306,7 +338,10 @@ function MaterialSpecsMultiSelectField({
   return (
     <div className="space-y-3">
       <div className="text-right">
-        <FieldLabel label={label} />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FieldLabel label={label} />
+          {alignmentTag}
+        </div>
         <p className="-mt-2 text-sm leading-7 text-slate-500">{helper}</p>
       </div>
       <MultiTagPills
@@ -346,11 +381,13 @@ function MaterialSpecsImportanceField({
   onChange,
   sectionEffectLabel,
   sectionEffect,
+  alignmentTag,
 }: {
   value: string;
   onChange: (value: string) => void;
   sectionEffectLabel?: string;
   sectionEffect?: string;
+  alignmentTag?: ReactNode;
 }) {
   const selectedOption =
     MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.find((option) => option.value === value) ?? MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS[0];
@@ -358,7 +395,10 @@ function MaterialSpecsImportanceField({
   return (
     <div className="space-y-3">
       <div className="text-right">
-        <FieldLabel label="سطح اهمیت تغییر" />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <FieldLabel label="سطح اهمیت تغییر" />
+          {alignmentTag}
+        </div>
       </div>
       <TagPills
         options={MATERIAL_SPECS_CHANGE_IMPORTANCE_LEVELS.map((option) => ({
@@ -389,6 +429,7 @@ function MaterialSpecsToggleField({
   onChange,
   sectionEffectLabel,
   sectionEffect,
+  alignmentTag,
 }: {
   title: string;
   description: string;
@@ -396,11 +437,15 @@ function MaterialSpecsToggleField({
   onChange: (value: boolean) => void;
   sectionEffectLabel?: string;
   sectionEffect?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4 rounded-[8px] border border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="space-y-2 text-right">
-        <div className="text-sm font-extrabold text-slate-800">{title}</div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="text-sm font-extrabold text-slate-800">{title}</div>
+          {alignmentTag}
+        </div>
         <p className="text-xs leading-6 text-slate-500">{description}</p>
         {sectionEffectLabel && sectionEffect ? <p className="text-xs leading-6 text-cyan-800">{sectionEffectLabel}: {sectionEffect}</p> : null}
       </div>
@@ -413,14 +458,23 @@ function MaterialSpecsToggleField({
 
 export type BuilderPenaltyInFlowHandle = {
   saveIfDirty: () => Promise<void>;
+  applyFromSettings: (next: ContractRuleState) => Promise<void>;
+};
+
+export type BuilderPenaltyInFlowStatus = {
+  loading: boolean;
+  saving: boolean;
+  dirty: boolean;
+  state: ContractRuleState | null;
 };
 
 export const BuilderPenaltyInFlow = forwardRef<
   BuilderPenaltyInFlowHandle,
   {
-    onStatusChange?: (status: { loading: boolean; saving: boolean; dirty: boolean }) => void;
+    onStatusChange?: (status: BuilderPenaltyInFlowStatus) => void;
+    settingsReference?: ContractRuleState | null;
   }
->(function BuilderPenaltyInFlow({ onStatusChange }, ref) {
+>(function BuilderPenaltyInFlow({ onStatusChange, settingsReference = null }, ref) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -464,8 +518,8 @@ export const BuilderPenaltyInFlow = forwardRef<
   }, []);
 
   useEffect(() => {
-    onStatusChange?.({ loading, saving, dirty: dirtyRef.current });
-  }, [loading, saving, onStatusChange]);
+    onStatusChange?.({ loading, saving, dirty: dirtyRef.current, state: stateRef.current });
+  }, [loading, saving, state, onStatusChange]);
 
   const persist = async (nextState: ContractRuleState, options?: { silent?: boolean }) => {
     try {
@@ -487,7 +541,7 @@ export const BuilderPenaltyInFlow = forwardRef<
       initialSnapshotRef.current = serialize(normalizedState);
       dirtyRef.current = false;
       if (!options?.silent) setMessage('تنظیمات جرایم سازنده ذخیره شد.');
-      onStatusChange?.({ loading: false, saving: false, dirty: false });
+      onStatusChange?.({ loading: false, saving: false, dirty: false, state: normalizedState });
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'ذخیره تنظیمات جریمه سازنده انجام نشد.');
     } finally {
@@ -509,7 +563,6 @@ export const BuilderPenaltyInFlow = forwardRef<
       };
       stateRef.current = next;
       dirtyRef.current = serialize(next) !== initialSnapshotRef.current;
-      onStatusChange?.({ loading: false, saving, dirty: dirtyRef.current });
       return next;
     });
   };
@@ -522,6 +575,13 @@ export const BuilderPenaltyInFlow = forwardRef<
   useImperativeHandle(ref, () => ({
     saveIfDirty: async () => {
       if (dirtyRef.current && stateRef.current) await persist(stateRef.current, { silent: true });
+    },
+    applyFromSettings: async (next) => {
+      const normalized = {
+        ...next,
+        values: normalizeKnownProgressivePenaltyValues(next.values),
+      };
+      await persist(normalized, { silent: true });
     },
   }));
 
@@ -547,6 +607,22 @@ export const BuilderPenaltyInFlow = forwardRef<
         const violationOutcomes = parseStoredStringList(state.values.materialSpecsChangeViolationOutcomes);
         const requiredDocuments = parseStoredStringList(state.values.materialSpecsChangeRequiredDocuments);
         const isExpanded = expandedSectionId === item.id;
+        const fieldHints = resolveBuilderPenaltyFieldHints(settingsReference, state, item.id);
+        const modeHint = getDomainFieldHint(fieldHints, section.modeKey);
+        const periodHint = getDomainFieldHint(fieldHints, section.periodKey);
+        const fixedAmountHint = getDomainFieldHint(fieldHints, section.fixedAmountKey);
+        const graceHint = section.graceDaysKey ? getDomainFieldHint(fieldHints, section.graceDaysKey) : undefined;
+        const maxCapHint = getDomainFieldHint(fieldHints, section.capKey);
+        const unlimitedCapHint = section.unlimitedCapKey
+          ? getDomainFieldHint(fieldHints, section.unlimitedCapKey)
+          : undefined;
+        const fieldAlignmentTag = (hint: ReturnType<typeof getDomainFieldHint> | undefined) => {
+          if (!hint || hint.status === 'idle') return null;
+          return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+        };
+        const sectionAlignment = settingsReference
+          ? buyerPenaltyAlignmentTag(resolveBuilderPenaltySectionHint(settingsReference, state, item.id).status)
+          : null;
 
         return (
           <div key={item.id} className={`overflow-hidden rounded-[8px] border transition ${sectionEnabled ? 'border-cyan-200 bg-cyan-50/40' : 'border-slate-200 bg-white'}`}>
@@ -561,12 +637,17 @@ export const BuilderPenaltyInFlow = forwardRef<
                   className="flex min-w-0 flex-1 flex-col gap-3 text-right sm:flex-row-reverse sm:items-center sm:gap-4"
                 >
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-sm font-bold text-slate-800">{item.title}</h3>
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${sectionEnabled ? 'border border-emerald-200 bg-emerald-50 text-emerald-800' : 'border border-slate-200 bg-slate-50 text-slate-500'}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${sectionEnabled ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden />
                         {sectionEnabled ? 'فعال' : 'غیرفعال'}
                       </span>
+                      {sectionAlignment ? (
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${sectionAlignment.className}`}>
+                          {sectionAlignment.label}
+                        </span>
+                      ) : null}
                     </div>
                     <p className="text-xs leading-6 text-slate-500">{item.description}</p>
                     {sectionEnabled ? (
@@ -623,6 +704,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                           emptyState="هنوز حوزه‌ای انتخاب نشده است. تا وقتی موردی انتخاب نشود، در ادامه فلو قرارداد هم دسته مشخصی برای این نوع تغییر وجود نخواهد داشت."
                           value={includedTypes}
                           onToggle={(itemValue) => setValue('materialSpecsChangeIncludedTypes', toggleStoredStringList(state.values.materialSpecsChangeIncludedTypes, itemValue), item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeIncludedTypes'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -630,6 +712,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                         <MaterialSpecsImportanceField
                           value={importanceLevel}
                           onChange={(value) => setValue('materialSpecsChangeImportanceLevel', value, item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeImportanceLevel'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -642,6 +725,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                           emptyState="هنوز مرجع مقایسه‌ای انتخاب نشده است. در این حالت، مبنای سنجش تغییر در بررسی‌های بعدی قرارداد روشن نخواهد بود."
                           value={referenceSources}
                           onToggle={(itemValue) => setValue('materialSpecsChangeReferenceSources', toggleStoredStringList(state.values.materialSpecsChangeReferenceSources, itemValue), item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeReferenceSources'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -651,6 +735,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                           description="اگر متریال یا مشخصات جایگزین از نظر کیفیت و ارزش معادل یا بهتر باشد، تخلف محسوب نمی‌شود."
                           checked={Boolean(state.values.materialSpecsChangeEquivalentOrBetterAllowed)}
                           onChange={(value) => setValue('materialSpecsChangeEquivalentOrBetterAllowed', value, item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeEquivalentOrBetterAllowed'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -660,6 +745,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                           description="اگر تغییر مهم بدون تأیید خریدار انجام شود، می‌تواند موجب مطالبه جبران، اصلاح یا حق فسخ شود."
                           checked={Boolean(state.values.materialSpecsChangeBuyerApprovalRequired)}
                           onChange={(value) => setValue('materialSpecsChangeBuyerApprovalRequired', value, item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeBuyerApprovalRequired'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -672,6 +758,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                           emptyState="هنوز خروجی قابل اعمالی انتخاب نشده است. در این وضعیت، مسیر نتیجه‌گیری در بررسی‌های بعدی استاندارد نمی‌شود."
                           value={violationOutcomes}
                           onToggle={(itemValue) => setValue('materialSpecsChangeViolationOutcomes', toggleStoredStringList(state.values.materialSpecsChangeViolationOutcomes, itemValue), item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeViolationOutcomes'))}
                         />
 
                         <div className="border-t border-slate-200" />
@@ -686,14 +773,20 @@ export const BuilderPenaltyInFlow = forwardRef<
                           sectionEffectLabel="محل ثبت در اپ"
                           sectionEffect="فایل این مدارک در مرحله `پیوست و اسناد قرارداد` آپلود می‌شود؛ معمولاً با `افزودن سند` و انتخاب یک دسته سفارشی یا یکی از دسته‌های موجود."
                           onToggle={(itemValue) => setValue('materialSpecsChangeRequiredDocuments', toggleStoredStringList(state.values.materialSpecsChangeRequiredDocuments, itemValue), item.id)}
+                          alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, 'materialSpecsChangeRequiredDocuments'))}
                         />
                       </div>
                     ) : (
                       <div className="space-y-8 p-5 md:p-10">
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {BUILDER_PENALTY_MODE_OPTIONS.map((mode) => (
-                            <ModeCard key={mode.value} value={mode.value} active={activeMode === mode.value} onSelect={(value) => setValue(section.modeKey, value, item.id)} />
-                          ))}
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            {fieldAlignmentTag(modeHint)}
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-3">
+                            {BUILDER_PENALTY_MODE_OPTIONS.map((mode) => (
+                              <ModeCard key={mode.value} value={mode.value} active={activeMode === mode.value} onSelect={(value) => setValue(section.modeKey, value, item.id)} />
+                            ))}
+                          </div>
                         </div>
 
                         <p className="text-center text-base leading-8 text-slate-600">
@@ -701,7 +794,10 @@ export const BuilderPenaltyInFlow = forwardRef<
                         </p>
 
                         <section className="space-y-5">
-                          <h5 className="text-right text-[17px] font-black text-slate-800">دوره محاسبه جریمه</h5>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <h5 className="text-right text-[17px] font-black text-slate-800">دوره محاسبه جریمه</h5>
+                            {fieldAlignmentTag(periodHint)}
+                          </div>
                           <p className="text-right text-sm leading-7 text-slate-600">دوره را برای محاسبه جریمه انتخاب کنید.</p>
                           <TagPills
                             options={BUILDER_PENALTY_PERIOD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
@@ -717,6 +813,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                             value={String(state.values[section.fixedAmountKey] ?? '')}
                             onChange={(value) => setValue(section.fixedAmountKey, value, item.id)}
                             helper="مبلغی که به ازای هر دوره تاخیر به عنوان جریمه درنظر گرفته می‌شود."
+                            alignmentTag={fieldAlignmentTag(fixedAmountHint)}
                           />
                         ) : null}
 
@@ -728,12 +825,16 @@ export const BuilderPenaltyInFlow = forwardRef<
                               onChange={(value) => setValue(section.percentAmountKey, value, item.id)}
                               helper="درصدی که به عنوان جریمه برای این مورد اعمال می‌شود."
                               suffix="%"
+                              alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.percentAmountKey))}
                             />
 
                             {section.percentBasisKey ? (
                               <div className="space-y-3">
                                 <div className="text-right">
-                                  <h5 className="text-sm font-extrabold text-slate-800">مبنای محاسبه درصد</h5>
+                                  <div className="flex flex-wrap items-center justify-end gap-2">
+                                    <h5 className="text-sm font-extrabold text-slate-800">مبنای محاسبه درصد</h5>
+                                    {fieldAlignmentTag(getDomainFieldHint(fieldHints, section.percentBasisKey))}
+                                  </div>
                                   <p className="mt-1 text-xs leading-6 text-slate-500">مشخص کنید درصد جریمه از چه مبنایی محاسبه شود.</p>
                                 </div>
                                 <TagPills
@@ -757,6 +858,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     value={String(state.values[section.marketValueAmountKey!] ?? '')}
                                     onChange={(value) => setValue(section.marketValueAmountKey!, value, item.id)}
                                     helper="عددی که درصد جریمه از آن محاسبه می‌شود."
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.marketValueAmountKey!))}
                                   />
                                   <TextField
                                     label="مرجع / توضیح ارزش روز"
@@ -764,6 +866,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     onChange={(value) => setValue(section.marketValueReferenceKey!, value, item.id)}
                                     placeholder="مثلاً گزارش داخلی ارزش‌گذاری"
                                     helper="منبع این عدد را مشخص کنید."
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.marketValueReferenceKey!))}
                                   />
                                 </div>
                               </div>
@@ -781,6 +884,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     value={String(state.values[section.expertAmountKey!] ?? '')}
                                     onChange={(value) => setValue(section.expertAmountKey!, value, item.id)}
                                     helper="عددی که مبنای محاسبه درصد جریمه خواهد بود."
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.expertAmountKey!))}
                                   />
                                   <TextField
                                     label="نام کارشناس / شماره گزارش"
@@ -788,6 +892,7 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     onChange={(value) => setValue(section.expertReferenceKey!, value, item.id)}
                                     placeholder="مثلاً گزارش شماره ۱۲۳"
                                     helper="برای استناد و پیگیری بعدی."
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.expertReferenceKey!))}
                                   />
                                 </div>
                               </div>
@@ -805,17 +910,20 @@ export const BuilderPenaltyInFlow = forwardRef<
                                     value={String(state.values[section.customBasisTitleKey!] ?? '')}
                                     onChange={(value) => setValue(section.customBasisTitleKey!, value, item.id)}
                                     placeholder="مثلاً ارزش توافقی واحد"
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.customBasisTitleKey!))}
                                   />
                                   <AmountField
                                     label="مبلغ مبنای سفارشی"
                                     value={String(state.values[section.customBasisAmountKey!] ?? '')}
                                     onChange={(value) => setValue(section.customBasisAmountKey!, value, item.id)}
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.customBasisAmountKey!))}
                                   />
                                   <TextField
                                     label="توضیح / مرجع سفارشی"
                                     value={String(state.values[section.customBasisReferenceKey!] ?? '')}
                                     onChange={(value) => setValue(section.customBasisReferenceKey!, value, item.id)}
                                     placeholder="اختیاری"
+                                    alignmentTag={fieldAlignmentTag(getDomainFieldHint(fieldHints, section.customBasisReferenceKey!))}
                                   />
                                 </div>
                               </div>
@@ -829,7 +937,13 @@ export const BuilderPenaltyInFlow = forwardRef<
                               <h5 className="text-sm font-extrabold text-slate-800">پله‌های جریمه تصاعدی</h5>
                               <p className="text-xs leading-6 text-slate-500">مبالغ هر بازه را ثبت کنید.</p>
                             </div>
-                            <ProgressiveGrid rows={section.progressiveRows} values={state.values} periodLabel={periodLabel} onValueChange={(key, value) => setValue(key, value, item.id)} />
+                            <ProgressiveGrid
+                              rows={section.progressiveRows}
+                              values={state.values}
+                              periodLabel={periodLabel}
+                              fieldHints={fieldHints}
+                              onValueChange={(key, value) => setValue(key, value, item.id)}
+                            />
                           </>
                         ) : null}
 
@@ -840,12 +954,16 @@ export const BuilderPenaltyInFlow = forwardRef<
                               value={String(state.values[section.graceDaysKey!] ?? '')}
                               onChange={(value) => setValue(section.graceDaysKey!, value, item.id)}
                               helper="اگر این مقدار ۱۰ باشد، جریمه از روز ۱۱ تاخیر شروع می‌شود."
+                              alignmentTag={fieldAlignmentTag(graceHint)}
                             />
 
                             <div className="space-y-5 rounded-[8px] border border-slate-200 bg-white p-5">
                               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="space-y-2 text-right">
-                                  <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
+                                  <div className="flex flex-wrap items-center justify-end gap-2">
+                                    <h4 className="text-sm font-bold text-slate-700">سقف جریمه</h4>
+                                    {fieldAlignmentTag(unlimitedCapHint)}
+                                  </div>
                                   <p className="text-xs leading-6 text-slate-500">در صورت فعال بودن، جریمه فقط تا سقف مشخص محاسبه می‌شود.</p>
                                 </div>
                                 <div className="self-start lg:self-auto">
@@ -855,7 +973,10 @@ export const BuilderPenaltyInFlow = forwardRef<
 
                               {!unlimitedCap ? (
                                 <div className="space-y-3">
-                                  <FieldLabel label="مبلغ سقف جریمه *" />
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <FieldLabel label="مبلغ سقف جریمه *" />
+                                    {fieldAlignmentTag(maxCapHint)}
+                                  </div>
                                   <FinancialAmountInput value={String(state.values[section.capKey] ?? '')} onChange={(value) => setValue(section.capKey, value, item.id)} suffix="" />
                                 </div>
                               ) : null}

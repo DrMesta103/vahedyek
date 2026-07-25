@@ -1,6 +1,7 @@
 'use client';
 
 import type { ElementType } from 'react';
+import { useState } from 'react';
 import {
   ArrowUpRight,
   BadgePercent,
@@ -18,6 +19,7 @@ import {
   RuleTabButton,
 } from '@repo/ui';
 import type { ContractRuleState } from '../../../lib/businessContractRules';
+import { hasPenaltyTypeSettings } from '../../../lib/businessContractRules';
 import { PENALTY_ITEMS } from '../../contracts/new/_components/penaltiesConfig';
 
 type PenaltyMode = 'fixed' | 'debt-percent' | 'contract-percent' | 'progressive';
@@ -352,12 +354,17 @@ function getModeValues(mode: PenaltyMode) {
 export function PenaltyRuleSection({
   state,
   onValueChange,
+  onSelectPenaltyType,
+  onLeavePenaltyType,
 }: {
   state: ContractRuleState;
   onValueChange: (key: string, value: string | boolean) => void;
+  onSelectPenaltyType: (typeId: string) => void;
+  onLeavePenaltyType?: () => void;
 }) {
   const activeMode = (state.activeTab || 'fixed') as PenaltyMode;
-  const selectedPenalty = PENALTY_ITEMS.find((item) => item.id === state.activeChip);
+  const [browsingPenaltyList, setBrowsingPenaltyList] = useState(!state.activeChip);
+  const selectedPenalty = browsingPenaltyList ? undefined : PENALTY_ITEMS.find((item) => item.id === state.activeChip);
   const currentMode = MODE_OPTIONS.find((item) => item.id === activeMode) ?? MODE_OPTIONS[0];
   const keys = getModeValues(currentMode.id);
   const activeRateCountLabel = `${MAX_PROGRESSIVE_ROWS} از ${MAX_PROGRESSIVE_ROWS} نرخ`;
@@ -405,28 +412,37 @@ export function PenaltyRuleSection({
     return (
       <section className="space-y-5 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] p-5">
         <div className="grid gap-3 lg:grid-cols-2">
-          {PENALTY_ITEMS.map((item) => (
+          {PENALTY_ITEMS.map((item) => {
+            const configured = hasPenaltyTypeSettings(state, item.id);
+            return (
             <button
               key={item.id}
               type="button"
               onClick={() => {
-                onValueChange('activeChip', item.id);
-                onValueChange('activeTab', 'fixed');
+                onSelectPenaltyType(item.id);
+                setBrowsingPenaltyList(false);
               }}
               className="flex items-start justify-between gap-4 rounded-[8px] border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-5 py-5 text-right transition hover:border-[color:var(--theme-action-border)] hover:bg-[color:var(--surface-soft)]"
             >
               <div className="flex-1">
                 <div className="flex flex-col flex-nowrap items-start justify-center gap-3">
                   <h3 className="text-lg font-black text-[color:var(--text-strong)]">{item.title}</h3>
-                  <span className="rounded-[8px] bg-[color:var(--theme-accent-softer)] px-3 py-1 text-xs font-bold text-[color:var(--text-muted)]">
-                    تنظیمات انجام‌شده
+                  <span
+                    className={`rounded-[8px] px-3 py-1 text-xs font-bold ${
+                      configured
+                        ? 'bg-[color:var(--theme-accent-softer)] text-[color:var(--text-muted)]'
+                        : 'border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-muted)]'
+                    }`}
+                  >
+                    {configured ? 'تنظیمات انجام‌شده' : 'بدون تنظیم'}
                   </span>
                 </div>
                 <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">{item.description}</p>
               </div>
               <ChevronLeft className="mt-1 h-5 w-5 shrink-0 text-[color:var(--text-muted)]" />
             </button>
-          ))}
+            );
+          })}
         </div>
       </section>
     );
@@ -443,7 +459,10 @@ export function PenaltyRuleSection({
 
           <button
             type="button"
-            onClick={() => onValueChange('activeChip', '')}
+            onClick={() => {
+              onLeavePenaltyType?.();
+              setBrowsingPenaltyList(true);
+            }}
             className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-soft)] px-4 py-2 text-sm font-bold text-[color:var(--text-muted)] transition hover:border-[color:var(--theme-action-border)] hover:text-[color:var(--text-strong)]"
           >
             <ChevronLeft className="h-4 w-4" />

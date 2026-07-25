@@ -37,10 +37,20 @@ export function getCategoryRequiresDue(categoryId: string): boolean {
   return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === categoryId)?.requiresDue ?? true;
 }
 
+function resolveSystemCategoryName(categoryId: string): string | undefined {
+  const direct = SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === categoryId);
+  if (direct) return direct.name;
+  const suffix = structuralFinancialSubSuffix(categoryId);
+  if (!suffix) return undefined;
+  return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === suffix)?.name;
+}
+
 export function normalizeFinancialCategory(item: FinancialLineCategory): FinancialLineCategory {
   const requiresDue = item.system ? getCategoryRequiresDue(item.id) : (item.requiresDue ?? true);
+  const systemName = item.system ? resolveSystemCategoryName(item.id) : undefined;
   return {
     ...item,
+    ...(systemName ? { name: systemName } : {}),
     requiresDue,
     dueAmount: requiresDue ? item.capAmount : 0,
     noDueAmount: requiresDue ? 0 : item.capAmount,

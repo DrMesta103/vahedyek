@@ -32,11 +32,40 @@ export function BusinessSettingsHint({
   const status = effectiveComparison.status ?? (effectiveComparison.missing ? 'missing' : effectiveComparison.differs ? 'different' : 'equal');
   const text = helperText ?? effectiveComparison.helperText;
 
-  if (status === 'missing' || status === 'info') {
+  if (status === 'missing') {
     return (
       <div className="mt-2 flex max-w-full items-start gap-2 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-600" dir="rtl">
         <Info className="mt-1 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>{text ?? 'برای این مورد تنظیمی در تنظیمات کسب‌وکار ثبت نشده است.'}</span>
+      </div>
+    );
+  }
+
+  if (status === 'info') {
+    const hasDetailLines =
+      effectiveComparison.referenceLines.length > 0 ||
+      effectiveComparison.currentLines.length > 0 ||
+      effectiveComparison.breakdownLines.length > 0;
+
+    if (!hasDetailLines) {
+      return (
+        <div className="mt-2 flex max-w-full items-start gap-2 rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-600" dir="rtl">
+          <Info className="mt-1 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>{text ?? 'برای این مورد تنظیمی در تنظیمات کسب‌وکار ثبت نشده است.'}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-2 max-w-full rounded-[8px] border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-6 text-slate-700" dir="rtl">
+        <div className="mb-1 flex items-start gap-2 font-bold text-slate-800">
+          <Info className="mt-1 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>مرجع تنظیمات کسب‌وکار</span>
+        </div>
+        {effectiveComparison.referenceLines.length ? <LineList lines={effectiveComparison.referenceLines} /> : null}
+        {effectiveComparison.currentLines.length ? <LineList lines={effectiveComparison.currentLines} /> : null}
+        {effectiveComparison.breakdownLines.length ? <Breakdown lines={effectiveComparison.breakdownLines} tone="cyan" /> : null}
+        {text ? <div className="mt-1 text-slate-600">{text}</div> : null}
       </div>
     );
   }

@@ -407,8 +407,9 @@ export function ContractFlowHub() {
       setBootstrapError('');
       const settings = await fetchContractFlowBootstrapSettings();
       setBusinessSettingsReference(settings);
+      // Keep bootstrap snapshot for any client-side fallback hydrate; server already seeds payloads.
       setContractFlowBootstrapSettings(settings);
-      await createDraftId();
+      await createDraftId({ applySettings: true });
       setBootstrapDialogOpen(false);
       setBootstrapRunId((current) => current + 1);
     } catch (error) {
@@ -1129,7 +1130,9 @@ export function ContractFlowHub() {
 
       if (nextUrl.origin !== currentUrl.origin || nextHref === currentHref) return false;
 
-      setPendingLeave({ mode: 'route', href: nextHref });
+      window.setTimeout(() => {
+        if (!leavingRef.current) setPendingLeave({ mode: 'route', href: nextHref });
+      }, 0);
       return true;
     };
 

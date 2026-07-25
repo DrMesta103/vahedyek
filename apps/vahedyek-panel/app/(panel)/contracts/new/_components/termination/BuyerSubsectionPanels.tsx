@@ -1,10 +1,18 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { ContractTerminationData } from '../../../../../types/contract';
+import type { DomainFieldHint } from '../../../../../lib/contractSettingsHints/domainFieldHints';
 import { FieldGroup, FormDateInput, FormTextInput, MultiTagPills, TagPills } from '../ContractFormPrimitives';
+import { SettingsFieldAlignmentTag } from '../SettingsFieldAlignmentTag';
 import { SubsectionSubmitRow, ToggleRow } from './TerminationPrimitives';
 
 type B = ContractTerminationData['buyerTerms'];
+
+function alignmentTag(hint: DomainFieldHint | undefined): ReactNode {
+  if (!hint || hint.status === 'idle') return null;
+  return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+}
 
 const LATE_GRACE: ReadonlyArray<{ value: B['lateDelivery']['gracePreset']; label: string }> = [
   { value: '1', label: '۱ ماه' },
@@ -205,17 +213,20 @@ export function BuyerLateDeliveryPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['lateDelivery'];
   onChange: (next: B['lateDelivery']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
       <FieldGroup
         label="بازه تأخیر مجاز"
         hint="در این بخش بازه‌ای را مشخص می‌کنید که پس از آن، شرط فسخ فعال می‌شود."
+        alignmentTag={alignmentTag(fieldHints.calculationBasis)}
       >
         <MultiTagPills<B['lateDelivery']['calculationBasis'][number]>
           values={value.calculationBasis}
@@ -228,7 +239,11 @@ export function BuyerLateDeliveryPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="بازه ارفاقی مجاز پس از سررسید" hint="اگر تأخیر از این بازه بیشتر شود، امکان فسخ بررسی می‌شود.">
+      <FieldGroup
+        label="بازه ارفاقی مجاز پس از سررسید"
+        hint="اگر تأخیر از این بازه بیشتر شود، امکان فسخ بررسی می‌شود."
+        alignmentTag={alignmentTag(fieldHints.gracePreset)}
+      >
         <TagPills
           value={value.gracePreset}
           onChange={(v) => onChange({ ...value, gracePreset: v, graceMonthsCustom: v === 'other' ? value.graceMonthsCustom : '' })}
@@ -237,7 +252,7 @@ export function BuyerLateDeliveryPanel({
       </FieldGroup>
 
       {value.gracePreset === 'other' ? (
-        <FieldGroup label="مدت سفارشی (ماه)" required>
+        <FieldGroup label="مدت سفارشی (ماه)" required alignmentTag={alignmentTag(fieldHints.graceMonthsCustom)}>
           <FormTextInput
             value={value.graceMonthsCustom}
             onChange={(v) => onChange({ ...value, graceMonthsCustom: normalizeDigits(v) })}
@@ -256,15 +271,21 @@ export function BuyerSpecificationChangesPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['specificationChanges'];
   onChange: (next: B['specificationChanges']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
-      <FieldGroup label="تغییرات مشمول فسخ" hint="تغییرات فنی یا شکلی موضوع قرارداد را انتخاب کنید.">
+      <FieldGroup
+        label="تغییرات مشمول فسخ"
+        hint="تغییرات فنی یا شکلی موضوع قرارداد را انتخاب کنید."
+        alignmentTag={alignmentTag(fieldHints.includedTypes)}
+      >
         <MultiTagPills<B['specificationChanges']['includedTypes'][number]>
           values={value.includedTypes}
           onChange={(values) => onChange({ ...value, includedTypes: values })}
@@ -277,6 +298,7 @@ export function BuyerSpecificationChangesPanel({
         onChange={(checked) => onChange({ ...value, priorApprovalRequired: checked })}
         label="آیا تأیید پیشین خریدار برای این تغییرات لازم است؟"
         description="در صورت فعال بودن، هر تغییر باید با تأیید قبلی خریدار ثبت شود."
+        alignmentTag={alignmentTag(fieldHints.priorApprovalRequired)}
       />
 
       <SubsectionSubmitRow onSave={onSubmit} saving={saving} />
@@ -289,11 +311,13 @@ export function BuyerBreachPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['breachOfObligations'];
   onChange: (next: B['breachOfObligations']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
@@ -304,6 +328,7 @@ export function BuyerBreachPanel({
       <FieldGroup
         label="گزینش انواع نقض تعهد سازنده"
         hint="مواردی را انتخاب کنید که در صورت وقوع، حق فسخ خریدار را فعال می‌کنند. برای برخی گزینه‌ها، جزئیات تکمیلی هم قابل تنظیم است."
+        alignmentTag={alignmentTag(fieldHints.obligationTypes)}
       >
         <MultiTagPills<B['breachOfObligations']['obligationTypes'][number]>
           values={value.obligationTypes}
@@ -322,11 +347,13 @@ export function BuyerAreaDiscrepancyPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: B['areaDiscrepancy'];
   onChange: (next: B['areaDiscrepancy']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
@@ -337,6 +364,7 @@ export function BuyerAreaDiscrepancyPanel({
       <FieldGroup
         label="آستانه اختلاف متراژ برای فعال شدن فسخ"
         hint="اگر اختلاف نهایی کمتر از این مقدار باشد، فسخ فعال نمی‌شود."
+        alignmentTag={alignmentTag(fieldHints.thresholdPreset)}
       >
         <TagPills
           value={value.thresholdPreset}
@@ -352,7 +380,12 @@ export function BuyerAreaDiscrepancyPanel({
       </FieldGroup>
 
       {value.thresholdPreset === 'other' ? (
-        <FieldGroup label="آستانه سفارشی" required hint="اگر مقدار موردنظر شما در گزینه‌ها نیست، مقدار دلخواه را وارد کنید.">
+        <FieldGroup
+          label="آستانه سفارشی"
+          required
+          hint="اگر مقدار موردنظر شما در گزینه‌ها نیست، مقدار دلخواه را وارد کنید."
+          alignmentTag={alignmentTag(fieldHints.thresholdPercentCustom)}
+        >
           <FormTextInput
             value={value.thresholdPercentCustom}
             onChange={(v) => onChange({ ...value, thresholdPercentCustom: normalizeDecimal(v) })}
@@ -364,6 +397,7 @@ export function BuyerAreaDiscrepancyPanel({
       <FieldGroup
         label="دامنه اختلاف مجاز"
         hint="مشخص می‌کند اختلاف باید کسری باشد، مازاد باشد یا هر دو حالت."
+        alignmentTag={alignmentTag(fieldHints.discrepancyScopes)}
       >
         <MultiTagPills<B['areaDiscrepancy']['discrepancyScopes'][number]>
           values={value.discrepancyScopes}
@@ -372,7 +406,11 @@ export function BuyerAreaDiscrepancyPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="مبنای ارزش‌گذاری برای تسویه" hint="وقتی فسخ به‌جای تسویه مالی انجام می‌شود، این مبنا برای محاسبه استفاده می‌شود.">
+      <FieldGroup
+        label="مبنای ارزش‌گذاری برای تسویه"
+        hint="وقتی فسخ به‌جای تسویه مالی انجام می‌شود، این مبنا برای محاسبه استفاده می‌شود."
+        alignmentTag={alignmentTag(fieldHints.referenceSources)}
+      >
         <MultiTagPills<B['areaDiscrepancy']['referenceSources'][number]>
           values={value.referenceSources}
           onChange={(values) => onChange({ ...value, referenceSources: values })}
@@ -385,10 +423,11 @@ export function BuyerAreaDiscrepancyPanel({
         onChange={(checked) => onChange({ ...value, financialSettlementInsteadOfTermination: checked })}
         label="تسویه مالی به‌جای فسخ اعمال شود"
         description="در صورت فعال بودن، اختلاف به‌صورت مالی تسویه می‌شود و فسخ مستقیم پیشنهاد نمی‌شود."
+        alignmentTag={alignmentTag(fieldHints.financialSettlementInsteadOfTermination)}
       />
 
       {value.financialSettlementInsteadOfTermination ? (
-        <FieldGroup label="روش محاسبه تسویه">
+        <FieldGroup label="روش محاسبه تسویه" alignmentTag={alignmentTag(fieldHints.settlementPricingBasis)}>
           <p className="mb-2 text-right text-xs leading-6 text-slate-500">
             مبنای محاسبه را از گزینه‌های زیر انتخاب کنید.
           </p>
@@ -414,12 +453,14 @@ export function BuyerPhysicalProgressDelayPanel({
   onSubmit,
   saving,
   showSubmit = true,
+  fieldHints = {},
 }: {
   value: B['physicalProgressDelay'];
   onChange: (next: B['physicalProgressDelay']) => void;
   onSubmit: () => void;
   saving: boolean;
   showSubmit?: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   const updateMilestoneSetting = (milestone: PhysicalProgressMilestone, patch: Partial<PhysicalProgressMilestoneSetting>) => {
     const currentSetting = value.milestoneSettings[milestone] ?? defaultMilestoneSetting(value);
@@ -438,7 +479,11 @@ export function BuyerPhysicalProgressDelayPanel({
         این بخش زمانی فعال می‌شود که تأخیر در تحقق مراحل پیشرفت پروژه از حد مجاز بیشتر باشد. برای هر مرحله می‌توانید زمان هدف، مهلت ارفاقی و مرجع سنجش را تعیین کنید.
       </div>
 
-      <FieldGroup label="مراحل پیشرفت مشمول فسخ" hint="مرحله‌هایی را انتخاب کنید که باید برای هرکدام زمان هدف و مهلت ارفاقی تنظیم شود.">
+      <FieldGroup
+        label="مراحل پیشرفت مشمول فسخ"
+        hint="مرحله‌هایی را انتخاب کنید که باید برای هرکدام زمان هدف و مهلت ارفاقی تنظیم شود."
+        alignmentTag={alignmentTag(fieldHints.milestoneTypes)}
+      >
         <MultiTagPills<B['physicalProgressDelay']['milestoneTypes'][number]>
           values={value.milestoneTypes}
           onChange={(values) =>

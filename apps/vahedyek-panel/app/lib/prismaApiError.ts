@@ -24,6 +24,10 @@ export function isDatabaseUnreachableError(error: unknown) {
 }
 
 export function handlePrismaApiError(error: unknown) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error('[prisma-api-error]', error);
+  }
+
   if (error instanceof Error && error.message.includes('Missing DATABASE_URL')) {
     return NextResponse.json(
       {
