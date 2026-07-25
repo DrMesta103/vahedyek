@@ -8,11 +8,12 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 
 FROM base AS builder
 
+ENV NODE_ENV=development
 ENV DATABASE_URL="postgres://postgres:opL0u42d4Yx9Qiv@5.9.164.187:5432/ai-lab-next-app"
 
 COPY . .
 
-RUN npm ci && \
+RUN npm ci --include=dev && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/taav-ai-lab run build
 

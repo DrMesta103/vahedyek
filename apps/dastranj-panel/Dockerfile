@@ -8,11 +8,12 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 
 FROM base AS builder
 
+ENV NODE_ENV=development
 ENV DATABASE_URL="postgres://postgres:postgres@172.19.0.8:5432/dastranj"
 
 COPY . .
 
-RUN npm ci && \
+RUN npm ci --include=dev && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/dastranj-panel run build
 
