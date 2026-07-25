@@ -14,10 +14,11 @@ ENV DATABASE_URL="postgres://postgres:postgres@172.19.0.8:5432/dastranj"
 
 COPY . .
 
-RUN sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json
+RUN if [ -f package-lock.json ]; then \
+    sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json; \
+    fi
 
-RUN npm ci --include=dev && \
-    npm install --no-save --package-lock=false --include=optional @rollup/rollup-linux-x64-gnu@4.60.2 && \
+RUN npm ci && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/dastranj-panel run build
 
