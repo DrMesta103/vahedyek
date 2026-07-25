@@ -15,6 +15,7 @@ import {
   BUSINESS_RECOMMENDATION_CARD_PROPS,
   DETAILS_LINK_PROPS,
 } from '@/lib/docs/component-props';
+import { TaavBusinessToggleCard } from '@repo/ui/taav/business';
 
 export default function BusinessRecommendationCardDocPage() {
   return (
@@ -83,6 +84,13 @@ export default function BusinessRecommendationCardDocPage() {
       <DocSection title="Props — TaavBusinessRecommendationCard">
         <DocPropsTable rows={BUSINESS_RECOMMENDATION_CARD_PROPS} />
       </DocSection>
+      <DocSection title="کارت وضعیت به‌عنوان زیرمجموعه">
+        <div className="grid gap-6">
+          <DocPreview label="الگوی ساده"><TaavBusinessToggleCard themeMode="light" title="فعال کردن محاسبه مالیات برای هزینه‌های جانبی" description="در صورت فعال بودن، مالیات مشخص‌شده روی هزینه تشکیل پرونده اعمال می‌شود." defaultChecked /></DocPreview>
+          <DocPreview label="الگوی عملیاتی"><TaavBusinessToggleCard themeMode="light" variant="action" title="فعال‌سازی هزینه تشکیل پرونده" description="با فعال‌سازی این گزینه، هزینه‌های مربوط به امور اداری به مبلغ قرارداد اضافه می‌شود." defaultChecked onAction={() => undefined} /></DocPreview>
+        </div>
+      </DocSection>
+
     </DocPageShell>
   );
 }

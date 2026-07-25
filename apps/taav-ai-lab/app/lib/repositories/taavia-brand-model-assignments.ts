@@ -81,7 +81,7 @@ export async function getTaaviaBrandModelAssignments(userId: string, tenantId: s
   await assertTenantAndBrand(userId, tenantId, brandId);
   const [brand, assignments, accounts] = await Promise.all([
     prisma.taaviaBrand.findUniqueOrThrow({ where: { id: brandId }, include: { mediaAsset: true } }),
-    prisma.taaviaBrandAiModelAssignment.findMany({ where: { tenantId, brandId, effectiveTo: null }, include: assignmentInclude, orderBy: { purpose: 'asc' } }),
+    prisma.taaviaBrandAiModelAssignment.findMany({ where: { tenantId, brandId, effectiveTo: null, purpose: { in: [...TAAVIA_BRAND_AI_MODEL_PURPOSES] } }, include: assignmentInclude, orderBy: { purpose: 'asc' } }),
     prisma.aiProviderAccountV2.findMany({
       where: { isActive: true },
       orderBy: [{ providerType: 'asc' }, { name: 'asc' }],

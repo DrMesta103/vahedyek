@@ -42,11 +42,18 @@ export type RuleConfig = {
   tabs: RuleTabConfig[];
 };
 
+export type ContractRuleTypeValuesSlice = {
+  activeTab: string;
+  values: Record<string, string | boolean>;
+};
+
 export type ContractRuleState = {
   active: boolean;
   activeTab: string;
   activeChip?: string;
   values: Record<string, string | boolean>;
+  /** Per penalty-type editor snapshots (penalty rule only). */
+  valuesByType?: Record<string, ContractRuleTypeValuesSlice>;
 };
 
 export const ADJUSTMENT_MULTI_INDICATOR_WEIGHTS = [
@@ -550,6 +557,19 @@ export const RULE_CONFIGS: Record<ContractRuleId, RuleConfig> = fixMojibakeDeep(
     description: 'فعال‌سازی جریمه‌ها و تعریف چارچوب محاسبه هر مورد مطابق قرارداد.',
     activationTitle: 'تنظیمات جریمه خریدار',
     activationDescription: 'در صورت فعال بودن، چارچوب پیشنهادی محاسبه جریمه تعریف می‌شود و در زمان ثبت یا اجرای قرارداد، در صورت وقوع تأخیر محاسبه و هشدار نمایش داده می‌شود.',
+    chips: [
+      'unit-handover-delay',
+      'installment-delay',
+      'document-delay',
+      'advance-payment-delay',
+      'misc-cost-delay',
+      'adjustment-delay',
+      'penalty-payment-delay',
+      'bank-loan-case-delay',
+      'lawsuit-cost',
+      'document-transfer-followup',
+      'discount-cancelled',
+    ],
     tabs: [
       {
         id: 'fixed',
@@ -894,8 +914,9 @@ export function createInitialRuleState(ruleId: ContractRuleId): ContractRuleStat
         ? false
         : true,
     activeTab: rule.tabs[0]?.id ?? '',
-    activeChip: rule.chips?.[0],
+    activeChip: rule.id === 'penalty' ? undefined : rule.chips?.[0],
     values,
+    ...(ruleId === 'penalty' ? { valuesByType: {} } : {}),
   };
 }
 
@@ -1016,12 +1037,204 @@ export function normalizeRuleState(ruleId: ContractRuleId, payload: unknown): Co
       ? input.activeChip
       : initial.activeChip;
 
-  return {
+  const base: ContractRuleState = {
     active: normalizedActive,
     activeTab,
     activeChip,
     values,
   };
+
+  if (ruleId !== 'penalty') return base;
+
+  const valuesByType = normalizePenaltyValuesByType(input, base, rule);
+  const chip = typeof base.activeChip === 'string' ? base.activeChip : '';
+  if (chip && valuesByType[chip]) {
+    return {
+      ...base,
+      activeTab: valuesByType[chip].activeTab,
+      values: cloneRuleValues(valuesByType[chip].values),
+      valuesByType,
+    };
+  }
+
+  return {
+    ...base,
+    valuesByType,
+  };
+}
+
+function cloneRuleValues(source: Record<string, string | boolean>): Record<string, string | boolean> {
+  return { ...source };
+}
+
+function normalizePenaltyValuesSlice(
+  raw: unknown,
+  fallback: ContractRuleTypeValuesSlice,
+  rule: RuleConfig,
+): ContractRuleTypeValuesSlice {
+  if (!raw || typeof raw !== 'object') return { activeTab: fallback.activeTab, values: cloneRuleValues(fallback.values) };
+  const record = raw as Record<string, unknown>;
+  const valuesInput = record.values && typeof record.values === 'object' ? (record.values as Record<string, unknown>) : {};
+  const values = cloneRuleValues(fallback.values);
+  rule.tabs.forEach((tab) => {
+    tab.fields.forEach((field) => {
+      const rawValue = valuesInput[field.key];
+      if (field.type === 'switch') {
+        if (rawValue !== undefined) values[field.key] = Boolean(rawValue);
+      } else if (field.type === 'select') {
+        if (typeof rawValue === 'string' && field.options.includes(rawValue)) values[field.key] = rawValue;
+      } else if (typeof rawValue === 'string') {
+        values[field.key] = rawValue;
+      }
+    });
+  });
+  const activeTab =
+    typeof record.activeTab === 'string' && rule.tabs.some((tab) => tab.id === record.activeTab)
+      ? record.activeTab
+      : fallback.activeTab;
+  return { activeTab, values };
+}
+
+function normalizePenaltyValuesByType(
+  input: Record<string, unknown>,
+  base: ContractRuleState,
+  rule: RuleConfig,
+): Record<string, ContractRuleTypeValuesSlice> {
+  const chips = rule.chips ?? [];
+  const rawMap = input.valuesByType && typeof input.valuesByType === 'object' ? (input.valuesByType as Record<string, unknown>) : null;
+  const result: Record<string, ContractRuleTypeValuesSlice> = {};
+  const workingFallback: ContractRuleTypeValuesSlice = {
+    activeTab: base.activeTab,
+    values: cloneRuleValues(base.values),
+  };
+
+  if (rawMap) {
+    for (const chip of chips) {
+      if (!(chip in rawMap)) continue;
+      result[chip] = normalizePenaltyValuesSlice(rawMap[chip], workingFallback, rule);
+    }
+  }
+
+  // Legacy: seed active chip from root working copy when map is empty/missing that chip.
+  const chip = typeof base.activeChip === 'string' ? base.activeChip : '';
+  if (chip && chips.includes(chip) && !result[chip]) {
+    result[chip] = {
+      activeTab: base.activeTab,
+      values: cloneRuleValues(base.values),
+    };
+  }
+
+  return result;
+}
+
+/** Whether a penalty type has a saved settings slice. */
+export function hasPenaltyTypeSettings(
+  state: Pick<ContractRuleState, 'activeChip' | 'valuesByType'> | null | undefined,
+  typeId: string,
+): boolean {
+  if (!state || !typeId) return false;
+  if (state.valuesByType?.[typeId]) return true;
+  // Working editor for this chip counts as configured once selected.
+  return state.activeChip === typeId;
+}
+
+/** Persist current working copy into valuesByType[activeChip]. */
+export function syncPenaltyWorkingCopyToValuesByType(state: ContractRuleState): ContractRuleState {
+  const chip = typeof state.activeChip === 'string' ? state.activeChip.trim() : '';
+  if (!chip) return { ...state, valuesByType: state.valuesByType ?? {} };
+  return {
+    ...state,
+    valuesByType: {
+      ...(state.valuesByType ?? {}),
+      [chip]: {
+        activeTab: state.activeTab,
+        values: cloneRuleValues(state.values),
+      },
+    },
+  };
+}
+
+/**
+ * Switch penalty editor to another type: stash current slice, load target (or fresh defaults).
+ */
+export function selectPenaltyTypeChip(state: ContractRuleState, nextTypeId: string): ContractRuleState {
+  const rule = RULE_CONFIGS.penalty;
+  if (!rule.chips?.includes(nextTypeId)) return state;
+
+  const stashed = syncPenaltyWorkingCopyToValuesByType(state);
+  const existing = stashed.valuesByType?.[nextTypeId];
+  if (existing) {
+    return {
+      ...stashed,
+      activeChip: nextTypeId,
+      activeTab: existing.activeTab || 'fixed',
+      values: cloneRuleValues(existing.values),
+    };
+  }
+
+  const blank = createInitialRuleState('penalty');
+  return {
+    ...stashed,
+    active: stashed.active,
+    activeChip: nextTypeId,
+    activeTab: 'fixed',
+    values: cloneRuleValues(blank.values),
+    valuesByType: stashed.valuesByType ?? {},
+  };
+}
+
+/** Type ids that have an explicit settings slice (for hints/bootstrap). */
+export function listConfiguredPenaltyTypeIds(
+  state: Pick<ContractRuleState, 'activeChip' | 'valuesByType' | 'values' | 'activeTab'> | null | undefined,
+): string[] {
+  if (!state) return [];
+  const fromMap = Object.keys(state.valuesByType ?? {}).filter((id) =>
+    Boolean(RULE_CONFIGS.penalty.chips?.includes(id)),
+  );
+  if (fromMap.length > 0) return fromMap;
+  const chip = typeof state.activeChip === 'string' ? state.activeChip.trim() : '';
+  if (chip && RULE_CONFIGS.penalty.chips?.includes(chip)) return [chip];
+  // Legacy single shared template without chip → only default type owns it.
+  return ['installment-delay'];
+}
+
+/** Resolve settings-shaped state for one penalty type, or null if not configured. */
+export function getPenaltyTypeSettingsSlice(
+  reference: ContractRuleState | null | undefined,
+  typeId: string,
+): ContractRuleState | null {
+  if (!reference || !typeId) return null;
+  const fromMap = reference.valuesByType?.[typeId];
+  if (fromMap) {
+    return {
+      active: Boolean(reference.active),
+      activeTab: fromMap.activeTab,
+      values: cloneRuleValues(fromMap.values),
+      activeChip: typeId,
+      valuesByType: reference.valuesByType,
+    };
+  }
+  const chip = typeof reference.activeChip === 'string' ? reference.activeChip.trim() : '';
+  if (chip === typeId) {
+    return {
+      active: Boolean(reference.active),
+      activeTab: reference.activeTab,
+      values: cloneRuleValues(reference.values),
+      activeChip: typeId,
+      valuesByType: reference.valuesByType,
+    };
+  }
+  const hasMap = Object.keys(reference.valuesByType ?? {}).length > 0;
+  if (!hasMap && !chip && typeId === 'installment-delay') {
+    return {
+      active: Boolean(reference.active),
+      activeTab: reference.activeTab,
+      values: cloneRuleValues(reference.values),
+      activeChip: typeId,
+      valuesByType: reference.valuesByType,
+    };
+  }
+  return null;
 }
 
 export function normalizeLoanSettingsState(payload: unknown): LoanSettingsState {

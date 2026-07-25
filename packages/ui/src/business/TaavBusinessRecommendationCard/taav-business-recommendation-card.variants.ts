@@ -3,19 +3,17 @@ import { TAAV_INTERACTION } from '../../primitives/shared/interaction';
 
 export const recommendationCardRoot = cva(
   [
-    'mx-auto w-full border border-solid',
+    'mx-auto w-[712px] max-w-none border-0',
     'bg-[var(--taav-recommendation-card-surface)]',
-    'border-[color:var(--taav-recommendation-card-border)]',
-    'rounded-[var(--taav-recommendation-card-radius)]',
-    'shadow-[var(--taav-recommendation-card-shadow)]',
+    'rounded-none shadow-none',
     TAAV_INTERACTION.base,
   ],
   {
     variants: {
       size: {
-        sm: 'p-[var(--taav-recommendation-card-padding-sm)]',
-        md: 'p-[var(--taav-recommendation-card-padding-md)]',
-        lg: 'p-[var(--taav-recommendation-card-padding-lg)]',
+        sm: 'h-[var(--taav-recommendation-card-height-sm)] p-[var(--taav-recommendation-card-padding-sm)]',
+        md: 'h-[var(--taav-recommendation-card-height-md)] p-[var(--taav-recommendation-card-padding-md)]',
+        lg: 'h-[var(--taav-recommendation-card-height-lg)] p-[var(--taav-recommendation-card-padding-lg)]',
       },
       width: {
         normal: 'max-w-[var(--taav-recommendation-card-max-width-normal)]',
@@ -42,7 +40,7 @@ export const recommendationCardRoot = cva(
 );
 
 export const recommendationCardLayout = cva(
-  'flex flex-col gap-[var(--taav-recommendation-card-gap)] md:flex-row md:items-center md:justify-between',
+  'flex items-start justify-between gap-[var(--taav-recommendation-card-gap)]',
 );
 
 export const recommendationCardLeading = cva(
@@ -74,7 +72,7 @@ export const recommendationCardIconBox = cva(
 
 export const recommendationCardAction = cva(
   [
-    'inline-flex shrink-0 items-center justify-center self-start',
+    'mt-[15px] inline-flex shrink-0 items-center justify-center self-start',
     'text-[var(--taav-recommendation-card-action-color)]',
     '[&_svg]:h-[var(--taav-recommendation-card-action-icon-size)]',
     '[&_svg]:w-[var(--taav-recommendation-card-action-icon-size)]',
@@ -95,10 +93,10 @@ export const recommendationCardAction = cva(
   },
 );
 
-export const recommendationCardCopy = cva('grid min-w-0 flex-1 gap-[var(--taav-recommendation-card-copy-gap)]');
+export const recommendationCardCopy = cva('grid min-w-0 max-w-[370px] flex-1 justify-items-end gap-[var(--taav-recommendation-card-copy-gap)]');
 
 export const recommendationCardTitle = cva(
-  'm-0 text-right font-black leading-[var(--taav-leading-tight)] text-[var(--taav-recommendation-card-title)]',
+  'm-0 text-right font-semibold leading-[var(--taav-recommendation-card-title-line-height)] text-[var(--taav-recommendation-card-title)]',
   {
     variants: {
       size: {
@@ -114,7 +112,7 @@ export const recommendationCardTitle = cva(
 );
 
 export const recommendationCardDescription = cva(
-  'm-0 text-right font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-recommendation-card-description)]',
+  'm-0 text-right font-normal leading-[var(--taav-recommendation-card-description-line-height)] text-[var(--taav-recommendation-card-description)]',
   {
     variants: {
       size: {
@@ -130,7 +128,7 @@ export const recommendationCardDescription = cva(
 );
 
 export const recommendationCardTrailing = cva(
-  'flex shrink-0 flex-wrap items-center justify-end gap-[var(--taav-recommendation-card-trailing-gap)] md:justify-start',
+  'mt-0 flex shrink-0 flex-wrap items-center justify-end gap-[var(--taav-recommendation-card-trailing-gap)] self-start',
 );
 
 export const recommendationCardTone = cva('', {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Archive, ArrowLeft, BookOpenText, Check, MoreVertical, PencilLine, Plus, RotateCcw, Search, Settings2, XCircle } from "lucide-react";
+import { Archive, ArrowLeft, BookOpenText, Check, Database, LayoutDashboard, MoreVertical, PencilLine, Plus, RotateCcw, Search, Settings2, XCircle } from "lucide-react";
 import { TaavBadge, TaavButton, TaavCard, TaavDropdown, TaavDropdownContent, TaavDropdownItem, TaavDropdownTrigger } from "@repo/ui/taav";
 import { TaavEmptyState } from "@repo/ui/taav/data-display";
 import type { TaaviaBrand } from "@/app/lib/types/domain";
@@ -113,8 +113,14 @@ export function TaaviaBrandsClient({ tenantId, initialBrands }: { tenantId: stri
                     </button>
                   </TaavDropdownTrigger>
                   <TaavDropdownContent align="end">
+                    <TaavDropdownItem iconStart={<LayoutDashboard className="h-4 w-4" />} onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}`)}>
+                      داشبورد برند
+                    </TaavDropdownItem>
                     <TaavDropdownItem iconStart={<BookOpenText className="h-4 w-4" />} onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/test`)}>
                       مدیریت نالج‌بیس
+                    </TaavDropdownItem>
+                    <TaavDropdownItem iconStart={<Database className="h-4 w-4" />} onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/knowledge-base`)}>
+                      مدیریت دانش ورژن ۲
                     </TaavDropdownItem>
                     <TaavDropdownItem iconStart={<Settings2 className="h-4 w-4" />} onClick={() => router.push(`/businesses/${tenantId}/products/taavia/brands/${brand.id}/model-settings`)}>
                       تنظیمات مدل

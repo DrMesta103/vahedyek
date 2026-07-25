@@ -63,6 +63,8 @@ model Tenant {
   taaviaAssignments TaaviaBrandAiModelAssignment[]
   taaviaUsages      TaaviaBrandAiModelUsage[]
   taaviaUsageItems  TaaviaBrandAiModelUsageItem[]
+  knowledgeBases    TaaviaKnowledgeBase[]
+  knowledgeBuilds   TaaviaKnowledgeBaseBuild[]
 }
 
 enum TaaviaBrandStatus {
@@ -86,6 +88,11 @@ enum TaaviaBrandInfoType {
 }
 
 enum TaaviaBrandInfoStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum TaaviaBrandSourceStatus {
   ACTIVE
   ARCHIVED
 }
@@ -214,9 +221,144 @@ model TaaviaBrand {
   assignments     TaaviaBrandAiModelAssignment[]
   usages          TaaviaBrandAiModelUsage[]
   brandInfos      TaaviaBrandInfo[]
+  knowledgeBases  TaaviaKnowledgeBase[]
+  knowledgeBuilds TaaviaKnowledgeBaseBuild[]
+  knowledgeSources TaaviaBrandKnowledge[]
+  products        TaaviaBrandProduct[]
+  faqs            TaaviaBrandFaq[]
 
   @@index([tenantId])
   @@index([tenantId, status])
+}
+
+enum TaaviaKnowledgeBaseBuildType {
+  INITIAL
+  UPDATE
+  FULL_REBUILD
+}
+enum TaaviaKnowledgeBaseBuildStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  SUCCEEDED
+  RUNNING
+}
+enum TaaviaKnowledgeSnapshotType {
+  TEXT
+  IMAGE
+  FILE
+  LINK
+  PRODUCT
+  FAQ
+}
+
+model TaaviaKnowledgeBase {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  versionNumber Int
+  versionLabel String @default("")
+  isActive Boolean @default(false)
+  buildType TaaviaKnowledgeBaseBuildType
+  createdByUserId String?
+  activatedAt DateTime?
+  activatedByUserId String?
+  description String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  brand TaaviaBrand @relation(fields:[brandId], references:[id], onDelete:Cascade)
+  build TaaviaKnowledgeBaseBuild?
+  snapshots TaaviaKnowledgeSourceSnapshot[]
+  categories TaaviaKnowledgeCategory[]
+  @@unique([brandId, versionNumber])
+  @@index([tenantId, brandId, isActive])
+}
+
+model TaaviaKnowledgeBaseBuild {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  knowledgeBaseId String @unique
+  status TaaviaKnowledgeBaseBuildStatus @default(SUCCEEDED)
+  buildType TaaviaKnowledgeBaseBuildType
+  description String? @db.Text
+  createdByUserId String?
+  completedAt DateTime?
+  failedAt DateTime?
+  failureCode String?
+  failureMessage String? @db.Text
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  brand TaaviaBrand @relation(fields:[brandId], references:[id], onDelete:Cascade)
+  knowledgeBase TaaviaKnowledgeBase @relation(fields:[knowledgeBaseId], references:[id], onDelete:Cascade)
+  @@index([tenantId, brandId, startedAt])
+}
+
+model TaaviaKnowledgeSourceSnapshot {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  knowledgeBaseId String
+  buildId String?
+  sourceGroup String @default("brand_info")
+  originalSourceId String?
+  originalBrandInfoId String?
+  mediaAssetId String?
+  sourceType TaaviaKnowledgeSnapshotType
+  title String
+  content String? @db.Text
+  fileType String?
+  fileName String?
+  mimeType String?
+  fileSizeBytes Int?
+  contentHash String?
+  previewUrl String? @db.Text
+  extractedText String? @db.Text
+  extractedWordCount Int?
+  snapshotCreatedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  knowledgeBase TaaviaKnowledgeBase @relation(fields:[knowledgeBaseId], references:[id], onDelete:Cascade)
+  categoryReferences TaaviaKnowledgeCategorySourceReference[]
+  @@index([tenantId, brandId, knowledgeBaseId])
+  @@index([tenantId, brandId, originalSourceId])
+}
+
+model TaaviaKnowledgeCategory {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  knowledgeBaseId String
+  parentCategoryId String?
+  title String
+  slug String
+  level Int
+  content String @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  knowledgeBase TaaviaKnowledgeBase @relation(fields:[knowledgeBaseId], references:[id], onDelete:Cascade)
+  parent TaaviaKnowledgeCategory? @relation("CategoryTree", fields:[parentCategoryId], references:[id], onDelete:Restrict)
+  children TaaviaKnowledgeCategory[] @relation("CategoryTree")
+  sourceReferences TaaviaKnowledgeCategorySourceReference[]
+  @@unique([knowledgeBaseId, slug])
+  @@index([tenantId, brandId, knowledgeBaseId, level])
+}
+
+model TaaviaKnowledgeCategorySourceReference {
+  id String @id @default(cuid())
+  categoryId String
+  snapshotId String
+  tenantId String @default("")
+  brandId String @default("")
+  knowledgeBaseId String @default("")
+  usedAt DateTime @default(now())
+  category TaaviaKnowledgeCategory @relation(fields:[categoryId], references:[id], onDelete:Cascade)
+  snapshot TaaviaKnowledgeSourceSnapshot @relation(fields:[snapshotId], references:[id], onDelete:Cascade)
+  @@unique([categoryId, snapshotId])
+  @@index([snapshotId])
 }
 
 model MediaAsset {
@@ -261,6 +403,69 @@ model TaaviaBrandInfo {
   @@index([tenantId, brandId, status, displayOrder])
   @@index([tenantId, brandId, type, status])
   @@index([tenantId, id, revision])
+  @@index([tenantId, brandId, contentHash])
+}
+
+model TaaviaBrandKnowledge {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  title String
+  content String @db.Text
+  status TaaviaBrandSourceStatus @default(ACTIVE)
+  sortOrder Int @default(0)
+  revision BigInt @default(1)
+  contentHash String
+  createdBy String
+  updatedBy String
+  archivedAt DateTime?
+  archivedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  brand TaaviaBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  @@index([tenantId, brandId, status, sortOrder])
+  @@index([tenantId, brandId, contentHash])
+}
+
+model TaaviaBrandProduct {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  name String
+  shortDescription String? @db.Text
+  fullDescription String @db.Text
+  status TaaviaBrandSourceStatus @default(ACTIVE)
+  revision BigInt @default(1)
+  contentHash String
+  createdBy String
+  updatedBy String
+  archivedAt DateTime?
+  archivedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  brand TaaviaBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  @@index([tenantId, brandId, status])
+  @@index([tenantId, brandId, contentHash])
+}
+
+model TaaviaBrandFaq {
+  id String @id @default(cuid())
+  tenantId String
+  brandId String
+  question String @db.Text
+  answer String @db.Text
+  status TaaviaBrandSourceStatus @default(ACTIVE)
+  sortOrder Int @default(0)
+  revision BigInt @default(1)
+  contentHash String
+  createdBy String
+  updatedBy String
+  archivedAt DateTime?
+  archivedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  brand TaaviaBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  @@index([tenantId, brandId, status, sortOrder])
   @@index([tenantId, brandId, contentHash])
 }
 

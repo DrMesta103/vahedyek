@@ -2,7 +2,6 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PrismaClient } from '@prisma/client';
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -32,6 +31,7 @@ function run(command) {
 
 async function assertMigrationHistoryIsClean() {
   loadLocalEnv();
+  const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient();
 
   try {
@@ -70,6 +70,11 @@ async function assertMigrationHistoryIsClean() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+const generate = run('prisma generate');
+if (generate.status !== 0) {
+  process.exit(generate.status ?? 1);
 }
 
 const migrate = run('prisma migrate deploy');

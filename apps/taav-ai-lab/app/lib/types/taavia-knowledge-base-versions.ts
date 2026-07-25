@@ -1,0 +1,2 @@
+export type TaaviaKnowledgeBaseVersionListItem = { knowledgeBaseId: string; businessId: string; brandId: string; versionLabel: string; isActive: boolean; buildType: string; buildId: string; createdAt: string; categoryCount: number; sourceSnapshotCount: number; description: string };
+export type TaaviaKnowledgeBaseVersionsOverview = { businessId: string; brandId: string; versions: TaaviaKnowledgeBaseVersionListItem[] };

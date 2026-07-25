@@ -27,6 +27,7 @@ import {
 } from './profileStorage';
 import { FormTextInput } from '../../../contracts/new/_components/ContractFormPrimitives';
 import { PersonAvatar } from './ProfilePeoplePrimitives';
+import { ContractDraftReturnButton, parseContractDraftReturnContext } from './ContractDraftReturnButton';
 
 type FlowStep = 'lookup' | 'details';
 type GenderValue = 'male' | 'female';
@@ -252,6 +253,10 @@ export function BusinessRepresentativePickerPanel({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedReturnTo = returnTo || searchParams.get('returnTo');
+  const effectiveReturnTo =
+    requestedReturnTo?.startsWith('/') && !requestedReturnTo.startsWith('//') ? requestedReturnTo : null;
+  const contractReturnContext = parseContractDraftReturnContext(effectiveReturnTo);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const signatureInputRef = useRef<HTMLInputElement | null>(null);
   const [step, setStep] = useState<FlowStep>('lookup');
@@ -521,13 +526,14 @@ export function BusinessRepresentativePickerPanel({
             : mode === 'buyer'
               ? upsertNaturalBuyer(withRepresentative, personRecord)
               : upsertNaturalShareholder(withRepresentative, personRecord);
-        await persistProfileStore(nextStore);
         setNaturalShareholderId(shareholderId);
 
         if (naturalStep === 'user') {
+          if (!contractReturnContext) await persistProfileStore(nextStore);
           setNaturalStep('extra');
         } else {
-          router.push(returnTo || searchParams.get('returnTo') || (mode === 'partner' ? '/business-settings/profile/partners' : mode === 'buyer' ? '/business-settings/profile/buyers?tab=natural' : '/business-settings/profile/shareholders?tab=natural'));
+          await persistProfileStore(nextStore);
+          router.push(effectiveReturnTo || (mode === 'partner' ? '/business-settings/profile/partners' : mode === 'buyer' ? '/business-settings/profile/buyers?tab=natural' : '/business-settings/profile/shareholders?tab=natural'));
           router.refresh();
         }
         return;
@@ -544,7 +550,7 @@ export function BusinessRepresentativePickerPanel({
               ? linkRepresentativeToLegalShareholder(withRepresentative, shareholderId, candidate)
               : withRepresentative;
       await persistProfileStore(finalStore);
-      router.push(returnTo || searchParams.get('returnTo') || (mode === 'board-member' ? '/business-settings/profile/board-members' : '/business-settings/profile/representatives'));
+      router.push(effectiveReturnTo || (mode === 'board-member' ? '/business-settings/profile/board-members' : '/business-settings/profile/representatives'));
       router.refresh();
     } finally {
       setSaving(false);
@@ -581,6 +587,7 @@ export function BusinessRepresentativePickerPanel({
 
   return (
     <section className="representative-picker-page" aria-label="افزودن نماینده قانونی">
+      {contractReturnContext ? <ContractDraftReturnButton context={contractReturnContext} /> : null}
       <div className="representative-flow-header">
         <h1>{title}</h1>
         {step === 'details' ? <p>{subtitle}</p> : null}

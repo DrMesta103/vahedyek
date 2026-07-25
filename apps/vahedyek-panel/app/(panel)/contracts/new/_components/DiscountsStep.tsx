@@ -7,7 +7,11 @@ import { BusinessSwitch, Input, StickySubmitBar } from '@repo/ui';
 import { ContractStepLoader } from './ContractStepLoader';
 import { DiscountConditionPanel, type DiscountConditionValues } from './DiscountConditionPanel';
 import { FieldLabel } from './FieldLabel';
-import { TagPills } from './ContractFormPrimitives';
+import { SettingsAlignedFieldBlock, TagPills } from './ContractFormPrimitives';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
+import { buyerPenaltyAlignmentTag } from '../../../../lib/contractSettingsHints';
+import { canAlignWithSettings, aggregateAlignmentStatuses } from '../../../../lib/contractSettingsHints/alignWithSettings';
+import { getDomainFieldHint, resolveDiscountFieldHints, resolveDiscountTypeHint } from '../../../../lib/contractSettingsHints/discountFieldHints';
 import { DISCOUNT_GROUPS, ITEMIZED_DISCOUNT_ENTRIES, WHOLE_DISCOUNT_ENTRY, getDiscountEntry } from './discountsConfig';
 import {
   ensureActiveDraftId,
@@ -20,7 +24,12 @@ import {
   setBusinessSettingsReference,
   saveDraftRuleSettings,
 } from '../../../../lib/contractDraftClient';
-import { RULE_CONFIGS, type ContractRuleState } from '../../../../lib/businessContractRules';
+import {
+  buildBootstrapDiscountsPayload,
+  normalizeDiscountRule,
+  normalizeDiscountsPayload,
+} from '../../../../lib/contractSettingsBootstrap';
+import type { ContractRuleState } from '../../../../lib/businessContractRules';
 import { validateDiscountsStep } from '../../../../lib/contractValidation';
 import { buildValidationSummary } from './validationPresentation';
 import type {
@@ -34,9 +43,7 @@ import { dispatchContractFlowDirty, dispatchContractFlowSavedForDraft } from './
 import type { ContractFlowSectionId } from './contractFlowSignals';
 import { useContractFlowBasePath } from './useContractFlowBasePath';
 import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
-import { buildRuleStateComparison } from '../../../../lib/contractSettingsReference';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
 
 const SCOPE_OPTIONS: Array<{ value: DiscountScope; label: string }> = [
@@ -76,102 +83,6 @@ function makeEmptyRule(discountTypeId: string, scope: DiscountScope = 'whole', e
     conditionSettlementTiming: 'unit-handover',
     managerApproval: false,
     approvalThreshold: '',
-  };
-}
-
-function normalizeRule(rule: DiscountRuleData): DiscountRuleData {
-  const scope = rule.scope === 'itemized' ? 'itemized' : 'whole';
-
-  return {
-    ...rule,
-    scope,
-    entryId: scope === 'itemized' ? rule.entryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || '' : WHOLE_DISCOUNT_ENTRY.id,
-    valueMode: rule.valueMode === 'percent' ? 'percent' : 'amount',
-    enabled: rule.enabled === true,
-    minValue: String(rule.minValue ?? ''),
-    maxValue: String(rule.maxValue ?? ''),
-    conditionNote: String(rule.conditionNote ?? ''),
-    conditionConfigured: Boolean(rule.conditionConfigured),
-    conditionMaxDelayCount: String(rule.conditionMaxDelayCount ?? ''),
-    conditionGraceDays: String(rule.conditionGraceDays ?? ''),
-    conditionDueBasis: Array.isArray(rule.conditionDueBasis) && rule.conditionDueBasis.length ? rule.conditionDueBasis : ['all-payment-types'],
-    conditionKeepOnDelay: Boolean(rule.conditionKeepOnDelay),
-    conditionPenaltyOnDiscount: Boolean(rule.conditionPenaltyOnDiscount),
-    conditionSettlementTiming: String(rule.conditionSettlementTiming ?? 'unit-handover'),
-    approvalThreshold: String(rule.approvalThreshold ?? ''),
-  };
-}
-
-function normalizeDiscountsPayload(data: ContractDiscountsData | null): ContractDiscountsData {
-  const typeMap = new Map((data?.types ?? []).map((item) => [item.id, item]));
-  const types = DISCOUNT_GROUPS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: typeMap.get(item.id)?.active ?? false,
-  }));
-
-  const validTypeIds = new Set(types.map((item) => item.id));
-  const rules = (data?.rules ?? [])
-    .map((rule) => normalizeRule(rule))
-    .filter((rule) => validTypeIds.has(rule.discountTypeId));
-  const activeTab = types.find((item) => item.active)?.id ?? types[0]?.id ?? '';
-
-  return { activeTab, types, rules };
-}
-
-function buildBootstrapDiscountsPayload(ruleState: ContractRuleState | null): ContractDiscountsData | null {
-  if (!ruleState) return null;
-
-  const activeGroupId = ruleState.active && ruleState.activeChip ? (ruleState.activeChip as 'contract-base' | 'early-payment') : null;
-  const baseTypes = DISCOUNT_GROUPS.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    active: activeGroupId === item.id,
-  }));
-
-  if (!activeGroupId) {
-    return {
-      activeTab: baseTypes[0]?.id ?? '',
-      types: baseTypes,
-      rules: [],
-    };
-  }
-
-  const isContractBase = activeGroupId === 'contract-base';
-  const amountValue = isContractBase ? String(ruleState.values.discountContractValue ?? '') : String(ruleState.values.discountEarlyValue ?? '');
-  const scope = String(ruleState.values.discountScope || 'whole') as DiscountScope;
-  const entryId =
-    scope === 'whole'
-      ? WHOLE_DISCOUNT_ENTRY.id
-      : String(ruleState.values.discountEntryId || ITEMIZED_DISCOUNT_ENTRIES[0]?.id || WHOLE_DISCOUNT_ENTRY.id);
-
-  return {
-    activeTab: activeGroupId,
-    types: baseTypes,
-    rules: [
-      normalizeRule({
-        id: `discount-bootstrap-${activeGroupId}`,
-        discountTypeId: activeGroupId,
-        scope,
-        entryId,
-        valueMode: String(ruleState.values.discountValueMode || 'amount') as DiscountValueMode,
-        enabled: true,
-        minValue: amountValue,
-        maxValue: amountValue,
-        conditionNote: isContractBase ? String(ruleState.values.discountContractSettlement ?? '') : String(ruleState.values.discountEarlyDeadline ?? ''),
-        conditionConfigured: Boolean(ruleState.values.discountConditionConfigured),
-        conditionMaxDelayCount: String(ruleState.values.discountApprovalThreshold ?? ''),
-        conditionGraceDays: isContractBase ? '' : String(ruleState.values.discountEarlyDeadline ?? ''),
-        conditionDueBasis: ['all-payment-types'],
-        conditionKeepOnDelay: Boolean(ruleState.values.discountEarlyKeepOnDelay),
-        conditionPenaltyOnDiscount: Boolean(ruleState.values.discountContractNeedApproval),
-        conditionSettlementTiming: String(ruleState.values.discountContractSettlement ?? 'unit-handover'),
-        managerApproval: Boolean(ruleState.values.discountManagerApproval),
-        approvalThreshold: String(ruleState.values.discountApprovalThreshold ?? ''),
-      }),
-    ],
   };
 }
 
@@ -219,17 +130,17 @@ function FieldBlock({
   label,
   children,
   hint,
+  alignmentTag,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  alignmentTag?: ReactNode;
 }) {
   return (
-    <div className="space-y-2 text-right">
-      <FieldLabel label={label} />
+    <SettingsAlignedFieldBlock label={label} hint={hint} alignmentTag={alignmentTag}>
       {children}
-      {hint ? <p className="text-xs leading-6 text-slate-500">{hint}</p> : null}
-    </div>
+    </SettingsAlignedFieldBlock>
   );
 }
 
@@ -246,37 +157,30 @@ function Toggle({
   onDisabledClick?: () => void;
   onChange: (checked: boolean) => void;
 }) {
+  const handleToggle = () => {
+    if (checked) {
+      onChange(false);
+      return;
+    }
+    if (disabled) {
+      onDisabledClick?.();
+      return;
+    }
+    if (onInactiveClick) {
+      onInactiveClick();
+      return;
+    }
+    if (onDisabledClick) {
+      onDisabledClick();
+      return;
+    }
+    onChange(true);
+  };
+
   return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        if (checked) {
-          onChange(false);
-          return;
-        }
-        if (disabled) {
-          onDisabledClick?.();
-          return;
-        }
-        if (onInactiveClick) {
-          onInactiveClick();
-          return;
-        }
-        if (onDisabledClick) {
-          onDisabledClick();
-          return;
-        }
-        onChange(true);
-      }}
-      className={`inline-flex rounded-full transition ${disabled ? 'opacity-55 grayscale' : ''}`}
-      aria-pressed={checked}
-      aria-disabled={disabled}
-    >
-      <span aria-hidden className="pointer-events-none">
-        <BusinessSwitch checked={checked} onChange={() => {}} />
-      </span>
-    </button>
+    <div className={`inline-flex rounded-full transition ${disabled ? 'opacity-55 grayscale' : ''}`}>
+      <BusinessSwitch checked={checked} onChange={() => handleToggle()} />
+    </div>
   );
 }
 
@@ -330,14 +234,20 @@ function RuleEditor({
   onChange,
   title,
   entryLabel,
+  fieldHints = {},
 }: {
   typeId: string;
   rule: DiscountRuleData;
   onChange: (patch: Partial<DiscountRuleData>) => void;
   title: string;
   entryLabel?: string;
+  fieldHints?: ReturnType<typeof resolveDiscountFieldHints>;
 }) {
   const valueMode = rule.valueMode === 'percent' ? 'percent' : 'amount';
+  const tag = (key: string) => {
+    const hint = getDomainFieldHint(fieldHints, key);
+    return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+  };
   const conditionValues = getConditionValues(rule);
 
   return (
@@ -354,7 +264,7 @@ function RuleEditor({
         </span>
       </div>
 
-      <FieldBlock label="نوع مقدار تخفیف">
+      <FieldBlock label="نوع مقدار تخفیف" alignmentTag={tag('valueMode')}>
         <TagPills
           options={VALUE_MODE_OPTIONS}
           value={valueMode}
@@ -366,6 +276,7 @@ function RuleEditor({
         <FieldBlock
           label={valueMode === 'percent' ? 'حداقل درصد تخفیف' : 'حداقل مبلغ تخفیف'}
           hint="در صورت نیاز می‌توانید مقدار حداقل را خالی بگذارید یا صفر ثبت کنید."
+          alignmentTag={tag('minValue')}
         >
           <Input
             value={rule.minValue}
@@ -382,6 +293,7 @@ function RuleEditor({
         <FieldBlock
           label={valueMode === 'percent' ? 'حداکثر درصد تخفیف' : 'حداکثر مبلغ تخفیف'}
           hint="این مقدار برای ثبت نهایی تخفیف الزامی است."
+          alignmentTag={tag('maxValue')}
         >
           <Input
             value={rule.maxValue}
@@ -399,6 +311,7 @@ function RuleEditor({
       <DiscountConditionPanel
         compact
         values={conditionValues}
+        fieldHints={fieldHints}
         onChange={(patch) => {
           const nextCondition = { ...conditionValues, ...patch };
           onChange({
@@ -417,9 +330,12 @@ function RuleEditor({
 
       <div className="space-y-4 rounded-[8px] border border-cyan-100 bg-cyan-50 p-4">
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
-            <p className="mt-1 text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-800">تایید مدیر برای تخفیف‌های بزرگ</h4>
+              {tag('managerApproval')}
+            </div>
+            <p className="text-xs text-slate-500">در صورت نیاز، برای این rule آستانه تایید مدیریتی تعریف کنید.</p>
           </div>
           <Toggle
             checked={Boolean(rule.managerApproval)}
@@ -428,7 +344,7 @@ function RuleEditor({
         </div>
 
         {rule.managerApproval ? (
-          <FieldBlock label={valueMode === 'percent' ? 'آستانه تایید مدیر (درصد)' : 'آستانه تایید مدیر (مبلغ)'}>
+          <FieldBlock label={valueMode === 'percent' ? 'آستانه تایید مدیر (درصد)' : 'آستانه تایید مدیر (مبلغ)'} alignmentTag={tag('approvalThreshold')}>
             <Input
               value={rule.approvalThreshold}
               onChange={(event) =>
@@ -451,6 +367,7 @@ function SectionShell({
   description,
   active,
   summary,
+  alignmentTag,
   onToggle,
   toggleDisabled = false,
   onInactiveToggle,
@@ -461,6 +378,7 @@ function SectionShell({
   description: string;
   active: boolean;
   summary?: string;
+  alignmentTag?: { label: string; className: string } | null;
   onToggle?: (checked: boolean) => void;
   toggleDisabled?: boolean;
   onInactiveToggle?: () => void;
@@ -477,6 +395,11 @@ function SectionShell({
               <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${active ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
                 {active ? 'فعال' : 'غیرفعال'}
               </span>
+              {alignmentTag ? (
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${alignmentTag.className}`}>
+                  {alignmentTag.label}
+                </span>
+              ) : null}
             </div>
             <p className="text-sm text-slate-500">{description}</p>
             {summary ? <p className="text-xs font-medium text-slate-500">{summary}</p> : null}
@@ -535,24 +458,6 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
   );
 
   const activeTypes = useMemo(() => types.filter((item) => item.active), [types]);
-  const discountHintState = useMemo<ContractRuleState>(() => {
-    const firstRule = rules.find((item) => item.enabled);
-    return {
-      active: activeTypes.length > 0,
-      activeTab: firstRule?.discountTypeId ?? payload.activeTab,
-      activeChip: payload.activeTab,
-      values: {
-        discountScope: firstRule?.scope ?? '',
-        discountEntryId: firstRule?.entryId ?? '',
-        discountValueMode: firstRule?.valueMode ?? '',
-        discountMinValue: firstRule?.minValue ?? '',
-        discountMaxValue: firstRule?.maxValue ?? '',
-        discountConditionConfigured: Boolean(firstRule?.conditionConfigured),
-        discountManagerApproval: Boolean(firstRule?.managerApproval),
-        discountApprovalThreshold: firstRule?.approvalThreshold ?? '',
-      },
-    };
-  }, [activeTypes.length, payload.activeTab, rules]);
 
   const typeRule = (typeId: string, scope: DiscountScope = 'whole', entryId = WHOLE_DISCOUNT_ENTRY.id) =>
     rules.find((item) => item.discountTypeId === typeId && item.scope === scope && (scope === 'whole' || item.entryId === entryId));
@@ -562,7 +467,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
 
   const setRule = (nextRule: DiscountRuleData) => {
     setRules((current) => {
-      const next = normalizeRule(nextRule);
+      const next = normalizeDiscountRule(nextRule);
       const index = current.findIndex((item) => item.id === next.id);
       if (index >= 0) {
         const copy = current.slice();
@@ -782,6 +687,31 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
     return rule?.enabled === true;
   }).length;
   const hasAnyActiveDiscount = contractBaseActive || earlyPaymentActive || itemizedEnabledCount > 0;
+  const stepAlignmentStatus = aggregateAlignmentStatuses([
+    resolveDiscountTypeHint(
+      snapshot?.rules?.discount,
+      'contract-base',
+      contractBaseActive,
+      contractBaseWholeRule ?? makeEmptyRule('contract-base'),
+    ).status,
+    ...ITEMIZED_DISCOUNT_ENTRIES.map((entry) => {
+      const entryRule = typeRule('contract-base', 'itemized', entry.id);
+      const isEnabled = Boolean(entryRule && entryRule.enabled === true);
+      return resolveDiscountTypeHint(
+        snapshot?.rules?.discount,
+        'contract-base',
+        isEnabled,
+        entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+      ).status;
+    }),
+    resolveDiscountTypeHint(
+      snapshot?.rules?.discount,
+      'early-payment',
+      earlyPaymentActive,
+      earlyPaymentRule ?? makeEmptyRule('early-payment'),
+    ).status,
+  ]);
+  const canAlign = Boolean(snapshot?.rules?.discount) && canAlignWithSettings(stepAlignmentStatus);
   const activationDialogContent =
     activationDialog && !activationDialog.confirmable
       ? {
@@ -822,9 +752,10 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
             <button
               type="button"
               onClick={() => setImportDialogOpen(true)}
-              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              دریافت از تنظیمات
+              سازگار کردن با تنظیمات
             </button>
             <button
               type="button"
@@ -842,16 +773,13 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           <button
             type="button"
             onClick={() => setImportDialogOpen(true)}
-            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            دریافت از تنظیمات
+            سازگار کردن با تنظیمات
           </button>
         </div>
       ) : null}
-
-      <BusinessSettingsHint
-        comparison={buildRuleStateComparison(RULE_CONFIGS.discount, snapshot?.rules?.discount, discountHintState)}
-      />
 
       <div className="space-y-4">
         <SectionShell
@@ -859,6 +787,18 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           description="این بخش برای تنظیم تخفیف اصلی قرارداد استفاده می‌شود."
           active={contractBaseActive}
           summary={contractBaseWholeRule && contractBaseWholeRule.enabled === true ? formatRuleSummary(contractBaseWholeRule) : undefined}
+          alignmentTag={
+            snapshot?.rules?.discount
+              ? buyerPenaltyAlignmentTag(
+                  resolveDiscountTypeHint(
+                    snapshot.rules.discount,
+                    'contract-base',
+                    contractBaseActive,
+                    contractBaseWholeRule ?? makeEmptyRule('contract-base'),
+                  ).status,
+                )
+              : null
+          }
           toggleDisabled={itemizedEnabledCount > 0 && !contractBaseActive}
           onToggle={(checked) => {
             if (checked) {
@@ -898,6 +838,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                 rule={contractBaseWholeRule ?? makeEmptyRule('contract-base')}
                 title="تنظیمات تخفیف اصل قرارداد"
                 entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+                fieldHints={resolveDiscountFieldHints(snapshot?.rules?.discount, contractBaseWholeRule, contractBaseActive)}
                 onChange={(patch) => patchRule('contract-base', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
               />
               {itemizedEnabledCount > 0 ? (
@@ -922,6 +863,16 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
             {ITEMIZED_DISCOUNT_ENTRIES.map((entry) => {
               const entryRule = typeRule('contract-base', 'itemized', entry.id);
               const isEnabled = Boolean(entryRule && entryRule.enabled === true);
+              const itemizedAlignment = snapshot?.rules?.discount
+                ? buyerPenaltyAlignmentTag(
+                    resolveDiscountTypeHint(
+                      snapshot.rules.discount,
+                      'contract-base',
+                      isEnabled,
+                      entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+                    ).status,
+                  )
+                : null;
               return (
                 <section
                   key={entry.id}
@@ -935,6 +886,11 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isEnabled ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
                             {isEnabled ? 'فعال' : 'غیرفعال'}
                           </span>
+                          {itemizedAlignment ? (
+                            <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${itemizedAlignment.className}`}>
+                              {itemizedAlignment.label}
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-sm text-slate-500">{entry.description}</p>
                       </div>
@@ -991,6 +947,11 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
                         rule={entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id)}
                         title="تنظیمات این تخفیف موردی"
                         entryLabel={entry.title}
+                        fieldHints={resolveDiscountFieldHints(
+                          snapshot?.rules?.discount,
+                          entryRule ?? makeEmptyRule('contract-base', 'itemized', entry.id),
+                          isEnabled,
+                        )}
                         onChange={(patch) => patchRule('contract-base', 'itemized', entry.id, patch)}
                       />
                     ) : contractBaseActive ? (
@@ -1010,6 +971,18 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
           description="این بخش برای تخفیف‌های پرداخت زودتر از موعد به‌صورت جداگانه مدیریت می‌شود."
           active={earlyPaymentActive}
           summary={earlyPaymentRule && earlyPaymentRule.enabled === true ? formatRuleSummary(earlyPaymentRule) : undefined}
+          alignmentTag={
+            snapshot?.rules?.discount
+              ? buyerPenaltyAlignmentTag(
+                  resolveDiscountTypeHint(
+                    snapshot.rules.discount,
+                    'early-payment',
+                    earlyPaymentActive,
+                    earlyPaymentRule ?? makeEmptyRule('early-payment'),
+                  ).status,
+                )
+              : null
+          }
           onToggle={(checked) => {
             if (checked) {
               toggleRulesForType('early-payment', true);
@@ -1037,6 +1010,7 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
               rule={earlyPaymentRule ?? makeEmptyRule('early-payment')}
               title="تنظیمات تخفیف مشوق پرداخت"
               entryLabel={WHOLE_DISCOUNT_ENTRY.title}
+              fieldHints={resolveDiscountFieldHints(snapshot?.rules?.discount, earlyPaymentRule, earlyPaymentActive)}
               onChange={(patch) => patchRule('early-payment', 'whole', WHOLE_DISCOUNT_ENTRY.id, patch)}
             />
           ) : null}
@@ -1069,8 +1043,8 @@ export function DiscountsStep({ stepId, title, embedded = false }: { stepId: str
         open={importDialogOpen}
         loading={importBusy}
         error={importError}
-        title="دریافت تنظیمات تخفیف"
-        description="اگر تایید کنید، تنظیمات ثبت‌شده در بخش تخفیف به‌عنوان مقدار اولیه این پیش‌نویس اعمال می‌شود."
+        title="سازگار کردن با تنظیمات تخفیف"
+        description="تنظیمات تخفیف کسب‌وکار جایگزین مقادیر فعلی این بخش می‌شود."
         onConfirm={() => void applySettingsFromBusiness()}
         onClose={() => setImportDialogOpen(false)}
       />

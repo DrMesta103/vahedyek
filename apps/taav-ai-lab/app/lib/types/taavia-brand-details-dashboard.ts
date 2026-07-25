@@ -1,0 +1,3 @@
+export type TaaviaBrandCurrentSourceSummary = { brandInfo: number; productsServices: number; faqs: number; filesDocuments: number; links: number };
+export type TaaviaBrandKnowledgeBaseListItem = { knowledgeBaseId: string; brandId: string; versionLabel: string; isActive: boolean; buildType: string; buildId: string; createdAt: string; categoryCount: number; sourceSnapshotCount: number; description: string };
+export type TaaviaBrandDetailsOverview = { businessId: string; brandId: string; website: string; country: string; industry: string; currentSources: TaaviaBrandCurrentSourceSummary; knowledgeBases: TaaviaBrandKnowledgeBaseListItem[]; chatbot: { ready: boolean; lastKnowledgeUpdatedAt: string } };

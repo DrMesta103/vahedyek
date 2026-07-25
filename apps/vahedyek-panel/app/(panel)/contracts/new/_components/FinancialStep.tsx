@@ -14,11 +14,13 @@ import { useContractFlowBasePath } from './useContractFlowBasePath';
 import {
   clearFrontendStepDraft,
   ensureActiveDraftId,
+  fetchContractFlowBootstrapSettings,
   getContractFlowBootstrapSettings,
   getFrontendStepDraft,
   getReferenceData,
   getStepData,
   saveStepData,
+  setBusinessSettingsReference,
   setFrontendStepDraft,
   type ReferenceUnit,
 } from '../../../../lib/contractDraftClient';
@@ -41,16 +43,35 @@ import {
 import type { AreaPricingMode, ContractFinancialData, ContractSubjectData, FinancialCategoryData, FinancialDueItemData, PricingType } from '../../../../types/contract';
 import { dispatchContractFlowDirty, dispatchContractFlowFinancialSnapshot, dispatchContractFlowSavedForDraft } from './contractFlowSignals';
 import { buildValidationSummary } from './validationPresentation';
-import { BusinessSettingsHint } from './BusinessSettingsHint';
+import { SettingsFieldAlignmentTag } from './SettingsFieldAlignmentTag';
 import { useBusinessSettingsReference } from './useBusinessSettingsReference';
+import type { BusinessSettingsComparison } from '../../../../lib/contractSettingsReference';
 import {
-  buildBusinessSettingsComparison,
-  compareBusinessSetting,
-  formatBusinessSettingAmount,
-  formatBusinessSettingPercent,
-  parseBusinessSettingNumber,
-} from '../../../../lib/contractSettingsReference';
+  aggregateAlignmentStatuses,
+  canAlignWithSettings,
+  resolveInstallmentDueScheduleHint,
+  resolveInstallmentHintReference,
+  resolvePrepaymentDueScheduleHint,
+  resolvePrepaymentHintReference,
+} from '../../../../lib/contractSettingsHints';
+import { buildBootstrapFinancialPayload as buildBootstrapFinancialPayloadFromSettings } from '../../../../lib/contractSettingsBootstrap';
 import { useContractDraftAutosave } from './useContractDraftAutosave';
+import { ContractSettingsImportDialog } from './ContractSettingsImportDialog';
+
+function comparisonToFieldAlignmentTag(comparison: BusinessSettingsComparison): ReactNode {
+  if (comparison.status === 'missing') {
+    return <SettingsFieldAlignmentTag status="missing" />;
+  }
+  if (comparison.status === 'equal') {
+    return <SettingsFieldAlignmentTag status="equal" />;
+  }
+  const settingsLabel = comparison.referenceLines[0]?.value ?? comparison.reference ?? comparison.differenceText;
+  const trimmed = typeof settingsLabel === 'string' ? settingsLabel.trim() : '';
+  if (!trimmed) {
+    return <SettingsFieldAlignmentTag status="missing" />;
+  }
+  return <SettingsFieldAlignmentTag status="different" settingsLabel={trimmed} />;
+}
 
 type FinancialCategory = FinancialCategoryData;
 type DueItem = FinancialDueItemData;
@@ -61,9 +82,9 @@ const SYSTEM_FINANCIAL_CATEGORIES = [
   { id: 'principal', name: 'اصل قرارداد', requiresDue: false },
   { id: 'advance', name: 'پیش‌پرداخت', requiresDue: true },
   { id: 'installment', name: 'اقساط', requiresDue: true },
-  { id: 'loan', name: 'وام', requiresDue: false },
-  { id: 'handover', name: 'تحویل', requiresDue: false },
-  { id: 'document', name: 'مدارک', requiresDue: false },
+  { id: 'loan', name: 'وام بانکی', requiresDue: false },
+  { id: 'handover', name: 'تحویل واحد', requiresDue: false },
+  { id: 'document', name: 'تحویل سند', requiresDue: false },
 ] as const;
 const LOCKED_CATEGORY_IDS = SYSTEM_FINANCIAL_CATEGORIES.map((item) => item.id);
 const FINANCIAL_SUB_CATEGORY_IDS = ['advance', 'installment', 'loan', 'handover', 'document'] as const;
@@ -151,10 +172,20 @@ function getCategoryRequiresDue(categoryId: string): boolean {
   return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === categoryId)?.requiresDue ?? true;
 }
 
+function resolveSystemCategoryName(categoryId: string): string | undefined {
+  const direct = SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === categoryId);
+  if (direct) return direct.name;
+  const suffix = structuralFinancialSubSuffix(categoryId);
+  if (!suffix) return undefined;
+  return SYSTEM_FINANCIAL_CATEGORIES.find((item) => item.id === suffix)?.name;
+}
+
 function normalizeCategory(item: FinancialCategory) {
   const requiresDue = item.system ? getCategoryRequiresDue(item.id) : (item.requiresDue ?? true);
+  const systemName = item.system ? resolveSystemCategoryName(item.id) : undefined;
   return {
     ...item,
+    ...(systemName ? { name: systemName } : {}),
     requiresDue,
     dueAmount: requiresDue ? item.capAmount : 0,
     noDueAmount: requiresDue ? 0 : item.capAmount,
@@ -381,451 +412,7 @@ function normalizeFinancialPayload(data: ContractFinancialData | null): Contract
 }
 
 function buildBootstrapFinancialPayload(): ContractFinancialData | null {
-  const bootstrap = getContractFlowBootstrapSettings();
-  const prepayment = bootstrap?.rules.prepayment;
-  if (!prepayment?.active) return null;
-
-  const fixedAmount = resolvePrepaymentAmountReference(prepayment, 0).referenceAmount;
-  if (!fixedAmount) return null;
-
-  const categories = INITIAL_CATEGORIES.map((item) =>
-    item.id === 'advance' ? { ...item, capAmount: fixedAmount } : item,
-  );
-  return normalizeFinancialPayload({
-    pricingType: 'fixed',
-    totalArea: '0',
-    pricePerMeter: '0',
-    fixedTotalAmount: '0',
-    activeTab: 'advance',
-    categories,
-    dueItems: [],
-  });
-}
-
-function resolvePrepaymentAmountReference(
-  prepayment: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | undefined,
-  totalContractAmount: number,
-) {
-  if (!prepayment?.active) {
-    return {
-      comparisonReference: prepayment?.active,
-      referenceAmount: null,
-      helperText: null,
-    };
-  }
-
-  const fixedAmount = readBusinessSettingNumber(prepayment.values.preFixedAmount);
-  const combinedAmount = readBusinessSettingNumber(prepayment.values.preCombinedAmount);
-  const percent = readBusinessSettingNumber(prepayment.values.prePercent);
-  const combinedPercent = readBusinessSettingNumber(prepayment.values.preCombinedPercent);
-
-  if (prepayment.activeTab === 'fixed' && fixedAmount !== null) {
-    return {
-      comparisonReference: fixedAmount,
-      referenceAmount: fixedAmount,
-      helperText: 'مرجع از مبلغ ثابت پیش‌پرداخت در تنظیمات کسب‌وکار خوانده شده است.',
-    };
-  }
-
-  if (prepayment.activeTab === 'combined') {
-    const percentAmount = combinedPercent !== null && totalContractAmount > 0 ? Math.round((totalContractAmount * combinedPercent) / 100) : 0;
-    const directAmount = combinedAmount ?? 0;
-    const totalReference = directAmount + percentAmount;
-    if (totalReference > 0) {
-      return {
-        comparisonReference: totalReference,
-        referenceAmount: totalReference,
-        helperText:
-          combinedPercent !== null
-            ? 'مرجع از ترکیب مبلغ ثابت و درصد پیش‌پرداخت تنظیمات محاسبه شده است.'
-            : 'مرجع از مبلغ ثابت بخش ترکیبی تنظیمات خوانده شده است.',
-      };
-    }
-    return {
-      comparisonReference: undefined,
-      referenceAmount: null,
-      helperText: 'تنظیمات پیش‌پرداخت ترکیبی است، اما تا وقتی مبلغ کل قرارداد مشخص نباشد بخش درصدی به تومان تبدیل نمی‌شود.',
-    };
-  }
-
-  if (prepayment.activeTab === 'percent') {
-    if (percent !== null && totalContractAmount > 0) {
-      const referenceAmount = Math.round((totalContractAmount * percent) / 100);
-      return {
-        comparisonReference: referenceAmount,
-        referenceAmount,
-        helperText: `مرجع از ${percent.toLocaleString('fa-IR')}٪ مبلغ کل قرارداد محاسبه شده است.`,
-      };
-    }
-    return {
-      comparisonReference: undefined,
-      referenceAmount: null,
-      helperText: 'تنظیمات پیش‌پرداخت درصدی است؛ بعد از تکمیل مبلغ کل قرارداد، مرجع تومان محاسبه و مقایسه می‌شود.',
-    };
-  }
-
-  return {
-    comparisonReference: undefined,
-    referenceAmount: null,
-    helperText: 'تنظیمات پیش‌پرداخت مبلغ ثابت مرجع ندارد و در حالت اختیار کارشناس فروش ثبت شده است.',
-  };
-}
-
-function readBusinessSettingNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value !== 'string' || !value.trim()) return null;
-  const normalized = value
-    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
-    .replace(/[٬,\s]/g, '');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function resolvePrepaymentHintReference(
-  prepayment: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | undefined,
-  totalContractAmount: number,
-  currentAmount: number,
-) {
-  if (!prepayment?.active) {
-    return buildBusinessSettingsComparison({
-      reference: prepayment?.active,
-      current: currentAmount > 0,
-      unitLabel: 'تومان',
-      helperText: 'پیش‌پرداخت در تنظیمات کسب‌وکار فعال نیست.',
-    });
-  }
-
-  const fixedAmount = parseBusinessSettingNumber(prepayment.values.preFixedAmount);
-  const combinedAmount = parseBusinessSettingNumber(prepayment.values.preCombinedAmount);
-  const percent = parseBusinessSettingNumber(prepayment.values.prePercent);
-  const combinedPercent = parseBusinessSettingNumber(prepayment.values.preCombinedPercent);
-
-  if (prepayment.activeTab === 'fixed' && fixedAmount !== null) {
-    return buildBusinessSettingsComparison({
-      reference: fixedAmount,
-      current: currentAmount,
-      unitLabel: 'تومان',
-      referenceLines: [{ label: 'مبلغ مرجع تنظیمات', value: formatBusinessSettingAmount(fixedAmount) }],
-      currentLines: [{ label: 'مبلغ فعلی پیش‌پرداخت', value: formatBusinessSettingAmount(currentAmount) }],
-      breakdownLines: [{ label: 'مبلغ ثابت تنظیمات', value: formatBusinessSettingAmount(fixedAmount) }],
-      helperText: 'مرجع از مبلغ ثابت پیش‌پرداخت در تنظیمات کسب‌وکار خوانده شده است.',
-    });
-  }
-
-  if (prepayment.activeTab === 'combined') {
-    const directAmount = combinedAmount ?? 0;
-    const percentAmount = combinedPercent !== null && totalContractAmount > 0 ? Math.round((totalContractAmount * combinedPercent) / 100) : 0;
-    const totalReference = directAmount + percentAmount;
-    const breakdownLines = [
-      ...(combinedPercent !== null ? [{ label: 'درصد تنظیمات', value: formatBusinessSettingPercent(combinedPercent) }] : []),
-      { label: 'مبلغ ثابت تنظیمات', value: formatBusinessSettingAmount(directAmount) },
-      ...(combinedPercent !== null
-        ? [{ label: 'مبلغ محاسبه‌شده از درصد', value: totalContractAmount > 0 ? formatBusinessSettingAmount(percentAmount) : 'بعد از تکمیل مبلغ کل قرارداد محاسبه می‌شود' }]
-        : []),
-      { label: 'جمع مرجع تنظیمات', value: totalReference > 0 ? formatBusinessSettingAmount(totalReference) : 'قابل محاسبه نیست' },
-    ];
-
-    if (totalReference > 0) {
-      return buildBusinessSettingsComparison({
-        reference: totalReference,
-        current: currentAmount,
-        unitLabel: 'تومان',
-        referenceLines: [{ label: 'جمع مرجع تنظیمات', value: formatBusinessSettingAmount(totalReference) }],
-        currentLines: [{ label: 'مبلغ فعلی پیش‌پرداخت', value: formatBusinessSettingAmount(currentAmount) }],
-        breakdownLines,
-        helperText: 'مرجع از ترکیب مبلغ ثابت و درصد پیش‌پرداخت تنظیمات محاسبه شده است.',
-      });
-    }
-
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      unitLabel: 'تومان',
-      breakdownLines,
-      helperText: 'تنظیمات پیش‌پرداخت ترکیبی است، اما تا وقتی مبلغ کل قرارداد مشخص نباشد بخش درصدی به تومان تبدیل نمی‌شود.',
-    });
-  }
-
-  if (prepayment.activeTab === 'percent') {
-    if (percent !== null && totalContractAmount > 0) {
-      const referenceAmount = Math.round((totalContractAmount * percent) / 100);
-      return buildBusinessSettingsComparison({
-        reference: referenceAmount,
-        current: currentAmount,
-        unitLabel: 'تومان',
-        referenceLines: [{ label: 'مبلغ مرجع تنظیمات', value: formatBusinessSettingAmount(referenceAmount) }],
-        currentLines: [{ label: 'مبلغ فعلی پیش‌پرداخت', value: formatBusinessSettingAmount(currentAmount) }],
-        breakdownLines: [
-          { label: 'درصد تنظیمات', value: formatBusinessSettingPercent(percent) },
-          { label: 'مبلغ محاسبه‌شده از درصد', value: formatBusinessSettingAmount(referenceAmount) },
-        ],
-        helperText: `مرجع از ${formatBusinessSettingPercent(percent)} مبلغ کل قرارداد محاسبه شده است.`,
-      });
-    }
-
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      unitLabel: 'تومان',
-      breakdownLines: percent !== null ? [{ label: 'درصد تنظیمات', value: formatBusinessSettingPercent(percent) }] : [],
-      helperText: 'تنظیمات پیش‌پرداخت درصدی است؛ بعد از تکمیل مبلغ کل قرارداد، مرجع تومان محاسبه و مقایسه می‌شود.',
-    });
-  }
-
-  return buildBusinessSettingsComparison({
-    status: 'info',
-    unitLabel: 'تومان',
-    breakdownLines: [{ label: 'حالت تنظیمات', value: 'اختیار کارشناس فروش' }],
-    helperText: 'تنظیمات پیش‌پرداخت مبلغ ثابت مرجع ندارد و در حالت اختیار کارشناس فروش ثبت شده است.',
-  });
-}
-
-function resolvePrepaymentDueScheduleHint(
-  prepayment: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | undefined,
-  dueItems: DueItem[],
-) {
-  if (!prepayment?.active) {
-    return buildBusinessSettingsComparison({
-      status: dueItems.length ? 'different' : 'info',
-      referenceLines: [{ label: 'اقساط پیش‌پرداخت در تنظیمات', value: 'غیرفعال' }],
-      currentLines: [{ label: 'سررسیدهای فعلی پیش‌پرداخت', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` }],
-      helperText: dueItems.length
-        ? 'در تنظیمات کسب‌وکار، اقساط پیش‌پرداخت فعال نیست اما در پیش‌نویس سررسید ثبت شده است.'
-        : 'در تنظیمات کسب‌وکار، اقساط پیش‌پرداخت فعال نیست.',
-    });
-  }
-
-  const config = getPrepaymentInstallmentConfig(prepayment);
-  const enabled = config.enabled;
-  const windowLabel = config.windowLabel;
-  const expectedInterval = parseInstallmentWindow(windowLabel);
-  const sortedDues = dueItems
-    .map((item) => ({ item, date: parseJalaliDate(item.dueDate) }))
-    .filter((entry): entry is { item: DueItem; date: JalaliDateParts } => Boolean(entry.date))
-    .sort((a, b) => compareJalaliDate(a.date, b.date));
-  const intervals = sortedDues.slice(1).map((entry, index) => describeDueInterval(sortedDues[index].date, entry.date));
-  const intervalMismatch =
-    Boolean(enabled && expectedInterval && intervals.length) &&
-    intervals.some((interval) => !isDueIntervalAligned(interval, expectedInterval));
-  const currentLines = [
-    { label: 'تعداد سررسیدهای فعلی', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` },
-    ...(intervals.length ? [{ label: 'فاصله‌های فعلی', value: intervals.map((interval) => interval.label).join('، ') }] : []),
-  ];
-
-  if (!enabled) {
-    return buildBusinessSettingsComparison({
-      status: dueItems.length ? 'different' : 'equal',
-      referenceLines: [
-        { label: 'اقساط پیش‌پرداخت در تنظیمات', value: 'غیرفعال' },
-        { label: 'بازه مرجع تنظیمات', value: windowLabel || 'ثبت نشده' },
-      ],
-      currentLines,
-      differenceText: dueItems.length ? 'برای پیش‌پرداخت سررسید ثبت شده، اما در تنظیمات اقساط پیش‌پرداخت غیرفعال است.' : null,
-      helperText: 'این Hint از تنظیمات اقساط پیش‌پرداخت خوانده می‌شود.',
-    });
-  }
-
-  if (!expectedInterval) {
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      referenceLines: [
-        { label: 'اقساط پیش‌پرداخت در تنظیمات', value: 'فعال' },
-        { label: 'بازه مرجع تنظیمات', value: windowLabel || 'ثبت نشده' },
-      ],
-      currentLines,
-      helperText: 'بازه تنظیمات حالت آزاد دارد؛ سیستم فقط تعداد و سررسیدهای فعلی را برای مقایسه دستی نمایش می‌دهد.',
-    });
-  }
-
-  if (dueItems.length < 2) {
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      referenceLines: [
-        { label: 'اقساط پیش‌پرداخت در تنظیمات', value: 'فعال' },
-        { label: 'بازه مرجع تنظیمات', value: windowLabel },
-      ],
-      currentLines,
-      helperText: 'برای سنجش فاصله اقساط، حداقل دو سررسید پیش‌پرداخت لازم است.',
-    });
-  }
-
-  return buildBusinessSettingsComparison({
-    status: intervalMismatch ? 'different' : 'equal',
-    referenceLines: [
-      { label: 'اقساط پیش‌پرداخت در تنظیمات', value: 'فعال' },
-      { label: 'بازه مرجع تنظیمات', value: windowLabel },
-    ],
-    currentLines,
-    breakdownLines: intervals.map((interval, index) => ({
-      label: `فاصله سررسید ${index + 1}`,
-      value: interval.label,
-    })),
-    differenceText: intervalMismatch ? `زمان‌بندی فعلی با بازه ${windowLabel} تنظیمات هماهنگ نیست.` : null,
-    helperText: intervalMismatch
-      ? 'سررسیدهای پیش‌پرداخت باید با بازه مرجع تنظیمات کسب‌وکار هماهنگ شوند.'
-      : 'زمان‌بندی سررسیدهای پیش‌پرداخت با تنظیمات کسب‌وکار هماهنگ است.',
-  });
-}
-
-function getPrepaymentInstallmentConfig(prepayment: { activeTab: string; values: Record<string, string | boolean> }) {
-  const prefix =
-    prepayment.activeTab === 'percent'
-      ? 'prePercent'
-      : prepayment.activeTab === 'combined'
-        ? 'preCombined'
-        : prepayment.activeTab === 'sales'
-          ? 'preSales'
-          : 'preFixed';
-  return {
-    enabled: prepayment.values[`${prefix}InstallmentEnabled`] === true,
-    windowLabel: String(prepayment.values[`${prefix}InstallmentWindow`] ?? ''),
-  };
-}
-
-function resolveInstallmentDueScheduleHint(
-  installments: { active: boolean; activeTab: string; values: Record<string, string | boolean> } | undefined,
-  dueItems: DueItem[],
-) {
-  if (!installments?.active) {
-    return buildBusinessSettingsComparison({
-      status: dueItems.length ? 'different' : 'info',
-      referenceLines: [{ label: 'اقساط در تنظیمات', value: 'غیرفعال' }],
-      currentLines: [{ label: 'سررسیدهای فعلی اقساط', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` }],
-      differenceText: dueItems.length ? 'در تنظیمات کسب‌وکار، اقساط فعال نیست اما در پیش‌نویس سررسید اقساط ثبت شده است.' : null,
-      helperText: 'این Hint از تنظیمات اقساط کسب‌وکار خوانده می‌شود.',
-    });
-  }
-
-  if (installments.activeTab !== 'regular') {
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      referenceLines: [
-        { label: 'حالت تنظیمات اقساط', value: installments.activeTab === 'irregular' ? 'نامنظم' : 'مبتنی بر پیشرفت' },
-        { label: 'سررسیدهای فعلی اقساط', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` },
-      ],
-      helperText: 'تنظیمات اقساط در حالت منظم نیست؛ سررسیدهای فعلی باید با سیاست همان حالت بررسی شوند.',
-    });
-  }
-
-  const windowLabel = String(installments.values.regularInterval ?? '');
-  const expectedInterval = parseInstallmentWindow(windowLabel);
-  const sortedDues = dueItems
-    .map((item) => ({ item, date: parseJalaliDate(item.dueDate) }))
-    .filter((entry): entry is { item: DueItem; date: JalaliDateParts } => Boolean(entry.date))
-    .sort((a, b) => compareJalaliDate(a.date, b.date));
-  const intervals = sortedDues.slice(1).map((entry, index) => describeDueInterval(sortedDues[index].date, entry.date));
-  const currentLines = [
-    { label: 'تعداد سررسیدهای فعلی', value: `${dueItems.length.toLocaleString('fa-IR')} مورد` },
-    ...(intervals.length ? [{ label: 'فاصله‌های فعلی', value: intervals.map((interval) => interval.label).join('، ') }] : []),
-  ];
-
-  if (!expectedInterval) {
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      referenceLines: [
-        { label: 'حالت تنظیمات اقساط', value: 'منظم' },
-        { label: 'بازه مرجع تنظیمات', value: windowLabel || 'ثبت نشده' },
-      ],
-      currentLines,
-      helperText: 'بازه تنظیمات اقساط آزاد یا قابل تعیین در زمان قرارداد است؛ سیستم فقط سررسیدهای فعلی را برای بررسی نمایش می‌دهد.',
-    });
-  }
-
-  if (dueItems.length < 2) {
-    return buildBusinessSettingsComparison({
-      status: 'info',
-      referenceLines: [
-        { label: 'حالت تنظیمات اقساط', value: 'منظم' },
-        { label: 'بازه مرجع تنظیمات', value: windowLabel },
-      ],
-      currentLines,
-      helperText: 'برای سنجش فاصله اقساط، حداقل دو سررسید لازم است.',
-    });
-  }
-
-  const intervalMismatch = intervals.some((interval) => !isDueIntervalAligned(interval, expectedInterval));
-  return buildBusinessSettingsComparison({
-    status: intervalMismatch ? 'different' : 'equal',
-    referenceLines: [
-      { label: 'حالت تنظیمات اقساط', value: 'منظم' },
-      { label: 'بازه مرجع تنظیمات', value: windowLabel },
-    ],
-    currentLines,
-    breakdownLines: intervals.map((interval, index) => ({
-      label: `فاصله سررسید ${index + 1}`,
-      value: interval.label,
-    })),
-    differenceText: intervalMismatch ? `زمان‌بندی فعلی اقساط با بازه ${windowLabel} تنظیمات هماهنگ نیست.` : null,
-    helperText: intervalMismatch
-      ? 'سررسیدهای اقساط باید با بازه مرجع تنظیمات کسب‌وکار هماهنگ شوند.'
-      : 'زمان‌بندی سررسیدهای اقساط با تنظیمات کسب‌وکار هماهنگ است.',
-  });
-}
-
-type JalaliDateParts = { year: number; month: number; day: number };
-type ExpectedDueInterval = { months?: number; days?: number };
-type ActualDueInterval = { months: number; days: number; label: string };
-
-function parseInstallmentWindow(value: string): ExpectedDueInterval | null {
-  const normalized = normalizePersianText(value);
-  if (normalized.includes('یک ماه')) return { months: 1 };
-  if (normalized.includes('ماهانه')) return { months: 1 };
-  if (normalized.includes('دو ماه')) return { months: 2 };
-  if (normalized.includes('دوماهه')) return { months: 2 };
-  if (normalized.includes('سه ماه')) return { months: 3 };
-  if (normalized.includes('سه‌ماهه') || normalized.includes('سه ماهه')) return { months: 3 };
-  if (normalized.includes('شش ماه')) return { months: 6 };
-  if (normalized.includes('شش‌ماهه') || normalized.includes('شش ماهه')) return { months: 6 };
-  if (normalized.includes('سالانه')) return { months: 12 };
-  if (normalized.includes('یک هفته')) return { days: 7 };
-  if (normalized.includes('دو هفته')) return { days: 14 };
-  if (normalized.includes('دوهفته')) return { days: 14 };
-  if (normalized.includes('چهل و پنج روز')) return { days: 45 };
-  return null;
-}
-
-function parseJalaliDate(value: string): JalaliDateParts | null {
-  const normalized = normalizeDigits(value);
-  const match = normalized.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
-  if (!match) return null;
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return null;
-  return { year, month, day };
-}
-
-function describeDueInterval(start: JalaliDateParts, end: JalaliDateParts): ActualDueInterval {
-  const months = Math.max(0, (end.year - start.year) * 12 + (end.month - start.month));
-  const days = end.day - start.day;
-  const parts = [
-    months ? `${months.toLocaleString('fa-IR')} ماه` : '',
-    days ? `${Math.abs(days).toLocaleString('fa-IR')} روز ${days > 0 ? 'بیشتر' : 'کمتر'}` : '',
-  ].filter(Boolean);
-  return { months, days, label: parts.length ? parts.join(' و ') : 'بدون فاصله' };
-}
-
-function isDueIntervalAligned(actual: ActualDueInterval, expected: ExpectedDueInterval) {
-  if (expected.months !== undefined) return actual.months === expected.months && Math.abs(actual.days) <= 3;
-  if (expected.days !== undefined) return Math.abs(toApproximateDays(actual) - expected.days) <= 2;
-  return true;
-}
-
-function toApproximateDays(interval: ActualDueInterval) {
-  return interval.months * 30 + interval.days;
-}
-
-function compareJalaliDate(a: JalaliDateParts, b: JalaliDateParts) {
-  return a.year - b.year || a.month - b.month || a.day - b.day;
-}
-
-function normalizeDigits(value: string) {
-  return value
-    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
-}
-
-function normalizePersianText(value: string) {
-  return value.replace(/ي/g, 'ی').replace(/ك/g, 'ک').trim();
+  return buildBootstrapFinancialPayloadFromSettings(getContractFlowBootstrapSettings()?.rules.prepayment ?? null);
 }
 
 function serializeFinancialPayloadForDirty(payload: ContractFinancialData) {
@@ -1132,6 +719,9 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
   const [principalExpanded, setPrincipalExpanded] = useState(true);
   const [expandedCustomCategoryId, setExpandedCustomCategoryId] = useState<string | null>(null);
   const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importError, setImportError] = useState('');
 
   const editingCategory = editingId ? categories.find((item) => item.id === editingId) ?? null : null;
   const editingLockedCategory = editingCategory ? isStructuralLockedCategoryId(editingCategory.id) : false;
@@ -1964,78 +1554,93 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
     await persistAdditionalCosts();
   };
 
-  const financialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
+  const businessFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
     const hints: Record<string, React.ReactNode> = {};
-    const prepayment = snapshot?.rules?.prepayment;
-    const prepaymentAmount = prepayment?.activeTab === 'fixed'
-      ? Number(prepayment.values.preFixedAmount ?? 0)
-      : prepayment?.activeTab === 'combined'
-        ? Number(prepayment.values.preCombinedAmount ?? 0)
-        : null;
+
     const advance = categories.find((item) => item.id === 'advance');
     if (advance) {
-      hints.advance = (
-        <BusinessSettingsHint
-          unitLabel="تومان"
-          comparison={compareBusinessSetting(
-            prepaymentAmount && prepaymentAmount > 0 ? prepaymentAmount : prepayment?.active,
-            prepaymentAmount && prepaymentAmount > 0 ? advance.capAmount : Boolean(advance.capAmount > 0 || advance.dueAmount > 0),
-          )}
-        />
+      hints.advance = comparisonToFieldAlignmentTag(
+        resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance.capAmount),
       );
     }
+
     const installment = categories.find((item) => item.id === 'installment');
     if (installment) {
-      hints.installment = <BusinessSettingsHint unitLabel="تومان" comparison={compareBusinessSetting(snapshot?.rules?.installments?.active, Boolean(installment.capAmount > 0 || dueItems.some((item) => item.categoryId === 'installment')))} />;
-    }
-    const loan = categories.find((item) => item.id === 'loan');
-    if (loan) {
-      hints.loan = <BusinessSettingsHint unitLabel="تومان" comparison={compareBusinessSetting(snapshot?.loanSettings?.enabled, Boolean(loan.capAmount > 0 || dueItems.some((item) => item.categoryId === 'loan')))} />;
-    }
-    return hints;
-  }, [categories, dueItems, snapshot]);
-
-  const resolvedFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
-    const hints: Record<string, React.ReactNode> = { ...financialCategoryHints };
-    const prepayment = snapshot?.rules?.prepayment;
-    const prepaymentReference = resolvePrepaymentAmountReference(prepayment, totalContractAmount);
-    const advance = categories.find((item) => item.id === 'advance');
-
-    if (advance) {
-      hints.advance = (
-        <BusinessSettingsHint
-          unitLabel="تومان"
-          referenceLabel="مبلغ مرجع تنظیمات"
-          currentLabel="مبلغ فعلی پیش‌پرداخت"
-          helperText={prepaymentReference.helperText}
-          comparison={compareBusinessSetting(
-            prepaymentReference.comparisonReference,
-            prepaymentReference.referenceAmount !== null ? advance.capAmount : Boolean(advance.capAmount > 0 || advance.dueAmount > 0),
-          )}
-        />
+      const installmentDueCount = dueItems.filter((item) => item.categoryId === 'installment').length;
+      const hasInstallments = installment.capAmount > 0 || installmentDueCount > 0;
+      hints.installment = comparisonToFieldAlignmentTag(
+        resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount),
       );
     }
 
     return hints;
-  }, [categories, financialCategoryHints, snapshot, totalContractAmount]);
-
-  const businessFinancialCategoryHints = useMemo<Record<string, React.ReactNode>>(() => {
-    const hints: Record<string, React.ReactNode> = { ...resolvedFinancialCategoryHints };
-    const advance = categories.find((item) => item.id === 'advance');
-    if (advance) {
-      hints.advance = <BusinessSettingsHint comparison={resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance.capAmount)} />;
-    }
-    return hints;
-  }, [categories, resolvedFinancialCategoryHints, snapshot, totalContractAmount]);
+  }, [categories, dueItems, snapshot, totalContractAmount]);
 
   const businessFinancialDueHints = useMemo<Record<string, React.ReactNode>>(() => {
     const hints: Record<string, React.ReactNode> = {};
     const advanceDueItems = dueItems.filter((item) => item.categoryId === 'advance');
     const installmentDueItems = dueItems.filter((item) => item.categoryId === 'installment');
-    hints.advance = <BusinessSettingsHint comparison={resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems)} />;
-    hints.installment = <BusinessSettingsHint comparison={resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems)} />;
+    hints.advance = comparisonToFieldAlignmentTag(resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems));
+    hints.installment = comparisonToFieldAlignmentTag(
+      resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems),
+    );
     return hints;
   }, [dueItems, snapshot]);
+
+  const stepAlignmentStatus = useMemo(() => {
+    const advance = categories.find((item) => item.id === 'advance');
+    const installment = categories.find((item) => item.id === 'installment');
+    const installmentDueCount = dueItems.filter((item) => item.categoryId === 'installment').length;
+    const hasInstallments = Boolean(installment && (installment.capAmount > 0 || installmentDueCount > 0));
+    const advanceDueItems = dueItems.filter((item) => item.categoryId === 'advance');
+    const installmentDueItems = dueItems.filter((item) => item.categoryId === 'installment');
+    return aggregateAlignmentStatuses([
+      resolvePrepaymentHintReference(snapshot?.rules?.prepayment, totalContractAmount, advance?.capAmount ?? 0).status,
+      resolveInstallmentHintReference(snapshot?.rules?.installments, hasInstallments, installmentDueCount).status,
+      resolvePrepaymentDueScheduleHint(snapshot?.rules?.prepayment, advanceDueItems).status,
+      resolveInstallmentDueScheduleHint(snapshot?.rules?.installments, installmentDueItems).status,
+    ]);
+  }, [categories, dueItems, snapshot?.rules?.installments, snapshot?.rules?.prepayment, totalContractAmount]);
+  const canAlign =
+    Boolean(snapshot?.rules?.prepayment || snapshot?.rules?.installments) && canAlignWithSettings(stepAlignmentStatus);
+
+  const applySettingsFromBusiness = async () => {
+    if (!draftId || importBusy) return;
+    setImportBusy(true);
+    setImportError('');
+    try {
+      const bootstrap = await fetchContractFlowBootstrapSettings();
+      setBusinessSettingsReference(bootstrap);
+      const bootstrapFinancial = buildBootstrapFinancialPayloadFromSettings(bootstrap.rules.prepayment ?? null);
+      const bootstrapAdvance = bootstrapFinancial?.categories.find((item) => item.id === 'advance');
+      const nextCategories = categories.map((category) => {
+        if (category.id === 'advance' && bootstrapAdvance) {
+          return { ...category, capAmount: bootstrapAdvance.capAmount };
+        }
+        return category;
+      });
+      if (!nextCategories.some((item) => item.id === 'advance') && bootstrapAdvance) {
+        nextCategories.push(bootstrapAdvance);
+      }
+      setCategories(nextCategories);
+      const nextPayload: ContractFinancialData = {
+        ...buildPayload(),
+        categories: nextCategories.map((item) => normalizeCategory(item)),
+      };
+      await saveStepData(draftId, 'financial', nextPayload);
+      setFrontendStepDraft(draftId, 'financial', nextPayload);
+      setSavedPayloadState(nextPayload);
+      initialSnapshotRef.current = serializeFinancialPayloadForDirty(nextPayload);
+      setDirty(false);
+      dispatchContractFlowDirty('financial', false);
+      dispatchContractFlowSavedForDraft(draftId, 'financial', Date.now(), nextPayload);
+      setImportDialogOpen(false);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'سازگار کردن تنظیمات مالی انجام نشد.');
+    } finally {
+      setImportBusy(false);
+    }
+  };
 
   if (loading) {
       return <ContractStepLoader title={title} description="در حال بارگذاری اطلاعات مالی، لطفاً کمی صبر کنید..." />;
@@ -2043,31 +1648,38 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
 
   return (
     <div className="space-y-5">
-      <div className="space-y-2" dir="rtl">
-        <div className="text-sm font-bold text-slate-700">مرجع تنظیمات مالی و قراردادی</div>
-        <BusinessSettingsHint
-          comparison={compareBusinessSetting(
-            snapshot?.rules?.prepayment?.active,
-            Boolean(categories.find((item) => item.id === 'advance' && (item.capAmount > 0 || item.dueAmount > 0))),
-          )}
-        />
-        <BusinessSettingsHint
-          comparison={compareBusinessSetting(
-            snapshot?.rules?.installments?.active,
-            Boolean(dueItems.some((item) => item.categoryId === 'installment')),
-          )}
-        />
-        <BusinessSettingsHint comparison={compareBusinessSetting(snapshot?.loanSettings?.enabled, Boolean(dueItems.some((item) => item.categoryId === 'loan')))} />
-      </div>
-      {!embedded ? <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-          <p className="mt-1 text-sm text-gray-500">در این مرحله مبلغ‌گذاری، پرداخت‌ها و آیتم‌های سررسید را تنظیم می‌کنید.</p>
+      {!embedded ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
+            <p className="mt-1 text-sm text-gray-500">در این مرحله مبلغ‌گذاری، پرداخت‌ها و آیتم‌های سررسید را تنظیم می‌کنید.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setImportDialogOpen(true)}
+              disabled={!canAlign}
+              className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              سازگار کردن با تنظیمات
+            </button>
+            <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+              بازگشت به مراحل
+            </button>
+          </div>
         </div>
-        <button type="button" onClick={() => requestNavigation(basePath)} className="rounded-[8px] border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-          بازگشت به مراحل
-        </button>
-      </div> : null}
+      ) : (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setImportDialogOpen(true)}
+            disabled={!canAlign}
+            className="rounded-[8px] border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-sm font-bold text-cyan-700 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            سازگار کردن با تنظیمات
+          </button>
+        </div>
+      )}
 
       <div className={visibleErrors.totalArea || visibleErrors.pricePerMeter || visibleErrors.parkingPricePerMeter || visibleErrors.storagePricePerMeter || visibleErrors.fixedTotalAmount || visibleErrors.parkingFixedAmount || visibleErrors.storageFixedAmount ? 'rounded-[8px] border border-rose-300 bg-rose-50/20 p-1' : ''}>
         <FinancialPricingBox
@@ -2460,6 +2072,16 @@ export function FinancialStep({ stepId, title, embedded = false }: { stepId: str
           {dueFormError ? <div className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{dueFormError}</div> : null}
         </div>
       </Modal>
+
+      <ContractSettingsImportDialog
+        open={importDialogOpen}
+        loading={importBusy}
+        error={importError}
+        title="سازگار کردن با تنظیمات مالی"
+        description="سقف پیش‌پرداخت از تنظیمات کسب‌وکار روی این پیش‌نویس اعمال می‌شود."
+        onConfirm={() => void applySettingsFromBusiness()}
+        onClose={() => setImportDialogOpen(false)}
+      />
     </div>
   );
 }

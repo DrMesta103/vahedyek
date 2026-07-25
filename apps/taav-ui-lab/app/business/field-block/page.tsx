@@ -34,7 +34,7 @@ export default function BusinessFieldBlockDocPage() {
       breadcrumbs={[
         { label: 'خانه', href: '/' },
         { label: 'Business', href: '/business' },
-        { label: 'بلوک فیلد' },
+        { label: 'field' },
       ]}
     >
       <DocPageHeader

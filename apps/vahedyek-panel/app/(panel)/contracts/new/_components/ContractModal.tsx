@@ -27,10 +27,10 @@ export function ContractModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className={`w-full ${maxWidthClass} rounded-[8px] border border-gray-200 bg-white shadow-2xl`}
+        className={`flex max-h-[calc(100vh-2rem)] w-full flex-col overflow-hidden ${maxWidthClass} rounded-[8px] border border-gray-200 bg-white shadow-2xl`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-gray-100 p-5">
+        <div className="flex shrink-0 items-start justify-between border-b border-gray-100 p-5">
           <div className={centeredTitle ? 'w-full text-center' : ''}>
             <h3 className={centeredTitle ? 'text-xl font-bold text-gray-800' : 'text-base font-bold text-gray-800'}>{title}</h3>
             {description ? <p className="mt-1 text-sm text-gray-500">{description}</p> : null}
@@ -39,8 +39,8 @@ export function ContractModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-4 p-5">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-gray-100 p-4">{footer}</div>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">{children}</div>
+        <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 p-4">{footer}</div>
       </div>
     </div>
   );

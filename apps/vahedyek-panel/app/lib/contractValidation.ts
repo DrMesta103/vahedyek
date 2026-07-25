@@ -10,6 +10,7 @@ import type {
   ConstructorTerminationSubsectionId,
   BuyerTerminationSubsectionId,
   BuyerTerminationTerms,
+  FirstPartyRelatedParticipant,
   ShareMode,
 } from '../types/contract';
 import { validateProgressiveRows } from './progressivePenalty';
@@ -97,10 +98,59 @@ export function validateShares(parties: ContractParty[], mode: ShareMode): Valid
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-export function validateStep2(data: Partial<ContractPartiesData>): ValidationResult {
+export function validateFirstPartyRelatedParticipants(
+  participants: FirstPartyRelatedParticipant[] | undefined,
+): ValidationResult {
+  const errors: Record<string, string> = {};
+  const items = participants ?? [];
+  const ids = new Set<string>();
+  const sources = new Set<string>();
+
+  for (const participant of items) {
+    const expectedPersonType = participant.role === 'legal_shareholder' ? 'legal' : 'natural';
+    const sourceKey = `${participant.parentSourceId ?? 'legacy'}:${participant.role}:${participant.sourceId}`;
+
+    if (!participant.id?.trim() || !participant.sourceId?.trim() || !participant.name?.trim()) {
+      errors.firstPartyRelatedParticipants = 'اطلاعات یکی از افراد وابسته به طرف اول کامل نیست.';
+      break;
+    }
+
+    if (participant.personType !== expectedPersonType) {
+      errors.firstPartyRelatedParticipants = 'نوع شخص با نقش فرد وابسته به طرف اول سازگار نیست.';
+      break;
+    }
+
+    if (ids.has(participant.id) || sources.has(sourceKey)) {
+      errors.firstPartyRelatedParticipants = 'فرد وابسته تکراری برای طرف اول قابل ثبت نیست.';
+      break;
+    }
+
+    ids.add(participant.id);
+    sources.add(sourceKey);
+  }
+
+  if (!errors.firstPartyRelatedParticipants) {
+    const byId = new Map(items.map((participant) => [participant.id, participant]));
+    for (const participant of items) {
+      if (!participant.parentParticipantId) continue;
+      const parent = byId.get(participant.parentParticipantId);
+      if (!parent || parent.id === participant.id || parent.role !== 'legal_shareholder') {
+        errors.firstPartyRelatedParticipants = 'رابطه والد برای فرد وابسته به طرف اول نامعتبر است.';
+        break;
+      }
+    }
+  }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function validateStep2(
+  data: Partial<ContractPartiesData>,
+  options: { allowEmptyPartyOne?: boolean } = {},
+): ValidationResult {
   const errors: Record<string, string> = {};
 
-  if (!data.partyOne || data.partyOne.length === 0) {
+  if ((!data.partyOne || data.partyOne.length === 0) && !options.allowEmptyPartyOne) {
     errors.partyOne = REQUIRED_MSG;
   }
 
@@ -109,6 +159,24 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
   }
 
   if (data.partyOne && data.partyOne.length > 0) {
+    const memberIds = new Set<string>();
+    for (const member of data.partyOne) {
+      if (memberIds.has(member.personId)) {
+        errors.partyOne = `طرف اول «${member.name}» تکراری است.`;
+        break;
+      }
+      memberIds.add(member.personId);
+
+      if (member.partyOneMemberKind === 'natural_shareholder' && member.personType !== 'natural') {
+        errors.partyOne = `نوع شخص طرف اول «${member.name}» با سهام‌دار حقیقی سازگار نیست.`;
+        break;
+      }
+      if (member.partyOneMemberKind === 'legal_shareholder' && member.personType !== 'legal') {
+        errors.partyOne = `نوع شخص طرف اول «${member.name}» با سهام‌دار حقوقی سازگار نیست.`;
+        break;
+      }
+    }
+
     const mode = data.partyOneMode ?? data.partyOne[0].share?.mode;
     if (mode) {
       const sharesResult = validateShares(data.partyOne, mode);
@@ -122,6 +190,33 @@ export function validateStep2(data: Partial<ContractPartiesData>): ValidationRes
       const sharesResult = validateShares(data.partyTwo, mode);
       if (!sharesResult.valid) {
         errors.partyTwoShares = Object.values(sharesResult.errors)[0];
+      }
+    }
+  }
+
+  Object.assign(errors, validateFirstPartyRelatedParticipants(data.firstPartyRelatedParticipants).errors);
+
+  if (!errors.firstPartyRelatedParticipants) {
+    const parentById = new Map((data.partyOne ?? []).map((member) => [member.personId, member]));
+    for (const participant of data.firstPartyRelatedParticipants ?? []) {
+      if (participant.role !== 'representative' && participant.role !== 'board_member') continue;
+      if (!participant.parentSourceId && participant.parentParticipantId) continue;
+      const parent = participant.parentSourceId ? parentById.get(participant.parentSourceId) : null;
+      if (!parent) {
+        errors.firstPartyRelatedParticipants = `والد فرد وابسته «${participant.name}» در طرف اول وجود ندارد.`;
+        break;
+      }
+      if (participant.role === 'board_member' && parent.partyOneMemberKind !== 'business') {
+        errors.firstPartyRelatedParticipants = `عضو هیئت‌مدیره «${participant.name}» فقط می‌تواند به کارت کسب‌وکار وابسته باشد.`;
+        break;
+      }
+      if (
+        participant.role === 'representative' &&
+        parent.partyOneMemberKind !== 'business' &&
+        parent.partyOneMemberKind !== 'legal_shareholder'
+      ) {
+        errors.firstPartyRelatedParticipants = `نماینده «${participant.name}» فقط می‌تواند به کسب‌وکار یا سهام‌دار حقوقی وابسته باشد.`;
+        break;
       }
     }
   }

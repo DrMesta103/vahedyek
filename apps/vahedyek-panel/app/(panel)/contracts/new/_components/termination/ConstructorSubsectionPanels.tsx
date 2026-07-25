@@ -1,11 +1,19 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { ContractTerminationData } from '../../../../../types/contract';
 import { formatThousandsGroupedInput } from '../../../../../lib/moneyInputFormat';
+import type { DomainFieldHint } from '../../../../../lib/contractSettingsHints/domainFieldHints';
 import { FieldGroup, FormTextInput, MultiTagPills, TagPills } from '../ContractFormPrimitives';
+import { SettingsFieldAlignmentTag } from '../SettingsFieldAlignmentTag';
 import { RadioRow, SubsectionSubmitRow, ToggleRow } from './TerminationPrimitives';
 
 type C = ContractTerminationData['constructorTerms'];
+
+function alignmentTag(hint: DomainFieldHint | undefined): ReactNode {
+  if (!hint || hint.status === 'idle') return null;
+  return <SettingsFieldAlignmentTag status={hint.status} settingsLabel={hint.settingsLabel} />;
+}
 
 const GRACE_A: ReadonlyArray<{ value: C['lateInstallment']['gracePreset']; label: string }> = [
   { value: '3', label: '۳ روز' },
@@ -94,11 +102,13 @@ export function LateInstallmentPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: C['lateInstallment'];
   onChange: (next: C['lateInstallment']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   const showMinDebtAmount = value.detectionBasis === 'total-debt';
   const showConsecutiveInstallmentsCount = value.detectionBasis === 'consecutive-installments';
@@ -108,6 +118,7 @@ export function LateInstallmentPanel({
       <FieldGroup
         label="مهلت ارفاقی (Grace period)"
         hint="پس از سررسید، چند روز پیش از ارجاع به فرایند فسخ صبر می‌شود."
+        alignmentTag={alignmentTag(fieldHints.gracePreset)}
       >
         <TagPills
           value={value.gracePreset}
@@ -117,7 +128,7 @@ export function LateInstallmentPanel({
       </FieldGroup>
 
       {value.gracePreset === 'other' ? (
-        <FieldGroup label="تعداد روز (سفارشی)" required>
+        <FieldGroup label="تعداد روز (سفارشی)" required alignmentTag={alignmentTag(fieldHints.graceDaysCustom)}>
           <FormTextInput
             value={value.graceDaysCustom}
             onChange={(v) => onChange({ ...value, graceDaysCustom: normalizeDigits(v) })}
@@ -126,7 +137,11 @@ export function LateInstallmentPanel({
         </FieldGroup>
       ) : null}
 
-      <FieldGroup label="مبنای تشخیص تأخیر" hint="نوع سابقه پرداختی که برای ارزیابی تأخیر اقساط لحاظ می‌شود.">
+      <FieldGroup
+        label="مبنای تشخیص تأخیر"
+        hint="نوع سابقه پرداختی که برای ارزیابی تأخیر اقساط لحاظ می‌شود."
+        alignmentTag={alignmentTag(fieldHints.detectionBasis)}
+      >
         <div className="grid gap-2 md:grid-cols-3">
           <RadioRow
             checked={value.detectionBasis === 'per-installment'}
@@ -151,6 +166,7 @@ export function LateInstallmentPanel({
           label="مجموع مبلغ بدهی"
           required
           hint="زمانی که مبنا «مجموع مبلغ بدهی» است، این آستانه برای ورود به جریان فسخ الزامی می‌شود."
+          alignmentTag={alignmentTag(fieldHints.minDebtAmount)}
         >
           <FormTextInput
             value={value.minDebtAmount}
@@ -168,6 +184,7 @@ export function LateInstallmentPanel({
           label="تعداد اقساط متوالی مجاز"
           required
           hint="تعیین کنید چند قسط پشت‌سرهم باید پرداخت نشود تا اختیار فسخ فعال شود."
+          alignmentTag={alignmentTag(fieldHints.consecutiveInstallmentsCount)}
         >
           <FormTextInput
             value={value.consecutiveInstallmentsCount}
@@ -190,15 +207,21 @@ export function FinancialObligationsPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: C['financialObligations'];
   onChange: (next: C['financialObligations']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
-      <FieldGroup label="انواع تعهدات مالی مشمول" hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد">
+      <FieldGroup
+        label="انواع تعهدات مالی مشمول"
+        hint="با فعال‌سازی این گزینه، جرایم براساس پیکربندی به تمام قراردادهای جدید اعمال خواهند شد"
+        alignmentTag={alignmentTag(fieldHints.obligationTypes)}
+      >
         <MultiTagPills<C['financialObligations']['obligationTypes'][number]>
           values={value.obligationTypes}
           onChange={(values) => onChange({ ...value, obligationTypes: values })}
@@ -206,7 +229,11 @@ export function FinancialObligationsPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="مهلت ارفاقی" hint="پس از اعلام بدهی، چند روز برای ایفا در نظر گرفته می‌شود.">
+      <FieldGroup
+        label="مهلت ارفاقی"
+        hint="پس از اعلام بدهی، چند روز برای ایفا در نظر گرفته می‌شود."
+        alignmentTag={alignmentTag(fieldHints.gracePreset)}
+      >
         <TagPills
           value={value.gracePreset}
           onChange={(v) => onChange({ ...value, gracePreset: v, graceDaysCustom: v === 'other' ? value.graceDaysCustom : '' })}
@@ -215,7 +242,7 @@ export function FinancialObligationsPanel({
       </FieldGroup>
 
       {value.gracePreset === 'other' ? (
-        <FieldGroup label="تعداد روز (سفارشی)" required>
+        <FieldGroup label="تعداد روز (سفارشی)" required alignmentTag={alignmentTag(fieldHints.graceDaysCustom)}>
           <FormTextInput
             value={value.graceDaysCustom}
             onChange={(v) => onChange({ ...value, graceDaysCustom: normalizeDigits(v) })}
@@ -234,15 +261,17 @@ export function DocumentDeficienciesPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: C['documentDeficiencies'];
   onChange: (next: C['documentDeficiencies']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
-      <FieldGroup label="موارد الزامی" hint="کدام مدارک یا تعهدات باید کامل باشند تا جریان ادامه یابد.">
+      <FieldGroup label="موارد الزامی" hint="کدام مدارک یا تعهدات باید کامل باشند تا جریان ادامه یابد." alignmentTag={alignmentTag(fieldHints.mandatoryItems)}>
         <MultiTagPills<C['documentDeficiencies']['mandatoryItems'][number]>
           values={value.mandatoryItems}
           onChange={(values) => onChange({ ...value, mandatoryItems: values })}
@@ -250,7 +279,7 @@ export function DocumentDeficienciesPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="مهلت تکمیل">
+      <FieldGroup label="مهلت تکمیل" alignmentTag={alignmentTag(fieldHints.completionDeadlineDays)}>
         <p className="text-[11px] text-slate-400">پس از اعلام نقص، چند روز برای تکمیل مدارک/تعهدات فرصت داده می‌شود.</p>
         <TagPills
           value={value.completionDeadlineDays}
@@ -266,7 +295,11 @@ export function DocumentDeficienciesPanel({
       </FieldGroup>
 
       {value.completionDeadlineDays === 'other' ? (
-        <FieldGroup label="تعداد روز مجاز (سفارشی)" required>
+        <FieldGroup
+          label="تعداد روز مجاز (سفارشی)"
+          required
+          alignmentTag={alignmentTag(fieldHints.completionDeadlineDaysCustom)}
+        >
           <FormTextInput
             value={value.completionDeadlineDaysCustom}
             onChange={(v) => onChange({ ...value, completionDeadlineDaysCustom: normalizeDigits(v) })}
@@ -287,11 +320,13 @@ export function OtherBreachPanel({
   onChange,
   onSubmit,
   saving,
+  fieldHints = {},
 }: {
   value: C['otherBreach'];
   onChange: (next: C['otherBreach']) => void;
   onSubmit: () => void;
   saving: boolean;
+  fieldHints?: Partial<Record<string, DomainFieldHint>>;
 }) {
   return (
     <div className="space-y-5">
@@ -303,7 +338,11 @@ export function OtherBreachPanel({
         />
       </FieldGroup>
 
-      <FieldGroup label="مهلت اصلاح رفتار" hint="پس از اعلام تخلف، فرصت جبران تعیین کنید.">
+      <FieldGroup
+        label="مهلت اصلاح رفتار"
+        hint="پس از اعلام تخلف، فرصت جبران تعیین کنید."
+        alignmentTag={alignmentTag(fieldHints.rectificationDays)}
+      >
         <TagPills
           value={value.rectificationDays}
           onChange={(v) => onChange({ ...value, rectificationDays: v, rectificationDaysCustom: v === 'other' ? value.rectificationDaysCustom : '' })}
@@ -312,7 +351,7 @@ export function OtherBreachPanel({
       </FieldGroup>
 
       {value.rectificationDays === 'other' ? (
-        <FieldGroup label="تعداد روز مجاز (سفارشی)" required>
+        <FieldGroup label="تعداد روز مجاز (سفارشی)" required alignmentTag={alignmentTag(fieldHints.rectificationDaysCustom)}>
           <FormTextInput
             value={value.rectificationDaysCustom}
             onChange={(v) => onChange({ ...value, rectificationDaysCustom: normalizeDigits(v) })}
