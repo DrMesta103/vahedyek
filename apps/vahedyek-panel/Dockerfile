@@ -14,6 +14,8 @@ ENV DATABASE_URL="postgres://postgres:postgres@172.19.0.8:5432/vahedyek"
 
 COPY . .
 
+RUN sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json
+
 RUN npm ci --include=dev && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/vahedyek-panel run build
