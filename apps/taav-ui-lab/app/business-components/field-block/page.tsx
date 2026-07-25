@@ -348,6 +348,84 @@ function MobileOrEmailInputToken() {
   );
 }
 
+function CalendarInputToken() {
+  const [value, setValue] = useState('');
+  const helperText = 'تاریخی که اقساط باید تا آن زمان به پایان برسند. تعداد و مبلغ اقساط بر اساس این تاریخ محاسبه می‌شود.';
+  const inputId = 'last-installment-date';
+  const selectedDate = '۱۴۰۵ / ۰۴ / ۰۹';
+  const hasValue = value.length > 0;
+
+  return (
+    <div dir="rtl" className="mx-auto w-full max-w-[920px]">
+      <TaavFieldBlock
+        label="تاریخ آخرین قسط"
+        required
+        htmlFor={inputId}
+        supportText={helperText}
+        wrapperClassName="group gap-1"
+        labelClassName="text-[16px] font-semibold text-[#555] group-focus-within:text-[#009da8]"
+        controlClassName="min-h-0"
+        supportClassName="text-[12px] leading-6 text-[#707070]"
+      >
+        <div className="relative h-[40px] w-full">
+          <input
+            id={inputId}
+            value=""
+            readOnly
+            aria-label="انتخاب تاریخ آخرین قسط"
+            onClick={() => setValue(selectedDate)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setValue(selectedDate);
+              }
+            }}
+            className="h-full w-full cursor-pointer rounded-[8px] border border-[#666] bg-white px-3 outline-none transition-colors hover:border-[#555] focus:border-[#009da8]"
+          />
+
+          <span
+            dir="ltr"
+            className="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center gap-[10px] text-[#8a8a8a]"
+          >
+            <span className="inline-flex h-[22px] w-[22px] items-center justify-center" aria-hidden>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M7 3v3M17 3v3M4 8.5h16M5.5 5h13A1.5 1.5 0 0 1 20 6.5v13A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5v-13A1.5 1.5 0 0 1 5.5 5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.45"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+
+            {hasValue ? <span className="h-6 w-px bg-[#d6d6d6]" aria-hidden /> : null}
+            {hasValue ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="پاک کردن تاریخ"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setValue('');
+                  }}
+                  className="pointer-events-auto inline-flex h-[22px] w-[22px] items-center justify-center rounded text-[#9a9a9a] transition-colors hover:bg-[#eeeeee] hover:text-[#666]"
+                >
+                  <X className="h-[17px] w-[17px]" strokeWidth={1.6} aria-hidden />
+                </button>
+                <span dir="ltr" className="whitespace-nowrap text-[16px] font-normal leading-5 text-[#555]">
+                  {value}
+                </span>
+              </>
+            ) : null}
+          </span>
+        </div>
+      </TaavFieldBlock>
+    </div>
+  );
+}
+
 function PercentageDisplayToken() {
   return (
     <div dir="rtl" className="mx-auto w-full max-w-[912px]">
@@ -527,6 +605,11 @@ export default function ComponentsFieldBlockDocPage() {
       <DocSection title="توکن موبایل یا ایمیل">
         <LightPreview>
           <MobileOrEmailInputToken />
+        </LightPreview>
+      </DocSection>
+      <DocSection title="توکن تاریخ آخرین قسط">
+        <LightPreview>
+          <CalendarInputToken />
         </LightPreview>
       </DocSection>
       <DocApiNote />

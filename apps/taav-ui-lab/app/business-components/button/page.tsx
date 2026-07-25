@@ -1,5 +1,6 @@
 'use client';
 
+import { Plus } from 'lucide-react';
 import { TaavButton } from '@repo/ui/taav/primitives';
 import { DocApiNote, DocCodeBlock, DocGuidelines, DocPageHeader, DocSection } from '@/components/lab/DocBlocks';
 import { DocPageShell } from '@/components/lab/DocPageShell';
@@ -15,6 +16,25 @@ function MainButtonPreview() {
         unsafeClassName="!h-[40px] !w-[299px] !rounded-[8px] !border-[#009c9f] !bg-[#009c9f] !text-white hover:!border-[#008b8e] hover:!bg-[#008b8e] hover:!shadow-[0_2px_6px_rgba(0,139,142,0.24)]"
       >
         ثبت فرایند
+      </TaavButton>
+    </div>
+  );
+}
+
+function AddActionButtonToken() {
+  return (
+    <div dir="rtl" data-taav-theme="light" className="flex min-h-[60px] w-full items-center justify-center bg-white p-2">
+      <TaavButton
+        width="auto"
+        size="md"
+        variant="outline"
+        tone="brand"
+        unsafeClassName="!h-[40px] !min-w-0 !rounded-[8px] !border-[#009c9f] !bg-white !px-[10px] !text-[#009c9f] hover:!border-[#008b8e] hover:!bg-[#f2fbfb] hover:!text-[#008b8e]"
+      >
+        <span className="flex items-center justify-center gap-[6px] whitespace-nowrap">
+          <Plus aria-hidden="true" className="size-[22px] stroke-[1.5]" />
+          <span>افزودن مرحله</span>
+        </span>
       </TaavButton>
     </div>
   );
@@ -38,6 +58,10 @@ export default function ComponentsButtonDocPage() {
           <MainButtonPreview />
         </div>
       </section>
+
+      <DocSection title="توکن دکمه افزودن">
+        <AddActionButtonToken />
+      </DocSection>
 
       <DocApiNote />
 

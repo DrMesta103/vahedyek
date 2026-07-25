@@ -37,8 +37,12 @@ function BadgeTokenGallery() {
 function SaleDeliveryStatusToken() {
   return (
     <div dir="rtl" className="flex flex-wrap justify-center gap-3 bg-[var(--taav-bg)] p-5">
-      <TaavBadge tone="danger" variant="soft" size="md" iconStart={<XCircle className="h-4 w-4" aria-hidden="true" />}>فروخته نشده</TaavBadge>
-      <TaavBadge tone="warning" variant="soft" size="md" iconStart={<Clock3 className="h-4 w-4" aria-hidden="true" />}>تحویل داده نشده</TaavBadge>
+      <TaavBadge tone="danger" variant="soft" size="md" iconStart={<XCircle className="h-4 w-4" aria-hidden="true" />} unsafeClassName="border-transparent">
+        فروخته نشده
+      </TaavBadge>
+      <TaavBadge tone="warning" variant="soft" size="md" iconStart={<Clock3 className="h-4 w-4" aria-hidden="true" />} unsafeClassName="border-transparent">
+        تحویل داده نشده
+      </TaavBadge>
     </div>
   );
 }

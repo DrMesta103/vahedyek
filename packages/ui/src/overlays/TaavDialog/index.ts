@@ -9,5 +9,11 @@ export {
   TaavDialogPortal,
   TaavDialogTitle,
   TaavDialogTrigger,
+  type TaavDialogProps,
   type TaavDialogContentProps,
 } from './TaavDialog';
+export type {
+  TaavDialogFooterVariant,
+  TaavDialogShellSize,
+  TaavDialogShellVariant,
+} from './taav-dialog-shell.variants';

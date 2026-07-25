@@ -91,7 +91,14 @@ const BUSINESS_COPY: Record<string, { label: string; description: string }> = {
 
 export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های کسب‌وکار', sectionLabel = 'کسب‌وکار', sectionMode = 'business' }: { sectionTitle?: string; sectionLabel?: string; sectionMode?: 'business' | 'components' }) {
   const items = sectionMode === 'components'
-    ? [...BUSINESS_ITEMS.filter((item) => item.href !== '/business/section-toolbar-card' && item.href !== '/business/communication-channels'), { href: '/business-components/choice-chip', label: 'chips', badge: 'TaavChoiceChipGroup', description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده' }, { href: '/business-components/switch', label: 'switch', badge: 'TaavActivationSwitch', description: 'کنترل دوحالته برای فعال‌سازی و غیرفعال‌سازی تنظیمات' }, { href: '/business-components/link', label: 'link', badge: 'TaavDetailsLink', description: 'لینک جزئیات برای هدایت کاربر به اطلاعات یا تنظیمات مرتبط' }, { href: '/business-components/expanded', label: 'expanded', badge: 'TaavExpanded', description: 'ردیف بازشونده برای نمایش یا پنهان‌کردن جزئیات' }, { href: '/business-components/button', label: 'button', badge: 'TaavButton', description: 'دکمه اصلی برای اجرای یک اقدام مشخص در جریان کاربر' }]
+    ? [...BUSINESS_ITEMS.filter((item) => ![
+      '/business/section-toolbar-card',
+      '/business/communication-channels',
+      '/business/currency-input',
+      '/business/percentage-input',
+      '/business/mobile-number-input',
+      '/business/ownership-card',
+    ].includes(item.href)), { href: '/business-components/choice-chip', label: 'chips', badge: 'TaavChoiceChipGroup', description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده' }, { href: '/business-components/switch', label: 'switch', badge: 'TaavActivationSwitch', description: 'کنترل دوحالته برای فعال‌سازی و غیرفعال‌سازی تنظیمات' }, { href: '/business-components/link', label: 'link', badge: 'TaavDetailsLink', description: 'لینک جزئیات برای هدایت کاربر به اطلاعات یا تنظیمات مرتبط' }, { href: '/business-components/expanded', label: 'expanded', badge: 'TaavExpanded', description: 'ردیف بازشونده برای نمایش یا پنهان‌کردن جزئیات' }, { href: '/business-components/button', label: 'button', badge: 'TaavButton', description: 'دکمه اصلی برای اجرای یک اقدام مشخص در جریان کاربر' }, { href: '/business-components/divider', label: 'divider', badge: 'TaavDivider', description: 'جداکننده افقی برای تفکیک بخش‌های محتوایی و فرم‌ها' }, { href: '/business-components/dialog', label: 'دیالوگ', badge: 'TaavDialog', description: 'کامپوننت پایه پنجره محاوره‌ای با محتوای قابل تزریق، overlay و دکمه‌های پایین' }]
     : BUSINESS_ITEMS;
 
   return (
@@ -120,7 +127,7 @@ export function BusinessOverviewPage({ sectionTitle = 'کامپوننت‌های
               : sectionMode === 'components' && item.href === '/business/field-block'
                 ? { ...item, href: '/business-components/field-block', label: 'inputs', badge: 'TaavFieldBlock' }
               : sectionMode === 'components' && item.href === '/business/form-step-indicator'
-                  ? { ...item, label: 'stepper' }
+                  ? { ...item, href: '/business-components/stepper', label: 'stepper' }
               : sectionMode === 'components' && item.href === '/business/module-link-grid'
                   ? { ...item, label: 'nextpage' }
               : sectionMode === 'components' && item.href === '/business/icon-option-selector'
