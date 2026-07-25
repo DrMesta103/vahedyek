@@ -464,6 +464,26 @@ export const BUSINESS_RECOMMENDATION_CARD_PROPS: DocPropRow[] = [
   { name: 'size / width / tone / variant / themeMode', type: 'enum', description: 'ظاهر و تم' },
 ];
 
+export const BUSINESS_SECTION_TOOLBAR_CARD_PROPS: DocPropRow[] = [
+  { name: 'title', type: 'string', required: true, description: 'عنوان اصلی سربرگ مدیریتی' },
+  { name: 'description', type: 'string', description: 'توضیح کوتاه زیر عنوان' },
+  { name: 'icon', type: 'ReactNode', description: 'آیکن بخش در باکس روشن' },
+  { name: 'showArrow', type: 'boolean', defaultValue: 'true', description: 'نمایش فلش ناوبری' },
+  { name: 'onArrowClick', type: '() => void', description: 'رفتار کلیک روی فلش' },
+  { name: 'href', type: 'string', description: 'لینک دسترسی برای فلش' },
+  {
+    name: 'search',
+    type: '{ value?: string; placeholder?: string; onChange?: (value: string) => void; }',
+    description: 'بخش جستجو درون کارت',
+  },
+  {
+    name: 'action',
+    type: '{ label: string; icon?: ReactNode; onClick?: () => void; disabled?: boolean; }',
+    description: 'اکشن کمکی کارت',
+  },
+  { name: 'className', type: 'string', description: 'افزودن class به shell کارت' },
+];
+
 export const STATS_CARD_PROPS: DocPropRow[] = [
   { name: 'title / value / description', type: 'ReactNode', description: 'محتوای metric' },
   { name: 'tone', type: "'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info' | 'purple'", defaultValue: 'neutral', description: 'تن رنگ' },

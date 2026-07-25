@@ -1,6 +1,6 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.js';
 import * as react_jsx_runtime from 'react/jsx-runtime';
-import { ReactNode, HTMLAttributes } from 'react';
+import { ReactNode, HTMLAttributes, ButtonHTMLAttributes, InputHTMLAttributes } from 'react';
 import 'clsx';
 
 type TaavActivationSwitchValue = 'active' | 'inactive';
@@ -57,6 +57,230 @@ type TaavBusinessIntroCardProps = {
     unsafeClassName?: string;
 } & Omit<HTMLAttributes<HTMLElement>, 'title'>;
 declare function TaavBusinessIntroCard({ title, description, eyebrow, badge, footnote, icon, actionIcon, actionLabel, href, onAction, disabled, loading, size, width, tone, variant, themeMode, layout, headingLevel, showPattern, children, wrapperClassName, contentClassName, actionClassName, unsafeClassName, ...rest }: TaavBusinessIntroCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessHeaderCardVariant = 'toggleWithLink' | 'toggle' | 'action' | 'actionWithSearch' | 'navigation';
+type TaavBusinessHeaderCardToggleLabels = {
+    enabled?: ReactNode;
+    disabled?: ReactNode;
+};
+type TaavBusinessHeaderCardAction = {
+    label: ReactNode;
+    icon?: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+};
+type TaavBusinessHeaderCardDetailLink = {
+    label: ReactNode;
+    href?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+};
+type TaavBusinessHeaderCardSearch = {
+    value?: string;
+    placeholder?: string;
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+};
+type TaavBusinessHeaderCardProps = {
+    title: ReactNode;
+    description?: ReactNode;
+    icon?: ReactNode;
+    variant?: TaavBusinessHeaderCardVariant;
+    showArrow?: boolean;
+    href?: string;
+    onNavigate?: () => void;
+    onClick?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    enabled?: boolean;
+    defaultEnabled?: boolean;
+    onToggle?: (enabled: boolean) => void;
+    toggleLabels?: TaavBusinessHeaderCardToggleLabels;
+    action?: TaavBusinessHeaderCardAction;
+    detailLink?: TaavBusinessHeaderCardDetailLink;
+    search?: TaavBusinessHeaderCardSearch;
+    arrowTooltipDefaultOpen?: boolean;
+    className?: string;
+    wrapperClassName?: string;
+    contentClassName?: string;
+    actionClassName?: string;
+    searchClassName?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onClick' | 'onToggle' | 'children'>;
+declare function TaavBusinessHeaderCard({ title, description, icon, variant, showArrow, href, onNavigate, onClick, disabled, loading, themeMode, enabled, defaultEnabled, onToggle, toggleLabels, action, detailLink, search, arrowTooltipDefaultOpen, className, wrapperClassName, contentClassName, actionClassName, searchClassName, ...rest }: TaavBusinessHeaderCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessSectionToolbarCardProps = {
+    title: string;
+    description?: string;
+    icon?: ReactNode;
+    showArrow?: boolean;
+    onArrowClick?: () => void;
+    href?: string;
+    search?: {
+        value?: string;
+        placeholder?: string;
+        onChange?: (value: string) => void;
+    };
+    action?: {
+        label: string;
+        icon?: ReactNode;
+        onClick?: () => void;
+        disabled?: boolean;
+    };
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title'>;
+declare function TaavBusinessSectionToolbarCard({ title, description, icon, showArrow, onArrowClick, href, search, action, className, ...rest }: TaavBusinessSectionToolbarCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessProfileSummaryCardProps = {
+    title: ReactNode;
+    description?: ReactNode;
+    icon?: ReactNode;
+    href?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    className?: string;
+    children?: ReactNode;
+} & Omit<HTMLAttributes<HTMLElement>, 'className' | 'title' | 'onClick' | 'children'>;
+declare function TaavBusinessProfileSummaryCard({ title, description, icon, href, onClick, disabled, className, children, ...rest }: TaavBusinessProfileSummaryCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessOwnershipValue = 'individual' | 'legal';
+type TaavBusinessOwnershipCardProps = {
+    title?: ReactNode;
+    description?: ReactNode;
+    value?: TaavBusinessOwnershipValue;
+    defaultValue?: TaavBusinessOwnershipValue;
+    onValueChange?: (value: TaavBusinessOwnershipValue) => void;
+    individualLabel?: ReactNode;
+    legalLabel?: ReactNode;
+    individualIcon?: ReactNode;
+    legalIcon?: ReactNode;
+    infoLabel?: string;
+    onInfoClick?: () => void;
+    continueLabel?: string;
+    continueHref?: string;
+    onContinue?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onChange'>;
+declare function TaavBusinessOwnershipCard({ title, description, value, defaultValue, onValueChange, individualLabel, legalLabel, individualIcon, legalIcon, infoLabel, onInfoClick, continueLabel, continueHref, onContinue, disabled, loading, className, ...rest }: TaavBusinessOwnershipCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessFormDialogField = {
+    id: string;
+    label: ReactNode;
+    value?: string;
+    defaultValue?: string;
+    placeholder?: string;
+    helperText?: ReactNode;
+    required?: boolean;
+    multiline?: boolean;
+    onChange?: (value: string) => void;
+};
+type TaavBusinessFormDialogCardProps = {
+    title: ReactNode;
+    description?: ReactNode;
+    fields: TaavBusinessFormDialogField[];
+    secondaryToggle?: {
+        selected?: boolean;
+        defaultSelected?: boolean;
+        label?: ReactNode;
+        onChange?: (selected: boolean) => void;
+    };
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onChange'>;
+declare function TaavBusinessFormDialogCard({ title, description, fields, secondaryToggle, confirmLabel, cancelLabel, onConfirm, onCancel, disabled, loading, themeMode, className, ...rest }: TaavBusinessFormDialogCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessOwnerCardProps = {
+    title?: ReactNode;
+    description?: ReactNode;
+    ownerName: ReactNode;
+    phone?: ReactNode;
+    secondaryText?: ReactNode;
+    avatar?: ReactNode;
+    editLabel?: string;
+    callLabel?: string;
+    phoneBadge?: ReactNode;
+    onEdit?: () => void;
+    onCall?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title'>;
+declare function TaavBusinessOwnerCard({ title, description, ownerName, phone, secondaryText, avatar, editLabel, callLabel, phoneBadge, onEdit, onCall, disabled, loading, themeMode, className, ...rest }: TaavBusinessOwnerCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavFormStep = {
+    id: string;
+    label: ReactNode;
+    description?: ReactNode;
+};
+type TaavFormStepIndicatorProps = {
+    steps: TaavFormStep[];
+    activeStep?: string | number;
+    defaultActiveStep?: string | number;
+    completedSteps?: string[];
+    intro?: ReactNode;
+    onStepChange?: (stepId: string, index: number) => void;
+    clickable?: boolean;
+    disabled?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'onChange'>;
+declare function TaavFormStepIndicator({ steps, activeStep, defaultActiveStep, completedSteps, intro, onStepChange, clickable, disabled, themeMode, className, ...rest }: TaavFormStepIndicatorProps): react_jsx_runtime.JSX.Element;
+
+type TaavCommunicationChannel = {
+    id: string;
+    label: ReactNode;
+    content?: ReactNode;
+    emptyText?: ReactNode;
+    disabled?: boolean;
+};
+type TaavCommunicationChannelsProps = {
+    channels?: TaavCommunicationChannel[];
+    expandedId?: string;
+    defaultExpandedId?: string;
+    onExpandedChange?: (channelId: string) => void;
+    onBack?: () => void;
+    backLabel?: string;
+    emptyText?: ReactNode;
+    themeMode?: 'auto' | 'light' | 'dark';
+    disabled?: boolean;
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'onChange'>;
+declare function TaavCommunicationChannels({ channels, expandedId, defaultExpandedId, onExpandedChange, onBack, backLabel, emptyText, themeMode, disabled, className, ...rest }: TaavCommunicationChannelsProps): react_jsx_runtime.JSX.Element;
+
+type TaavCommunicationChannelsCardItem = {
+    id: string;
+    label: ReactNode;
+    icon?: ReactNode;
+    value?: ReactNode;
+};
+type TaavCommunicationChannelsCardProps = {
+    title?: ReactNode;
+    primaryLabel?: ReactNode;
+    primaryDescription?: ReactNode;
+    primaryEnabled?: boolean;
+    onPrimaryChange?: (enabled: boolean) => void;
+    postalCode?: ReactNode;
+    mapLabel?: ReactNode;
+    onMapClick?: () => void;
+    location?: ReactNode;
+    phoneBadge?: ReactNode;
+    items?: TaavCommunicationChannelsCardItem[];
+    onMenuClick?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onChange'>;
+declare function TaavCommunicationChannelsCard({ title, primaryLabel, primaryDescription, primaryEnabled, onPrimaryChange, postalCode, mapLabel, onMapClick, location, phoneBadge, items, onMenuClick, disabled, loading, themeMode, className, ...rest }: TaavCommunicationChannelsCardProps): react_jsx_runtime.JSX.Element;
 
 type TaavBusinessRecommendationCardSize = 'sm' | 'md' | 'lg';
 type TaavBusinessRecommendationCardWidth = 'normal' | 'wide' | 'full';
@@ -175,6 +399,29 @@ type TaavBusinessSidebarProps = {
 } & Omit<HTMLAttributes<HTMLElement>, 'className'>;
 declare function TaavBusinessSidebar({ user, tenant, quickActions, items, activeItemId, version, width, variant, placement: placementProp, collapsed: collapsedProp, defaultCollapsed, collapsible, lockCollapsed, loading, navPath, showNavPath, children, shellClassName, contentClassName, navPathClassName, onNavigate, onTenantSwitch, onTenantPanelClick, onLogout, onCollapsedChange, className, ...props }: TaavBusinessSidebarProps): react_jsx_runtime.JSX.Element;
 
+type TaavMobileNumberInputCardProps = {
+    title?: ReactNode;
+    description?: ReactNode;
+    label?: ReactNode;
+    placeholder?: string;
+    value?: string;
+    defaultValue?: string;
+    onValueChange?: (value: string) => void;
+    helperText?: ReactNode;
+    error?: ReactNode;
+    required?: boolean;
+    disabled?: boolean;
+    readOnly?: boolean;
+    autoFocus?: boolean;
+    loading?: boolean;
+    maxLength?: number;
+    icon?: ReactNode;
+    className?: string;
+    wrapperClassName?: string;
+    inputClassName?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onChange'>;
+declare function TaavMobileNumberInputCard({ title, description, label, placeholder, value, defaultValue, onValueChange, helperText, error, required, disabled, readOnly, autoFocus, loading, maxLength, icon, className, wrapperClassName, inputClassName, ...rest }: TaavMobileNumberInputCardProps): react_jsx_runtime.JSX.Element;
+
 type TaavDetailsLinkSize = 'sm' | 'md' | 'lg';
 type TaavDetailsLinkTone = 'neutral' | 'brand' | 'info';
 type TaavDetailsLinkUnderline = 'always' | 'hover' | 'none';
@@ -187,11 +434,12 @@ type TaavDetailsLinkProps = {
     tone?: TaavDetailsLinkTone;
     size?: TaavDetailsLinkSize;
     underline?: TaavDetailsLinkUnderline;
+    hoverEffect?: boolean;
     ariaLabel?: string;
     wrapperClassName?: string;
     unsafeClassName?: string;
 };
-declare function TaavDetailsLink({ children, href, onClick, disabled, icon, tone, size, underline, ariaLabel, wrapperClassName, unsafeClassName, }: TaavDetailsLinkProps): react_jsx_runtime.JSX.Element;
+declare function TaavDetailsLink({ children, href, onClick, disabled, icon, tone, size, underline, hoverEffect, ariaLabel, wrapperClassName, unsafeClassName, }: TaavDetailsLinkProps): react_jsx_runtime.JSX.Element;
 
 type TaavModuleCardStatus = 'default' | 'active' | 'complete' | 'incomplete' | 'locked' | 'disabled' | 'warning' | 'error';
 type TaavModuleCardVariant = 'default' | 'setup' | 'imageHeader' | 'compact' | 'flat';
@@ -251,4 +499,234 @@ type TaavModuleCardGridItemProps = {
 declare function TaavModuleCardGrid({ columns, gap, density, responsive, children, className, ...rest }: TaavModuleCardGridProps): react_jsx_runtime.JSX.Element;
 declare function TaavModuleCardGridItem({ span, responsive, children, className, ...rest }: TaavModuleCardGridItemProps): react_jsx_runtime.JSX.Element;
 
-export { DEFAULT_BUSINESS_NAV_PATH, DEFAULT_BUSINESS_SIDEBAR_NAV_PATH, TaavActivationSwitch, type TaavActivationSwitchProps, type TaavActivationSwitchSize, type TaavActivationSwitchTone, type TaavActivationSwitchValue, TaavBusinessIntroCard, type TaavBusinessIntroCardHeadingLevel, type TaavBusinessIntroCardLayout, type TaavBusinessIntroCardProps, type TaavBusinessIntroCardSize, type TaavBusinessIntroCardThemeMode, type TaavBusinessIntroCardTone, type TaavBusinessIntroCardVariant, type TaavBusinessIntroCardWidth, type TaavBusinessNavPathItem, TaavBusinessRecommendationCard, type TaavBusinessRecommendationCardActivationValue, type TaavBusinessRecommendationCardProps, type TaavBusinessRecommendationCardSize, type TaavBusinessRecommendationCardThemeMode, type TaavBusinessRecommendationCardTone, type TaavBusinessRecommendationCardVariant, type TaavBusinessRecommendationCardWidth, TaavBusinessSidebar, type TaavBusinessSidebarItem, type TaavBusinessSidebarNavPathItem, type TaavBusinessSidebarPlacement, type TaavBusinessSidebarProps, type TaavBusinessSidebarQuickAction, type TaavBusinessSidebarTenant, type TaavBusinessSidebarTenantStatus, type TaavBusinessSidebarUser, type TaavBusinessSidebarVariant, type TaavBusinessSidebarWidth, TaavDetailsLink, type TaavDetailsLinkProps, type TaavDetailsLinkSize, type TaavDetailsLinkTone, type TaavDetailsLinkUnderline, TaavModuleCard, type TaavModuleCardAlign, type TaavModuleCardDirection, TaavModuleCardGrid, type TaavModuleCardGridColumns, type TaavModuleCardGridDensity, type TaavModuleCardGridGap, TaavModuleCardGridItem, type TaavModuleCardGridItemProps, type TaavModuleCardGridProps, type TaavModuleCardGridSpan, type TaavModuleCardHeaderPattern, type TaavModuleCardProps, type TaavModuleCardSize, type TaavModuleCardStatus, type TaavModuleCardThemeMode, type TaavModuleCardTone, type TaavModuleCardVariant, type TaavModuleCardWidth };
+type TaavBusinessModuleLinkItem = {
+    id: string;
+    title: ReactNode;
+    description?: ReactNode;
+    icon?: ReactNode;
+    href?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    ariaLabel?: string;
+};
+type TaavBusinessModuleLinkProps = {
+    item: TaavBusinessModuleLinkItem;
+} & Omit<HTMLAttributes<HTMLElement>, 'onClick' | 'children'>;
+declare function TaavBusinessModuleLink({ item, className: customClassName, ...rest }: TaavBusinessModuleLinkProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessModuleLinkGridProps = {
+    items: TaavBusinessModuleLinkItem[];
+    columns?: 1 | 2;
+    gap?: 'sm' | 'md' | 'lg';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick'>;
+declare function TaavBusinessModuleLinkGrid({ items, columns, gap, className, ...rest }: TaavBusinessModuleLinkGridProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessAccountInfoCardProps = {
+    bankName?: ReactNode;
+    contractLabel?: ReactNode;
+    logo?: ReactNode;
+    formattedAccountNumber?: ReactNode;
+    accountNumber?: ReactNode;
+    iban?: ReactNode;
+    accountLabel?: ReactNode;
+    ibanLabel?: ReactNode;
+    displayLabel?: ReactNode;
+    displayDescription?: ReactNode;
+    showInContract?: boolean;
+    onShowInContractChange?: (value: boolean) => void;
+    ownerLabel?: ReactNode;
+    ownerName?: ReactNode;
+    ownerNames?: ReactNode[];
+    onMenuClick?: () => void;
+    onRefresh?: () => void;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    disabled?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title' | 'onChange'>;
+declare function TaavBusinessAccountInfoCard({ bankName, contractLabel, logo, formattedAccountNumber, accountNumber, iban, accountLabel, ibanLabel, displayLabel, displayDescription, showInContract, onShowInContractChange, ownerLabel, ownerName, ownerNames, onMenuClick, onRefresh, onEdit, onDelete, disabled, themeMode, className, ...rest }: TaavBusinessAccountInfoCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessIconOption = {
+    value: string;
+    label: ReactNode;
+    icon: ReactNode;
+    disabled?: boolean;
+};
+type TaavBusinessIconChoiceGroupProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> & {
+    items: TaavBusinessIconOption[];
+    selected?: string;
+    defaultSelected?: string;
+    onSelectedChange?: (value: string) => void;
+    ariaLabel?: string;
+    themeMode?: 'auto' | 'light' | 'dark';
+};
+declare function TaavBusinessIconChoiceGroup({ items, selected, defaultSelected, onSelectedChange, ariaLabel, themeMode, className, ...rest }: TaavBusinessIconChoiceGroupProps): react_jsx_runtime.JSX.Element;
+
+type TaavBusinessToggleCardVariant = 'simple' | 'action';
+type TaavBusinessToggleCardProps = Omit<HTMLAttributes<HTMLElement>, 'title'> & {
+    title?: ReactNode;
+    description?: ReactNode;
+    checked?: boolean;
+    defaultChecked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
+    variant?: TaavBusinessToggleCardVariant;
+    icon?: ReactNode;
+    onAction?: ButtonHTMLAttributes<HTMLButtonElement>['onClick'];
+    actionLabel?: string;
+    disabled?: boolean;
+    themeMode?: 'auto' | 'light' | 'dark';
+};
+declare function TaavBusinessToggleCard({ title, description, checked, defaultChecked, onCheckedChange, variant, icon, onAction, actionLabel, disabled, themeMode, className, ...rest }: TaavBusinessToggleCardProps): react_jsx_runtime.JSX.Element;
+
+type SharedProps = {
+    label?: ReactNode;
+    helperText?: ReactNode;
+    error?: ReactNode;
+    required?: boolean;
+    disabled?: boolean;
+    readOnly?: boolean;
+    onValueChange?: (value: string) => void;
+    className?: string;
+};
+type TaavBankCardNumberInputProps = SharedProps & {
+    value?: string;
+    defaultValue?: string;
+    autoFocus?: boolean;
+};
+declare function TaavBankCardNumberInput({ value, defaultValue, onValueChange, label, helperText, error, required, disabled, readOnly, autoFocus, className }: TaavBankCardNumberInputProps): react_jsx_runtime.JSX.Element;
+type TaavShebaNumberInputProps = SharedProps & {
+    value?: string;
+    defaultValue?: string;
+    autoFocus?: boolean;
+    placeholder?: string;
+    showPrefixOnFocus?: boolean;
+};
+declare function TaavShebaNumberInput({ value, defaultValue, onValueChange, label, helperText, error, required, disabled, readOnly, autoFocus, placeholder, showPrefixOnFocus, className }: TaavShebaNumberInputProps): react_jsx_runtime.JSX.Element;
+type TaavBankAccountNumberInputProps = SharedProps & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onChange' | 'className'> & {
+    value?: string;
+    defaultValue?: string;
+};
+declare function TaavBankAccountNumberInput({ value, defaultValue, onValueChange, label, helperText, error, required, disabled, readOnly, className, ...props }: TaavBankAccountNumberInputProps): react_jsx_runtime.JSX.Element;
+
+type TaavBankAccountInfoInputCardProps = {
+    title?: ReactNode;
+    description?: ReactNode;
+    cardNumber?: TaavBankCardNumberInputProps;
+    shebaNumber?: TaavShebaNumberInputProps;
+    accountNumber?: TaavBankAccountNumberInputProps;
+    variant?: 'compact' | 'showcase';
+    themeMode?: 'auto' | 'light' | 'dark';
+    className?: string;
+} & Omit<HTMLAttributes<HTMLElement>, 'title'>;
+declare function TaavBankAccountInfoInputCard({ title, description, cardNumber, shebaNumber, accountNumber, variant, themeMode, className, ...rest }: TaavBankAccountInfoInputCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavProjectStructureCardProps = {
+    token?: 'floor' | 'unit';
+    title: string;
+    subtitle?: string;
+    locationText?: string;
+    headerImage?: string;
+    headerLabel?: string;
+    usageTitle?: string;
+    unitAreaText?: string;
+    usageTypes?: Array<{
+        key: string;
+        label: string;
+        tone?: 'default' | 'orange' | 'blue' | 'teal' | 'purple';
+    }>;
+    activeUsageType?: string;
+    statusItems?: Array<{
+        key: string;
+        label: string;
+        tone?: 'warning' | 'danger';
+        icon?: 'clock' | 'close';
+    }>;
+    onUsageTypeClick?: (usageType: NonNullable<TaavProjectStructureCardProps['usageTypes']>[number]) => void;
+    showMenu?: boolean;
+    onMenuClick?: () => void;
+    onCardClick?: () => void;
+    menuActions?: TaavProjectStructureCardAction[];
+    showNavigate?: boolean;
+    onNavigate?: () => void;
+    progressReport?: {
+        title: string;
+        description?: string;
+        moreLabel?: string;
+        onMoreClick?: () => void;
+        moreHint?: string;
+        statusLabel?: string;
+        status?: 'incomplete' | 'complete' | 'warning' | 'neutral';
+        onClick?: () => void;
+    };
+    disabled?: boolean;
+    loading?: boolean;
+    className?: string;
+};
+type TaavProjectStructureCardAction = {
+    key: string;
+    label: string;
+    icon?: 'edit' | 'copy' | 'delete' | 'custom';
+    onClick?: () => void;
+    disabled?: boolean;
+};
+declare function TaavProjectStructureCard({ token, title, subtitle, locationText, headerImage, headerLabel, usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, statusItems, showMenu, onMenuClick, onCardClick, menuActions, showNavigate, onNavigate, progressReport, disabled, loading, className }: TaavProjectStructureCardProps): react_jsx_runtime.JSX.Element;
+
+type TaavPlateFormProps = {
+    mainPlateValue?: string;
+    subPlateValue?: string;
+    subPlateValues?: string[];
+    onMainPlateChange?: (value: string) => void;
+    onSubPlateChange?: (value: string) => void;
+    onSubPlateValuesChange?: (values: string[]) => void;
+    mainPlateLabel?: string;
+    subPlateLabel?: string;
+    mainPlatePlaceholder?: string;
+    subPlatePlaceholder?: string;
+    mainPlateHelperText?: string;
+    subPlateHelperText?: string;
+    maxLength?: number;
+    required?: boolean;
+    disabled?: boolean;
+    className?: string;
+};
+declare function TaavPlateForm({ mainPlateValue, subPlateValue, subPlateValues, onMainPlateChange, onSubPlateChange, onSubPlateValuesChange, mainPlateLabel, subPlateLabel, mainPlatePlaceholder, subPlatePlaceholder, mainPlateHelperText, subPlateHelperText, maxLength, required, disabled, className, }: TaavPlateFormProps): react_jsx_runtime.JSX.Element;
+
+type TaavProjectTechnicalInfoFormProps = {
+    titleValue?: string;
+    descriptionValue?: string;
+    onTitleChange?: (value: string) => void;
+    onDescriptionChange?: (value: string) => void;
+    titleLabel?: string;
+    descriptionLabel?: string;
+    titlePlaceholder?: string;
+    descriptionPlaceholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    formIntro?: string;
+    className?: string;
+};
+declare function TaavProjectTechnicalInfoForm({ titleValue, descriptionValue, onTitleChange, onDescriptionChange, titleLabel, descriptionLabel, titlePlaceholder, descriptionPlaceholder, required, disabled, formIntro, className, }: TaavProjectTechnicalInfoFormProps): react_jsx_runtime.JSX.Element;
+
+type TaavApprovalUser = {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+};
+type TaavApprovalUserFormProps = {
+    users: TaavApprovalUser[];
+    selectedUserId?: string;
+    searchValue?: string;
+    onSearchChange?: (value: string) => void;
+    onUserSelect?: (userId: string) => void;
+    onAddUser?: () => void;
+    addUserLabel?: string;
+    searchPlaceholder?: string;
+    emptyText?: string;
+    disabled?: boolean;
+    className?: string;
+};
+declare function TaavApprovalUserForm({ users, selectedUserId, searchValue, onSearchChange, onUserSelect, onAddUser, addUserLabel, searchPlaceholder, emptyText, disabled, className, }: TaavApprovalUserFormProps): react_jsx_runtime.JSX.Element;
+
+export { DEFAULT_BUSINESS_NAV_PATH, DEFAULT_BUSINESS_SIDEBAR_NAV_PATH, TaavActivationSwitch, type TaavActivationSwitchProps, type TaavActivationSwitchSize, type TaavActivationSwitchTone, type TaavActivationSwitchValue, type TaavApprovalUser, TaavApprovalUserForm, type TaavApprovalUserFormProps, TaavBankAccountInfoInputCard, type TaavBankAccountInfoInputCardProps, TaavBankAccountNumberInput, type TaavBankAccountNumberInputProps, TaavBankCardNumberInput, type TaavBankCardNumberInputProps, TaavBusinessAccountInfoCard, type TaavBusinessAccountInfoCardProps, TaavBusinessFormDialogCard, type TaavBusinessFormDialogCardProps, type TaavBusinessFormDialogField, TaavBusinessHeaderCard, type TaavBusinessHeaderCardAction, type TaavBusinessHeaderCardDetailLink, type TaavBusinessHeaderCardProps, type TaavBusinessHeaderCardSearch, type TaavBusinessHeaderCardToggleLabels, type TaavBusinessHeaderCardVariant, TaavBusinessIconChoiceGroup, type TaavBusinessIconChoiceGroupProps, type TaavBusinessIconOption, TaavBusinessIntroCard, type TaavBusinessIntroCardHeadingLevel, type TaavBusinessIntroCardLayout, type TaavBusinessIntroCardProps, type TaavBusinessIntroCardSize, type TaavBusinessIntroCardThemeMode, type TaavBusinessIntroCardTone, type TaavBusinessIntroCardVariant, type TaavBusinessIntroCardWidth, TaavBusinessModuleLink, TaavBusinessModuleLinkGrid, type TaavBusinessModuleLinkGridProps, type TaavBusinessModuleLinkItem, type TaavBusinessModuleLinkProps, type TaavBusinessNavPathItem, TaavBusinessOwnerCard, type TaavBusinessOwnerCardProps, TaavBusinessOwnershipCard, type TaavBusinessOwnershipCardProps, type TaavBusinessOwnershipValue, TaavBusinessProfileSummaryCard, type TaavBusinessProfileSummaryCardProps, TaavBusinessRecommendationCard, type TaavBusinessRecommendationCardActivationValue, type TaavBusinessRecommendationCardProps, type TaavBusinessRecommendationCardSize, type TaavBusinessRecommendationCardThemeMode, type TaavBusinessRecommendationCardTone, type TaavBusinessRecommendationCardVariant, type TaavBusinessRecommendationCardWidth, TaavBusinessSectionToolbarCard, type TaavBusinessSectionToolbarCardProps, TaavBusinessSidebar, type TaavBusinessSidebarItem, type TaavBusinessSidebarNavPathItem, type TaavBusinessSidebarPlacement, type TaavBusinessSidebarProps, type TaavBusinessSidebarQuickAction, type TaavBusinessSidebarTenant, type TaavBusinessSidebarTenantStatus, type TaavBusinessSidebarUser, type TaavBusinessSidebarVariant, type TaavBusinessSidebarWidth, TaavBusinessToggleCard, type TaavBusinessToggleCardProps, type TaavBusinessToggleCardVariant, type TaavCommunicationChannel, TaavCommunicationChannels, TaavCommunicationChannelsCard, type TaavCommunicationChannelsCardItem, type TaavCommunicationChannelsCardProps, type TaavCommunicationChannelsProps, TaavDetailsLink, type TaavDetailsLinkProps, type TaavDetailsLinkSize, type TaavDetailsLinkTone, type TaavDetailsLinkUnderline, type TaavFormStep, TaavFormStepIndicator, type TaavFormStepIndicatorProps, TaavMobileNumberInputCard, type TaavMobileNumberInputCardProps, TaavModuleCard, type TaavModuleCardAlign, type TaavModuleCardDirection, TaavModuleCardGrid, type TaavModuleCardGridColumns, type TaavModuleCardGridDensity, type TaavModuleCardGridGap, TaavModuleCardGridItem, type TaavModuleCardGridItemProps, type TaavModuleCardGridProps, type TaavModuleCardGridSpan, type TaavModuleCardHeaderPattern, type TaavModuleCardProps, type TaavModuleCardSize, type TaavModuleCardStatus, type TaavModuleCardThemeMode, type TaavModuleCardTone, type TaavModuleCardVariant, type TaavModuleCardWidth, TaavPlateForm, type TaavPlateFormProps, TaavProjectStructureCard, type TaavProjectStructureCardAction, type TaavProjectStructureCardProps, TaavProjectTechnicalInfoForm, type TaavProjectTechnicalInfoFormProps, TaavShebaNumberInput, type TaavShebaNumberInputProps };

@@ -1,6 +1,6 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.js';
 import * as react_jsx_runtime from 'react/jsx-runtime';
-import { ReactNode, ButtonHTMLAttributes, HTMLAttributes } from 'react';
+import { ReactNode, ButtonHTMLAttributes, HTMLAttributes, ComponentPropsWithoutRef } from 'react';
 import { b as TaavBadgeTone, a as TaavBadgeSize, T as TaavBadgeShape, d as TaavBadgeWidth, c as TaavBadgeVariant } from './taav-badge.variants-DM1buIc6.js';
 import 'clsx';
 
@@ -63,13 +63,20 @@ type TaavTooltipProps = {
     side?: TaavTooltipSide;
     align?: TaavTooltipAlign;
     delayDuration?: number;
+    sideOffset?: number;
+    collisionPadding?: number;
+    open?: boolean;
+    defaultOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    showArrow?: boolean;
     children: ReactNode;
     contentClassName?: string;
+    arrowClassName?: string;
 };
 declare function TaavTooltipProvider({ children }: {
     children: ReactNode;
 }): react_jsx_runtime.JSX.Element;
-declare function TaavTooltip({ content, side, align, delayDuration, children, contentClassName, }: TaavTooltipProps): react_jsx_runtime.JSX.Element;
+declare function TaavTooltip({ content, side, align, delayDuration, sideOffset, collisionPadding, open, defaultOpen, onOpenChange, showArrow, children, contentClassName, arrowClassName, }: TaavTooltipProps): react_jsx_runtime.JSX.Element;
 
 type TaavFieldHintTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 type TaavFieldHintSize = 'sm' | 'md';
@@ -84,4 +91,9 @@ type TaavFieldHintProps = {
 };
 declare function TaavFieldHint({ tone, size, icon, title, children, unsafeClassName, }: TaavFieldHintProps): react_jsx_runtime.JSX.Element;
 
-export { TaavBadge, type TaavBadgeProps, TaavBadgeShape, TaavBadgeSize, TaavBadgeTone, TaavBadgeVariant, TaavBadgeWidth, TaavButton, type TaavButtonProps, type TaavButtonSize, type TaavButtonTone, type TaavButtonVariant, type TaavButtonWidth, TaavCard, type TaavCardPadding, type TaavCardProps, type TaavCardRadius, type TaavCardVariant, TaavFieldHint, type TaavFieldHintProps, type TaavFieldHintSize, type TaavFieldHintTone, TaavTooltip, type TaavTooltipAlign, type TaavTooltipProps, TaavTooltipProvider, type TaavTooltipSide };
+type TaavDividerProps = Omit<ComponentPropsWithoutRef<'hr'>, 'color'> & {
+    unsafeClassName?: string;
+};
+declare function TaavDivider({ unsafeClassName, ...props }: TaavDividerProps): react_jsx_runtime.JSX.Element;
+
+export { TaavBadge, type TaavBadgeProps, TaavBadgeShape, TaavBadgeSize, TaavBadgeTone, TaavBadgeVariant, TaavBadgeWidth, TaavButton, type TaavButtonProps, type TaavButtonSize, type TaavButtonTone, type TaavButtonVariant, type TaavButtonWidth, TaavCard, type TaavCardPadding, type TaavCardProps, type TaavCardRadius, type TaavCardVariant, TaavDivider, type TaavDividerProps, TaavFieldHint, type TaavFieldHintProps, type TaavFieldHintSize, type TaavFieldHintTone, TaavTooltip, type TaavTooltipAlign, type TaavTooltipProps, TaavTooltipProvider, type TaavTooltipSide };

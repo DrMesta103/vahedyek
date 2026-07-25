@@ -17,6 +17,7 @@ export type TaavDetailsLinkProps = {
   tone?: TaavDetailsLinkTone;
   size?: TaavDetailsLinkSize;
   underline?: TaavDetailsLinkUnderline;
+  hoverEffect?: boolean;
   ariaLabel?: string;
   wrapperClassName?: string;
   unsafeClassName?: string;
@@ -31,12 +32,13 @@ export function TaavDetailsLink({
   tone = 'neutral',
   size = 'md',
   underline = 'always',
+  hoverEffect = true,
   ariaLabel,
   wrapperClassName,
   unsafeClassName,
 }: TaavDetailsLinkProps) {
   const className = cn(
-    detailsLinkRoot({ size, underline, disabled }),
+    detailsLinkRoot({ size, underline, disabled, hoverEffect }),
     detailsLinkTone({ tone }),
     wrapperClassName,
     unsafeClassName,

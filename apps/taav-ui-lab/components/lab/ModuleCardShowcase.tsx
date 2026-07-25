@@ -10,76 +10,60 @@ type ModuleCardPreviewFrameProps = {
 };
 
 export function ModuleCardPreviewFrame({ theme, children, className }: ModuleCardPreviewFrameProps) {
-  const isDark = theme === 'dark';
-
   return (
-    <div
-      dir="rtl"
-      data-taav-theme={isDark ? 'dark' : 'light'}
-      className={className}
-      style={{
-        backgroundColor: isDark
-          ? 'var(--taav-module-card-preview-bg-dark)'
-          : 'var(--taav-module-card-preview-bg-light)',
-        backgroundImage: isDark
-          ? 'var(--taav-module-card-preview-pattern-dark)'
-          : 'var(--taav-module-card-preview-pattern-light)',
-      }}
-    >
-      <div className="p-5 md:p-6">{children}</div>
+    <div dir="rtl" data-taav-theme={theme} className={className}>
+      {children}
     </div>
+  );
+}
+
+function ModuleCardsGrid({ theme }: { theme: 'light' | 'dark' }) {
+  return (
+    <TaavModuleCardGrid columns={2} gap="md">
+      {SETUP_MODULE_CARDS.map((card) => (
+        <TaavModuleCardGridItem key={card.id}>
+          <TaavModuleCard
+            title={card.title}
+            description={card.description}
+            themeMode={theme}
+            width="full"
+            onClick={() => undefined}
+          />
+        </TaavModuleCardGridItem>
+      ))}
+    </TaavModuleCardGrid>
   );
 }
 
 export function ModuleCardDarkSetupDemo() {
   return (
-    <ModuleCardPreviewFrame theme="dark" className="overflow-hidden rounded-[var(--taav-radius-xl)] border border-[color:var(--taav-border-subtle)]">
-      <TaavModuleCardGrid columns={2} gap="md">
-        {SETUP_MODULE_CARDS.map((card) => (
-          <TaavModuleCardGridItem key={card.id} span={card.id === 'approval-process' ? 1 : 1}>
-            <TaavModuleCard
-              title={card.title}
-              description={card.description}
-              themeMode="dark"
-              onClick={() => undefined}
-            />
-          </TaavModuleCardGridItem>
-        ))}
-      </TaavModuleCardGrid>
+    <ModuleCardPreviewFrame theme="dark">
+      <ModuleCardsGrid theme="dark" />
     </ModuleCardPreviewFrame>
   );
 }
 
 export function ModuleCardLightSetupDemo() {
   return (
-    <ModuleCardPreviewFrame theme="light" className="overflow-hidden rounded-[var(--taav-radius-xl)] border border-[color:var(--taav-border-subtle)]">
-      <TaavModuleCardGrid columns={2} gap="md">
-        {SETUP_MODULE_CARDS.map((card) => (
-          <TaavModuleCardGridItem key={card.id}>
-            <TaavModuleCard
-              title={card.title}
-              description={card.description}
-              themeMode="light"
-              onClick={() => undefined}
-            />
-          </TaavModuleCardGridItem>
-        ))}
-      </TaavModuleCardGrid>
+    <ModuleCardPreviewFrame theme="light">
+      <ModuleCardsGrid theme="light" />
     </ModuleCardPreviewFrame>
   );
 }
 
 export function ModuleCardMixedOwnershipDemo() {
   return (
-    <ModuleCardPreviewFrame theme="light" className="overflow-hidden rounded-[var(--taav-radius-xl)] border border-[color:var(--taav-border-subtle)]">
+    <ModuleCardPreviewFrame theme="light">
       <TaavModuleCardGrid columns={2} gap="md">
         {OWNERSHIP_MODULE_CARDS.map((card) => (
           <TaavModuleCardGridItem key={card.id} span={card.span ?? 1}>
             <TaavModuleCard
               title={card.title}
               description={card.description}
-              status={card.status}
               themeMode="light"
+              size="md"
+              variant="setup"
+              headerPattern="geometric"
               width="full"
               onClick={() => undefined}
             />
@@ -96,12 +80,7 @@ export function ModuleCardStatusGallery() {
       <TaavModuleCard title="پیش‌فرض" description="کارت ماژول در حالت عادی" onClick={() => undefined} />
       <TaavModuleCard title="فعال" description="مرحله فعلی راه‌اندازی" status="active" selected onClick={() => undefined} />
       <TaavModuleCard title="تکمیل‌شده" description="اطلاعات این بخش ثبت شده است" status="complete" onClick={() => undefined} />
-      <TaavModuleCard
-        title="تکمیل‌نشده"
-        description="( تکمیل نشده ) اطلاعات ضروری هنوز وارد نشده"
-        status="incomplete"
-        onClick={() => undefined}
-      />
+      <TaavModuleCard title="تکمیل‌نشده" description="اطلاعات ضروری هنوز وارد نشده است" status="incomplete" onClick={() => undefined} />
       <TaavModuleCard title="هشدار" description="نیاز به بازبینی قبل از ادامه" status="warning" onClick={() => undefined} />
       <TaavModuleCard title="خطا" description="اطلاعات این بخش نامعتبر است" status="error" onClick={() => undefined} />
     </div>
@@ -111,12 +90,7 @@ export function ModuleCardStatusGallery() {
 export function ModuleCardDisabledGallery() {
   return (
     <div dir="rtl" className="grid gap-4 md:grid-cols-2">
-      <TaavModuleCard
-        title="قفل‌شده"
-        description="ابتدا مرحله قبلی را تکمیل کنید"
-        status="locked"
-        onClick={() => undefined}
-      />
+      <TaavModuleCard title="قفل‌شده" description="ابتدا مرحله قبلی را تکمیل کنید" status="locked" onClick={() => undefined} />
       <TaavModuleCard title="غیرفعال" description="دسترسی به این بخش برای شما فعال نیست" disabled onClick={() => undefined} />
       <TaavModuleCard title="در حال بارگذاری" description="..." loading />
     </div>
@@ -126,11 +100,7 @@ export function ModuleCardDisabledGallery() {
 export function ModuleCardBasicUsage() {
   return (
     <div dir="rtl" className="max-w-md">
-      <TaavModuleCard
-        title="پروفایل کسب‌وکار"
-        description="ورود اطلاعات پایه کسب‌وکار برای تنظیم قراردادها"
-        href="#module-profile"
-      />
+      <TaavModuleCard title="پروفایل کسب‌وکار" description="ورود اطلاعات پایه کسب‌وکار برای تنظیم قراردادها" href="#module-profile" />
     </div>
   );
 }
@@ -138,14 +108,7 @@ export function ModuleCardBasicUsage() {
 export function ModuleCardTwoColumnGridDemo() {
   return (
     <div dir="rtl">
-      <TaavModuleCardGrid columns={2} gap="md">
-        <TaavModuleCardGridItem>
-          <TaavModuleCard title="تعریف پروژه" description="ثبت اطلاعات پروژه یا مجتمع" onClick={() => undefined} />
-        </TaavModuleCardGridItem>
-        <TaavModuleCardGridItem>
-          <TaavModuleCard title="تنظیمات مالی" description="چارچوب مالی و قواعد قراردادی" onClick={() => undefined} />
-        </TaavModuleCardGridItem>
-      </TaavModuleCardGrid>
+      <ModuleCardsGrid theme="light" />
     </div>
   );
 }
