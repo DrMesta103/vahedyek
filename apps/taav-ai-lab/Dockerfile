@@ -9,7 +9,7 @@ RUN npm install --global npm@10.9.2
 
 FROM base AS builder
 
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 ENV DATABASE_URL="postgres://postgres:opL0u42d4Yx9Qiv@5.9.164.187:5432/ai-lab-next-app"
 
 COPY . .
@@ -18,7 +18,7 @@ RUN if [ -f package-lock.json ]; then \
     sed -i 's#https://package-mirror\.liara\.ir/artifactory/api/npm/npm/#https://registry.npmjs.org/#g' package-lock.json; \
     fi
 
-RUN npm ci && \
+RUN npm ci --include=dev && \
     npm --workspace @repo/ui run build && \
     npm --workspace @apps/taav-ai-lab run build
 
