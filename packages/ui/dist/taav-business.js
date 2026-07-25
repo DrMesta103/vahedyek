@@ -422,7 +422,7 @@ var activationSwitchSegment = classVarianceAuthority.cva(
   [
     "inline-flex min-w-0 items-center justify-center border-0",
     "rounded-[var(--taav-activation-switch-segment-radius)]",
-    "font-bold leading-none whitespace-nowrap",
+    "font-semibold leading-none whitespace-nowrap",
     "transition-[background-color,color,box-shadow] duration-[var(--taav-duration-normal)]",
     TAAV_INTERACTION.focus
   ],
@@ -435,7 +435,7 @@ var activationSwitchSegment = classVarianceAuthority.cva(
       },
       selected: {
         true: "bg-[var(--taav-activation-switch-active-bg)] text-[var(--taav-activation-switch-active-text)] shadow-[var(--taav-activation-switch-active-shadow)]",
-        false: "bg-[var(--taav-activation-switch-inactive-bg)] text-[var(--taav-activation-switch-inactive-text)] hover:bg-[var(--taav-activation-switch-inactive-hover-bg)]"
+        false: "bg-transparent text-[var(--taav-activation-switch-inactive-text)] hover:bg-transparent"
       }
     },
     defaultVariants: {
@@ -537,7 +537,7 @@ function TaavActivationSwitch({
   );
 }
 function BusinessIntroCardActionIcon({ className }) {
-  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M6 4l4 4-4 4", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) });
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M6 4l4 4-4 4", stroke: "currentColor", strokeWidth: "2.8", strokeLinecap: "round", strokeLinejoin: "round" }) });
 }
 function BusinessIntroCardBuildingIcon({ className }) {
   return /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", "aria-hidden": true, className, children: [
@@ -567,9 +567,9 @@ var businessIntroCardRoot = classVarianceAuthority.cva(
   {
     variants: {
       size: {
-        sm: "p-[var(--taav-business-intro-card-padding-sm)]",
-        md: "p-[var(--taav-business-intro-card-padding-md)]",
-        lg: "p-[var(--taav-business-intro-card-padding-lg)]"
+        sm: "min-h-[var(--taav-business-intro-card-min-height-sm)] p-[var(--taav-business-intro-card-padding-sm)]",
+        md: "min-h-[var(--taav-business-intro-card-min-height-md)] p-[var(--taav-business-intro-card-padding-md)]",
+        lg: "min-h-[var(--taav-business-intro-card-min-height-lg)] p-[var(--taav-business-intro-card-padding-lg)]"
       },
       width: {
         normal: "max-w-[var(--taav-business-intro-card-max-width-normal)]",
@@ -595,7 +595,7 @@ var businessIntroCardRoot = classVarianceAuthority.cva(
   }
 );
 var businessIntroCardLayout = classVarianceAuthority.cva("flex items-center justify-between gap-[var(--taav-business-intro-card-gap)]");
-var businessIntroCardLeading = classVarianceAuthority.cva("flex min-w-0 flex-1 items-start gap-[var(--taav-business-intro-card-leading-gap)]");
+var businessIntroCardLeading = classVarianceAuthority.cva("flex min-w-0 flex-1 items-center gap-[var(--taav-business-intro-card-leading-gap)]");
 var businessIntroCardIconBox = classVarianceAuthority.cva(
   [
     "inline-flex shrink-0 items-center justify-center",
@@ -619,7 +619,7 @@ var businessIntroCardIconBox = classVarianceAuthority.cva(
   }
 );
 var businessIntroCardTitle = classVarianceAuthority.cva(
-  "m-0 text-right font-black leading-[var(--taav-leading-tight)] text-[var(--taav-business-intro-card-title)]",
+  "m-0 text-right font-semibold leading-[var(--taav-business-intro-card-title-line-height)] text-[var(--taav-business-intro-card-title)]",
   {
     variants: {
       size: {
@@ -634,7 +634,7 @@ var businessIntroCardTitle = classVarianceAuthority.cva(
   }
 );
 var businessIntroCardDescription = classVarianceAuthority.cva(
-  "m-0 text-right font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-business-intro-card-description)]",
+  "m-0 text-right font-normal leading-[var(--taav-business-intro-card-description-line-height)] text-[var(--taav-business-intro-card-description)]",
   {
     variants: {
       size: {
@@ -826,6 +826,7 @@ function TaavBusinessIntroCard({
     ] }),
     /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 36, height: 36, radius: "md" })
   ] }) : /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardLayout(), children: [
+    actionNode,
     /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessIntroCardLeading(), contentClassName), children: [
       iconBlock,
       /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardCopy(), children: [
@@ -833,8 +834,7 @@ function TaavBusinessIntroCard({
         descriptionBlock,
         children
       ] })
-    ] }),
-    actionNode
+    ] })
   ] });
   const hubBody = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessIntroCardHubContent(), children: [
     /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 140, height: 28, radius: "pill" }),
@@ -887,6 +887,416 @@ function TaavBusinessIntroCard({
     }
   );
 }
+
+// ../../node_modules/lucide-react/dist/esm/shared/src/utils.js
+var toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+var toCamelCase = (string) => string.replace(
+  /^([A-Z])|[\s-_]+(\w)/g,
+  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
+);
+var toPascalCase = (string) => {
+  const camelCase = toCamelCase(string);
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+};
+var mergeClasses = (...classes) => classes.filter((className, index, array) => {
+  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
+}).join(" ").trim();
+
+// ../../node_modules/lucide-react/dist/esm/defaultAttributes.js
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+
+// ../../node_modules/lucide-react/dist/esm/Icon.js
+var Icon = react.forwardRef(
+  ({
+    color = "currentColor",
+    size = 24,
+    strokeWidth = 2,
+    absoluteStrokeWidth,
+    className = "",
+    children,
+    iconNode,
+    ...rest
+  }, ref) => {
+    return react.createElement(
+      "svg",
+      {
+        ref,
+        ...defaultAttributes,
+        width: size,
+        height: size,
+        stroke: color,
+        strokeWidth: absoluteStrokeWidth ? Number(strokeWidth) * 24 / Number(size) : strokeWidth,
+        className: mergeClasses("lucide", className),
+        ...rest
+      },
+      [
+        ...iconNode.map(([tag, attrs]) => react.createElement(tag, attrs)),
+        ...Array.isArray(children) ? children : [children]
+      ]
+    );
+  }
+);
+
+// ../../node_modules/lucide-react/dist/esm/createLucideIcon.js
+var createLucideIcon = (iconName, iconNode) => {
+  const Component = react.forwardRef(
+    ({ className, ...props }, ref) => react.createElement(Icon, {
+      ref,
+      iconNode,
+      className: mergeClasses(
+        `lucide-${toKebabCase(toPascalCase(iconName))}`,
+        `lucide-${iconName}`,
+        className
+      ),
+      ...props
+    })
+  );
+  Component.displayName = toPascalCase(iconName);
+  return Component;
+};
+
+// ../../node_modules/lucide-react/dist/esm/icons/building-2.js
+var __iconNode = [
+  ["path", { d: "M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z", key: "1b4qmf" }],
+  ["path", { d: "M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2", key: "i71pzd" }],
+  ["path", { d: "M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2", key: "10jefs" }],
+  ["path", { d: "M10 6h4", key: "1itunk" }],
+  ["path", { d: "M10 10h4", key: "tcdvrf" }],
+  ["path", { d: "M10 14h4", key: "kelpxr" }],
+  ["path", { d: "M10 18h4", key: "1ulq68" }]
+];
+var Building2 = createLucideIcon("building-2", __iconNode);
+
+// ../../node_modules/lucide-react/dist/esm/icons/check.js
+var __iconNode2 = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+var Check = createLucideIcon("check", __iconNode2);
+
+// ../../node_modules/lucide-react/dist/esm/icons/chevron-left.js
+var __iconNode3 = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+var ChevronLeft = createLucideIcon("chevron-left", __iconNode3);
+
+// ../../node_modules/lucide-react/dist/esm/icons/chevron-right.js
+var __iconNode4 = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+var ChevronRight = createLucideIcon("chevron-right", __iconNode4);
+
+// ../../node_modules/lucide-react/dist/esm/icons/circle-alert.js
+var __iconNode5 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["line", { x1: "12", x2: "12", y1: "8", y2: "12", key: "1pkeuh" }],
+  ["line", { x1: "12", x2: "12.01", y1: "16", y2: "16", key: "4dfq90" }]
+];
+var CircleAlert = createLucideIcon("circle-alert", __iconNode5);
+
+// ../../node_modules/lucide-react/dist/esm/icons/circle-dot.js
+var __iconNode6 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }]
+];
+var CircleDot = createLucideIcon("circle-dot", __iconNode6);
+
+// ../../node_modules/lucide-react/dist/esm/icons/copy.js
+var __iconNode7 = [
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+];
+var Copy = createLucideIcon("copy", __iconNode7);
+
+// ../../node_modules/lucide-react/dist/esm/icons/earth.js
+var __iconNode8 = [
+  ["path", { d: "M21.54 15H17a2 2 0 0 0-2 2v4.54", key: "1djwo0" }],
+  [
+    "path",
+    {
+      d: "M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17",
+      key: "1tzkfa"
+    }
+  ],
+  ["path", { d: "M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05", key: "14pb5j" }],
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }]
+];
+var Earth = createLucideIcon("earth", __iconNode8);
+
+// ../../node_modules/lucide-react/dist/esm/icons/ellipsis-vertical.js
+var __iconNode9 = [
+  ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
+  ["circle", { cx: "12", cy: "5", r: "1", key: "gxeob9" }],
+  ["circle", { cx: "12", cy: "19", r: "1", key: "lyex9k" }]
+];
+var EllipsisVertical = createLucideIcon("ellipsis-vertical", __iconNode9);
+
+// ../../node_modules/lucide-react/dist/esm/icons/info.js
+var __iconNode10 = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 16v-4", key: "1dtifu" }],
+  ["path", { d: "M12 8h.01", key: "e9boi3" }]
+];
+var Info = createLucideIcon("info", __iconNode10);
+
+// ../../node_modules/lucide-react/dist/esm/icons/landmark.js
+var __iconNode11 = [
+  ["line", { x1: "3", x2: "21", y1: "22", y2: "22", key: "j8o0r" }],
+  ["line", { x1: "6", x2: "6", y1: "18", y2: "11", key: "10tf0k" }],
+  ["line", { x1: "10", x2: "10", y1: "18", y2: "11", key: "54lgf6" }],
+  ["line", { x1: "14", x2: "14", y1: "18", y2: "11", key: "380y" }],
+  ["line", { x1: "18", x2: "18", y1: "18", y2: "11", key: "1kevvc" }],
+  ["polygon", { points: "12 2 20 7 4 7", key: "jkujk7" }]
+];
+var Landmark = createLucideIcon("landmark", __iconNode11);
+
+// ../../node_modules/lucide-react/dist/esm/icons/mail.js
+var __iconNode12 = [
+  ["rect", { width: "20", height: "16", x: "2", y: "4", rx: "2", key: "18n3k1" }],
+  ["path", { d: "m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7", key: "1ocrg3" }]
+];
+var Mail = createLucideIcon("mail", __iconNode12);
+
+// ../../node_modules/lucide-react/dist/esm/icons/map-pinned.js
+var __iconNode13 = [
+  [
+    "path",
+    {
+      d: "M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0",
+      key: "11u0oz"
+    }
+  ],
+  ["circle", { cx: "12", cy: "8", r: "2", key: "1822b1" }],
+  [
+    "path",
+    {
+      d: "M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712",
+      key: "q8zwxj"
+    }
+  ]
+];
+var MapPinned = createLucideIcon("map-pinned", __iconNode13);
+
+// ../../node_modules/lucide-react/dist/esm/icons/pen-line.js
+var __iconNode14 = [
+  ["path", { d: "M12 20h9", key: "t2du7b" }],
+  [
+    "path",
+    {
+      d: "M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z",
+      key: "1ykcvy"
+    }
+  ]
+];
+var PenLine = createLucideIcon("pen-line", __iconNode14);
+
+// ../../node_modules/lucide-react/dist/esm/icons/pencil.js
+var __iconNode15 = [
+  [
+    "path",
+    {
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+      key: "1a8usu"
+    }
+  ],
+  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
+];
+var Pencil = createLucideIcon("pencil", __iconNode15);
+
+// ../../node_modules/lucide-react/dist/esm/icons/phone-call.js
+var __iconNode16 = [
+  [
+    "path",
+    {
+      d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+      key: "foiqr5"
+    }
+  ],
+  ["path", { d: "M14.05 2a9 9 0 0 1 8 7.94", key: "vmijpz" }],
+  ["path", { d: "M14.05 6A5 5 0 0 1 18 10", key: "13nbpp" }]
+];
+var PhoneCall = createLucideIcon("phone-call", __iconNode16);
+
+// ../../node_modules/lucide-react/dist/esm/icons/phone.js
+var __iconNode17 = [
+  [
+    "path",
+    {
+      d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z",
+      key: "foiqr5"
+    }
+  ]
+];
+var Phone = createLucideIcon("phone", __iconNode17);
+
+// ../../node_modules/lucide-react/dist/esm/icons/plus.js
+var __iconNode18 = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+var Plus = createLucideIcon("plus", __iconNode18);
+
+// ../../node_modules/lucide-react/dist/esm/icons/printer.js
+var __iconNode19 = [
+  [
+    "path",
+    {
+      d: "M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2",
+      key: "143wyd"
+    }
+  ],
+  ["path", { d: "M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6", key: "1itne7" }],
+  ["rect", { x: "6", y: "14", width: "12", height: "8", rx: "1", key: "1ue0tg" }]
+];
+var Printer = createLucideIcon("printer", __iconNode19);
+
+// ../../node_modules/lucide-react/dist/esm/icons/refresh-cw.js
+var __iconNode20 = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+var RefreshCw = createLucideIcon("refresh-cw", __iconNode20);
+
+// ../../node_modules/lucide-react/dist/esm/icons/search.js
+var __iconNode21 = [
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }],
+  ["path", { d: "m21 21-4.3-4.3", key: "1qie3q" }]
+];
+var Search = createLucideIcon("search", __iconNode21);
+
+// ../../node_modules/lucide-react/dist/esm/icons/sliders-horizontal.js
+var __iconNode22 = [
+  ["line", { x1: "21", x2: "14", y1: "4", y2: "4", key: "obuewd" }],
+  ["line", { x1: "10", x2: "3", y1: "4", y2: "4", key: "1q6298" }],
+  ["line", { x1: "21", x2: "12", y1: "12", y2: "12", key: "1iu8h1" }],
+  ["line", { x1: "8", x2: "3", y1: "12", y2: "12", key: "ntss68" }],
+  ["line", { x1: "21", x2: "16", y1: "20", y2: "20", key: "14d8ph" }],
+  ["line", { x1: "12", x2: "3", y1: "20", y2: "20", key: "m0wm8r" }],
+  ["line", { x1: "14", x2: "14", y1: "2", y2: "6", key: "14e1ph" }],
+  ["line", { x1: "8", x2: "8", y1: "10", y2: "14", key: "1i6ji0" }],
+  ["line", { x1: "16", x2: "16", y1: "18", y2: "22", key: "1lctlv" }]
+];
+var SlidersHorizontal = createLucideIcon("sliders-horizontal", __iconNode22);
+
+// ../../node_modules/lucide-react/dist/esm/icons/smartphone.js
+var __iconNode23 = [
+  ["rect", { width: "14", height: "20", x: "5", y: "2", rx: "2", ry: "2", key: "1yt0o3" }],
+  ["path", { d: "M12 18h.01", key: "mhygvu" }]
+];
+var Smartphone = createLucideIcon("smartphone", __iconNode23);
+
+// ../../node_modules/lucide-react/dist/esm/icons/square-pen.js
+var __iconNode24 = [
+  ["path", { d: "M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7", key: "1m0v6g" }],
+  [
+    "path",
+    {
+      d: "M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z",
+      key: "ohrbg2"
+    }
+  ]
+];
+var SquarePen = createLucideIcon("square-pen", __iconNode24);
+
+// ../../node_modules/lucide-react/dist/esm/icons/trash-2.js
+var __iconNode25 = [
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+];
+var Trash2 = createLucideIcon("trash-2", __iconNode25);
+
+// ../../node_modules/lucide-react/dist/esm/icons/user-round.js
+var __iconNode26 = [
+  ["circle", { cx: "12", cy: "8", r: "5", key: "1hypcn" }],
+  ["path", { d: "M20 21a8 8 0 0 0-16 0", key: "rfgkzh" }]
+];
+var UserRound = createLucideIcon("user-round", __iconNode26);
+
+// ../../node_modules/lucide-react/dist/esm/icons/users-round.js
+var __iconNode27 = [
+  ["path", { d: "M18 21a8 8 0 0 0-16 0", key: "3ypg7q" }],
+  ["circle", { cx: "10", cy: "8", r: "5", key: "o932ke" }],
+  ["path", { d: "M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3", key: "10s06x" }]
+];
+var UsersRound = createLucideIcon("users-round", __iconNode27);
+
+// ../../node_modules/lucide-react/dist/esm/icons/wand-sparkles.js
+var __iconNode28 = [
+  [
+    "path",
+    {
+      d: "m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72",
+      key: "ul74o6"
+    }
+  ],
+  ["path", { d: "m14 7 3 3", key: "1r5n42" }],
+  ["path", { d: "M5 6v4", key: "ilb8ba" }],
+  ["path", { d: "M19 14v4", key: "blhpug" }],
+  ["path", { d: "M10 2v2", key: "7u0qdc" }],
+  ["path", { d: "M7 8H3", key: "zfb6yr" }],
+  ["path", { d: "M21 16h-4", key: "1cnmox" }],
+  ["path", { d: "M11 3H9", key: "1obp7u" }]
+];
+var WandSparkles = createLucideIcon("wand-sparkles", __iconNode28);
+
+// ../../node_modules/lucide-react/dist/esm/icons/x.js
+var __iconNode29 = [
+  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
+  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
+];
+var X = createLucideIcon("x", __iconNode29);
+function TaavTooltipProvider({ children }) {
+  return /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Provider, { delayDuration: 200, skipDelayDuration: 100, children });
+}
+function TaavTooltip({
+  content,
+  side = "top",
+  align = "center",
+  delayDuration = 200,
+  sideOffset = 6,
+  collisionPadding = 8,
+  open,
+  defaultOpen,
+  onOpenChange,
+  showArrow = true,
+  children,
+  contentClassName,
+  arrowClassName
+}) {
+  return /* @__PURE__ */ jsxRuntime.jsxs(TooltipPrimitive__namespace.Root, { delayDuration, open, defaultOpen, onOpenChange, children: [
+    /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Trigger, { asChild: true, children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex rounded-[var(--taav-radius-sm)] focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]", children }) }),
+    /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Portal, { children: /* @__PURE__ */ jsxRuntime.jsxs(
+      TooltipPrimitive__namespace.Content,
+      {
+        side,
+        align,
+        sideOffset,
+        collisionPadding,
+        className: cn(
+          "z-[var(--taav-z-tooltip)] max-w-[var(--taav-tooltip-max-width)]",
+          "rounded-[var(--taav-tooltip-radius)] border border-[color:var(--taav-border)]",
+          "bg-[var(--taav-surface-elevated)] px-[var(--taav-tooltip-padding-x)] py-[var(--taav-tooltip-padding-y)]",
+          "text-right text-[length:var(--taav-text-xs)] leading-[var(--taav-leading-relaxed)]",
+          "text-[var(--taav-text-body)] shadow-[var(--taav-tooltip-shadow)]",
+          contentClassName
+        ),
+        style: { direction: "rtl" },
+        children: [
+          content,
+          showArrow ? /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Arrow, { width: 10, height: 5, className: cn("fill-[var(--taav-surface-elevated)]", arrowClassName) }) : null
+        ]
+      }
+    ) })
+  ] });
+}
 var detailsLinkRoot = classVarianceAuthority.cva(
   [
     "inline-flex max-w-full items-center gap-[var(--taav-details-link-gap)]",
@@ -894,8 +1304,6 @@ var detailsLinkRoot = classVarianceAuthority.cva(
     "text-[var(--taav-details-link-text)]",
     "decoration-[var(--taav-details-link-underline)] decoration-[length:var(--taav-details-link-underline-thickness)]",
     "underline-offset-[var(--taav-details-link-underline-offset)]",
-    "hover:text-[var(--taav-details-link-text-hover)]",
-    "hover:decoration-[var(--taav-details-link-underline-hover)]",
     TAAV_INTERACTION.base,
     TAAV_INTERACTION.focus
   ],
@@ -914,12 +1322,17 @@ var detailsLinkRoot = classVarianceAuthority.cva(
       disabled: {
         true: "pointer-events-none opacity-[var(--taav-details-link-disabled-opacity)]",
         false: "cursor-pointer"
+      },
+      hoverEffect: {
+        true: "hover:text-[var(--taav-details-link-text-hover)] hover:decoration-[var(--taav-details-link-underline-hover)]",
+        false: ""
       }
     },
     defaultVariants: {
       size: "md",
       underline: "always",
-      disabled: false
+      disabled: false,
+      hoverEffect: true
     }
   }
 );
@@ -944,12 +1357,13 @@ function TaavDetailsLink({
   tone = "neutral",
   size = "md",
   underline = "always",
+  hoverEffect = true,
   ariaLabel,
   wrapperClassName,
   unsafeClassName
 }) {
   const className = cn(
-    detailsLinkRoot({ size, underline, disabled }),
+    detailsLinkRoot({ size, underline, disabled, hoverEffect }),
     detailsLinkTone({ tone }),
     wrapperClassName,
     unsafeClassName
@@ -981,8 +1395,962 @@ function TaavDetailsLink({
   }
   return /* @__PURE__ */ jsxRuntime.jsx("span", { className, "aria-disabled": disabled || void 0, "aria-label": label, children: content });
 }
+var businessHeaderCardRoot = classVarianceAuthority.cva(
+  [
+    "w-full max-w-[712px] overflow-hidden rounded-none border-0",
+    "box-border bg-white shadow-none",
+    "transition-[background-color,box-shadow,transform] duration-150",
+    "hover:bg-[rgba(250,252,253,1)] hover:shadow-[0_4px_14px_rgba(15,23,42,0.04)]",
+    "md:h-[176px] md:min-h-[176px]"
+  ],
+  {
+    variants: {
+      variant: {
+        navigation: "md:h-[100px] md:min-h-[100px] md:max-w-[696px] rounded-[16px] border border-[rgba(145,170,190,0.5)]",
+        toggleWithLink: "",
+        toggle: "md:h-[96px] md:min-h-[96px] md:max-w-[960px]",
+        action: "md:h-[96px] md:min-h-[96px] md:max-w-[960px]",
+        actionWithSearch: "md:h-[145px] md:min-h-[145px] md:max-w-[690px] rounded-[14px] border border-[rgba(145,170,190,0.5)]"
+      },
+      loading: {
+        true: "pointer-events-none",
+        false: ""
+      },
+      themeMode: {
+        auto: "",
+        light: "",
+        dark: ""
+      }
+    },
+    defaultVariants: {
+      variant: "navigation",
+      loading: false,
+      themeMode: "auto"
+    }
+  }
+);
+var businessHeaderCardBody = classVarianceAuthority.cva("flex h-full min-h-0 flex-col gap-[12px] p-[24px_28px_24px_24px]", {
+  variants: {
+    variant: {
+      navigation: "md:p-[17px_28px] md:justify-center",
+      toggleWithLink: "",
+      toggle: "md:p-[20px_28px]",
+      action: "md:p-[20px_28px]",
+      actionWithSearch: "w-full items-start"
+    }
+  },
+  defaultVariants: { variant: "navigation" }
+});
+var businessHeaderCardTopRow = classVarianceAuthority.cva("grid min-w-0 grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-[16px]");
+var businessHeaderCardArrow = classVarianceAuthority.cva(
+  [
+    "inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center border-0 bg-transparent p-0 leading-none text-[#008f8f]",
+    "appearance-none rounded-none",
+    TAAV_INTERACTION.base,
+    TAAV_INTERACTION.pressable,
+    TAAV_INTERACTION.focus
+  ],
+  {
+    variants: {
+      disabled: {
+        true: "pointer-events-none opacity-50",
+        false: ""
+      }
+    },
+    defaultVariants: {
+      disabled: false
+    }
+  }
+);
+var businessHeaderCardArrowPlaceholder = classVarianceAuthority.cva("inline-flex h-[26px] w-[26px] shrink-0");
+var businessHeaderCardIconBox = classVarianceAuthority.cva([
+  "inline-flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-[16px]",
+  "bg-[rgba(0,143,143,0.10)] text-[#008f8f]",
+  "[&_svg]:h-[24px] [&_svg]:w-[24px]"
+]);
+var businessHeaderCardCopy = classVarianceAuthority.cva("flex min-w-0 flex-col items-end justify-self-end gap-[4px] text-right", {
+  variants: {
+    variant: {
+      navigation: "w-full items-start",
+      toggleWithLink: "",
+      toggle: "w-full items-start",
+      action: "w-full items-start",
+      actionWithSearch: "w-full text-right"
+    }
+  },
+  defaultVariants: { variant: "navigation" }
+});
+var businessHeaderCardTitle = classVarianceAuthority.cva("m-0 text-right text-[18px] font-semibold leading-[26px] text-[#30343b]", {
+  variants: {
+    variant: {
+      navigation: "w-full text-right text-[18px] font-semibold leading-[22px]",
+      toggleWithLink: "",
+      toggle: "w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]",
+      action: "w-full text-right text-[18px] font-bold leading-[26px] text-[#30343b]",
+      actionWithSearch: ""
+    }
+  },
+  defaultVariants: { variant: "navigation" }
+});
+var businessHeaderCardDescription = classVarianceAuthority.cva(
+  "m-0 max-w-[520px] text-right text-[12.5px] font-medium leading-[22px] text-[#5f6f80]",
+  {
+    variants: {
+      variant: {
+        navigation: "md:w-[520px] md:max-w-[520px] text-[12.5px] font-medium leading-[20px]",
+        toggleWithLink: "",
+        toggle: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]",
+        action: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#6b7280]",
+        actionWithSearch: "whitespace-nowrap text-[12.5px] font-medium leading-[22px] text-[#5f6f80]"
+      }
+    },
+    defaultVariants: { variant: "navigation" }
+  }
+);
+var businessHeaderCardLink = classVarianceAuthority.cva("mt-[2px] flex w-full justify-start text-right");
+var businessHeaderCardToggle = classVarianceAuthority.cva("shrink-0");
+var businessHeaderCardAction = classVarianceAuthority.cva("shrink-0");
+var businessHeaderCardActionButton = classVarianceAuthority.cva(
+  [
+    "inline-flex h-[36px] min-w-[148px] items-center justify-center gap-[8px] rounded-[14px]",
+    "border-0 bg-[#008f8f] px-[16px] text-[14px] font-bold leading-5 text-white whitespace-nowrap",
+    "box-border [direction:rtl] [font-family:inherit]",
+    "transition-[background-color,transform,opacity] hover:bg-[#007f7f] active:translate-y-px active:bg-[#006f6f]",
+    "focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[rgba(0,143,143,0.22)] focus-visible:outline-offset-2",
+    "disabled:cursor-not-allowed disabled:opacity-[0.55]"
+  ],
+  {
+    variants: {
+      variant: {
+        action: "min-w-[170px] text-[14px] font-bold",
+        actionWithSearch: ""
+      },
+      disabled: {
+        true: "pointer-events-none",
+        false: ""
+      }
+    },
+    defaultVariants: {
+      variant: "actionWithSearch",
+      disabled: false
+    }
+  }
+);
+var businessHeaderCardActionButtonLabel = classVarianceAuthority.cva("inline-flex items-center");
+var businessHeaderCardActionButtonIcon = classVarianceAuthority.cva("inline-flex h-5 w-5 shrink-0 items-center justify-center");
+classVarianceAuthority.cva("w-full");
+var businessHeaderCardSearchShell = classVarianceAuthority.cva(
+  "flex h-[38px] items-center gap-2 rounded-full bg-[#dfe4ea] px-4 text-[#64748b] shadow-none"
+);
+var businessHeaderCardSearchInput = classVarianceAuthority.cva(
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-right text-[12.5px] font-medium leading-5 text-[#64748b] placeholder:text-[#64748b] focus:outline-none"
+);
+var businessHeaderCardSearchContainer = classVarianceAuthority.cva("mt-[14px] flex justify-start", {
+  variants: {
+    variant: {
+      navigation: "",
+      toggleWithLink: "",
+      toggle: "",
+      action: "",
+      actionWithSearch: "mt-[2px] justify-end"
+    }
+  },
+  defaultVariants: { variant: "navigation" }
+});
+function HeaderArrowIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(ChevronRight, { className: "h-[26px] w-[26px]", strokeWidth: 2.7 });
+}
+function HeaderPlusIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(Plus, { className: "h-5 w-5", strokeWidth: 2.4 });
+}
+function HeaderSearchIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(Search, { className: "h-[19px] w-[19px]", strokeWidth: 1.6 });
+}
+function HeaderBuildingIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(Building2, { className: "h-[24px] w-[24px]", strokeWidth: 2.2 });
+}
+function resolveVariant({
+  variant,
+  action,
+  detailLink,
+  search,
+  enabled,
+  defaultEnabled,
+  onToggle
+}) {
+  if (variant) return variant;
+  if (action && search) return "actionWithSearch";
+  if (action) return "action";
+  if (typeof enabled === "boolean" || typeof defaultEnabled === "boolean" || onToggle) {
+    return detailLink ? "toggleWithLink" : "toggle";
+  }
+  return "navigation";
+}
+function TaavBusinessHeaderCard({
+  title,
+  description,
+  icon,
+  variant,
+  showArrow = true,
+  href,
+  onNavigate,
+  onClick,
+  disabled = false,
+  loading = false,
+  themeMode = "auto",
+  enabled,
+  defaultEnabled = false,
+  onToggle,
+  toggleLabels,
+  action,
+  detailLink,
+  search,
+  arrowTooltipDefaultOpen = false,
+  className,
+  wrapperClassName,
+  contentClassName,
+  actionClassName,
+  searchClassName,
+  ...rest
+}) {
+  const resolvedVariant = resolveVariant({ variant, action, detailLink, search, enabled, defaultEnabled, onToggle });
+  const [internalEnabled, setInternalEnabled] = react.useState(defaultEnabled);
+  const currentEnabled = enabled ?? internalEnabled;
+  const switchDisabled = disabled || loading;
+  const actionDisabled = disabled || loading || action?.disabled;
+  const detailDisabled = disabled || loading || detailLink?.disabled;
+  const searchDisabled = disabled || loading || search?.disabled;
+  const toggleLabelsResolved = {
+    enabled: toggleLabels?.enabled ?? "\u0641\u0639\u0627\u0644",
+    disabled: toggleLabels?.disabled ?? "\u063A\u06CC\u0631\u0641\u0639\u0627\u0644"
+  };
+  const arrowHandler = onNavigate ?? onClick;
+  const shouldShowArrow = showArrow;
+  const showToggle = resolvedVariant === "toggle" || resolvedVariant === "toggleWithLink";
+  const showAction = resolvedVariant === "action" || resolvedVariant === "actionWithSearch";
+  const showSearch = resolvedVariant === "actionWithSearch" || Boolean(search);
+  const showDetailLink = Boolean(detailLink) && resolvedVariant === "toggleWithLink";
+  const detailLinkIsActive = showDetailLink && currentEnabled && !switchDisabled;
+  const updateToggle = (nextValue) => {
+    if (switchDisabled) return;
+    if (enabled === void 0) {
+      setInternalEnabled(nextValue);
+    }
+    onToggle?.(nextValue);
+  };
+  const arrowNode = shouldShowArrow ? href && !disabled && !loading ? /* @__PURE__ */ jsxRuntime.jsx(
+    TaavTooltip,
+    {
+      content: "\u0628\u0627\u0632\u06AF\u0634\u062A",
+      side: "bottom",
+      align: "center",
+      sideOffset: 1,
+      collisionPadding: 4,
+      showArrow: false,
+      contentClassName: "border-0 rounded-[8px] bg-[#7b7b7b] px-[10px] py-[6px] text-[11px] font-medium leading-4 text-white shadow-[0_6px_14px_rgba(15,23,42,0.22)]",
+      children: /* @__PURE__ */ jsxRuntime.jsx(
+        "a",
+        {
+          href,
+          "aria-label": "\u0628\u0627\u0632\u06AF\u0634\u062A",
+          className: businessHeaderCardArrow(),
+          onClick: (event) => {
+            if (arrowHandler) {
+              event.preventDefault();
+              arrowHandler?.();
+            }
+          },
+          children: /* @__PURE__ */ jsxRuntime.jsx(HeaderArrowIcon, {})
+        }
+      )
+    }
+  ) : arrowHandler && !disabled && !loading ? /* @__PURE__ */ jsxRuntime.jsx(
+    TaavTooltip,
+    {
+      content: "\u0628\u0627\u0632\u06AF\u0634\u062A",
+      side: "bottom",
+      align: "center",
+      open: arrowTooltipDefaultOpen || void 0,
+      sideOffset: 1,
+      collisionPadding: 4,
+      showArrow: false,
+      contentClassName: "border-0 rounded-[8px] bg-[#7b7b7b] px-[10px] py-[6px] text-[11px] font-medium leading-4 text-white shadow-[0_6px_14px_rgba(15,23,42,0.22)]",
+      children: /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0628\u0627\u0632\u06AF\u0634\u062A", className: businessHeaderCardArrow(), onClick: arrowHandler, children: /* @__PURE__ */ jsxRuntime.jsx(HeaderArrowIcon, {}) })
+    }
+  ) : /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessHeaderCardArrowPlaceholder(), "aria-hidden": "true" }) : null;
+  const iconNode = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 56, height: 56, radius: "lg" }) : /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessHeaderCardIconBox(), "aria-hidden": icon ? void 0 : true, children: icon ?? /* @__PURE__ */ jsxRuntime.jsx(HeaderBuildingIcon, {}) });
+  const titleNode = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "56%", contentClassName: "h-6" }) : /* @__PURE__ */ jsxRuntime.jsx("h3", { className: businessHeaderCardTitle({ variant: resolvedVariant }), children: title });
+  const descriptionNode = loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { lines: 2, size: "sm" }) : description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: businessHeaderCardDescription({ variant: resolvedVariant }), children: description }) : null;
+  const detailLinkNode = showDetailLink && !loading && detailLink ? /* @__PURE__ */ jsxRuntime.jsx(
+    TaavDetailsLink,
+    {
+      href: detailLinkIsActive ? detailLink.href : void 0,
+      onClick: detailLinkIsActive ? detailLink.onClick : void 0,
+      disabled: detailDisabled || !detailLinkIsActive,
+      size: "sm",
+      tone: detailLinkIsActive ? "brand" : "neutral",
+      underline: "always",
+      hoverEffect: false,
+      wrapperClassName: cn(
+        "text-[12.5px] font-normal leading-[22px]",
+        detailLinkIsActive ? "text-[#2563eb]" : "text-[#5f6f80]",
+        businessHeaderCardLink()
+      ),
+      children: detailLink.label
+    }
+  ) : null;
+  const actionButtonNode = showAction && action ? /* @__PURE__ */ jsxRuntime.jsxs(
+    "button",
+    {
+      type: "button",
+      disabled: actionDisabled || !action.onClick,
+      onClick: action.onClick,
+      className: cn(
+        businessHeaderCardActionButton({
+          variant: resolvedVariant === "action" ? "action" : "actionWithSearch",
+          disabled: actionDisabled || !action.onClick
+        }),
+        actionClassName
+      ),
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessHeaderCardActionButtonIcon(), "aria-hidden": "true", children: action.icon ?? /* @__PURE__ */ jsxRuntime.jsx(HeaderPlusIcon, {}) }),
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: businessHeaderCardActionButtonLabel(), children: action.label })
+      ]
+    }
+  ) : null;
+  const toggleNode = showToggle ? /* @__PURE__ */ jsxRuntime.jsx(
+    TaavActivationSwitch,
+    {
+      value: enabled !== void 0 ? currentEnabled ? "active" : "inactive" : void 0,
+      defaultValue: currentEnabled ? "active" : "inactive",
+      onValueChange: (nextValue) => updateToggle(nextValue === "active"),
+      activeLabel: toggleLabelsResolved.enabled,
+      inactiveLabel: toggleLabelsResolved.disabled,
+      disabled: switchDisabled,
+      size: "md",
+      wrapperClassName: cn(
+        "!h-[36px] !w-[180px] !min-w-[180px] !gap-[4px] !border-0 !bg-[#a9b4c1] !p-[3px] !shadow-none",
+        "[&_[role=radio]]:h-[30px] [&_[role=radio]]:min-w-[84px] [&_[role=radio]]:px-[12px] [&_[role=radio]]:py-0",
+        "[&_[role=radio]]:text-[13px] [&_[role=radio]]:font-semibold"
+      )
+    }
+  ) : null;
+  const searchNode = !loading && showSearch && search ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn(businessHeaderCardSearchContainer({ variant: resolvedVariant }), searchClassName), children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: "w-full max-w-[228px]", children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessHeaderCardSearchShell(), searchClassName), dir: "rtl", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": "true", className: "inline-flex h-[19px] w-[19px] shrink-0 items-center justify-center text-[#64748b]", children: /* @__PURE__ */ jsxRuntime.jsx(HeaderSearchIcon, {}) }),
+    /* @__PURE__ */ jsxRuntime.jsx(
+      "input",
+      {
+        value: search.value,
+        placeholder: search.placeholder,
+        disabled: searchDisabled,
+        readOnly: search.value !== void 0 && !search.onChange,
+        onChange: (event) => search.onChange?.(event.currentTarget.value),
+        "aria-label": search.placeholder ?? (typeof title === "string" ? title : void 0),
+        className: cn(businessHeaderCardSearchInput(), searchClassName)
+      }
+    )
+  ] }) }) }) : null;
+  const topRow = loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessHeaderCardTopRow(), children: [
+    /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 26, height: 26, radius: "sm" }),
+    /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 56, height: 56, radius: "lg" }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid min-w-0 flex-1 gap-[4px] justify-items-end", children: [
+      /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "62%", contentClassName: "h-6" }),
+      /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "text", width: "78%" })
+    ] }),
+    showToggle ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 180, height: 36, radius: "pill" }) : showAction ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 148, height: 36, radius: "md" }) : null
+  ] }) : /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn(businessHeaderCardTopRow(), contentClassName), children: [
+    arrowNode,
+    iconNode,
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessHeaderCardCopy({ variant: resolvedVariant }), children: [
+      titleNode,
+      descriptionNode
+    ] }),
+    toggleNode ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessHeaderCardToggle(), children: toggleNode }) : actionButtonNode ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessHeaderCardAction(), children: actionButtonNode }) : null
+  ] });
+  const loadingSearchNode = loading && showSearch ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessHeaderCardSearchContainer({ variant: resolvedVariant }), children: /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 228, height: 38, radius: "pill" }) }) : null;
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "article",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-business-header-card": true,
+      "data-variant": resolvedVariant,
+      "data-theme-mode": themeMode,
+      "data-disabled": disabled || void 0,
+      "data-loading": loading || void 0,
+      className: cn(businessHeaderCardRoot({ loading, themeMode, variant: resolvedVariant }), wrapperClassName, className),
+      "aria-busy": loading || void 0,
+      "aria-disabled": disabled || void 0,
+      children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: businessHeaderCardBody({ variant: resolvedVariant }), children: [
+        topRow,
+        detailLinkNode ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: businessHeaderCardLink(), children: detailLinkNode }) : null,
+        searchNode ?? loadingSearchNode
+      ] })
+    }
+  );
+}
+function ModuleCardArrowIcon({ direction = "enter", className }) {
+  const path = direction === "back" ? "M6.5 4.5 10.5 9l-4 4.5" : "M11.5 4.5 7.5 9l4 4.5";
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 18 18", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: path, stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }) });
+}
+var sectionToolbarCardRoot = classVarianceAuthority.cva(
+  [
+    "w-full max-w-[690px] overflow-hidden rounded-[14px] border border-[color:rgba(145,170,190,0.5)]",
+    "box-border bg-[#ffffff] shadow-none",
+    "md:h-[145px] md:min-h-[145px]"
+  ],
+  {
+    variants: {
+      interactive: {
+        true: TAAV_INTERACTION.base,
+        false: ""
+      }
+    },
+    defaultVariants: {
+      interactive: false
+    }
+  }
+);
+var sectionToolbarCardBody = classVarianceAuthority.cva("block p-[22px_26px_22px_32px]");
+var sectionToolbarCardHeader = classVarianceAuthority.cva("block");
+var sectionToolbarCardLead = classVarianceAuthority.cva("block min-w-0");
+var sectionToolbarCardIconBox = classVarianceAuthority.cva([
+  "inline-flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-[16px]",
+  "bg-[rgba(0,143,143,0.1)] text-[#008f8f]",
+  "[&_svg]:h-[24px] [&_svg]:w-[24px]"
+]);
+var sectionToolbarCardCopy = classVarianceAuthority.cva("block min-w-0 w-full");
+var sectionToolbarCardTitle = classVarianceAuthority.cva(
+  "m-0 text-right text-[18px] font-semibold leading-[28px] text-[#30343b]"
+);
+var sectionToolbarCardDescription = classVarianceAuthority.cva(
+  "m-0 mt-0 text-right text-[12.5px] font-normal leading-[22px] text-[#5f6f80]"
+);
+var sectionToolbarCardArrow = classVarianceAuthority.cva(
+  [
+    "inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center text-[#008f8f] justify-self-end mt-[18px]",
+    TAAV_INTERACTION.base,
+    TAAV_INTERACTION.focus
+  ],
+  {
+    variants: {
+      disabled: {
+        true: "pointer-events-none opacity-50",
+        false: ""
+      }
+    },
+    defaultVariants: {
+      disabled: false
+    }
+  }
+);
+classVarianceAuthority.cva("block mt-[9px] w-full");
+var sectionToolbarCardSearch = classVarianceAuthority.cva("w-full");
+var sectionToolbarCardAction = classVarianceAuthority.cva("block");
+var sectionToolbarCardSearchShell = classVarianceAuthority.cva(
+  "flex h-[38px] items-center gap-2 rounded-full bg-[#dfe4ea] px-4 text-[#64748b] shadow-none"
+);
+var sectionToolbarCardSearchInput = classVarianceAuthority.cva(
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-right text-[12.5px] font-medium leading-5 text-[#64748b] placeholder:text-[#64748b] focus:outline-none"
+);
+var sectionToolbarCardActionButton = classVarianceAuthority.cva(
+  "taav-business-action-button box-border inline-flex h-[36px] min-w-[148px] items-center justify-center gap-2 border-0 rounded-[14px] bg-[#008f8f] px-[16px] text-[14px] font-bold leading-5 text-white transition-[background-color,transform,opacity] hover:bg-[#007f7f] active:translate-y-px active:bg-[#006f6f] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[rgba(0,143,143,0.22)] focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-[0.55] [direction:rtl] [font-family:inherit] whitespace-nowrap"
+);
+var sectionToolbarCardActionButtonLabel = classVarianceAuthority.cva("inline-flex items-center");
+var sectionToolbarCardActionButtonIcon = classVarianceAuthority.cva("inline-flex h-5 w-5 shrink-0 items-center justify-center");
+function ToolbarSearchIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className: "h-[1em] w-[1em]", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M11.5 11.5 14 14", stroke: "currentColor", strokeWidth: "1.7", strokeLinecap: "round", strokeLinejoin: "round" }),
+    /* @__PURE__ */ jsxRuntime.jsx("circle", { cx: "7", cy: "7", r: "4.25", stroke: "currentColor", strokeWidth: "1.7" })
+  ] });
+}
+function ToolbarPlusIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 20 20", fill: "none", "aria-hidden": true, className: "h-[1em] w-[1em]", children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M10 4.5v11M4.5 10h11", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round" }) });
+}
+function TaavBusinessSectionToolbarCard({
+  title,
+  description,
+  icon,
+  showArrow = true,
+  onArrowClick,
+  href,
+  search,
+  action,
+  className,
+  ...rest
+}) {
+  const arrowDisabled = !href && !onArrowClick;
+  const showSearch = Boolean(search);
+  const showAction = Boolean(action);
+  const arrowContent = /* @__PURE__ */ jsxRuntime.jsx("span", { className: sectionToolbarCardArrow({ disabled: arrowDisabled }), "aria-hidden": arrowDisabled || void 0, children: /* @__PURE__ */ jsxRuntime.jsx(ModuleCardArrowIcon, { direction: "back", className: "h-[18px] w-[18px]" }) });
+  const arrowNode = showArrow ? href ? /* @__PURE__ */ jsxRuntime.jsx(
+    "a",
+    {
+      href,
+      className: sectionToolbarCardArrow({ disabled: false }),
+      "aria-label": title,
+      onClick: (event) => {
+        if (onArrowClick) {
+          event.preventDefault();
+          onArrowClick();
+        }
+      },
+      children: /* @__PURE__ */ jsxRuntime.jsx(ModuleCardArrowIcon, { direction: "back", className: "h-[18px] w-[18px]" })
+    }
+  ) : onArrowClick ? /* @__PURE__ */ jsxRuntime.jsx(
+    "button",
+    {
+      type: "button",
+      className: sectionToolbarCardArrow({ disabled: false }),
+      "aria-label": title,
+      onClick: onArrowClick,
+      children: /* @__PURE__ */ jsxRuntime.jsx(ModuleCardArrowIcon, { direction: "back", className: "h-[18px] w-[18px]" })
+    }
+  ) : arrowContent : null;
+  const actionButtonNode = showAction ? /* @__PURE__ */ jsxRuntime.jsxs(
+    "button",
+    {
+      type: "button",
+      className: sectionToolbarCardActionButton(),
+      onClick: action?.onClick,
+      disabled: action?.disabled || !action?.onClick,
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: sectionToolbarCardActionButtonIcon(), "aria-hidden": true, children: action?.icon ?? /* @__PURE__ */ jsxRuntime.jsx(ToolbarPlusIcon, {}) }),
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: sectionToolbarCardActionButtonLabel(), children: action?.label })
+      ]
+    }
+  ) : null;
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "article",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-business-section-toolbar-card": true,
+      className: cn(sectionToolbarCardRoot({ interactive: Boolean(href || onArrowClick) }), className),
+      children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: sectionToolbarCardBody(), children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: sectionToolbarCardHeader(), dir: "rtl", children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start gap-[16px]", dir: "rtl", children: [
+          arrowNode ?? /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": true, className: "mt-[18px] h-[26px] w-[26px]" }),
+          /* @__PURE__ */ jsxRuntime.jsx("div", { className: sectionToolbarCardLead(), dir: "rtl", children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start gap-[16px]", dir: "rtl", children: [
+            icon ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: sectionToolbarCardIconBox(), children: icon }) : null,
+            /* @__PURE__ */ jsxRuntime.jsxs("div", { className: sectionToolbarCardCopy(), children: [
+              /* @__PURE__ */ jsxRuntime.jsx("h3", { className: sectionToolbarCardTitle(), children: title }),
+              description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: sectionToolbarCardDescription(), children: description }) : null
+            ] })
+          ] }) }),
+          showAction ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: sectionToolbarCardAction(), children: actionButtonNode }) : /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": true, className: "w-[148px]" })
+        ] }),
+        showSearch ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: sectionToolbarCardSearch(), dir: "rtl", children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex justify-start", children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: "w-full max-w-[228px]", children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: sectionToolbarCardSearchShell(), dir: "rtl", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": true, className: "inline-flex h-[19px] w-[19px] shrink-0 items-center justify-center text-[#64748b]", children: /* @__PURE__ */ jsxRuntime.jsx(ToolbarSearchIcon, {}) }),
+          /* @__PURE__ */ jsxRuntime.jsx(
+            "input",
+            {
+              value: search?.value,
+              placeholder: search?.placeholder,
+              readOnly: search?.value !== void 0 && !search?.onChange,
+              onChange: (event) => search?.onChange?.(event.currentTarget.value),
+              "aria-label": search?.placeholder ?? title,
+              className: sectionToolbarCardSearchInput()
+            }
+          )
+        ] }) }) }) }) : null
+      ] }) })
+    }
+  );
+}
+function SummaryIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "span",
+    {
+      className: "inline-flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-[17px] bg-[rgba(0,143,143,0.10)] text-[#008f8f]",
+      "aria-hidden": "true",
+      children: /* @__PURE__ */ jsxRuntime.jsx(Building2, { className: "h-[24px] w-[24px]", strokeWidth: 2.2 })
+    }
+  );
+}
+function SummaryArrow() {
+  return /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center text-[#008f8f]", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntime.jsx(ChevronRight, { className: "h-[30px] w-[30px]", strokeWidth: 2.8 }) });
+}
+function TaavBusinessProfileSummaryCard({
+  title,
+  description,
+  icon,
+  href,
+  onClick,
+  disabled = false,
+  className,
+  children,
+  ...rest
+}) {
+  const rootClassName = cn(
+    "group relative flex min-h-[101px] w-full max-w-[696px] items-center overflow-hidden rounded-[15px] border border-[rgba(145,170,190,0.5)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,247,249,0.98)_100%)] px-[28px] py-[17px] text-right shadow-[0_4px_10px_rgba(15,23,42,0.03)]",
+    className
+  );
+  const content = /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "ml-[16px] shrink-0", children: /* @__PURE__ */ jsxRuntime.jsx(SummaryArrow, {}) }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "ml-[22px] shrink-0", children: icon ?? /* @__PURE__ */ jsxRuntime.jsx(SummaryIcon, {}) }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid min-w-0 max-w-[520px] gap-[6px] text-right", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "m-0 text-[18px] font-semibold leading-[26px] text-[#3f3f46]", children: title }),
+      description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 max-w-[520px] text-[12.5px] font-normal leading-[22px] text-[#52657a]", children: description }) : null,
+      children
+    ] })
+  ] });
+  if (href && !disabled) {
+    return /* @__PURE__ */ jsxRuntime.jsx(
+      "a",
+      {
+        ...rest,
+        href,
+        className: rootClassName,
+        onClick: (event) => {
+          if (onClick) {
+            event.preventDefault();
+            onClick();
+          }
+        },
+        children: content
+      }
+    );
+  }
+  if (!disabled && onClick) {
+    return /* @__PURE__ */ jsxRuntime.jsx("button", { ...rest, type: "button", className: rootClassName, onClick, children: content });
+  }
+  return /* @__PURE__ */ jsxRuntime.jsx("article", { ...rest, className: rootClassName, "aria-disabled": disabled || void 0, children: content });
+}
+function TaavBusinessOwnershipCard({
+  title = "\u0646\u0648\u0639 \u0645\u0627\u0644\u06A9\u06CC\u062A \u0648 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u067E\u0627\u06CC\u0647",
+  description = "\u0648\u0631\u0648\u062F \u0627\u06CC\u0646 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u062F\u0631 \u062A\u0646\u0638\u06CC\u0645\u0627\u062A \u0642\u0631\u0627\u0631\u062F\u0627\u062F \u0636\u0631\u0648\u0631\u06CC \u0627\u0633\u062A",
+  value,
+  defaultValue = "individual",
+  onValueChange,
+  individualLabel = "\u062D\u0642\u06CC\u0642\u06CC",
+  legalLabel = "\u062D\u0642\u0648\u0642\u06CC",
+  individualIcon,
+  legalIcon,
+  infoLabel = "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u062F\u0631\u0628\u0627\u0631\u0647 \u0646\u0648\u0639 \u0645\u0627\u0644\u06A9\u06CC\u062A",
+  onInfoClick,
+  continueLabel = "\u0627\u062F\u0627\u0645\u0647",
+  continueHref,
+  onContinue,
+  disabled = false,
+  loading = false,
+  className,
+  ...rest
+}) {
+  const groupId = react.useId();
+  const [internalValue, setInternalValue] = react.useState(defaultValue);
+  const selectedValue = value ?? internalValue;
+  const selectValue = (nextValue) => {
+    if (disabled || loading) return;
+    if (value === void 0) setInternalValue(nextValue);
+    onValueChange?.(nextValue);
+  };
+  const continueContent = /* @__PURE__ */ jsxRuntime.jsx(ChevronRight, { className: "h-7 w-7", strokeWidth: 1.7, "aria-hidden": "true" });
+  const continueNode = continueHref ? /* @__PURE__ */ jsxRuntime.jsx("a", { href: continueHref, "aria-label": continueLabel, onClick: onContinue, className: "text-[#009ca6] transition-colors hover:text-[#007f86] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", children: continueContent }) : /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": continueLabel, onClick: onContinue, disabled: !onContinue || disabled || loading, className: "text-[#009ca6] transition-colors hover:text-[#007f86] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: continueContent });
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "article",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-business-ownership-card": true,
+      "data-value": selectedValue,
+      "data-disabled": disabled || void 0,
+      "data-loading": loading || void 0,
+      className: cn("w-full max-w-[690px] overflow-hidden rounded-[2px] border border-[#eef1f2] bg-white px-[18px] pb-[12px] pt-[14px] text-right shadow-[0_4px_14px_rgba(15,23,42,0.03)]", disabled ? "opacity-60" : "", className),
+      children: loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid gap-5", children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start justify-between gap-4", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: 52, height: 52, radius: "lg" }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid flex-1 justify-items-end gap-2", children: [
+            /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "title", width: "38%" }),
+            /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "text", width: "55%" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid grid-cols-2 gap-8", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: "100%", height: 58 }),
+          /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: "100%", height: 58 })
+        ] })
+      ] }) : /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "flex items-start justify-start gap-2", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex shrink-0 items-center gap-2", children: [
+            continueNode,
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex h-[56px] w-[56px] items-center justify-center rounded-[20px] bg-[rgba(0,156,166,0.10)] text-[#009ca6]", title: infoLabel, children: onInfoClick ? /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": infoLabel, onClick: onInfoClick, className: "rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", children: /* @__PURE__ */ jsxRuntime.jsx(Info, { className: "h-6 w-6", strokeWidth: 1.7 }) }) : /* @__PURE__ */ jsxRuntime.jsx(Info, { className: "h-6 w-6", strokeWidth: 1.7, "aria-hidden": "true" }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "min-w-0 pt-[2px] text-right", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[18px] font-bold leading-7 text-[#4b4b4b]", children: title }),
+            description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-[2px] text-[13px] leading-6 text-[#777777]", children: description }) : null
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { role: "radiogroup", "aria-label": typeof title === "string" ? title : "\u0646\u0648\u0639 \u0645\u0627\u0644\u06A9\u06CC\u062A", className: "mt-[12px] grid grid-cols-2 gap-[10px]", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(OwnershipOption, { id: `${groupId}-legal`, value: "legal", selectedValue, label: legalLabel, icon: legalIcon ?? /* @__PURE__ */ jsxRuntime.jsx(UsersRound, { className: "h-6 w-6", strokeWidth: 1.25 }), disabled, onSelect: selectValue }),
+          /* @__PURE__ */ jsxRuntime.jsx(OwnershipOption, { id: `${groupId}-individual`, value: "individual", selectedValue, label: individualLabel, icon: individualIcon ?? /* @__PURE__ */ jsxRuntime.jsx(UserRound, { className: "h-6 w-6", strokeWidth: 1.25 }), disabled, onSelect: selectValue })
+        ] })
+      ] })
+    }
+  );
+}
+function OwnershipOption({ id, value, selectedValue, label, icon, disabled, onSelect }) {
+  const selected = value === selectedValue;
+  return /* @__PURE__ */ jsxRuntime.jsxs("button", { id, type: "button", role: "radio", "aria-checked": selected, disabled, onClick: () => onSelect(value), className: cn("flex min-h-[64px] flex-col items-center justify-center gap-1 border-b-2 border-transparent px-3 py-1 text-[13px] text-[#666666] transition-[border-color,color,background-color] hover:bg-[#fafcfc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", selected ? "border-[#4f4f4f] text-[#4f4f4f]" : ""), children: [
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-[#777777]", "aria-hidden": "true", children: icon }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { children: label })
+  ] });
+}
+function TaavBusinessFormDialogCard({
+  title,
+  description,
+  fields,
+  secondaryToggle,
+  confirmLabel = "\u062B\u0628\u062A",
+  cancelLabel = "\u0644\u063A\u0648",
+  onConfirm,
+  onCancel,
+  disabled = false,
+  loading = false,
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  const titleId = react.useId();
+  const [toggleState, setToggleState] = react.useState(Boolean(secondaryToggle?.defaultSelected));
+  const toggleSelected = secondaryToggle?.selected ?? toggleState;
+  const updateToggle = () => {
+    if (disabled || loading || !secondaryToggle) return;
+    const next = !toggleSelected;
+    if (secondaryToggle.selected === void 0) setToggleState(next);
+    secondaryToggle.onChange?.(next);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { ...rest, dir: "rtl", "aria-labelledby": titleId, "data-taav-business-form-dialog-card": true, "data-theme-mode": themeMode, className: cn("flex min-h-[440px] w-full max-w-[520px] flex-col overflow-hidden rounded-[28px] border border-[var(--taav-business-form-dialog-border)] bg-[var(--taav-business-form-dialog-surface)] text-right text-[var(--taav-business-form-dialog-body)] shadow-[var(--taav-business-form-dialog-shadow)]", disabled ? "opacity-60" : "", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex flex-1 flex-col px-[24px] pb-[22px] pt-[22px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("h2", { id: titleId, className: "m-0 text-[22px] font-bold leading-8 text-[var(--taav-business-form-dialog-title)]", children: title }),
+      description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-[18px] text-[13px] leading-6 text-[var(--taav-business-form-dialog-body)]", children: description }) : null,
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-[16px] grid gap-[16px]", children: [
+        fields.map((field) => /* @__PURE__ */ jsxRuntime.jsx(DialogField, { field, disabled: disabled || loading }, field.id)),
+        secondaryToggle ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: "border-t border-[var(--taav-business-form-dialog-divider)] pt-[16px]", children: /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-end gap-3", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", role: "checkbox", "aria-checked": toggleSelected, onClick: updateToggle, disabled: disabled || loading, className: cn("inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[var(--taav-business-form-dialog-field-border)] text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", toggleSelected ? "border-[var(--taav-business-form-dialog-accent)] bg-[var(--taav-business-form-dialog-accent)]" : "bg-transparent"), children: toggleSelected ? /* @__PURE__ */ jsxRuntime.jsx(Check, { className: "h-6 w-6", strokeWidth: 2, "aria-hidden": "true" }) : null }),
+          /* @__PURE__ */ jsxRuntime.jsx("div", { dir: "rtl", className: "min-w-0 flex-1", children: /* @__PURE__ */ jsxRuntime.jsx(DialogField, { field: { id: `${titleId}-secondary`, label: secondaryToggle.label ?? "\u067E\u0644\u0627\u06A9 \u0641\u0631\u0639\u06CC", required: true, helperText: "\u0644\u0637\u0641\u0627\u064B \u0639\u062F\u062F \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F." }, disabled: disabled || loading, compact: true, active: toggleSelected }) })
+        ] }) }) : null
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsxs("footer", { className: "flex items-center justify-start gap-[42px] border-t border-[var(--taav-business-form-dialog-footer-border)] bg-[var(--taav-business-form-dialog-footer)] px-[30px] py-[21px] text-[16px] font-semibold text-[var(--taav-business-form-dialog-accent)]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onConfirm, disabled: disabled || loading, className: "transition-colors hover:text-[#007f86] focus-visible:outline-none focus-visible:underline disabled:opacity-50", children: confirmLabel }),
+      /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onCancel, disabled: disabled || loading, className: "transition-colors hover:text-[#007f86] focus-visible:outline-none focus-visible:underline disabled:opacity-50", children: cancelLabel })
+    ] })
+  ] });
+}
+function DialogField({ field, disabled, compact = false, active = false }) {
+  const inputId = react.useId();
+  const [internalValue, setInternalValue] = react.useState(field.defaultValue ?? "");
+  const currentValue = field.value ?? internalValue;
+  const change = (next) => {
+    if (field.value === void 0) setInternalValue(next);
+    field.onChange?.(next);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("grid gap-[5px]", compact ? "gap-[3px]" : ""), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("label", { htmlFor: inputId, className: cn("text-[15px] font-semibold leading-6", active ? "text-[var(--taav-business-form-dialog-accent)]" : "text-[var(--taav-business-form-dialog-label)]"), children: [
+      field.label,
+      field.required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "mr-1 text-[#ef4444]", "aria-hidden": "true", children: "*" }) : null
+    ] }),
+    field.multiline ? /* @__PURE__ */ jsxRuntime.jsx("textarea", { id: inputId, value: currentValue, placeholder: field.placeholder, disabled, required: field.required, onChange: (event) => change(event.target.value), className: cn("min-h-[80px] w-full resize-y rounded-[9px] border bg-[var(--taav-business-form-dialog-field-bg)] px-3 py-2 text-[14px] text-[var(--taav-business-form-dialog-field-text)] outline-none focus:border-[var(--taav-business-form-dialog-accent)] focus:ring-2 focus:ring-[rgba(0,156,166,0.12)]", active ? "border-[var(--taav-business-form-dialog-accent)]" : "border-[var(--taav-business-form-dialog-field-border)]") }) : /* @__PURE__ */ jsxRuntime.jsx("input", { id: inputId, value: currentValue, placeholder: field.placeholder, disabled, required: field.required, onChange: (event) => change(event.target.value), className: cn("h-[38px] w-full rounded-[9px] border bg-[var(--taav-business-form-dialog-field-bg)] px-3 text-[14px] text-[var(--taav-business-form-dialog-field-text)] outline-none focus:border-[var(--taav-business-form-dialog-accent)] focus:ring-2 focus:ring-[rgba(0,156,166,0.12)]", active ? "border-[var(--taav-business-form-dialog-accent)]" : "border-[var(--taav-business-form-dialog-field-border)]") }),
+    field.helperText ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex justify-between text-[11px] leading-5 text-[var(--taav-business-form-dialog-muted)]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { children: field.helperText }),
+      /* @__PURE__ */ jsxRuntime.jsxs("span", { children: [
+        currentValue.length,
+        "/255"
+      ] })
+    ] }) : null
+  ] });
+}
+function TaavBusinessOwnerCard({
+  title = "\u0645\u0627\u0644\u06A9 \u06A9\u0633\u0628 \u0648 \u06A9\u0627\u0631",
+  description = "\u062A\u0648\u0635\u06CC\u0647 \u0645\u06CC\u200C\u0634\u0648\u062F \u062F\u0631 \u0635\u0648\u0631\u062A\u06CC \u06A9\u0647 \u06A9\u062F \u0645\u0644\u06CC \u0634\u0645\u0627 \u062F\u0631 \u0633\u0627\u0645\u0627\u0646\u0647 \u062B\u0628\u062A \u0646\u0634\u062F\u0647 \u0627\u0633\u062A\u060C \u0627\u0632 \u0637\u0631\u06CC\u0642 \u0648\u06CC\u0631\u0627\u06CC\u0634 \u0627\u0642\u062F\u0627\u0645 \u0628\u0647 \u062B\u0628\u062A \u06A9\u062F \u0645\u0644\u06CC \u062E\u0648\u062F \u06A9\u0646\u06CC\u062F.",
+  ownerName,
+  phone,
+  secondaryText = "-",
+  avatar,
+  editLabel = "\u0648\u06CC\u0631\u0627\u06CC\u0634 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0645\u0627\u0644\u06A9 \u06A9\u0633\u0628\u200C\u0648\u06A9\u0627\u0631",
+  callLabel = "\u062A\u0645\u0627\u0633 \u0628\u0627 \u0645\u0627\u0644\u06A9 \u06A9\u0633\u0628\u200C\u0648\u06A9\u0627\u0631",
+  phoneBadge,
+  onEdit,
+  onCall,
+  disabled = false,
+  loading = false,
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { ...rest, dir: "rtl", "data-taav-business-owner-card": true, "data-theme-mode": themeMode, "data-disabled": disabled || void 0, "data-loading": loading || void 0, className: cn("w-full max-w-[690px] overflow-hidden rounded-[8px] border border-[var(--taav-business-owner-border)] bg-[var(--taav-business-owner-surface)] text-right shadow-[var(--taav-business-owner-shadow)]", disabled ? "opacity-60" : "", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "border-b border-[var(--taav-business-owner-header-border)] bg-[var(--taav-business-owner-header)] px-[18px] py-[10px] text-[var(--taav-business-owner-header-text)]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[17px] font-bold leading-7", children: title }),
+      description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[12px] font-normal leading-5", children: description }) : null
+    ] }),
+    loading ? /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex h-[88px] items-center gap-4 px-[10px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { className: "h-[70px] w-[70px] animate-pulse rounded-[8px] bg-[var(--taav-business-owner-avatar)]" }),
+      /* @__PURE__ */ jsxRuntime.jsx("span", { className: "h-4 w-48 animate-pulse rounded bg-[var(--taav-business-owner-muted)]" })
+    ] }) : /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex min-h-[88px] items-center justify-between gap-4 px-[10px] py-[8px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex min-w-0 items-center gap-3", children: [
+        /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[8px] bg-[var(--taav-business-owner-avatar)] text-[var(--taav-business-owner-avatar-icon)]", "aria-hidden": avatar ? void 0 : true, children: avatar ?? /* @__PURE__ */ jsxRuntime.jsx(UserRound, { className: "h-12 w-12", strokeWidth: 1.6 }) }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "min-w-0 text-right text-[var(--taav-business-owner-text)]", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "m-0 truncate text-[16px] font-bold leading-7", children: ownerName }),
+          phone ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[12px] leading-5", children: phone }) : null,
+          secondaryText ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[12px] leading-5", children: secondaryText }) : null
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex shrink-0 items-center gap-5 text-[var(--taav-business-owner-action)]", children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", "aria-label": callLabel, onClick: onCall, disabled: disabled || !onCall, className: "relative inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-[var(--taav-business-owner-action-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(Phone, { className: "h-7 w-7", strokeWidth: 1.6 }),
+          phoneBadge ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "absolute bottom-0 right-0 inline-flex min-h-4 min-w-4 translate-x-1/4 translate-y-1/4 items-center justify-center rounded-full bg-[#a8a8a8] px-1 text-[10px] font-bold text-white", children: phoneBadge }) : null
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": editLabel, onClick: onEdit, disabled: disabled || !onEdit, className: "inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:bg-[var(--taav-business-owner-action-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: /* @__PURE__ */ jsxRuntime.jsx(SquarePen, { className: "h-7 w-7", strokeWidth: 1.6 }) })
+      ] })
+    ] })
+  ] });
+}
+function resolveIndex(value, steps, fallback) {
+  if (typeof value === "number") return Math.max(0, Math.min(value, steps.length - 1));
+  if (typeof value === "string") {
+    const index = steps.findIndex((step) => step.id === value);
+    if (index >= 0) return index;
+  }
+  return fallback;
+}
+function TaavFormStepIndicator({
+  steps,
+  activeStep,
+  defaultActiveStep = 0,
+  completedSteps = [],
+  intro,
+  onStepChange,
+  clickable = false,
+  disabled = false,
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  const activeIndex = resolveIndex(activeStep ?? defaultActiveStep, steps, 0);
+  const handleStepClick = (step, index) => {
+    if (disabled || !clickable) return;
+    onStepChange?.(step.id, index);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs("nav", { ...rest, dir: "rtl", "aria-label": "\u0645\u0631\u0627\u062D\u0644 \u0641\u0631\u0645", "data-taav-form-step-indicator": true, "data-theme-mode": themeMode, "data-disabled": disabled || void 0, className: cn("w-full border-b border-[var(--taav-form-step-divider)] px-[20px] pb-[14px] pt-[18px] text-right", disabled ? "opacity-60" : "", className), children: [
+    intro ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-center text-[13px] leading-6 text-[var(--taav-form-step-intro)]", children: intro }) : null,
+    /* @__PURE__ */ jsxRuntime.jsx("ol", { role: "list", className: cn("mx-auto mt-[14px] grid max-w-[420px] items-start", steps.length === 2 ? "grid-cols-2" : ""), children: steps.map((step, index) => {
+      const complete = completedSteps.includes(step.id) || index < activeIndex;
+      const current = index === activeIndex;
+      const stepContent = /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border text-[14px] font-normal transition-colors", complete ? "border-[var(--taav-form-step-complete-border)] bg-[var(--taav-form-step-complete-bg)] text-[var(--taav-form-step-complete-text)]" : current ? "border-[var(--taav-form-step-active)] bg-[var(--taav-form-step-active-bg)] text-[var(--taav-form-step-active-text)]" : "border-[var(--taav-form-step-inactive-border)] bg-transparent text-[var(--taav-form-step-inactive-text)]"), children: complete ? /* @__PURE__ */ jsxRuntime.jsx(Check, { className: "h-[17px] w-[17px]", strokeWidth: 2, "aria-hidden": "true" }) : index + 1 }),
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("mt-[5px] text-[13px] leading-5 transition-colors", current || complete ? "text-[var(--taav-form-step-label-active)]" : "text-[var(--taav-form-step-label-inactive)]"), children: step.label }),
+        step.description ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "sr-only", children: step.description }) : null
+      ] });
+      return /* @__PURE__ */ jsxRuntime.jsx("li", { className: "flex justify-center text-center", children: clickable ? /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-current": current ? "step" : void 0, "aria-label": `\u0645\u0631\u062D\u0644\u0647 ${index + 1}: ${step.label}`, onClick: () => handleStepClick(step, index), disabled, className: "flex min-w-[100px] flex-col items-center rounded-lg px-3 pb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", children: stepContent }) : /* @__PURE__ */ jsxRuntime.jsx("div", { "aria-current": current ? "step" : void 0, className: "flex min-w-[100px] flex-col items-center px-3 pb-1", children: stepContent }) }, step.id);
+    }) })
+  ] });
+}
+var DEFAULT_CHANNELS = [
+  { id: "mobile", label: "\u0634\u0645\u0627\u0631\u0647 \u062A\u0644\u0641\u0646 \u0647\u0645\u0631\u0627\u0647" },
+  { id: "landline", label: "\u062A\u0644\u0641\u0646 \u062B\u0627\u0628\u062A" },
+  { id: "fax", label: "\u0634\u0645\u0627\u0631\u0647 \u0641\u06A9\u0633" },
+  { id: "email", label: "\u0627\u06CC\u0645\u06CC\u0644" },
+  { id: "website", label: "\u0648\u0628\u0633\u0627\u06CC\u062A" },
+  { id: "social", label: "\u0634\u0628\u06A9\u0647\u200C\u0647\u0627\u06CC \u0627\u062C\u062A\u0645\u0627\u0639\u06CC" }
+];
+function TaavCommunicationChannels({
+  channels = DEFAULT_CHANNELS,
+  expandedId,
+  defaultExpandedId = "social",
+  onExpandedChange,
+  onBack,
+  backLabel = "\u0628\u0627\u0632\u06AF\u0634\u062A",
+  emptyText = "\u0645\u0648\u0631\u062F\u06CC \u0628\u0631\u0627\u06CC \u0646\u0645\u0627\u06CC\u0634 \u0648\u062C\u0648\u062F \u0646\u062F\u0627\u0631\u062F",
+  themeMode = "auto",
+  disabled = false,
+  className,
+  ...rest
+}) {
+  const resolvedExpandedId = expandedId ?? defaultExpandedId;
+  return /* @__PURE__ */ jsxRuntime.jsxs("section", { ...rest, dir: "rtl", "aria-label": "\u0627\u0637\u0644\u0627\u0639\u0627\u062A \u062A\u0645\u0627\u0633", "data-taav-communication-channels": true, "data-theme-mode": themeMode, className: cn("w-full max-w-[690px] text-right", disabled ? "opacity-60" : "", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "grid gap-[8px]", children: channels.map((channel) => {
+      const isExpanded = resolvedExpandedId === channel.id;
+      const channelDisabled = disabled || channel.disabled;
+      return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("overflow-hidden rounded-[12px] border border-[var(--taav-communication-border)] bg-[var(--taav-communication-surface)]", isExpanded ? "min-h-[106px]" : "min-h-[54px]"), children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", "aria-expanded": isExpanded, disabled: channelDisabled, onClick: () => onExpandedChange?.(channel.id), className: "flex min-h-[54px] w-full items-center justify-between gap-3 px-[14px] text-[16px] font-semibold text-[var(--taav-communication-label)] transition-colors hover:bg-[var(--taav-communication-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "flex min-w-0 items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntime.jsx(CircleDot, { className: "h-[24px] w-[24px] shrink-0 text-[var(--taav-communication-accent)]", strokeWidth: 1.15 }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "truncate", children: channel.label })
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsx(Plus, { className: "h-[22px] w-[22px] shrink-0 text-[var(--taav-communication-accent)]", strokeWidth: 1.6, "aria-hidden": "true" })
+        ] }),
+        isExpanded ? /* @__PURE__ */ jsxRuntime.jsx("div", { className: "border-t border-[var(--taav-communication-divider)] px-[18px] py-[14px] text-center text-[14px] text-[var(--taav-communication-muted)]", children: channel.content ?? channel.emptyText ?? emptyText }) : null
+      ] }, channel.id);
+    }) }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex justify-center pt-[16px]", children: /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onBack, disabled: disabled || !onBack, className: "rounded-[8px] bg-[var(--taav-communication-button)] px-[10px] py-[6px] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--taav-communication-button-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed disabled:opacity-50", children: backLabel }) })
+  ] });
+}
+var DEFAULT_ITEMS = [
+  { id: "mobile", label: "\u0634\u0645\u0627\u0631\u0647 \u062A\u0644\u0641\u0646\u200C\u0647\u0627\u06CC \u0647\u0645\u0631\u0627\u0647", icon: /* @__PURE__ */ jsxRuntime.jsx(Smartphone, {}) },
+  { id: "landline", label: "\u062A\u0644\u0641\u0646 \u062B\u0627\u0628\u062A", icon: /* @__PURE__ */ jsxRuntime.jsx(PhoneCall, {}) },
+  { id: "fax", label: "\u0634\u0645\u0627\u0631\u0647 \u0641\u06A9\u0633", icon: /* @__PURE__ */ jsxRuntime.jsx(Printer, {}) },
+  { id: "email", label: "\u0627\u06CC\u0645\u06CC\u0644", icon: /* @__PURE__ */ jsxRuntime.jsx(Mail, {}) },
+  { id: "website", label: "\u0648\u0628\u200C\u0633\u0627\u06CC\u062A", icon: /* @__PURE__ */ jsxRuntime.jsx(Earth, {}) }
+];
+function TaavCommunicationChannelsCard({
+  title = "\u062F\u0641\u062A\u0631 \u0641\u0646\u06CC",
+  primaryLabel = "\u0627\u0646\u062A\u062E\u0627\u0628 \u0628\u0647 \u0639\u0646\u0648\u0627\u0646 \u0631\u0627\u0647 \u0627\u0631\u062A\u0628\u0627\u0637 \u0627\u0635\u0644\u06CC",
+  primaryDescription = "\u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u06CC\u062F \u0628\u0627 \u0627\u0646\u062A\u062E\u0627\u0628 \u0631\u0627\u0647 \u0627\u0631\u062A\u0628\u0627\u0637 \u0627\u0635\u0644\u06CC\u060C \u062A\u0645\u0627\u0633\u200C\u0647\u0627\u060C \u067E\u06CC\u0627\u0645\u200C\u0647\u0627 \u0648 \u0628\u0647\u200C\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06CC\u200C\u0647\u0627\u06CC \u0627\u06CC\u0646 \u0628\u062E\u0634 \u0631\u0627 \u0627\u0632 \u0637\u0631\u06CC\u0642 \u0622\u0646 \u062F\u0631\u06CC\u0627\u0641\u062A \u06A9\u0646\u06CC\u062F.",
+  primaryEnabled = false,
+  onPrimaryChange,
+  postalCode = "-",
+  mapLabel = "\u0645\u0634\u0627\u0647\u062F\u0647 \u0631\u0648\u06CC \u0646\u0642\u0634\u0647",
+  onMapClick,
+  location = "-",
+  phoneBadge,
+  items = DEFAULT_ITEMS,
+  onMenuClick,
+  disabled = false,
+  loading = false,
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { ...rest, dir: "rtl", "data-taav-communication-channels-card": true, "data-theme-mode": themeMode, className: cn("w-full max-w-[690px] overflow-hidden rounded-[12px] border border-[var(--taav-communication-card-border)] bg-[var(--taav-communication-card-surface)] px-[8px] pb-[18px] pt-[12px] text-right shadow-[var(--taav-communication-card-shadow)]", disabled ? "opacity-60" : "", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "flex items-start justify-between gap-4 px-[8px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[20px] font-bold leading-8 text-[var(--taav-communication-card-title)]", children: title }),
+      /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", onClick: onMenuClick, disabled: disabled || loading || !onMenuClick, "aria-label": "\u06AF\u0632\u06CC\u0646\u0647\u200C\u0647\u0627\u06CC \u0628\u06CC\u0634\u062A\u0631", className: "text-[var(--taav-communication-card-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:opacity-50", children: /* @__PURE__ */ jsxRuntime.jsx(EllipsisVertical, { className: "h-6 w-6" }) })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "px-[8px] pt-[8px]", children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-start justify-between gap-5", children: [
+        /* @__PURE__ */ jsxRuntime.jsx(Switch, { checked: primaryEnabled, onChange: onPrimaryChange, disabled: disabled || loading }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "rtl", className: "min-w-0 text-right", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "m-0 text-[15px] font-semibold leading-6 text-[var(--taav-communication-card-title)]", children: primaryLabel }),
+          /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-[2px] text-[12px] leading-5 text-[var(--taav-communication-card-muted)]", children: primaryDescription })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-[14px] min-h-[128px] border-t border-[var(--taav-communication-card-divider)] pt-[10px]", children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start justify-between text-[13px] text-[var(--taav-communication-card-muted)]", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "flex w-[145px] shrink-0 flex-col items-end gap-0.5 text-right", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "w-full text-right", children: location }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "w-full text-right", children: "\u06A9\u062F\u067E\u0633\u062A\u06CC" })
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsx("span", { className: "w-[145px] shrink-0 text-left", children: postalCode })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", onClick: onMapClick, disabled: disabled || loading || !onMapClick, className: "mx-auto mt-[10px] flex items-center gap-1 text-[14px] font-semibold text-[var(--taav-communication-card-map)] opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9] disabled:cursor-not-allowed", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(MapPinned, { className: "h-6 w-6" }),
+          mapLabel
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-[12px] border-t border-[var(--taav-communication-card-divider)] px-[8px] pt-[10px]", children: /* @__PURE__ */ jsxRuntime.jsx("ul", { className: "m-0 grid list-none gap-[5px] p-0", children: items.map((item) => /* @__PURE__ */ jsxRuntime.jsxs("li", { className: "flex items-center justify-between gap-4 text-[15px] leading-7 text-[var(--taav-communication-card-text)]", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { children: item.label }),
+      /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "relative inline-flex h-7 w-7 items-center justify-center text-[var(--taav-communication-card-icon)]", children: [
+        item.icon,
+        item.id === "mobile" && phoneBadge ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--taav-communication-card-accent)] px-1 text-[10px] leading-none text-white", children: phoneBadge }) : null
+      ] })
+    ] }, item.id)) }) })
+  ] });
+}
+function Switch({ checked, onChange, disabled }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", role: "switch", "aria-checked": checked, onClick: () => onChange?.(!checked), disabled, className: cn("relative inline-flex h-[18px] w-[38px] shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80d7d9]", checked ? "bg-[#9adbd9]" : "bg-[#c8ced7]"), children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("absolute left-0 h-[20px] w-[20px] rounded-full shadow-[0_1px_3px_rgba(15,23,42,0.16)] transition-transform", checked ? "bg-[var(--taav-communication-card-accent)] translate-x-0" : "bg-white translate-x-[18px]") }) });
+}
 function RecommendationCardActionIcon({ className }) {
-  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M10 4 6 8l4 4", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) });
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M6 4l4 4-4 4", stroke: "currentColor", strokeWidth: "2.7", strokeLinecap: "round", strokeLinejoin: "round" }) });
 }
 function RecommendationCardDefaultIcon({ className }) {
   return /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 24 24", fill: "none", "aria-hidden": true, className, children: [
@@ -1039,19 +2407,17 @@ function RecommendationCardDefaultIcon({ className }) {
 }
 var recommendationCardRoot = classVarianceAuthority.cva(
   [
-    "mx-auto w-full border border-solid",
+    "mx-auto w-[712px] max-w-none border-0",
     "bg-[var(--taav-recommendation-card-surface)]",
-    "border-[color:var(--taav-recommendation-card-border)]",
-    "rounded-[var(--taav-recommendation-card-radius)]",
-    "shadow-[var(--taav-recommendation-card-shadow)]",
+    "rounded-none shadow-none",
     TAAV_INTERACTION.base
   ],
   {
     variants: {
       size: {
-        sm: "p-[var(--taav-recommendation-card-padding-sm)]",
-        md: "p-[var(--taav-recommendation-card-padding-md)]",
-        lg: "p-[var(--taav-recommendation-card-padding-lg)]"
+        sm: "h-[var(--taav-recommendation-card-height-sm)] p-[var(--taav-recommendation-card-padding-sm)]",
+        md: "h-[var(--taav-recommendation-card-height-md)] p-[var(--taav-recommendation-card-padding-md)]",
+        lg: "h-[var(--taav-recommendation-card-height-lg)] p-[var(--taav-recommendation-card-padding-lg)]"
       },
       width: {
         normal: "max-w-[var(--taav-recommendation-card-max-width-normal)]",
@@ -1077,7 +2443,7 @@ var recommendationCardRoot = classVarianceAuthority.cva(
   }
 );
 var recommendationCardLayout = classVarianceAuthority.cva(
-  "flex flex-col gap-[var(--taav-recommendation-card-gap)] md:flex-row md:items-center md:justify-between"
+  "flex items-start justify-between gap-[var(--taav-recommendation-card-gap)]"
 );
 var recommendationCardLeading = classVarianceAuthority.cva(
   "flex min-w-0 flex-1 items-start gap-[var(--taav-recommendation-card-leading-gap)]"
@@ -1106,7 +2472,7 @@ var recommendationCardIconBox = classVarianceAuthority.cva(
 );
 var recommendationCardAction = classVarianceAuthority.cva(
   [
-    "inline-flex shrink-0 items-center justify-center self-start",
+    "mt-[15px] inline-flex shrink-0 items-center justify-center self-start",
     "text-[var(--taav-recommendation-card-action-color)]",
     "[&_svg]:h-[var(--taav-recommendation-card-action-icon-size)]",
     "[&_svg]:w-[var(--taav-recommendation-card-action-icon-size)]",
@@ -1126,9 +2492,9 @@ var recommendationCardAction = classVarianceAuthority.cva(
     }
   }
 );
-var recommendationCardCopy = classVarianceAuthority.cva("grid min-w-0 flex-1 gap-[var(--taav-recommendation-card-copy-gap)]");
+var recommendationCardCopy = classVarianceAuthority.cva("grid min-w-0 max-w-[370px] flex-1 justify-items-end gap-[var(--taav-recommendation-card-copy-gap)]");
 var recommendationCardTitle = classVarianceAuthority.cva(
-  "m-0 text-right font-black leading-[var(--taav-leading-tight)] text-[var(--taav-recommendation-card-title)]",
+  "m-0 text-right font-semibold leading-[var(--taav-recommendation-card-title-line-height)] text-[var(--taav-recommendation-card-title)]",
   {
     variants: {
       size: {
@@ -1143,7 +2509,7 @@ var recommendationCardTitle = classVarianceAuthority.cva(
   }
 );
 var recommendationCardDescription = classVarianceAuthority.cva(
-  "m-0 text-right font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-recommendation-card-description)]",
+  "m-0 text-right font-normal leading-[var(--taav-recommendation-card-description-line-height)] text-[var(--taav-recommendation-card-description)]",
   {
     variants: {
       size: {
@@ -1158,7 +2524,7 @@ var recommendationCardDescription = classVarianceAuthority.cva(
   }
 );
 var recommendationCardTrailing = classVarianceAuthority.cva(
-  "flex shrink-0 flex-wrap items-center justify-end gap-[var(--taav-recommendation-card-trailing-gap)] md:justify-start"
+  "mt-0 flex shrink-0 flex-wrap items-center justify-end gap-[var(--taav-recommendation-card-trailing-gap)] self-start"
 );
 var recommendationCardTone = classVarianceAuthority.cva("", {
   variants: {
@@ -1272,6 +2638,7 @@ function TaavBusinessRecommendationCard({
             onClick: onDetailsClick,
             disabled: detailsDisabled,
             size: size === "lg" ? "md" : size === "sm" ? "sm" : "md",
+            wrapperClassName: "mt-[6px] justify-self-start text-[12.5px] leading-[22px] text-[#7a8a9c]",
             children: detailsLabel
           }
         ) : null
@@ -1288,7 +2655,12 @@ function TaavBusinessRecommendationCard({
         disabled: switchDisabled,
         size: mapSwitchSize(size),
         tone: tone === "info" ? "brand" : tone === "danger" ? "danger" : tone === "warning" ? "warning" : tone === "success" ? "success" : tone === "neutral" ? "neutral" : "brand",
-        ariaLabel: "\u0648\u0636\u0639\u06CC\u062A \u0641\u0639\u0627\u0644\u200C\u0633\u0627\u0632\u06CC \u062A\u0646\u0638\u06CC\u0645"
+        ariaLabel: "\u0648\u0636\u0639\u06CC\u062A \u0641\u0639\u0627\u0644\u200C\u0633\u0627\u0632\u06CC \u062A\u0646\u0638\u06CC\u0645",
+        wrapperClassName: cn(
+          "!h-[40px] !w-[180px] !min-w-[180px] !gap-[4px] !border-0 !bg-[var(--taav-activation-switch-track-bg)] !p-[3px]",
+          "[&_[role=radio]]:h-[32px] [&_[role=radio]]:min-w-[88px] [&_[role=radio]]:px-[14px] [&_[role=radio]]:py-0",
+          "[&_[role=radio]]:text-[13px] [&_[role=radio]]:font-semibold"
+        )
       }
     ) })
   ] });
@@ -1296,6 +2668,7 @@ function TaavBusinessRecommendationCard({
     "article",
     {
       ...rest,
+      dir: "rtl",
       "data-taav-business-recommendation-card": true,
       "data-size": size,
       "data-width": width,
@@ -1315,50 +2688,6 @@ function TaavBusinessRecommendationCard({
       children: body
     }
   );
-}
-function TaavTooltipProvider({ children }) {
-  return /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Provider, { delayDuration: 200, skipDelayDuration: 100, children });
-}
-function TaavTooltip({
-  content,
-  side = "top",
-  align = "center",
-  delayDuration = 200,
-  children,
-  contentClassName
-}) {
-  return /* @__PURE__ */ jsxRuntime.jsxs(TooltipPrimitive__namespace.Root, { delayDuration, children: [
-    /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Trigger, { asChild: true, children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex rounded-[var(--taav-radius-sm)] focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]", children }) }),
-    /* @__PURE__ */ jsxRuntime.jsx(TooltipPrimitive__namespace.Portal, { children: /* @__PURE__ */ jsxRuntime.jsxs(
-      TooltipPrimitive__namespace.Content,
-      {
-        side,
-        align,
-        sideOffset: 6,
-        collisionPadding: 8,
-        className: cn(
-          "z-[var(--taav-z-tooltip)] max-w-[var(--taav-tooltip-max-width)]",
-          "rounded-[var(--taav-tooltip-radius)] border border-[color:var(--taav-border)]",
-          "bg-[var(--taav-surface-elevated)] px-[var(--taav-tooltip-padding-x)] py-[var(--taav-tooltip-padding-y)]",
-          "text-right text-[length:var(--taav-text-xs)] leading-[var(--taav-leading-relaxed)]",
-          "text-[var(--taav-text-body)] shadow-[var(--taav-tooltip-shadow)]",
-          contentClassName
-        ),
-        style: { direction: "rtl" },
-        children: [
-          content,
-          /* @__PURE__ */ jsxRuntime.jsx(
-            TooltipPrimitive__namespace.Arrow,
-            {
-              width: 10,
-              height: 5,
-              className: "fill-[var(--taav-surface-elevated)]"
-            }
-          )
-        ]
-      }
-    ) })
-  ] });
 }
 var businessSidebarRoot = classVarianceAuthority.cva(
   [
@@ -1551,6 +2880,7 @@ var businessSidebarNavPathRoot = classVarianceAuthority.cva(
   [
     "flex w-full shrink-0 items-center justify-start",
     "min-h-[var(--taav-business-nav-path-height)]",
+    "border-t border-[color:var(--taav-business-nav-path-border-top)]",
     "border-b border-[color:var(--taav-business-nav-path-border)]",
     "bg-[var(--taav-business-nav-path-bg)]",
     "px-[var(--taav-business-nav-path-px)] py-[var(--taav-business-nav-path-py)]"
@@ -1562,7 +2892,7 @@ var businessSidebarNavPathList = classVarianceAuthority.cva(
 var businessSidebarNavPathLink = classVarianceAuthority.cva(
   [
     "inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-underline",
-    "text-[length:var(--taav-business-nav-path-text-size)] leading-tight",
+    "text-[length:var(--taav-business-nav-path-text-size)] leading-5 tracking-[-0.005em]",
     "text-[var(--taav-business-nav-path-text)]",
     "transition-colors hover:text-[var(--taav-business-nav-path-text-hover)]",
     "focus-visible:outline-none focus-visible:shadow-[var(--taav-focus-ring)]"
@@ -1571,12 +2901,12 @@ var businessSidebarNavPathLink = classVarianceAuthority.cva(
 var businessSidebarNavPathCurrent = classVarianceAuthority.cva(
   [
     "inline-flex min-w-0 items-center truncate",
-    "text-[length:var(--taav-business-nav-path-text-size)] font-bold leading-tight",
+    "text-[length:var(--taav-business-nav-path-text-size)] font-normal leading-5 tracking-[-0.005em]",
     "text-[var(--taav-business-nav-path-text-current)]"
   ].join(" ")
 );
 var businessSidebarNavPathSeparator = classVarianceAuthority.cva(
-  "inline-flex shrink-0 text-[var(--taav-business-nav-path-separator)] [&_svg]:h-3 [&_svg]:w-3"
+  "inline-flex shrink-0 items-center justify-center text-[var(--taav-business-nav-path-separator)] [&_svg]:h-[var(--taav-business-nav-path-separator-size)] [&_svg]:w-[var(--taav-business-nav-path-separator-size)]"
 );
 var DEFAULT_BUSINESS_SIDEBAR_NAV_PATH = [
   { label: "\u062E\u0627\u0646\u0647", id: "home" }
@@ -1982,28 +3312,148 @@ function TaavBusinessSidebar({
     placement === "right" ? sidebarRail : null
   ] });
 }
-function ModuleCardArrowIcon({ direction = "enter", className }) {
-  const path = direction === "back" ? "M6 4l4 4-4 4" : "M10 4 6 8l4 4";
-  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 16 16", fill: "none", "aria-hidden": true, className, children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: path, stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }) });
+function normalizeMobileNumber(value) {
+  return value.replace(/\D/g, "").slice(0, 50);
+}
+function isPotentiallyValidIranMobile(value) {
+  if (!value) return true;
+  return /^09\d{0,9}$/.test(value) || /^9\d{0,9}$/.test(value);
+}
+function MobileCardIcon({ icon }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex h-[86px] w-[86px] shrink-0 items-center justify-center text-[#174154]", "aria-hidden": "true", children: icon ?? /* @__PURE__ */ jsxRuntime.jsxs("svg", { viewBox: "0 0 86 86", className: "h-[86px] w-[86px]", role: "img", "aria-label": "\u0646\u0634\u0627\u0646 \u0648\u0627\u062D\u062F\u06CC\u06A9", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M31 14 47 18v51l-16 4Z", fill: "#174154" }),
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M47 18c13 1 20 7 20 16 0 7-5 12-13 15 8-4 13-9 13-15 0-8-7-14-20-16Z", fill: "#18b86b" }),
+    /* @__PURE__ */ jsxRuntime.jsx("path", { d: "M30 74c10 2 19 1 27-3-8 6-18 8-29 5Z", fill: "#18b86b" }),
+    /* @__PURE__ */ jsxRuntime.jsx("text", { x: "43", y: "82", textAnchor: "middle", fill: "#18b86b", fontSize: "6", fontFamily: "Tahoma", children: "\u0648\u0627\u062D\u062F\u06CC\u06A9" })
+  ] }) });
+}
+function ClearButton({ onClick }) {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "button",
+    {
+      type: "button",
+      onClick,
+      "aria-label": "\u067E\u0627\u06A9 \u06A9\u0631\u062F\u0646 \u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644",
+      className: "inline-flex h-8 w-8 items-center justify-center rounded-full text-[#777777] transition-colors hover:bg-[#f1f1f1] hover:text-[#555555] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(0,143,143,0.24)]",
+      children: /* @__PURE__ */ jsxRuntime.jsx(X, { className: "h-[17px] w-[17px]", strokeWidth: 2.3 })
+    }
+  );
+}
+function TaavMobileNumberInputCard({
+  title = "\u0648\u0627\u0631\u062F \u06A9\u0631\u062F\u0646 \u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644",
+  description = "\u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644 \u06A9\u0627\u0631\u0628\u0631 \u0628\u0631\u0627\u06CC \u062B\u0628\u062A \u0648 \u0627\u0631\u062A\u0628\u0627\u0637 \u062F\u0631 \u0641\u0631\u0645\u200C\u0647\u0627\u06CC \u06A9\u0633\u0628\u200C\u0648\u06A9\u0627\u0631\u06CC \u0627\u0633\u062A\u0641\u0627\u062F\u0647 \u0645\u06CC\u200C\u0634\u0648\u062F.",
+  label = "\u0645\u0648\u0628\u0627\u06CC\u0644 \u06CC\u0627 \u0627\u06CC\u0645\u06CC\u0644",
+  placeholder = "",
+  value,
+  defaultValue = "",
+  onValueChange,
+  helperText = "\u0648\u0627\u0631\u062F \u06A9\u0631\u062F\u0646 \u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644 \u06CC\u0627 \u0627\u06CC\u0645\u06CC\u0644 \u0628\u0631\u0627\u06CC \u062B\u0628\u062A \u06A9\u0627\u0631\u0628\u0631 \u0636\u0631\u0648\u0631\u06CC \u0645\u06CC\u200C\u0628\u0627\u0634\u062F.",
+  error,
+  required = true,
+  disabled = false,
+  readOnly = false,
+  autoFocus = false,
+  loading = false,
+  maxLength = 50,
+  icon,
+  className,
+  wrapperClassName,
+  inputClassName,
+  ...rest
+}) {
+  const inputId = react.useId();
+  const [internalValue, setInternalValue] = react.useState(defaultValue);
+  const [isFocused, setIsFocused] = react.useState(false);
+  const currentValue = value !== void 0 ? value : internalValue;
+  const resolvedValue = react.useMemo(() => normalizeMobileNumber(currentValue ?? ""), [currentValue]);
+  const touched = resolvedValue.length > 0;
+  const invalidFormat = touched && !isPotentiallyValidIranMobile(resolvedValue);
+  const isRequiredError = required && touched && !resolvedValue;
+  const showError = Boolean(error) || invalidFormat || isRequiredError;
+  const shownError = error ?? (isRequiredError ? "\u0648\u0627\u0631\u062F \u06A9\u0631\u062F\u0646 \u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644 \u0627\u0644\u0632\u0627\u0645\u06CC \u0627\u0633\u062A." : invalidFormat ? "\u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644 \u0648\u0627\u0631\u062F \u0634\u062F\u0647 \u0645\u0639\u062A\u0628\u0631 \u0646\u06CC\u0633\u062A." : null);
+  const showClear = Boolean(resolvedValue) && !disabled && !readOnly && !loading;
+  const counter = `${resolvedValue.length}/${maxLength}`;
+  const handleChange = (nextValue) => {
+    const sanitized = normalizeMobileNumber(nextValue).slice(0, maxLength);
+    if (value === void 0) setInternalValue(sanitized);
+    onValueChange?.(sanitized);
+  };
+  const clearValue = () => {
+    if (disabled || readOnly || loading) return;
+    if (value === void 0) setInternalValue("");
+    onValueChange?.("");
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "article",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-mobile-number-input-card": true,
+      className: cn("w-full max-w-[690px] overflow-hidden rounded-[18px] border border-[#d5dde2] bg-white px-[16px] pb-[18px] pt-[20px] text-right shadow-[0_3px_10px_rgba(15,23,42,0.04)]", className),
+      children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("grid gap-[10px]", wrapperClassName), children: [
+        /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex justify-center", children: /* @__PURE__ */ jsxRuntime.jsx(MobileCardIcon, { icon: loading ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "h-[24px] w-[24px] rounded-full bg-[rgba(0,143,143,0.18)]" }) : icon }) }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "sr-only", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("h3", { children: title }),
+          description ? /* @__PURE__ */ jsxRuntime.jsx("p", { children: description }) : null
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsxs("label", { htmlFor: inputId, dir: "rtl", className: cn("flex w-full items-center justify-start gap-[3px] text-right text-[16px] font-semibold leading-6 transition-colors", isFocused ? "text-[#008f8f]" : "text-[#454545]"), children: [
+          label,
+          required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-[18px] leading-none text-[#ef4444]", "aria-hidden": "true", children: "*" }) : null
+        ] }),
+        loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavSkeleton, { variant: "custom", width: "100%", height: 40, radius: "lg" }) : /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn("relative", disabled ? "opacity-75" : ""), children: /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("relative flex min-h-[40px] items-center overflow-hidden rounded-[13px] border border-[#666666] bg-white transition-[border-color,box-shadow,background-color] duration-150", "focus-within:border-[color:#008f8f] focus-within:shadow-[0_0_0_3px_rgba(0,143,143,0.10)]", disabled ? "bg-[rgba(248,250,252,0.95)]" : ""), children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "absolute left-1 top-1/2 z-10 inline-flex -translate-y-1/2 items-center gap-0 text-[#777777]", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex h-8 w-8 items-center justify-center", children: /* @__PURE__ */ jsxRuntime.jsx(Search, { className: "h-[19px] w-[19px]", strokeWidth: 1.6 }) }),
+            showClear ? /* @__PURE__ */ jsxRuntime.jsx(ClearButton, { onClick: clearValue }) : null
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsx(
+            "input",
+            {
+              id: inputId,
+              value: resolvedValue,
+              placeholder,
+              disabled,
+              readOnly,
+              autoFocus,
+              required,
+              maxLength,
+              inputMode: "numeric",
+              autoComplete: "tel",
+              "aria-label": typeof label === "string" ? label : "\u0634\u0645\u0627\u0631\u0647 \u0645\u0648\u0628\u0627\u06CC\u0644",
+              "aria-invalid": showError || void 0,
+              onFocus: () => setIsFocused(true),
+              onBlur: () => setIsFocused(false),
+              onChange: (event) => handleChange(event.target.value),
+              className: cn("h-[40px] w-full border-0 bg-transparent px-[12px] py-0 text-right text-[16px] font-normal leading-5 text-[#555555] placeholder:text-[#9a9a9a] focus:outline-none", showClear ? "pl-[76px]" : "pl-[44px]", inputClassName),
+              dir: "rtl"
+            }
+          )
+        ] }) }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start justify-between gap-4 text-[12px] leading-5", dir: "rtl", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("div", { className: "min-w-0 text-right", children: showError ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[#dc2626]", children: shownError }) : helperText ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[#777777]", children: helperText }) : null }),
+          /* @__PURE__ */ jsxRuntime.jsx("span", { className: "shrink-0 text-left font-normal text-[#777777]", "aria-label": `\u0645\u0648\u0631\u062F \u0627\u0633\u062A\u0641\u0627\u062F\u0647 ${counter}`, children: counter })
+        ] })
+      ] })
+    }
+  );
 }
 var moduleCardRoot = classVarianceAuthority.cva(
   [
     "group/taav-module-card relative flex min-h-0 w-full flex-col overflow-hidden border border-solid",
     "bg-[var(--taav-module-card-surface)] text-[var(--taav-module-card-title)]",
     "border-[color:var(--taav-module-card-border)]",
-    "rounded-[var(--taav-module-card-radius)] shadow-[var(--taav-module-card-shadow)]",
+    "rounded-[15px] shadow-none",
     TAAV_INTERACTION.base
   ],
   {
     variants: {
       size: {
-        sm: "min-h-[var(--taav-module-card-min-height-sm)]",
-        md: "min-h-[var(--taav-module-card-min-height-md)]",
-        lg: "min-h-[var(--taav-module-card-min-height-lg)]"
+        sm: "min-h-[176px]",
+        md: "min-h-[192px]",
+        lg: "min-h-[212px]"
       },
       width: {
-        auto: "",
-        full: "w-full"
+        auto: "w-full max-w-[460px]",
+        full: "w-full max-w-none"
       },
       variant: {
         default: "",
@@ -2055,8 +3505,7 @@ var moduleCardRoot = classVarianceAuthority.cva(
 var moduleCardHeader = classVarianceAuthority.cva(
   [
     "relative flex shrink-0 items-center justify-between gap-[var(--taav-space-3)]",
-    "h-[var(--taav-module-card-header-height)] px-[var(--taav-module-card-header-px)]",
-    "border-b border-solid border-[color:var(--taav-module-card-header-border)]",
+    "h-[64px] pr-[20px] pl-[20px]",
     "bg-[var(--taav-module-card-header-bg)]"
   ],
   {
@@ -2072,11 +3521,11 @@ var moduleCardHeader = classVarianceAuthority.cva(
     }
   }
 );
-var moduleCardTitle = classVarianceAuthority.cva("relative z-[1] m-0 min-w-0 flex-1 text-right font-black leading-[var(--taav-leading-tight)]", {
+var moduleCardTitle = classVarianceAuthority.cva("relative z-[1] m-0 min-w-0 flex-1 text-right font-medium leading-[26px] text-[var(--taav-module-card-title)]", {
   variants: {
     size: {
       sm: "text-[length:var(--taav-module-card-title-sm)]",
-      md: "text-[length:var(--taav-module-card-title-md)]",
+      md: "text-[18px]",
       lg: "text-[length:var(--taav-module-card-title-lg)]"
     }
   },
@@ -2087,9 +3536,9 @@ var moduleCardTitle = classVarianceAuthority.cva("relative z-[1] m-0 min-w-0 fle
 var moduleCardBody = classVarianceAuthority.cva("relative flex w-full flex-1 flex-col", {
   variants: {
     size: {
-      sm: "p-[var(--taav-module-card-body-padding-sm)]",
-      md: "p-[var(--taav-module-card-body-padding-md)]",
-      lg: "p-[var(--taav-module-card-body-padding-lg)]"
+      sm: "px-[18px] pt-[16px] pb-[18px]",
+      md: "px-[20px] pt-[17px] pb-[20px]",
+      lg: "px-[24px] pt-[19px] pb-[22px]"
     },
     align: {
       start: "items-start text-right",
@@ -2099,17 +3548,17 @@ var moduleCardBody = classVarianceAuthority.cva("relative flex w-full flex-1 fle
   },
   defaultVariants: {
     size: "md",
-    align: "start"
+    align: "center"
   }
 });
 var moduleCardDescription = classVarianceAuthority.cva(
-  "m-0 w-full font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-module-card-description)]",
+  "m-0 w-full max-w-[520px] font-normal text-center leading-[22px] text-[var(--taav-module-card-description)]",
   {
     variants: {
       size: {
-        sm: "text-[length:var(--taav-module-card-description-sm)]",
-        md: "text-[length:var(--taav-module-card-description-md)]",
-        lg: "text-[length:var(--taav-module-card-description-lg)]"
+        sm: "text-[12px]",
+        md: "text-[12.5px]",
+        lg: "text-[13px]"
       }
     },
     defaultVariants: {
@@ -2120,8 +3569,8 @@ var moduleCardDescription = classVarianceAuthority.cva(
 var moduleCardArrow = classVarianceAuthority.cva(
   [
     "relative z-[1] inline-flex shrink-0 items-center justify-center",
-    "text-[var(--taav-module-card-arrow)]",
-    "[&_svg]:h-[var(--taav-module-card-arrow-size)] [&_svg]:w-[var(--taav-module-card-arrow-size)]"
+    "text-[#334155]",
+    "[&_svg]:h-[18px] [&_svg]:w-[18px]"
   ],
   {
     variants: {
@@ -2379,6 +3828,534 @@ function TaavModuleCardGridItem({
     }
   );
 }
+function ArrowIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx("svg", { viewBox: "0 0 18 18", fill: "none", "aria-hidden": "true", className: "h-[18px] w-[18px]", children: /* @__PURE__ */ jsxRuntime.jsx("path", { d: "m10.5 4.5-4 4.5 4 4.5", stroke: "currentColor", strokeWidth: "1.7", strokeLinecap: "round", strokeLinejoin: "round" }) });
+}
+function TaavBusinessModuleLink({ item, className: customClassName, ...rest }) {
+  const disabled = Boolean(item.disabled);
+  const interactive = Boolean((item.href || item.onClick) && !disabled);
+  const className = cn(
+    "group/module-link flex w-full min-w-0 flex-row items-start gap-4 px-0 py-2 text-right",
+    "text-[var(--taav-business-module-link-text)] transition-colors duration-150",
+    interactive && "cursor-pointer hover:bg-[var(--taav-business-module-link-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--taav-focus-ring)]",
+    disabled && "cursor-not-allowed opacity-50",
+    customClassName
+  );
+  const content = /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "mt-1 shrink-0 text-[var(--taav-business-module-link-arrow)] transition-transform duration-150 group-hover/module-link:-translate-x-0.5", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntime.jsx(ArrowIcon, {}) }),
+    /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "min-w-0 flex-1", dir: "rtl", children: [
+      /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "flex items-center justify-start gap-2 text-[length:var(--taav-business-module-link-title-size)] font-semibold leading-6", children: [
+        item.icon ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex shrink-0 text-[var(--taav-business-module-link-icon)]", "aria-hidden": "true", children: item.icon }) : null,
+        /* @__PURE__ */ jsxRuntime.jsx("span", { className: "truncate", children: item.title })
+      ] }),
+      item.description ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "mt-1 block text-[length:var(--taav-business-module-link-description-size)] leading-6 text-[var(--taav-business-module-link-description)]", children: item.description }) : null
+    ] })
+  ] });
+  if (item.href && !disabled) return /* @__PURE__ */ jsxRuntime.jsx("a", { ...rest, href: item.href, dir: "ltr", className, "aria-label": item.ariaLabel, children: content });
+  if (interactive) return /* @__PURE__ */ jsxRuntime.jsx("button", { ...rest, type: "button", dir: "ltr", className, onClick: item.onClick, "aria-label": item.ariaLabel, children: content });
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { ...rest, dir: "ltr", className, "aria-disabled": disabled || void 0, children: content });
+}
+function TaavBusinessModuleLinkGrid({ items, columns = 2, gap = "md", className, ...rest }) {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "div",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-business-module-link-grid": true,
+      "data-columns": columns,
+      className: cn(
+        "grid w-full",
+        columns === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1",
+        gap === "sm" ? "gap-x-6 gap-y-3" : gap === "lg" ? "gap-x-16 gap-y-10" : "gap-x-12 gap-y-7",
+        className
+      ),
+      children: items.map((item) => /* @__PURE__ */ jsxRuntime.jsx(TaavBusinessModuleLink, { item }, item.id))
+    }
+  );
+}
+function TaavBusinessAccountInfoCard({
+  bankName = "\u0631\u0641\u0627\u0647",
+  contractLabel = "\u062E\u0633\u0627\u0631\u062A\u200C\u0647\u0627\u06CC \u0642\u0631\u0627\u0631\u062F\u0627\u062F\u06CC",
+  logo,
+  formattedAccountNumber = "\u06F0\u06F5\u06F9\u06F4 \u06F6\u06F3\u06F1\u06F1 \u06F4\u06F5\u06F0\u06F5 \u06F0\u06F5\u06F1\u06F9",
+  accountNumber = "\u06F3\u06F3\u06F5\u06F2\u06F6\u06F5\u06F4\u06F5\u06F1\u06F1\u06F2",
+  iban = "IR\u06F3\u06F0 \u06F0\u06F5\u06F5\u06F5 \u06F4\u06F5\u06F4\u06F1 \u06F1\u06F2\u06F5\u06F5 \u06F5\u06F5\u06F5\u06F5 \u06F5\u06F5\u06F5\u06F5 \u06F4\u06F3",
+  accountLabel = "\u0634\u0645\u0627\u0631\u0647 \u062D\u0633\u0627\u0628",
+  ibanLabel = "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627",
+  displayLabel = "\u0627\u0645\u06A9\u0627\u0646 \u0646\u0645\u0627\u06CC\u0634 \u062F\u0631 \u0642\u0631\u0627\u0631\u062F\u0627\u062F",
+  displayDescription = "\u062F\u0631 \u0635\u0648\u0631\u062A \u062A\u0623\u06CC\u06CC\u062F \u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u06CC\u062F \u0627\u0632 \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u0627\u06CC\u0646 \u062D\u0633\u0627\u0628 \u0628\u0627\u0646\u06A9\u06CC \u062F\u0631 \u0645\u062A\u0646 \u0642\u0631\u0627\u0631\u062F\u0627\u062F \u0627\u0633\u062A\u0641\u0627\u062F\u0647 \u06A9\u0646\u06CC\u062F.",
+  showInContract = false,
+  onShowInContractChange,
+  ownerLabel = "\u0646\u0627\u0645 \u0635\u0627\u062D\u0628 / \u0635\u0627\u062D\u0628\u0627\u0646 \u062D\u0633\u0627\u0628",
+  ownerName = "\u06F1 - \u0646\u0631\u06AF\u0633 \u0633\u067E\u0647\u0631\u06CC",
+  ownerNames,
+  onMenuClick,
+  onRefresh,
+  onEdit,
+  onDelete,
+  disabled = false,
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  const [internalChecked, setInternalChecked] = react.useState(showInContract);
+  const [menuOpen, setMenuOpen] = react.useState(false);
+  const menuButtonRef = react.useRef(null);
+  const menuPanelRef = react.useRef(null);
+  const checked = onShowInContractChange ? showInContract : internalChecked;
+  const renderedOwnerNames = ownerNames ?? (Array.isArray(ownerName) ? ownerName : [ownerName]);
+  react.useEffect(() => {
+    if (!menuOpen) return;
+    const closeMenu = (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (menuButtonRef.current?.contains(target) || menuPanelRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeMenu);
+    return () => document.removeEventListener("pointerdown", closeMenu);
+  }, [menuOpen]);
+  const handleSwitchChange = (value) => {
+    if (!onShowInContractChange) setInternalChecked(value);
+    onShowInContractChange?.(value);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsxs(
+    "article",
+    {
+      ...rest,
+      dir: "rtl",
+      "data-taav-business-account-info-card": true,
+      "data-theme-mode": themeMode,
+      className: cn(
+        "relative w-full max-w-[740px] overflow-hidden rounded-[10px] border border-[var(--taav-business-account-border)] bg-[var(--taav-business-account-surface)] px-[16px] pb-[18px] pt-[12px] text-right shadow-[var(--taav-business-account-shadow)]",
+        disabled ? "opacity-60" : "",
+        className
+      ),
+      children: [
+        /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "flex items-start justify-between gap-4", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "flex items-start gap-3", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("div", { className: "flex h-10 w-10 items-center justify-center text-[var(--taav-business-account-brand)]", children: logo ?? /* @__PURE__ */ jsxRuntime.jsx(Landmark, { className: "h-9 w-9", strokeWidth: 1.6 }) }),
+            /* @__PURE__ */ jsxRuntime.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[17px] font-bold leading-7 text-[var(--taav-business-account-title)]", children: bankName }),
+              /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[13px] leading-6 text-[var(--taav-business-account-contract)]", children: contractLabel })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "relative flex items-center gap-4 text-[var(--taav-business-account-action)]", children: [
+            onRefresh ? /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0628\u0627\u0632\u0646\u0634\u0627\u0646\u06CC \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u062D\u0633\u0627\u0628", onClick: onRefresh, disabled, className: "inline-flex h-8 w-8 items-center justify-center rounded-md disabled:opacity-40", children: /* @__PURE__ */ jsxRuntime.jsx(RefreshCw, { className: "h-6 w-6" }) }) : null,
+            /* @__PURE__ */ jsxRuntime.jsx(
+              "button",
+              {
+                type: "button",
+                "aria-label": "\u06AF\u0632\u06CC\u0646\u0647\u200C\u0647\u0627\u06CC \u0628\u06CC\u0634\u062A\u0631",
+                "aria-expanded": menuOpen,
+                ref: menuButtonRef,
+                onClick: () => {
+                  setMenuOpen((value) => !value);
+                  onMenuClick?.();
+                },
+                disabled,
+                className: "inline-flex h-8 w-8 items-center justify-center rounded-md disabled:opacity-40",
+                children: /* @__PURE__ */ jsxRuntime.jsx(EllipsisVertical, { className: "h-6 w-6" })
+              }
+            ),
+            menuOpen ? /* @__PURE__ */ jsxRuntime.jsxs("div", { ref: menuPanelRef, role: "menu", className: "absolute left-0 top-[30px] z-20 w-[104px] overflow-hidden rounded-[14px] border border-[var(--taav-business-account-border)] bg-[var(--taav-business-account-surface)] py-1 text-right shadow-[0_8px_22px_rgba(15,23,42,0.16)]", children: [
+              /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", role: "menuitem", onClick: () => {
+                setMenuOpen(false);
+                onEdit?.();
+              }, className: "flex w-full items-center gap-2 px-3 py-3 text-[13px] text-[var(--taav-business-account-title)] hover:bg-[var(--taav-business-account-hover)]", children: [
+                /* @__PURE__ */ jsxRuntime.jsx(Pencil, { className: "h-4 w-4" }),
+                "\u0648\u06CC\u0631\u0627\u06CC\u0634"
+              ] }),
+              /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", role: "menuitem", onClick: () => {
+                setMenuOpen(false);
+                onDelete?.();
+              }, className: "flex w-full items-center gap-2 px-3 py-3 text-[13px] text-[var(--taav-business-account-title)] hover:bg-[var(--taav-business-account-hover)]", children: [
+                /* @__PURE__ */ jsxRuntime.jsx(Trash2, { className: "h-4 w-4" }),
+                "\u062D\u0630\u0641"
+              ] })
+            ] }) : null
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-[10px] text-center text-[18px] font-semibold tracking-[0.12em] text-[var(--taav-business-account-number)]", children: formattedAccountNumber }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-[10px] flex flex-col gap-0 text-[14px] leading-7 text-[var(--taav-business-account-text)]", children: [
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-center justify-between gap-6", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "min-w-0 flex-1 text-left", dir: "ltr", children: accountNumber }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "shrink-0 text-right text-[var(--taav-business-account-link)]", dir: "rtl", children: accountLabel })
+          ] }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-center justify-between gap-6", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "min-w-0 flex-1 text-left", dir: "ltr", children: iban }),
+            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "shrink-0 text-right text-[var(--taav-business-account-link)]", dir: "rtl", children: ibanLabel })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-[6px] border-t border-[var(--taav-business-account-divider)] pt-[10px]", children: /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-start justify-between gap-5", children: [
+          /* @__PURE__ */ jsxRuntime.jsx(AccountSwitch, { checked, onChange: handleSwitchChange, disabled }),
+          /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "rtl", className: "min-w-0 text-right", children: [
+            /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "m-0 text-[15px] font-semibold leading-6 text-[var(--taav-business-account-title)]", children: displayLabel }),
+            /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 text-[12px] leading-5 text-[var(--taav-business-account-muted)]", children: displayDescription })
+          ] })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-[12px] text-right text-[14px] font-semibold leading-6 text-[var(--taav-business-account-title)]", children: [
+          /* @__PURE__ */ jsxRuntime.jsx("div", { children: ownerLabel }),
+          /* @__PURE__ */ jsxRuntime.jsx("div", { children: renderedOwnerNames.map((name, index) => /* @__PURE__ */ jsxRuntime.jsx("div", { children: name }, index)) })
+        ] })
+      ]
+    }
+  );
+}
+function AccountSwitch({ checked, onChange, disabled }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", role: "switch", "aria-checked": checked, onClick: () => onChange?.(!checked), disabled, className: cn("relative inline-flex h-[16px] w-[34px] shrink-0 items-center rounded-full transition-colors", checked ? "bg-[#9adbd9]" : "bg-[#c8ced7]"), children: /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("absolute left-0 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(15,23,42,0.16)] transition-transform", checked ? "translate-x-0" : "translate-x-[16px]") }) });
+}
+function TaavBusinessIconChoiceGroup({ items, selected, defaultSelected, onSelectedChange, ariaLabel = "\u0627\u0646\u062A\u062E\u0627\u0628 \u06AF\u0632\u06CC\u0646\u0647", themeMode = "auto", className, ...rest }) {
+  const [internalSelected, setInternalSelected] = react.useState(defaultSelected ?? items.find((item) => !item.disabled)?.value ?? "");
+  const current = selected ?? internalSelected;
+  const columns = Math.min(Math.max(items.length, 1), 4);
+  const isScrollable = items.length > 4;
+  const select = (value, disabled) => {
+    if (disabled) return;
+    if (selected === void 0) setInternalSelected(value);
+    onSelectedChange?.(value);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { ...rest, dir: "rtl", "data-taav-business-icon-option-selector": true, "data-theme-mode": themeMode, "data-count": items.length, className: cn("w-full overflow-hidden rounded-[10px] border border-[var(--taav-icon-option-card-border)] bg-[var(--taav-icon-option-card-surface)] px-3 pt-2", className), children: /* @__PURE__ */ jsxRuntime.jsx("div", { role: "radiogroup", "aria-label": ariaLabel, className: cn("grid min-w-0 border-b border-[var(--taav-icon-option-divider)]", isScrollable ? "grid-flow-col auto-cols-[minmax(120px,1fr)] overflow-x-auto" : ""), style: isScrollable ? void 0 : { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }, children: items.map((item) => {
+    const isSelected = current === item.value;
+    return /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", role: "radio", "aria-checked": isSelected, "aria-label": typeof item.label === "string" ? item.label : void 0, disabled: item.disabled, onClick: () => select(item.value, item.disabled), className: cn("group relative flex min-h-[112px] min-w-0 flex-col items-center justify-start gap-2 px-2 pt-2 text-center outline-none transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--taav-icon-option-focus)]", item.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer", isScrollable ? "w-[120px]" : "w-full"), children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("flex h-12 w-12 items-center justify-center rounded-full border text-[var(--taav-icon-option-icon)] transition-colors", isSelected ? "border-[var(--taav-icon-option-selected)] bg-[var(--taav-icon-option-selected)] text-[var(--taav-icon-option-selected-icon)]" : "border-[var(--taav-icon-option-border)] bg-transparent group-hover:border-[var(--taav-icon-option-hover)] group-hover:text-[var(--taav-icon-option-hover)]"), children: item.icon }),
+      /* @__PURE__ */ jsxRuntime.jsx("span", { className: cn("max-w-full truncate text-[13px] leading-6", isSelected ? "font-bold text-[var(--taav-icon-option-selected-text)]" : "font-normal text-[var(--taav-icon-option-text)]"), children: item.label }),
+      /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": "true", className: cn("absolute inset-x-2 bottom-[-1px] h-[2px] rounded-full transition-colors", isSelected ? "bg-[var(--taav-icon-option-selected)]" : "bg-transparent") })
+    ] }, item.value);
+  }) }) });
+}
+function Toggle({ checked, onChange, disabled }) {
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { role: "group", "aria-label": "\u0648\u0636\u0639\u06CC\u062A", className: cn("inline-flex h-9 w-[180px] shrink-0 items-center rounded-full bg-[var(--taav-toggle-card-track)] p-1", disabled && "opacity-50"), children: [
+    /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", role: "switch", "aria-checked": checked, disabled, onClick: () => onChange(true), className: cn("h-7 flex-1 rounded-full px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--taav-toggle-card-focus)]", checked ? "bg-[var(--taav-toggle-card-active)] text-white shadow-sm" : "text-[var(--taav-toggle-card-muted)]"), children: "\u0641\u0639\u0627\u0644" }),
+    /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-pressed": !checked, disabled, onClick: () => onChange(false), className: cn("h-7 flex-1 rounded-full px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--taav-toggle-card-focus)]", !checked ? "bg-[var(--taav-toggle-card-active)] text-white shadow-sm" : "text-[var(--taav-toggle-card-muted)]"), children: "\u063A\u06CC\u0631\u0641\u0639\u0627\u0644" })
+  ] });
+}
+function TaavBusinessToggleCard({ title = "\u0639\u0646\u0648\u0627\u0646 \u0648\u0636\u0639\u06CC\u062A", description, checked, defaultChecked = false, onCheckedChange, variant = "simple", icon = /* @__PURE__ */ jsxRuntime.jsx(SlidersHorizontal, { className: "h-6 w-6" }), onAction, actionLabel = "\u0645\u0634\u0627\u0647\u062F\u0647 \u062C\u0632\u0626\u06CC\u0627\u062A", disabled = false, themeMode = "auto", className, ...rest }) {
+  const [internalChecked, setInternalChecked] = react.useState(defaultChecked);
+  const current = checked ?? internalChecked;
+  const update = (value) => {
+    if (disabled) return;
+    if (checked === void 0) setInternalChecked(value);
+    onCheckedChange?.(value);
+  };
+  const copy = /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "min-w-0 flex-1", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[16px] font-bold leading-7 text-[var(--taav-toggle-card-title)]", children: title }),
+    description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-0.5 text-[12px] leading-5 text-[var(--taav-toggle-card-description)]", children: description }) : null
+  ] });
+  const toggle = /* @__PURE__ */ jsxRuntime.jsx(Toggle, { checked: current, onChange: update, disabled });
+  return /* @__PURE__ */ jsxRuntime.jsx("article", { ...rest, dir: "rtl", "data-taav-business-toggle-card": true, "data-variant": variant, "data-theme-mode": themeMode, className: cn("w-full rounded-[14px] border border-[var(--taav-toggle-card-border)] bg-[var(--taav-toggle-card-surface)] text-right text-[var(--taav-toggle-card-text)]", variant === "action" ? "px-5 py-3" : "px-4 py-2.5", disabled && "opacity-60", className), children: /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn("flex items-center gap-5", variant === "action" ? "min-h-[62px]" : "min-h-[46px]"), children: variant === "action" ? /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": actionLabel, onClick: onAction, disabled: disabled || !onAction, className: "order-1 inline-flex h-8 w-8 shrink-0 items-center justify-center text-[var(--taav-toggle-card-action)] transition-colors hover:text-[var(--taav-toggle-card-action-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--taav-toggle-card-focus)] disabled:opacity-40", children: /* @__PURE__ */ jsxRuntime.jsx(ChevronRight, { className: "h-7 w-7" }) }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "order-2 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--taav-toggle-card-icon-bg)] text-[var(--taav-toggle-card-icon)]", "aria-hidden": "true", children: icon }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "order-3 flex min-w-0 flex-1", children: copy }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "order-4", children: toggle })
+  ] }) : /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "order-1 flex min-w-0 flex-1", children: copy }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "order-2", children: toggle })
+  ] }) }) });
+}
+function digits(value) {
+  return value.replace(/[۰-۹]/g, (char) => String("\u06F0\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7\u06F8\u06F9".indexOf(char))).replace(/\D/g, "");
+}
+function FieldFrame({ id, label, error, required, helperText, children, className }) {
+  return /* @__PURE__ */ jsxRuntime.jsxs("div", { "data-taav-bank-input": true, className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxRuntime.jsx("label", { htmlFor: id, dir: "rtl", className: cn("mb-1 block w-full text-right text-[14px] font-semibold leading-6", error ? "text-[var(--taav-bank-input-error)]" : "text-[var(--taav-bank-input-label)]"), children: /* @__PURE__ */ jsxRuntime.jsxs("span", { className: "inline-flex items-center gap-1", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("span", { children: label }),
+      required ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-[#dc2626]", children: "*" }) : null
+    ] }) }),
+    children,
+    error ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-1 text-right text-[12px] leading-5 text-[var(--taav-bank-input-error)]", children: error }) : helperText ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-1 text-right text-[12px] leading-5 text-[var(--taav-bank-input-helper)]", children: helperText }) : null
+  ] });
+}
+function BankIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex shrink-0 items-center justify-center text-[var(--taav-bank-input-icon)]", "aria-hidden": "true", children: /* @__PURE__ */ jsxRuntime.jsx(Landmark, { className: "h-7 w-7", strokeWidth: 1.5 }) });
+}
+function baseInputClass(invalid) {
+  return cn("h-[38px] w-full rounded-[9px] border bg-[var(--taav-bank-input-surface)] px-3 text-left text-[15px] font-normal tracking-[0.04em] text-[var(--taav-bank-input-text)] outline-none transition-colors placeholder:text-[var(--taav-bank-input-helper)] focus:border-[var(--taav-bank-input-focus)] focus:ring-2 focus:ring-[var(--taav-bank-input-focus-ring)]", invalid ? "border-[var(--taav-bank-input-error)]" : "border-[var(--taav-bank-input-border)]");
+}
+function TaavBankCardNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u06A9\u0627\u0631\u062A", helperText, error, required = true, disabled, readOnly, autoFocus, className }) {
+  const [internal, setInternal] = react.useState(defaultValue);
+  const current = value ?? internal;
+  const parts = Array.from({ length: 4 }, (_, index) => digits(current).slice(index * 4, index * 4 + 4));
+  const refs = react.useRef([]);
+  const id = react.useId();
+  const invalid = Boolean(error) || current.length > 0 && digits(current).length !== 16;
+  const update = (index, next) => {
+    const clean = digits(next).slice(0, 4);
+    const nextParts = [...parts];
+    nextParts[index] = clean;
+    const joined = nextParts.join("");
+    if (value === void 0) setInternal(joined);
+    onValueChange?.(joined);
+    if (clean.length === 4 && index < 3) refs.current[index + 1]?.focus();
+  };
+  const paste = (event) => {
+    const clean = digits(event.clipboardData.getData("text")).slice(0, 16);
+    if (!clean) return;
+    event.preventDefault();
+    if (value === void 0) setInternal(clean);
+    onValueChange?.(clean);
+    refs.current[Math.min(3, Math.floor((clean.length - 1) / 4))]?.focus();
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(FieldFrame, { id: `${id}-0`, label, error: invalid ? error ?? "\u0634\u0645\u0627\u0631\u0647 \u06A9\u0627\u0631\u062A \u0628\u0627\u06CC\u062F \u06F1\u06F6 \u0631\u0642\u0645 \u0628\u0627\u0634\u062F." : void 0, helperText, required, className, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-end gap-2", children: [
+    /* @__PURE__ */ jsxRuntime.jsx(BankIcon, {}),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "grid min-w-0 flex-1 grid-cols-4 gap-2", children: parts.map((part, index) => /* @__PURE__ */ jsxRuntime.jsx("input", { ref: (node) => {
+      refs.current[index] = node;
+    }, id: `${id}-${index}`, value: part, onChange: (event) => update(index, event.target.value), onPaste: paste, autoFocus: autoFocus && index === 0, disabled, readOnly, inputMode: "numeric", maxLength: 4, "aria-label": `${label} \u0628\u062E\u0634 ${index + 1}`, className: baseInputClass(invalid) }, index)) })
+  ] }) });
+}
+function TaavShebaNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627", helperText, error, required = true, disabled, readOnly, autoFocus, placeholder = "", className }) {
+  const [internal, setInternal] = react.useState(defaultValue);
+  const current = value ?? internal;
+  const clean = current.toUpperCase().replace(/\s/g, "");
+  const numeric = digits(clean.replace(/^IR/, ""));
+  const invalid = Boolean(error) || clean.length > 0 && numeric.length !== 24;
+  const id = react.useId();
+  const update = (next) => {
+    const normalized = next.toUpperCase().replace(/\s/g, "").replace(/[^IR\d]/g, "").replace(/(?!^)I|(?<!^)R/g, "").slice(0, 26);
+    if (value === void 0) setInternal(normalized);
+    onValueChange?.(normalized);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(FieldFrame, { id, label, error: invalid ? error ?? "\u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627 \u0648\u0627\u0631\u062F\u0634\u062F\u0647 \u0645\u0639\u062A\u0628\u0631 \u0646\u06CC\u0633\u062A." : void 0, helperText, required, className, children: /* @__PURE__ */ jsxRuntime.jsxs("div", { dir: "ltr", className: "flex items-end gap-2", children: [
+    /* @__PURE__ */ jsxRuntime.jsx(BankIcon, {}),
+    /* @__PURE__ */ jsxRuntime.jsx("input", { id, value: clean, onChange: (event) => update(event.target.value), autoFocus, disabled, readOnly, inputMode: "text", placeholder, "aria-invalid": invalid || void 0, className: cn(baseInputClass(invalid), "flex-1") })
+  ] }) });
+}
+function TaavBankAccountNumberInput({ value, defaultValue = "", onValueChange, label = "\u0634\u0645\u0627\u0631\u0647 \u062D\u0633\u0627\u0628", helperText = "\u06F0 / \u06F2\u06F0", error, required = true, disabled, readOnly, className, ...props }) {
+  const [internal, setInternal] = react.useState(defaultValue);
+  const current = value ?? internal;
+  const id = react.useId();
+  const update = (next) => {
+    const normalized = digits(next).slice(0, 20);
+    if (value === void 0) setInternal(normalized);
+    onValueChange?.(normalized);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(FieldFrame, { id, label, error, helperText, required, className: cn("md:col-span-2", className), children: /* @__PURE__ */ jsxRuntime.jsx("input", { ...props, id, value: current, onChange: (event) => update(event.target.value), disabled, readOnly, inputMode: "numeric", "aria-invalid": Boolean(error) || void 0, className: baseInputClass(Boolean(error)) }) });
+}
+function TaavBankAccountInfoInputCard({
+  title = "\u0648\u0631\u0648\u062F\u06CC \u0627\u0637\u0644\u0627\u0639\u0627\u062A \u062D\u0633\u0627\u0628 \u0628\u0627\u0646\u06A9\u06CC",
+  description = "\u0634\u0645\u0627\u0631\u0647 \u06A9\u0627\u0631\u062A\u060C \u0634\u0645\u0627\u0631\u0647 \u0634\u0628\u0627 \u0648 \u0634\u0645\u0627\u0631\u0647 \u062D\u0633\u0627\u0628 \u0628\u0627\u0646\u06A9\u06CC \u0631\u0627 \u0648\u0627\u0631\u062F \u06A9\u0646\u06CC\u062F.",
+  cardNumber,
+  shebaNumber,
+  accountNumber,
+  variant = "compact",
+  themeMode = "auto",
+  className,
+  ...rest
+}) {
+  const [card, setCard] = react.useState(cardNumber?.value ?? cardNumber?.defaultValue ?? "");
+  const [sheba, setSheba] = react.useState(shebaNumber?.value ?? shebaNumber?.defaultValue ?? "");
+  const [account, setAccount] = react.useState(accountNumber?.value ?? accountNumber?.defaultValue ?? "");
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { ...rest, dir: "rtl", "data-taav-bank-account-info-input-card": true, "data-variant": variant, "data-theme-mode": themeMode, className: cn("w-full max-w-[700px] rounded-[18px] border border-[var(--taav-bank-input-card-border)] bg-[var(--taav-bank-input-card-surface)] px-5 py-5 text-right shadow-[var(--taav-bank-input-card-shadow)]", className), children: [
+    variant === "showcase" ? /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "mb-5", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("h2", { className: "m-0 text-[20px] font-bold leading-8 text-[var(--taav-bank-input-card-title)]", children: title }),
+      description ? /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-1 text-[13px] leading-6 text-[var(--taav-bank-input-card-description)]", children: description }) : null
+    ] }) : null,
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "grid gap-x-5 gap-y-4 md:grid-cols-2", children: [
+      /* @__PURE__ */ jsxRuntime.jsx(TaavBankCardNumberInput, { ...cardNumber, value: cardNumber?.value !== void 0 ? cardNumber.value : card, onValueChange: (next) => {
+        setCard(next);
+        cardNumber?.onValueChange?.(next);
+      } }),
+      /* @__PURE__ */ jsxRuntime.jsx(TaavShebaNumberInput, { ...shebaNumber, value: shebaNumber?.value !== void 0 ? shebaNumber.value : sheba, onValueChange: (next) => {
+        setSheba(next);
+        shebaNumber?.onValueChange?.(next);
+      } }),
+      /* @__PURE__ */ jsxRuntime.jsx(TaavBankAccountNumberInput, { ...accountNumber, value: accountNumber?.value !== void 0 ? accountNumber.value : account, onValueChange: (next) => {
+        setAccount(next);
+        accountNumber?.onValueChange?.(next);
+      }, className: "md:col-span-2" })
+    ] })
+  ] });
+}
+var BASE_TOKENS = {
+  headerBackground: "#6d9eae",
+  headerOverlay: "#477f91",
+  borderColor: "#b7cbd5",
+  titleColor: "#3f4d55",
+  chipBorderColor: "#a4b7c4",
+  chipTextColor: "#718290",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#83a7b6"
+};
+var FLOOR_TOKENS = {
+  headerBackground: "#b4a675",
+  headerOverlay: "#918352",
+  borderColor: "#c8c5a8",
+  titleColor: "#514a38",
+  chipBorderColor: "#aeb8bf",
+  chipTextColor: "#71808a",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#b9aa76"
+};
+var UNIT_TOKENS = {
+  headerBackground: "#3d5fa7",
+  headerOverlay: "#294c91",
+  borderColor: "rgba(145, 170, 190, 0.72)",
+  titleColor: "#35486e",
+  chipBorderColor: "#278cc1",
+  chipTextColor: "#197ea9",
+  activeChipBorderColor: "#f59e0b",
+  activeChipTextColor: "#f59e0b",
+  statusColor: "#ef4444",
+  dividerColor: "#7c98c8"
+};
+var UNIT_CHIP_COLORS = {
+  orange: { border: "#f59e0b", text: "#ed8d00" },
+  blue: { border: "#3b82f6", text: "#2563eb" },
+  teal: { border: "#1599b5", text: "#087f98" },
+  purple: { border: "#7c4dff", text: "#6d3df0" }
+};
+function Header({ title, headerLabel, headerImage, tokens }) {
+  const style = { "--structure-header": tokens.headerBackground, "--structure-overlay": tokens.headerOverlay, ...headerImage ? { backgroundImage: `url(${headerImage})` } : {} };
+  return /* @__PURE__ */ jsxRuntime.jsxs("header", { className: "relative flex min-h-[88px] items-center overflow-hidden rounded-t-[16px] bg-[var(--structure-header)] px-5 py-4 text-white", style, children: [
+    !headerImage && /* @__PURE__ */ jsxRuntime.jsx("span", { "aria-hidden": true, className: "absolute inset-0 opacity-80 [background:linear-gradient(135deg,transparent_0_55%,var(--structure-overlay)_55%_72%,transparent_72%),linear-gradient(90deg,transparent_0_58%,rgba(255,255,255,.06)_58%_59%,transparent_59%)]" }),
+    /* @__PURE__ */ jsxRuntime.jsx("h3", { className: "relative z-10 m-0 min-w-0 flex-1 truncate text-right text-[21px] font-extrabold leading-8", children: headerLabel ?? title })
+  ] });
+}
+function ActionIcon({ icon }) {
+  if (icon === "edit") return /* @__PURE__ */ jsxRuntime.jsx(PenLine, { className: "h-4 w-4", strokeWidth: 1.7 });
+  if (icon === "copy") return /* @__PURE__ */ jsxRuntime.jsx(Copy, { className: "h-4 w-4", strokeWidth: 1.7 });
+  if (icon === "delete") return /* @__PURE__ */ jsxRuntime.jsx(Trash2, { className: "h-4 w-4", strokeWidth: 1.7 });
+  return /* @__PURE__ */ jsxRuntime.jsx(WandSparkles, { className: "h-4 w-4", strokeWidth: 1.7 });
+}
+function MenuButton({ onClick, open }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0645\u0646\u0648\u06CC \u06A9\u0627\u0631\u062A", "aria-expanded": open, onClick: (event) => {
+    event.stopPropagation();
+    onClick?.();
+  }, className: cn("absolute left-4 top-[104px] z-20 inline-flex h-7 w-7 items-center justify-center rounded-md text-[#555b60] transition hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]", open && "text-[#2f6979]"), children: /* @__PURE__ */ jsxRuntime.jsx(EllipsisVertical, { className: "h-5 w-5", strokeWidth: 3 }) });
+}
+function ActionMenu({ actions, tokens, isUnitToken }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { dir: "rtl", className: cn("absolute left-[-20px] top-[95px] z-30 overflow-hidden rounded-[14px] border-0 bg-[#f1f2f3] p-1.5 text-right shadow-[0_7px_18px_rgba(30,44,52,.2)]", isUnitToken ? "w-[135px]" : "w-[101px]"), style: { borderColor: tokens.borderColor }, role: "menu", children: actions.map((action) => /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", role: "menuitem", disabled: action.disabled || !action.onClick, onClick: action.onClick, className: cn("flex w-full items-center justify-start rounded-[8px] text-right text-[12px] font-normal leading-5 text-[#4c5155] transition hover:bg-[#e1e4e6] focus-visible:bg-[#e1e4e6] focus-visible:outline-none disabled:cursor-default disabled:opacity-45", isUnitToken ? "h-[52px] gap-2 px-3" : "h-[43px] gap-1.5 px-2.5"), children: [
+    /* @__PURE__ */ jsxRuntime.jsx(ActionIcon, { icon: action.icon }),
+    /* @__PURE__ */ jsxRuntime.jsx("span", { className: "flex-1 text-right", children: action.label })
+  ] }, action.key)) });
+}
+function UsageChips({ usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, tokens, isUnitToken }) {
+  if (!usageTypes?.length) return null;
+  return /* @__PURE__ */ jsxRuntime.jsxs("section", { className: "mt-3", "aria-label": usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC", children: [
+    /* @__PURE__ */ jsxRuntime.jsx("h4", { className: "m-0 text-right text-[17px] font-bold leading-7 text-[#555b60]", children: usageTitle ?? "\u0646\u0648\u0639 \u06A9\u0627\u0631\u0628\u0631\u06CC" }),
+    isUnitToken && unitAreaText && /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 mt-1 text-right text-[13px] leading-6 text-[#5f666b]", children: unitAreaText }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-2 flex flex-wrap justify-start gap-1.5", children: usageTypes.map((usage) => {
+      const active = usage.key === activeUsageType;
+      const colors = isUnitToken && usage.tone && UNIT_CHIP_COLORS[usage.tone] ? UNIT_CHIP_COLORS[usage.tone] : active ? { border: tokens.activeChipBorderColor, text: tokens.activeChipTextColor } : null;
+      const Chip = onUsageTypeClick ? "button" : "span";
+      return /* @__PURE__ */ jsxRuntime.jsx(Chip, { type: onUsageTypeClick ? "button" : void 0, onClick: onUsageTypeClick ? (event) => {
+        event.stopPropagation();
+        onUsageTypeClick(usage);
+      } : void 0, className: cn("inline-flex min-h-7 items-center rounded-full border bg-white px-2.5 text-[12px] font-medium leading-5 transition", onUsageTypeClick && "cursor-pointer hover:bg-[#f1f5f6] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5b92a3]"), style: { borderColor: colors?.border ?? tokens.chipBorderColor, color: colors?.text ?? tokens.chipTextColor }, children: usage.label }, usage.key);
+    }) })
+  ] });
+}
+function UnitStatuses({ items }) {
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mt-4 flex flex-wrap justify-start gap-2", children: items.map((item) => /* @__PURE__ */ jsxRuntime.jsxs("span", { className: cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] leading-5", item.tone === "danger" ? "bg-[#fbe8e8] text-[#d94848]" : "bg-[#f5e8df] text-[#b45b2e]"), children: [
+    item.icon === "close" ? /* @__PURE__ */ jsxRuntime.jsx("span", { className: "inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[10px]", children: "\xD7" }) : /* @__PURE__ */ jsxRuntime.jsx("span", { className: "text-[13px]", children: "\u25F7" }),
+    item.label
+  ] }, item.key)) });
+}
+function ProgressReport({ report, tokens, resetKey }) {
+  const [moreOpen, setMoreOpen] = react.useState(false);
+  react.useEffect(() => setMoreOpen(false), [resetKey]);
+  const status = report.statusLabel ?? (report.status === "complete" ? "\u062A\u06A9\u0645\u06CC\u0644 \u0634\u062F\u0647" : "\u062A\u06A9\u0645\u06CC\u0644 \u0646\u0634\u062F\u0647");
+  return /* @__PURE__ */ jsxRuntime.jsxs("section", { className: "relative mt-3 border-t pt-3", style: { borderColor: tokens.dividerColor }, children: [
+    /* @__PURE__ */ jsxRuntime.jsx("h4", { className: "m-0 text-right text-[15px] font-bold leading-6 text-[#4f5559] line-clamp-2", children: report.title }),
+    report.description && /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "mt-1 flex min-w-0 items-center justify-between gap-1 text-right", children: [
+      /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 min-w-0 flex-1 truncate whitespace-nowrap text-right text-[11px] leading-5 text-[#656b70]", children: report.description }),
+      /* @__PURE__ */ jsxRuntime.jsxs("button", { dir: "ltr", type: "button", onClick: (event) => {
+        event.stopPropagation();
+        setMoreOpen((open) => !open);
+        report.onMoreClick?.();
+      }, className: "inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] leading-5 text-[#0798a3] underline-offset-2 hover:underline", children: [
+        /* @__PURE__ */ jsxRuntime.jsx(ChevronLeft, { className: "h-[15px] w-[15px] text-[#9da3a6]", strokeWidth: 2.1 }),
+        /* @__PURE__ */ jsxRuntime.jsx("span", { children: report.moreLabel ?? "\u0628\u06CC\u0634\u062A\u0631" })
+      ] })
+    ] }),
+    moreOpen && /* @__PURE__ */ jsxRuntime.jsx("div", { className: "absolute left-0 right-0 top-[52px] z-10 rounded-[3px] border border-[#e0e3e5] bg-[#fafafa] px-3 py-2 text-right text-[11px] leading-5 text-[#656b70] shadow-[0_1px_3px_rgba(30,44,52,.05)]", children: report.moreHint ?? report.description }),
+    /* @__PURE__ */ jsxRuntime.jsx("div", { className: "relative mt-1.5 min-h-7", children: /* @__PURE__ */ jsxRuntime.jsxs("button", { type: "button", onClick: (event) => {
+      event.stopPropagation();
+      report.onClick?.();
+    }, disabled: !report.onClick, className: "flex w-full items-center justify-start gap-1 text-[11px] leading-5 disabled:cursor-default", style: { color: tokens.statusColor }, children: [
+      /* @__PURE__ */ jsxRuntime.jsx(CircleAlert, { className: "h-3.5 w-3.5" }),
+      status
+    ] }) })
+  ] });
+}
+function TaavProjectStructureCard({ token, title, subtitle, locationText, headerImage, headerLabel, usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, statusItems, showMenu = false, onMenuClick, onCardClick, menuActions, showNavigate = false, onNavigate, progressReport, disabled = false, loading = false, className }) {
+  const isFloorToken = token === "floor";
+  const isUnitToken = token === "unit";
+  const tokens = isUnitToken ? UNIT_TOKENS : isFloorToken ? FLOOR_TOKENS : BASE_TOKENS;
+  const [menuOpen, setMenuOpen] = react.useState(false);
+  const [cardClickVersion, setCardClickVersion] = react.useState(0);
+  return /* @__PURE__ */ jsxRuntime.jsxs("article", { dir: "rtl", "data-taav-project-structure-card": true, "data-token": token, "aria-busy": loading || void 0, "aria-disabled": disabled || void 0, onClick: () => {
+    setMenuOpen(false);
+    setCardClickVersion((version) => version + 1);
+    onCardClick?.();
+  }, className: cn("relative w-full max-w-[300px] cursor-pointer overflow-visible border bg-white text-right shadow-[0_2px_8px_rgba(28,54,65,.04)] transition hover:shadow-[0_5px_16px_rgba(28,54,65,.09)]", isUnitToken ? "rounded-[15px]" : "rounded-[16px]", isFloorToken ? "h-[250px] max-h-[250px] min-h-[250px]" : isUnitToken ? "h-[326px] max-h-[326px] min-h-[326px]" : "h-[376px] max-h-[376px] min-h-[376px]", disabled && "pointer-events-none opacity-55", loading && "animate-pulse", className), style: { borderColor: tokens.borderColor }, children: [
+    /* @__PURE__ */ jsxRuntime.jsx(Header, { title, headerLabel, headerImage, tokens }),
+    showMenu && !loading && /* @__PURE__ */ jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntime.jsx(MenuButton, { open: menuOpen, onClick: () => {
+        setMenuOpen((open) => !open);
+        onMenuClick?.();
+      } }),
+      menuOpen && menuActions?.length ? /* @__PURE__ */ jsxRuntime.jsx("div", { onClick: (event) => event.stopPropagation(), children: /* @__PURE__ */ jsxRuntime.jsx(ActionMenu, { actions: menuActions, tokens, isUnitToken }) }) : null
+    ] }),
+    /* @__PURE__ */ jsxRuntime.jsxs("div", { className: cn("relative min-h-0 overflow-visible px-4 pb-4 pt-3", isFloorToken ? "h-[162px]" : isUnitToken ? "h-[238px]" : "h-[284px]"), children: [
+      !isFloorToken && (subtitle || locationText) && /* @__PURE__ */ jsxRuntime.jsx("p", { className: "m-0 max-w-[calc(100%-2rem)] truncate text-right text-[13px] leading-6 text-[#61676b]", children: subtitle ?? locationText }),
+      /* @__PURE__ */ jsxRuntime.jsx(UsageChips, { usageTitle, unitAreaText, usageTypes, activeUsageType, onUsageTypeClick, tokens, isUnitToken }),
+      isUnitToken && statusItems?.length ? /* @__PURE__ */ jsxRuntime.jsx(UnitStatuses, { items: statusItems }) : null,
+      progressReport && /* @__PURE__ */ jsxRuntime.jsx(ProgressReport, { report: progressReport, tokens, resetKey: cardClickVersion }),
+      !progressReport && showNavigate && /* @__PURE__ */ jsxRuntime.jsx("button", { type: "button", "aria-label": "\u0645\u0634\u0627\u0647\u062F\u0647 \u062C\u0632\u0626\u06CC\u0627\u062A", onClick: (event) => {
+        event.stopPropagation();
+        onNavigate?.();
+      }, className: "absolute bottom-3 left-4 text-[#5e8998]", children: /* @__PURE__ */ jsxRuntime.jsx(ChevronLeft, { className: "h-[19px] w-[19px]", strokeWidth: 2.1 }) })
+    ] })
+  ] });
+}
+/*! Bundled license information:
+
+lucide-react/dist/esm/shared/src/utils.js:
+lucide-react/dist/esm/defaultAttributes.js:
+lucide-react/dist/esm/Icon.js:
+lucide-react/dist/esm/createLucideIcon.js:
+lucide-react/dist/esm/icons/building-2.js:
+lucide-react/dist/esm/icons/check.js:
+lucide-react/dist/esm/icons/chevron-left.js:
+lucide-react/dist/esm/icons/chevron-right.js:
+lucide-react/dist/esm/icons/circle-alert.js:
+lucide-react/dist/esm/icons/circle-dot.js:
+lucide-react/dist/esm/icons/copy.js:
+lucide-react/dist/esm/icons/earth.js:
+lucide-react/dist/esm/icons/ellipsis-vertical.js:
+lucide-react/dist/esm/icons/info.js:
+lucide-react/dist/esm/icons/landmark.js:
+lucide-react/dist/esm/icons/mail.js:
+lucide-react/dist/esm/icons/map-pinned.js:
+lucide-react/dist/esm/icons/pen-line.js:
+lucide-react/dist/esm/icons/pencil.js:
+lucide-react/dist/esm/icons/phone-call.js:
+lucide-react/dist/esm/icons/phone.js:
+lucide-react/dist/esm/icons/plus.js:
+lucide-react/dist/esm/icons/printer.js:
+lucide-react/dist/esm/icons/refresh-cw.js:
+lucide-react/dist/esm/icons/search.js:
+lucide-react/dist/esm/icons/sliders-horizontal.js:
+lucide-react/dist/esm/icons/smartphone.js:
+lucide-react/dist/esm/icons/square-pen.js:
+lucide-react/dist/esm/icons/trash-2.js:
+lucide-react/dist/esm/icons/user-round.js:
+lucide-react/dist/esm/icons/users-round.js:
+lucide-react/dist/esm/icons/wand-sparkles.js:
+lucide-react/dist/esm/icons/x.js:
+lucide-react/dist/esm/lucide-react.js:
+  (**
+   * @license lucide-react v0.487.0 - ISC
+   *
+   * This source code is licensed under the ISC license.
+   * See the LICENSE file in the root directory of this source tree.
+   *)
+*/
 
 exports.DEFAULT_BUSINESS_NAV_PATH = DEFAULT_BUSINESS_NAV_PATH;
 exports.DEFAULT_BUSINESS_SIDEBAR_NAV_PATH = DEFAULT_BUSINESS_SIDEBAR_NAV_PATH;
@@ -2391,13 +4368,33 @@ exports.TAAV_TOKEN_CATALOG = TAAV_TOKEN_CATALOG;
 exports.TAAV_TOKEN_SECTIONS = TAAV_TOKEN_SECTIONS;
 exports.TAAV_TONE_LABELS = TAAV_TONE_LABELS;
 exports.TaavActivationSwitch = TaavActivationSwitch;
+exports.TaavBankAccountInfoInputCard = TaavBankAccountInfoInputCard;
+exports.TaavBankAccountNumberInput = TaavBankAccountNumberInput;
+exports.TaavBankCardNumberInput = TaavBankCardNumberInput;
+exports.TaavBusinessAccountInfoCard = TaavBusinessAccountInfoCard;
+exports.TaavBusinessFormDialogCard = TaavBusinessFormDialogCard;
+exports.TaavBusinessHeaderCard = TaavBusinessHeaderCard;
+exports.TaavBusinessIconChoiceGroup = TaavBusinessIconChoiceGroup;
 exports.TaavBusinessIntroCard = TaavBusinessIntroCard;
+exports.TaavBusinessModuleLink = TaavBusinessModuleLink;
+exports.TaavBusinessModuleLinkGrid = TaavBusinessModuleLinkGrid;
+exports.TaavBusinessOwnerCard = TaavBusinessOwnerCard;
+exports.TaavBusinessOwnershipCard = TaavBusinessOwnershipCard;
+exports.TaavBusinessProfileSummaryCard = TaavBusinessProfileSummaryCard;
 exports.TaavBusinessRecommendationCard = TaavBusinessRecommendationCard;
+exports.TaavBusinessSectionToolbarCard = TaavBusinessSectionToolbarCard;
 exports.TaavBusinessSidebar = TaavBusinessSidebar;
+exports.TaavBusinessToggleCard = TaavBusinessToggleCard;
+exports.TaavCommunicationChannels = TaavCommunicationChannels;
+exports.TaavCommunicationChannelsCard = TaavCommunicationChannelsCard;
 exports.TaavDetailsLink = TaavDetailsLink;
+exports.TaavFormStepIndicator = TaavFormStepIndicator;
+exports.TaavMobileNumberInputCard = TaavMobileNumberInputCard;
 exports.TaavModuleCard = TaavModuleCard;
 exports.TaavModuleCardGrid = TaavModuleCardGrid;
 exports.TaavModuleCardGridItem = TaavModuleCardGridItem;
+exports.TaavProjectStructureCard = TaavProjectStructureCard;
+exports.TaavShebaNumberInput = TaavShebaNumberInput;
 exports.cn = cn;
 //# sourceMappingURL=taav-business.js.map
 //# sourceMappingURL=taav-business.js.map

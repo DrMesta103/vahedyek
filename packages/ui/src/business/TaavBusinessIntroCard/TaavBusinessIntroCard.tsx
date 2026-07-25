@@ -179,6 +179,7 @@ export function TaavBusinessIntroCard({
     </div>
   ) : (
     <div className={businessIntroCardLayout()}>
+      {actionNode}
       <div className={cn(businessIntroCardLeading(), contentClassName)}>
         {iconBlock}
         <div className={businessIntroCardCopy()}>
@@ -187,7 +188,6 @@ export function TaavBusinessIntroCard({
           {children}
         </div>
       </div>
-      {actionNode}
     </div>
   );
 

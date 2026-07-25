@@ -6,19 +6,19 @@ export const moduleCardRoot = cva(
     'group/taav-module-card relative flex min-h-0 w-full flex-col overflow-hidden border border-solid',
     'bg-[var(--taav-module-card-surface)] text-[var(--taav-module-card-title)]',
     'border-[color:var(--taav-module-card-border)]',
-    'rounded-[var(--taav-module-card-radius)] shadow-[var(--taav-module-card-shadow)]',
+    'rounded-[15px] shadow-none',
     TAAV_INTERACTION.base,
   ],
   {
     variants: {
       size: {
-        sm: 'min-h-[var(--taav-module-card-min-height-sm)]',
-        md: 'min-h-[var(--taav-module-card-min-height-md)]',
-        lg: 'min-h-[var(--taav-module-card-min-height-lg)]',
+        sm: 'min-h-[176px]',
+        md: 'min-h-[192px]',
+        lg: 'min-h-[212px]',
       },
       width: {
-        auto: '',
-        full: 'w-full',
+        auto: 'w-full max-w-[460px]',
+        full: 'w-full max-w-none',
       },
       variant: {
         default: '',
@@ -71,8 +71,7 @@ export const moduleCardRoot = cva(
 export const moduleCardHeader = cva(
   [
     'relative flex shrink-0 items-center justify-between gap-[var(--taav-space-3)]',
-    'h-[var(--taav-module-card-header-height)] px-[var(--taav-module-card-header-px)]',
-    'border-b border-solid border-[color:var(--taav-module-card-header-border)]',
+    'h-[64px] pr-[20px] pl-[20px]',
     'bg-[var(--taav-module-card-header-bg)]',
   ],
   {
@@ -89,11 +88,11 @@ export const moduleCardHeader = cva(
   },
 );
 
-export const moduleCardTitle = cva('relative z-[1] m-0 min-w-0 flex-1 text-right font-black leading-[var(--taav-leading-tight)]', {
+export const moduleCardTitle = cva('relative z-[1] m-0 min-w-0 flex-1 text-right font-medium leading-[26px] text-[var(--taav-module-card-title)]', {
   variants: {
     size: {
       sm: 'text-[length:var(--taav-module-card-title-sm)]',
-      md: 'text-[length:var(--taav-module-card-title-md)]',
+      md: 'text-[18px]',
       lg: 'text-[length:var(--taav-module-card-title-lg)]',
     },
   },
@@ -105,9 +104,9 @@ export const moduleCardTitle = cva('relative z-[1] m-0 min-w-0 flex-1 text-right
 export const moduleCardBody = cva('relative flex w-full flex-1 flex-col', {
   variants: {
     size: {
-      sm: 'p-[var(--taav-module-card-body-padding-sm)]',
-      md: 'p-[var(--taav-module-card-body-padding-md)]',
-      lg: 'p-[var(--taav-module-card-body-padding-lg)]',
+      sm: 'px-[18px] pt-[16px] pb-[18px]',
+      md: 'px-[20px] pt-[17px] pb-[20px]',
+      lg: 'px-[24px] pt-[19px] pb-[22px]',
     },
     align: {
       start: 'items-start text-right',
@@ -117,18 +116,18 @@ export const moduleCardBody = cva('relative flex w-full flex-1 flex-col', {
   },
   defaultVariants: {
     size: 'md',
-    align: 'start',
+    align: 'center',
   },
 });
 
 export const moduleCardDescription = cva(
-  'm-0 w-full font-normal leading-[var(--taav-leading-relaxed)] text-[var(--taav-module-card-description)]',
+  'm-0 w-full max-w-[520px] font-normal text-center leading-[22px] text-[var(--taav-module-card-description)]',
   {
     variants: {
       size: {
-        sm: 'text-[length:var(--taav-module-card-description-sm)]',
-        md: 'text-[length:var(--taav-module-card-description-md)]',
-        lg: 'text-[length:var(--taav-module-card-description-lg)]',
+        sm: 'text-[12px]',
+        md: 'text-[12.5px]',
+        lg: 'text-[13px]',
       },
     },
     defaultVariants: {
@@ -140,8 +139,8 @@ export const moduleCardDescription = cva(
 export const moduleCardArrow = cva(
   [
     'relative z-[1] inline-flex shrink-0 items-center justify-center',
-    'text-[var(--taav-module-card-arrow)]',
-    '[&_svg]:h-[var(--taav-module-card-arrow-size)] [&_svg]:w-[var(--taav-module-card-arrow-size)]',
+    'text-[#334155]',
+    '[&_svg]:h-[18px] [&_svg]:w-[18px]',
   ],
   {
     variants: {

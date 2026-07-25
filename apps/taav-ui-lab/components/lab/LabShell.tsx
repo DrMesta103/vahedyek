@@ -48,6 +48,7 @@ const MAIN_ICONS: Record<string, typeof Home> = {
   '/data-display': Table2,
   '/layout': PanelRight,
   '/business': PanelRight,
+  '/business-components': LayoutGrid,
 };
 
 const FOUNDATION_ICONS: Record<string, typeof FileText> = {

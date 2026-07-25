@@ -38,7 +38,7 @@ export const activationSwitchSegment = cva(
   [
     'inline-flex min-w-0 items-center justify-center border-0',
     'rounded-[var(--taav-activation-switch-segment-radius)]',
-    'font-bold leading-none whitespace-nowrap',
+    'font-semibold leading-none whitespace-nowrap',
     'transition-[background-color,color,box-shadow] duration-[var(--taav-duration-normal)]',
     TAAV_INTERACTION.focus,
   ],
@@ -51,7 +51,7 @@ export const activationSwitchSegment = cva(
       },
       selected: {
         true: 'bg-[var(--taav-activation-switch-active-bg)] text-[var(--taav-activation-switch-active-text)] shadow-[var(--taav-activation-switch-active-shadow)]',
-        false: 'bg-[var(--taav-activation-switch-inactive-bg)] text-[var(--taav-activation-switch-inactive-text)] hover:bg-[var(--taav-activation-switch-inactive-hover-bg)]',
+        false: 'bg-transparent text-[var(--taav-activation-switch-inactive-text)] hover:bg-transparent',
       },
     },
     defaultVariants: {

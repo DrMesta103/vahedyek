@@ -85,11 +85,12 @@ export function TaavPercentageInput({
         taavNumericAffixShellClass(size),
         taavNumericAffixShellVariants({ size }),
         getTaavFieldToneClasses(tone, showInvalid),
+        'gap-[4px]',
         wrapperClassName,
         unsafeClassName,
       )}
     >
-      <span className={taavNumericAffixLabelVariants({ size, align: 'start' })} aria-hidden="true">
+      <span className={cn(taavNumericAffixLabelVariants({ size, align: 'start' }), 'min-w-[1.25rem]')} aria-hidden="true">
         %
       </span>
       <input

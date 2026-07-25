@@ -767,11 +767,12 @@ function TaavPercentageInput({
         taavNumericAffixShellClass(size),
         taavNumericAffixShellVariants({ size }),
         getTaavFieldToneClasses(tone, showInvalid),
+        "gap-[4px]",
         wrapperClassName,
         unsafeClassName
       ),
       children: [
-        /* @__PURE__ */ jsx("span", { className: taavNumericAffixLabelVariants({ size, align: "start" }), "aria-hidden": "true", children: "%" }),
+        /* @__PURE__ */ jsx("span", { className: cn(taavNumericAffixLabelVariants({ size, align: "start" }), "min-w-[1.25rem]"), "aria-hidden": "true", children: "%" }),
         /* @__PURE__ */ jsx(
           "input",
           {

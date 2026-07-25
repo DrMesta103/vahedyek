@@ -76,12 +76,16 @@ export function DocSection({
 export function DocPreview({
   label,
   meta,
+  bare = false,
   children,
 }: {
   label?: string;
   meta?: string;
+  bare?: boolean;
   children: ReactNode;
 }) {
+  if (bare) return <>{children}</>;
+
   return (
     <div className="lab-preview-panel">
       <div className="lab-preview-panel-label">

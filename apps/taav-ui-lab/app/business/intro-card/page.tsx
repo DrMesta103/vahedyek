@@ -11,9 +11,7 @@ import {
 } from '@/components/lab/DocBlocks';
 import { DocPageShell } from '@/components/lab/DocPageShell';
 import {
-  BusinessIntroCardDarkDemo,
   BusinessIntroCardDisabledActionDemo,
-  BusinessIntroCardHubDemo,
   BusinessIntroCardLightDemo,
   BusinessIntroCardLoadingDemo,
   BusinessIntroCardWithActionDemo,
@@ -48,28 +46,13 @@ export default function BusinessIntroCardDocPage() {
       <DocSection title="راهنمای استفاده">
         <StateNote>
           این کامپوننت برای معرفی کوتاه یک بخش بیزینسی در ابتدای صفحه استفاده می‌شود و شامل آیکون، عنوان، توضیح و اکشن
-          اختیاری برگشت یا ورود است. route، permission و business logic باید از اپ (DastRanj / VahedYek) پاس داده شود.
+          اختیاری برگشت یا ورود است. route، permission و business logic باید از اپ پاس داده شود.
         </StateNote>
-      </DocSection>
-
-      <DocSection title="الگوی hub — مرکز تنظیمات">
-        <StateNote>
-          برای صفحات مرکزی مثل «تنظیمات کسب‌وکار» با eyebrow، badge، footnote و پس‌زمینه decorative — بدون اکشن.
-        </StateNote>
-        <DocPreview label="layout=hub · business settings hub">
-          <BusinessIntroCardHubDemo />
-        </DocPreview>
       </DocSection>
 
       <DocSection title="تم روشن — نمونه نزدیک اسکرین‌شات">
-        <DocPreview label="light · با اکشن برگشت">
+        <DocPreview label="light · با اکشن برگشت" bare>
           <BusinessIntroCardLightDemo />
-        </DocPreview>
-      </DocSection>
-
-      <DocSection title="تم تیره">
-        <DocPreview label="dark · با اکشن برگشت">
-          <BusinessIntroCardDarkDemo />
         </DocPreview>
       </DocSection>
 
@@ -127,7 +110,7 @@ export default function BusinessIntroCardDocPage() {
         />
       </DocSection>
 
-      <DocSection title="Do / Don't">
+      <DocSection title="Do / Don’t">
         <DocDoDont
           doItems={[
             'برای معرفی بخش بیزینسی نزدیک بالای صفحه استفاده کنید',

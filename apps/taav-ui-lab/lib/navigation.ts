@@ -15,6 +15,7 @@ export const LAB_MAIN_NAV: LabNavItem[] = [
   { href: '/data-display', label: 'Data Display' },
   { href: '/layout', label: 'Layout' },
   { href: '/business', label: 'Business' },
+  { href: '/business-components', label: 'Components' },
 ];
 
 export const LAB_FOUNDATION_NAV: LabNavItem[] = [
@@ -44,7 +45,7 @@ export const LAB_FORM_NAV: LabNavItem[] = [
   { href: '/forms/segmented-control', label: 'سگمنت', badge: 'TaavSegmentedControl' },
   { href: '/forms/option-card', label: 'کارت گزینه', badge: 'TaavOptionCard' },
   { href: '/forms/form-field', label: 'فیلد فرم', badge: 'TaavFormField' },
-  { href: '/forms/field-block', label: 'بلوک فیلد', badge: 'TaavFieldBlock' },
+  { href: '/forms/field-block', label: 'field', badge: 'TaavFieldBlock' },
   { href: '/forms/field-grid', label: 'گرید فیلد', badge: 'TaavFieldGrid' },
   { href: '/forms/choice-chip', label: 'چیپ انتخابی', badge: 'TaavChoiceChipGroup' },
 ];
@@ -84,7 +85,7 @@ export const LAB_LAYOUT_NAV: LabNavItem[] = [
   { href: '/layout/progress-summary', label: 'خلاصه پیشرفت', badge: 'TaavProgressSummary' },
 ];
 
-export const LAB_BUSINESS_NAV: LabNavItem[] = [
+export const LAB_BUSINESS_NAV: LabNavItem[] = ([
   {
     href: '/business/sidebar',
     label: 'سایدبار کسب‌وکار',
@@ -93,18 +94,32 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     keywords: ['sidebar', 'navigation', 'dastranj'],
   },
   {
-    href: '/business/intro-card',
-    label: 'کارت معرفی بخش',
-    badge: 'TaavBusinessIntroCard',
-    description: 'intro استاندارد و layout=hub برای مرکز تنظیمات کسب‌وکار',
-    keywords: ['hub', 'eyebrow', 'footnote', 'badge', 'تنظیمات کسب‌وکار', 'business settings'],
+    href: '/business/section-toolbar-card',
+    label: 'کارت سربرگ مدیریتی بخش',
+    badge: 'TaavBusinessSectionToolbarCard',
+    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جستجو و اقدام',
+    keywords: ['toolbar card', 'section header', 'business management'],
   },
   {
-    href: '/business/recommendation-card',
-    label: 'کارت پیشنهاد تنظیمات',
-    badge: 'TaavBusinessRecommendationCard',
-    description: 'تنظیم پیشنهادی با TaavActivationSwitch و لینک جزئیات',
-    keywords: ['activation', 'switch', 'recommendation', 'details link'],
+    href: '/business/section-toolbar-card',
+    label: 'کارت سربرگ مدیریتی بخش',
+    badge: 'TaavBusinessSectionToolbarCard',
+    description: 'الگوی مشترک برای سربرگ‌های مدیریتی با جست‌وجو و اقدام',
+    keywords: ['toolbar card', 'section header', 'business management'],
+  },
+  {
+    href: '/business/header-card',
+    label: 'سربرگ',
+    badge: 'TaavBusinessHeaderCard',
+    description: 'کارت سربرگ بیزینسی برای عنوان، توضیح، آیکن، سوییچ، دکمه و جستجو',
+    keywords: ['header card', 'section header', 'toggle', 'action', 'search'],
+  },
+  {
+    href: '/business/mobile-number-input',
+    label: '???? ???? ????? ??????',
+    badge: 'TaavMobileNumberInputCard',
+    description: '???? ???? ???? ????? ?????? ?? ????? ??????? ? ???? ???',
+    keywords: ['mobile', 'phone', 'input', 'form', 'business'],
   },
   {
     href: '/business/module-card',
@@ -112,13 +127,6 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     badge: 'TaavModuleCard',
     description: 'کارت navigation برای ماژول‌ها و مراحل راه‌اندازی',
     keywords: ['setup', 'module', 'navigation card'],
-  },
-  {
-    href: '/business/module-card-grid',
-    label: 'گرید کارت ماژول',
-    badge: 'TaavModuleCardGrid',
-    description: 'چیدمان responsive کارت‌های TaavModuleCard',
-    keywords: ['grid', 'setup cards', 'two column'],
   },
   {
     href: '/business/currency-input',
@@ -136,7 +144,7 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
   },
   {
     href: '/business/field-block',
-    label: 'بلوک فیلد',
+    label: 'field',
     badge: 'TaavFieldBlock',
     description: 'الگوی فیلد کسب‌وکاری با label، tooltip ثابت و پیام وضعیت',
     keywords: ['field block', 'business form', 'label', 'tooltip', 'validation'],
@@ -148,7 +156,7 @@ export const LAB_BUSINESS_NAV: LabNavItem[] = [
     description: 'انتخاب محدود کسب‌وکار — نوع شرکت، نوع قرارداد، وضعیت ساده',
     keywords: ['choice chip', 'company type', 'contract type', 'selection'],
   },
-];
+]);
 
 export const LAB_CATEGORIES = [
   {
@@ -215,3 +223,4 @@ export const LAB_STATUS_ITEMS = [
   { key: 'ui-lab', label: 'UI Lab', status: 'مستندات', progress: 92 },
   { key: 'migration', label: 'Migration', status: 'شروع نشده', progress: 0 },
 ];
+
