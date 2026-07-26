@@ -74,7 +74,11 @@ export function TaaviaBrandModelSettingsPageClient({ tenantId, brandId, initialD
               <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--taav-text-muted)]">برای هر نوع مدل فنی، حساب ارائه‌دهنده و مدل مستقل انتخاب کنید. هر تغییر به‌صورت تاریخی ثبت می‌شود.</p>
             </div>
           </div>
-          <Link href={`/businesses/${tenantId}/products/taavia/brands`}><TaavButton variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>بازگشت به برندها</TaavButton></Link>
+          <Link href={`/businesses/${tenantId}/products/taavia/brands/${brandId}`}>
+            <TaavButton variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>
+              بازگشت به داشبورد برند
+            </TaavButton>
+          </Link>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <TaavBadge tone={data.brand.status === 'ACTIVE' ? 'success' : 'warning'} variant="soft">{data.brand.status === 'ACTIVE' ? 'فعال' : data.brand.status}</TaavBadge>

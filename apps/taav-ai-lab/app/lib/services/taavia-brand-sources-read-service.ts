@@ -1,10 +1,40 @@
 import { assertTenantAccess } from "@/app/lib/auth";
+import { findActiveBuild } from "@/app/lib/taavia-active-build";
 import { prisma } from "@/app/lib/prisma";
 
 export type BrandSourceFamily = "brand_info" | "knowledge" | "product" | "faq";
 export type BrandSourceUsageStatus = "USED_IN_ACTIVE_KB_UNCHANGED" | "USED_IN_ACTIVE_KB_CHANGED" | "USED_IN_PREVIOUS_KB_ONLY" | "NEVER_USED" | "ARCHIVED_SOURCE_USED_IN_HISTORY" | "NO_ACTIVE_KNOWLEDGE_BASE";
-export type BrandSourceListItem = { sourceId: string; sourceType: BrandSourceFamily; title: string; summary: string; status: "ACTIVE" | "ARCHIVED"; revision: string; contentHash: string; updatedAt: string; updatedByDisplayName: string; usageStatus: BrandSourceUsageStatus; usageStatusLabel: string; knowledgeBaseUsageCount: number; latestUsedKnowledgeBaseId: string | null; latestUsedVersionLabel: string | null; usedInActiveKnowledgeBase: boolean; changedSinceActiveKnowledgeBase: boolean };
-export type BrandSourcesPageData = { businessId: string; brandId: string; activeVersionLabel: string | null; summary: { total: number; active: number; archived: number; usedInActive: number; changedAfterBuild: number; neverUsed: number }; typeCounts: Record<BrandSourceFamily, number>; sources: BrandSourceListItem[] };
+export type BrandSourceListItem = {
+  sourceId: string;
+  sourceType: BrandSourceFamily;
+  title: string;
+  summary: string;
+  status: "ACTIVE" | "ARCHIVED";
+  revision: string;
+  contentHash: string;
+  createdAt: string;
+  createdByDisplayName: string;
+  updatedAt: string;
+  updatedByDisplayName: string;
+  usageStatus: BrandSourceUsageStatus;
+  usageStatusLabel: string;
+  knowledgeBaseUsageCount: number;
+  latestUsedKnowledgeBaseId: string | null;
+  latestUsedVersionLabel: string | null;
+  usedInActiveKnowledgeBase: boolean;
+  changedSinceActiveKnowledgeBase: boolean;
+};
+export type BrandSourcesPageData = {
+  businessId: string;
+  brandId: string;
+  activeVersionLabel: string | null;
+  hasKnowledgeBase: boolean;
+  activeKnowledgeBaseId: string | null;
+  activeBuildId: string | null;
+  summary: { total: number; active: number; archived: number; usedInActive: number; changedAfterBuild: number; neverUsed: number };
+  typeCounts: Record<BrandSourceFamily, number>;
+  sources: BrandSourceListItem[];
+};
 
 const date = (value: Date) => new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "short", timeStyle: "short" }).format(value);
 const labels: Record<BrandSourceUsageStatus, string> = { USED_IN_ACTIVE_KB_UNCHANGED: "استفاده‌شده در نسخه فعال", USED_IN_ACTIVE_KB_CHANGED: "بعد از نسخه فعال ویرایش شده", USED_IN_PREVIOUS_KB_ONLY: "استفاده‌شده فقط در نسخه‌های قبلی", NEVER_USED: "در هیچ Knowledge Base استفاده نشده", ARCHIVED_SOURCE_USED_IN_HISTORY: "منبع آرشیوشده؛ استفاده‌شده در نسخه‌های قبلی", NO_ACTIVE_KNOWLEDGE_BASE: "هنوز Knowledge Base فعالی وجود ندارد" };
@@ -16,17 +46,166 @@ async function requireScopedBrand(userId: string, tenantId: string, brandId: str
 
 export async function getBrandSourcesPageData(userId: string, businessId: string, brandId: string): Promise<BrandSourcesPageData | null> {
   if (!(await requireScopedBrand(userId, businessId, brandId))) return null;
-  const [brandInfo, knowledge, products, faqs, versions] = await Promise.all([prisma.taaviaBrandInfo.findMany({ where: { tenantId: businessId, brandId }, select: { id: true, title: true, textContent: true, status: true, revision: true, contentHash: true, updatedAt: true, updatedBy: true }, orderBy: { displayOrder: "asc" } }), prisma.taaviaBrandKnowledge.findMany({ where: { tenantId: businessId, brandId }, select: { id: true, title: true, content: true, status: true, revision: true, contentHash: true, updatedAt: true, updatedBy: true } }), prisma.taaviaBrandProduct.findMany({ where: { tenantId: businessId, brandId }, select: { id: true, name: true, shortDescription: true, fullDescription: true, status: true, revision: true, contentHash: true, updatedAt: true, updatedBy: true } }), prisma.taaviaBrandFaq.findMany({ where: { tenantId: businessId, brandId }, select: { id: true, question: true, answer: true, status: true, revision: true, contentHash: true, updatedAt: true, updatedBy: true } }), prisma.taaviaKnowledgeBase.findMany({ where: { tenantId: businessId, brandId }, include: { snapshots: { select: { originalSourceId: true, originalBrandInfoId: true, contentHash: true } } }, orderBy: { versionNumber: "desc" } })]);
+  const sourceSelect = {
+    id: true,
+    status: true,
+    revision: true,
+    contentHash: true,
+    createdAt: true,
+    createdBy: true,
+    updatedAt: true,
+    updatedBy: true,
+  } as const;
+  const [brandInfo, knowledge, products, faqs, versions, activeBuild] = await Promise.all([
+    prisma.taaviaBrandInfo.findMany({
+      where: { tenantId: businessId, brandId },
+      select: { ...sourceSelect, title: true, textContent: true },
+      orderBy: { displayOrder: "asc" },
+    }),
+    prisma.taaviaBrandKnowledge.findMany({
+      where: { tenantId: businessId, brandId },
+      select: { ...sourceSelect, title: true, content: true },
+    }),
+    prisma.taaviaBrandProduct.findMany({
+      where: { tenantId: businessId, brandId },
+      select: { ...sourceSelect, name: true, shortDescription: true, fullDescription: true },
+    }),
+    prisma.taaviaBrandFaq.findMany({
+      where: { tenantId: businessId, brandId },
+      select: { ...sourceSelect, question: true, answer: true },
+    }),
+    prisma.taaviaKnowledgeBase.findMany({
+      where: { tenantId: businessId, brandId },
+      include: { snapshots: { select: { originalSourceId: true, originalBrandInfoId: true, contentHash: true } } },
+      orderBy: { versionNumber: "desc" },
+    }),
+    findActiveBuild(businessId, brandId),
+  ]);
   const active = versions.find((version) => version.isActive) ?? null;
-  const records = [...brandInfo.map((item) => ({ sourceId: item.id, sourceType: "brand_info" as const, title: item.title ?? "بدون عنوان", summary: item.textContent ?? "فایل یا رسانهٔ معرفی برند", status: item.status, revision: item.revision.toString(), contentHash: item.contentHash, updatedAt: item.updatedAt, updatedBy: item.updatedBy })), ...knowledge.map((item) => ({ sourceId: item.id, sourceType: "knowledge" as const, title: item.title, summary: item.content, status: item.status, revision: item.revision.toString(), contentHash: item.contentHash, updatedAt: item.updatedAt, updatedBy: item.updatedBy })), ...products.map((item) => ({ sourceId: item.id, sourceType: "product" as const, title: item.name, summary: item.shortDescription ?? item.fullDescription, status: item.status, revision: item.revision.toString(), contentHash: item.contentHash, updatedAt: item.updatedAt, updatedBy: item.updatedBy })), ...faqs.map((item) => ({ sourceId: item.id, sourceType: "faq" as const, title: item.question, summary: item.answer, status: item.status, revision: item.revision.toString(), contentHash: item.contentHash, updatedAt: item.updatedAt, updatedBy: item.updatedBy }))];
+  const records = [
+    ...brandInfo.map((item) => ({
+      sourceId: item.id,
+      sourceType: "brand_info" as const,
+      title: item.title ?? "بدون عنوان",
+      summary: item.textContent ?? "فایل یا رسانهٔ معرفی برند",
+      status: item.status,
+      revision: item.revision.toString(),
+      contentHash: item.contentHash,
+      createdAt: item.createdAt,
+      createdBy: item.createdBy,
+      updatedAt: item.updatedAt,
+      updatedBy: item.updatedBy,
+    })),
+    ...knowledge.map((item) => ({
+      sourceId: item.id,
+      sourceType: "knowledge" as const,
+      title: item.title,
+      summary: item.content,
+      status: item.status,
+      revision: item.revision.toString(),
+      contentHash: item.contentHash,
+      createdAt: item.createdAt,
+      createdBy: item.createdBy,
+      updatedAt: item.updatedAt,
+      updatedBy: item.updatedBy,
+    })),
+    ...products.map((item) => ({
+      sourceId: item.id,
+      sourceType: "product" as const,
+      title: item.name,
+      summary: item.shortDescription ?? item.fullDescription,
+      status: item.status,
+      revision: item.revision.toString(),
+      contentHash: item.contentHash,
+      createdAt: item.createdAt,
+      createdBy: item.createdBy,
+      updatedAt: item.updatedAt,
+      updatedBy: item.updatedBy,
+    })),
+    ...faqs.map((item) => ({
+      sourceId: item.id,
+      sourceType: "faq" as const,
+      title: item.question,
+      summary: item.answer,
+      status: item.status,
+      revision: item.revision.toString(),
+      contentHash: item.contentHash,
+      createdAt: item.createdAt,
+      createdBy: item.createdBy,
+      updatedAt: item.updatedAt,
+      updatedBy: item.updatedBy,
+    })),
+  ];
+  const userIds = [...new Set(records.flatMap((record) => [record.createdBy, record.updatedBy].filter(Boolean)))];
+  const users = userIds.length
+    ? await prisma.appUser.findMany({ where: { id: { in: userIds } }, select: { id: true, fullName: true } })
+    : [];
+  const userNameById = new Map(users.map((user) => [user.id, user.fullName]));
+
   const sources = records.map((record) => {
-    const usages = versions.filter((version) => version.snapshots.some((snapshot) => snapshot.originalSourceId === record.sourceId || (record.sourceType === "brand_info" && snapshot.originalBrandInfoId === record.sourceId)));
-    const activeSnapshot = active?.snapshots.find((snapshot) => snapshot.originalSourceId === record.sourceId || (record.sourceType === "brand_info" && snapshot.originalBrandInfoId === record.sourceId));
+    const usages = versions.filter((version) =>
+      version.snapshots.some(
+        (snapshot) =>
+          snapshot.originalSourceId === record.sourceId ||
+          (record.sourceType === "brand_info" && snapshot.originalBrandInfoId === record.sourceId),
+      ),
+    );
+    const activeSnapshot = active?.snapshots.find(
+      (snapshot) =>
+        snapshot.originalSourceId === record.sourceId ||
+        (record.sourceType === "brand_info" && snapshot.originalBrandInfoId === record.sourceId),
+    );
     const usedInActiveKnowledgeBase = Boolean(activeSnapshot);
     const changedSinceActiveKnowledgeBase = Boolean(activeSnapshot?.contentHash && activeSnapshot.contentHash !== record.contentHash);
-    const usageStatus: BrandSourceUsageStatus = !active ? "NO_ACTIVE_KNOWLEDGE_BASE" : record.status === "ARCHIVED" && usages.length ? "ARCHIVED_SOURCE_USED_IN_HISTORY" : usedInActiveKnowledgeBase ? (changedSinceActiveKnowledgeBase ? "USED_IN_ACTIVE_KB_CHANGED" : "USED_IN_ACTIVE_KB_UNCHANGED") : usages.length ? "USED_IN_PREVIOUS_KB_ONLY" : "NEVER_USED";
+    const usageStatus: BrandSourceUsageStatus = !active
+      ? "NO_ACTIVE_KNOWLEDGE_BASE"
+      : record.status === "ARCHIVED" && usages.length
+        ? "ARCHIVED_SOURCE_USED_IN_HISTORY"
+        : usedInActiveKnowledgeBase
+          ? changedSinceActiveKnowledgeBase
+            ? "USED_IN_ACTIVE_KB_CHANGED"
+            : "USED_IN_ACTIVE_KB_UNCHANGED"
+          : usages.length
+            ? "USED_IN_PREVIOUS_KB_ONLY"
+            : "NEVER_USED";
     const latest = usages[0] ?? null;
-    return { ...record, updatedByDisplayName: record.updatedBy, updatedAt: date(record.updatedAt), usageStatus, usageStatusLabel: labels[usageStatus], knowledgeBaseUsageCount: usages.length, latestUsedKnowledgeBaseId: latest?.id ?? null, latestUsedVersionLabel: latest ? latest.versionLabel || `v${latest.versionNumber}` : null, usedInActiveKnowledgeBase, changedSinceActiveKnowledgeBase };
+    return {
+      sourceId: record.sourceId,
+      sourceType: record.sourceType,
+      title: record.title,
+      summary: record.summary,
+      status: record.status,
+      revision: record.revision,
+      contentHash: record.contentHash,
+      createdAt: date(record.createdAt),
+      createdByDisplayName: userNameById.get(record.createdBy) ?? record.createdBy,
+      updatedAt: date(record.updatedAt),
+      updatedByDisplayName: userNameById.get(record.updatedBy) ?? record.updatedBy,
+      usageStatus,
+      usageStatusLabel: labels[usageStatus],
+      knowledgeBaseUsageCount: usages.length,
+      latestUsedKnowledgeBaseId: latest?.id ?? null,
+      latestUsedVersionLabel: latest ? latest.versionLabel || `v${latest.versionNumber}` : null,
+      usedInActiveKnowledgeBase,
+      changedSinceActiveKnowledgeBase,
+    };
   });
-  return { businessId, brandId, activeVersionLabel: active ? active.versionLabel || `v${active.versionNumber}` : null, summary: { total: sources.length, active: sources.filter((source) => source.status === "ACTIVE").length, archived: sources.filter((source) => source.status === "ARCHIVED").length, usedInActive: sources.filter((source) => source.usedInActiveKnowledgeBase).length, changedAfterBuild: sources.filter((source) => source.changedSinceActiveKnowledgeBase).length, neverUsed: sources.filter((source) => source.usageStatus === "NEVER_USED").length }, typeCounts: { brand_info: brandInfo.length, knowledge: knowledge.length, product: products.length, faq: faqs.length }, sources };
+  return {
+    businessId,
+    brandId,
+    activeVersionLabel: active ? active.versionLabel || `v${active.versionNumber}` : null,
+    hasKnowledgeBase: versions.length > 0,
+    activeKnowledgeBaseId: active?.id ?? null,
+    activeBuildId: activeBuild?.id ?? null,
+    summary: {
+      total: sources.length,
+      active: sources.filter((source) => source.status === "ACTIVE").length,
+      archived: sources.filter((source) => source.status === "ARCHIVED").length,
+      usedInActive: sources.filter((source) => source.usedInActiveKnowledgeBase).length,
+      changedAfterBuild: sources.filter((source) => source.changedSinceActiveKnowledgeBase).length,
+      neverUsed: sources.filter((source) => source.usageStatus === "NEVER_USED").length,
+    },
+    typeCounts: { brand_info: brandInfo.length, knowledge: knowledge.length, product: products.length, faq: faqs.length },
+    sources,
+  };
 }

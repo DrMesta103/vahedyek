@@ -66,6 +66,8 @@ export {
 
 export {
   getTaaviaBrandsForTenant,
+  getTaaviaBrandListItemsForTenant,
+  canOpenTaaviaBrandDashboard,
   getTaaviaBrandForTenant,
   createTaaviaBrandForTenant,
   updateTaaviaBrandForTenant,

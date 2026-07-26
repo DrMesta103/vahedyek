@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { assertTenantAccess } from "@/app/lib/auth";
+import { assertNoActiveBuild } from "@/app/lib/taavia-active-build";
 import { prisma } from "@/app/lib/prisma";
 import type { Prisma } from "@/app/lib/prisma-client";
 import { BrandInfoConflictError, BrandInfoError, BrandInfoForbiddenError, BrandInfoNotFoundError } from "./errors";
@@ -89,6 +90,7 @@ export async function getBrandInfo(userId: string, tenantId: string, brandId: st
 
 export async function createTextBrandInfo(userId: string, input: { tenantId: string; brandId: string; title?: string | null; textContent?: string | null }): Promise<BrandInfoMutationResult> {
   await authorizedBrand(userId, input.tenantId, input.brandId, true);
+  await assertNoActiveBuild(input.tenantId, input.brandId);
   const fields = validateSourceFields("TEXT", input.title, input.textContent, false);
   const now = new Date();
   const id = newId();
@@ -104,6 +106,7 @@ export async function createTextBrandInfo(userId: string, input: { tenantId: str
 
 export async function createMediaBrandInfo(userId: string, input: { tenantId: string; brandId: string; type: Exclude<BrandInfoType, "TEXT">; title?: string | null; file: File }): Promise<BrandInfoMutationResult> {
   await authorizedBrand(userId, input.tenantId, input.brandId, true);
+  await assertNoActiveBuild(input.tenantId, input.brandId);
   const fields = validateSourceFields(input.type, input.title, null, true);
   const fileInfo = validateUploadedFile(input.type, input.file);
   const stored = await storeBrandInfoMedia(input.file);
@@ -125,6 +128,7 @@ export async function createMediaBrandInfo(userId: string, input: { tenantId: st
 
 export async function updateBrandInfo(userId: string, input: { tenantId: string; brandId: string; id: string; expectedRevision: unknown; type?: BrandInfoType; title?: string | null; textContent?: string | null; file?: File | null }): Promise<BrandInfoMutationResult> {
   const current = await authorizedItem(userId, input.tenantId, input.brandId, input.id, true);
+  await assertNoActiveBuild(input.tenantId, input.brandId);
   if (current.status !== "ACTIVE") throw new BrandInfoForbiddenError("منبع آرشیوشده قابل ویرایش نیست.");
   const expectedRevision = validateExpectedRevision(input.expectedRevision);
   const nextType = input.type ?? current.type;
@@ -171,6 +175,7 @@ export async function reactivateBrandInfo(userId: string, input: { tenantId: str
 
 async function changeStatus(userId: string, input: { tenantId: string; brandId: string; id: string; expectedRevision: unknown }, status: "ACTIVE" | "ARCHIVED") {
   const current = await authorizedItem(userId, input.tenantId, input.brandId, input.id, true);
+  await assertNoActiveBuild(input.tenantId, input.brandId);
   const expectedRevision = validateExpectedRevision(input.expectedRevision);
   if (current.status === status) return { item: dto(current), changed: false };
   const now = new Date();
@@ -186,6 +191,7 @@ async function changeStatus(userId: string, input: { tenantId: string; brandId: 
 
 export async function reorderBrandInfo(userId: string, input: { tenantId: string; brandId: string; ids: string[] }) {
   await authorizedBrand(userId, input.tenantId, input.brandId, true);
+  await assertNoActiveBuild(input.tenantId, input.brandId);
   if (new Set(input.ids).size !== input.ids.length) throw new BrandInfoForbiddenError("شناسه تکراری در ترتیب منابع مجاز نیست.");
   const rows = await prisma.taaviaBrandInfo.findMany({ where: { tenantId: input.tenantId, brandId: input.brandId, status: "ACTIVE" }, select: { id: true } });
   if (rows.length !== input.ids.length || rows.some((row) => !input.ids.includes(row.id))) throw new BrandInfoForbiddenError("همه منابع باید متعلق به همین برند باشند.");

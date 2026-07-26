@@ -57,8 +57,9 @@ export function getActiveNavItem(pathname: string, businessId?: string | null) {
   }
 
   const ranked = [...AI_LAB_NAV_ITEMS].sort((a, b) => {
-    const aLen = a.segment?.length ?? a.href?.length ?? 0;
-    const bLen = b.segment?.length ?? b.href?.length ?? 0;
+    // Rank by the resolved URL so `/businesses` cannot shadow nested routes.
+    const aLen = resolveNavHref(a, businessId).length;
+    const bLen = resolveNavHref(b, businessId).length;
     return bLen - aLen;
   });
 

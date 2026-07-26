@@ -21,7 +21,7 @@ export default async function TaaviaBrandSourcesPage({ params }: { params: Promi
   const data = await getBrandSourcesPageData(session.userId, business.id, brand.id);
   if (!data) notFound();
   return (
-    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/sources`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
+    <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/sources`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name} currentBrandName={brand.name}>
       <TaaviaBrandSourcesClient data={data} />
     </AiLabShell>
   );
