@@ -1,5 +1,4 @@
 import { getSessionContext } from './auth';
-import { prisma } from './prisma';
 
 export const WORK_GROUP_PERMISSIONS = {
   view: 'work_groups.view',
@@ -17,31 +16,19 @@ export async function getWorkGroupAccess() {
   const session = await getSessionContext();
   const denied = { tenantId: null as string | null, userId: null as string | null, actorRole: 'unknown', canView: false, canCreate: false, canEdit: false, canMemberManage: false, canPolicyChange: false, canLocationChange: false, canDisable: false };
   if (!session?.tenantId || !session.userId) return denied;
-  const membership = await prisma.userTenantMembership.findUnique({
-    where: { userId_tenantId: { userId: session.userId, tenantId: session.tenantId } },
-    include: { roles: { include: { role: { include: { permissions: { select: { permissionKey: true } } } } } } },
-  });
-  if (!membership) return denied;
-  const permissions = new Set(membership.roles.flatMap((item) => item.role.permissions.map((permission) => permission.permissionKey)));
-  const roleKeys = membership.roles.map((item) => item.role.key);
-  const has = (key: string) => permissions.has(key);
-  const canCreate = has(WORK_GROUP_PERMISSIONS.create);
-  const canEdit = has(WORK_GROUP_PERMISSIONS.edit);
-  const canMemberManage = has(WORK_GROUP_PERMISSIONS.memberManage);
-  const canPolicyChange = has(WORK_GROUP_PERMISSIONS.policyChange);
-  const canLocationChange = has(WORK_GROUP_PERMISSIONS.locationChange);
-  const canDisable = has(WORK_GROUP_PERMISSIONS.disable);
+  // Work-group permissions are intentionally open to every authenticated user.
+  // Tenant scoping is still enforced by the returned tenantId in every action.
   return {
     tenantId: session.tenantId,
     userId: session.userId,
-    actorRole: roleKeys[0] ?? membership.role ?? 'unknown',
-    canView: has(WORK_GROUP_PERMISSIONS.view) || canCreate || canEdit || canMemberManage || canPolicyChange || canLocationChange || canDisable,
-    canCreate,
-    canEdit,
-    canMemberManage,
-    canPolicyChange,
-    canLocationChange,
-    canDisable,
+    actorRole: 'authenticated-user',
+    canView: true,
+    canCreate: true,
+    canEdit: true,
+    canMemberManage: true,
+    canPolicyChange: true,
+    canLocationChange: true,
+    canDisable: true,
   };
 }
 

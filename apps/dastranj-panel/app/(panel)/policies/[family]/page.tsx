@@ -153,7 +153,9 @@ export default async function PolicyFamilyPage({
       : availableVariants.includes(requestedVariant)
         ? requestedVariant
         : availableVariants[0] ?? 'default';
-  const discoveredVariants = POLICY_VARIANTS.shift.filter((item) => shiftTypes.includes(item.key as typeof shiftTypes[number]));
+  // Shift policy configuration is available for every supported shift model;
+  // a calendar may be connected later without hiding these policy controls.
+  const discoveredVariants = POLICY_VARIANTS.shift;
   const effectiveShiftVariant = discoveredVariants.some((item) => item.key === activeVariant)
     ? activeVariant
     : discoveredVariants[0]?.key ?? activeVariant;
@@ -202,6 +204,7 @@ export default async function PolicyFamilyPage({
         : typeof sectionValues.monthlyLimit === 'number'
           ? sectionValues.monthlyLimit
           : 0,
+    incompleteAttendanceRule: sectionValues.incompleteAttendanceRule === 'warning_only' ? 'warning_only' as const : 'correction_required' as const,
     requiresManagerApproval: Boolean(sectionValues.requiresManagerApproval),
     maxMissionHours: typeof sectionValues.maxMissionHours === 'number' ? sectionValues.maxMissionHours : 0,
     nightEnabled:
@@ -309,15 +312,9 @@ export default async function PolicyFamilyPage({
             <div className="policy-form-card shift-policy-editor">
               <input type="hidden" name="title" value={familyMeta.title} />
               <input type="hidden" name="description" value={familyMeta.subtitle} />
-              {calendarShifts.length === 0 ? (
-                <PolicyInfoStrip text="برای تنظیم سیاست‌های شیفت، ابتدا حداقل یک شیفت واقعی به تقویم کاری متصل به این سیاست اضافه کنید." />
-              ) : (
-                <>
-                  <PolicyInfoStrip text={`نوع شیفت از تقویم «${policy?.calendar?.title ?? 'تقویم انتخاب‌شده'}» خوانده شده است؛ زمان‌بندی و ساختار شیفت فقط به‌صورت خواندنی نمایش داده می‌شود.`} />
-                  {selectedShiftSummary ? <div className="policy-info-strip"><strong>{selectedCalendarShift?.title}</strong> · {selectedShiftSummary.shiftTypeLabel} · {selectedShiftSummary.timeRange || 'بازه زمانی در قالب شیفت ثبت نشده است'}</div> : null}
-                  <PolicyVariantTabs familyKey={familyKey} variant={effectiveShiftVariant} variants={discoveredVariants.map((item) => ({ ...item, disabled: item.key === 'rotate' }))} />
-                </>
-              )}
+              <PolicyInfoStrip text={calendarShifts.length === 0 ? 'تنظیمات همه مدل‌های شیفت از پیش در دسترس است؛ با اتصال شیفت به تقویم، همین قواعد روی آن اعمال می‌شود.' : `نوع شیفت از تقویم «${policy?.calendar?.title ?? 'تقویم انتخاب‌شده'}» خوانده شده است؛ زمان‌بندی و ساختار شیفت فقط به‌صورت خواندنی نمایش داده می‌شود.`} />
+              {selectedShiftSummary ? <div className="policy-info-strip"><strong>{selectedCalendarShift?.title}</strong> · {selectedShiftSummary.shiftTypeLabel} · {selectedShiftSummary.timeRange || 'بازه زمانی در قالب شیفت ثبت نشده است'}</div> : null}
+              <PolicyVariantTabs familyKey={familyKey} variant={effectiveShiftVariant} variants={discoveredVariants.map((item) => ({ ...item, disabled: item.key === 'rotate' }))} />
 
               <div className="shift-policy-sections">
                 {effectiveShiftVariant === 'rotate' ? (
@@ -539,6 +536,7 @@ export default async function PolicyFamilyPage({
               manualPastDaysEnabled={defaults.manualPastDaysEnabled}
               manualMaxPastDays={defaults.manualMaxPastDays}
               manualMonthlyCapPerUser={defaults.manualMonthlyCapPerUser}
+              incompleteAttendanceRule={defaults.incompleteAttendanceRule}
             />
           ) : null}
 

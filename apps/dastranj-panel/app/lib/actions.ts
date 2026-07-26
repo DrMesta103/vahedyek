@@ -29,6 +29,7 @@ import { countCalendarHolidayDays } from './calendar-grid';
 import type { CalendarShiftType } from './calendar-shifts';
 import {
   getCalendarShiftTypeLabel,
+  listCalendarShifts,
   listExcludedShiftDates,
   parseCalendarShiftConfig,
   resolveCalendarShiftTitle,
@@ -1996,9 +1997,11 @@ export async function updateCalendarFromQuickSetupAction(data: {
 export async function createPolicyAction(formData: FormData) {
   const tenantId = await requirePolicyManagement();
   const calendarId = value(formData, 'calendarId') || null;
+  let calendarShiftTypes: string[] = [];
   if (calendarId) {
-    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId, status: 'active' }, select: { id: true } });
+    const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId, status: 'active' }, select: { id: true, shiftConfig: true } });
     if (!calendar) throw new Error('Calendar not found for active tenant.');
+    calendarShiftTypes = [...new Set(listCalendarShifts(calendar.shiftConfig).map((shift) => shift.shiftType))];
   }
   const blueprintKey = value(formData, 'blueprintKey') || 'custom';
   const blueprint = getPolicyBlueprint(blueprintKey);
@@ -2008,6 +2011,7 @@ export async function createPolicyAction(formData: FormData) {
   const overtimeRule = value(formData, 'overtimeRule') || blueprint.defaults.overtimeRule;
   const requestRule = value(formData, 'requestRule') || blueprint.defaults.requestRule;
   const entryGraceMinutes = Number(value(formData, 'entryGraceMinutes') || blueprint.defaults.entryGraceMinutes);
+  const shiftPolicyOverrides = (() => { try { const parsed = JSON.parse(value(formData, 'shiftPolicyOverrides') || '{}'); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {}; } catch { return {}; } })();
   const sectionValues = {
     blueprintKey,
     blueprintTitle: blueprint.title,
@@ -2026,6 +2030,14 @@ export async function createPolicyAction(formData: FormData) {
     nightWorkStart: value(formData, 'nightWorkStart') || '22:00',
     familyKey: 'work',
     variant: 'default',
+    shiftPolicies: Object.fromEntries(calendarShiftTypes.map((type) => [type, {
+      entryRequired: typeof (shiftPolicyOverrides[type] as Record<string, unknown> | undefined)?.entryRequired === 'boolean'
+        ? (shiftPolicyOverrides[type] as Record<string, unknown>).entryRequired : true,
+      exitRequired: typeof (shiftPolicyOverrides[type] as Record<string, unknown> | undefined)?.exitRequired === 'boolean'
+        ? (shiftPolicyOverrides[type] as Record<string, unknown>).exitRequired : true,
+      entryGraceMinutes: type === 'float-day' ? 0 : type === 'split' ? 5 : 10,
+      ...(type === 'float-abs' ? { allowedDeficitMinutes: 15 } : {}),
+    }])),
   };
   const validation = validatePolicyInput({ title: value(formData, 'title'), description: value(formData, 'description'), calendarId, blueprintKey, sectionValues });
   if (!validation.valid) throw new Error(validation.errors[0]);
@@ -2173,6 +2185,13 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
           title,
           description,
           calendarId: effectiveCalendarId,
+          overtimeRule: ['manager_approval', 'automatic', 'disabled'].includes(value(formData, 'overtimeRule'))
+            ? value(formData, 'overtimeRule')
+            : 'disabled',
+          requestRule: ['leave_and_correction', 'leave_only', 'correction_only', 'none'].includes(value(formData, 'requestRule'))
+            ? value(formData, 'requestRule')
+            : 'none',
+          requestEnabled: ['leave_and_correction', 'leave_only', 'correction_only'].includes(value(formData, 'requestRule')),
           overtimeFromAttendance: boolValue(formData, 'overtimeFromAttendance'),
           overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
           overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
@@ -2186,7 +2205,8 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
             title,
             description,
             calendarId: effectiveCalendarId,
-            requireGeofence: boolValue(formData, 'requireGeofence'),
+            locationRule: value(formData, 'locationRule') === 'unrestricted' ? 'unrestricted' : 'workplace_only',
+            requireGeofence: value(formData, 'locationRule') !== 'unrestricted',
             faceRecognitionInFlow: boolValue(formData, 'faceRecognitionInFlow'),
             consecutiveAbsenceWarning: boolValue(formData, 'consecutiveAbsenceWarning'),
             maxConsecutiveAbsenceDays: Number(value(formData, 'maxConsecutiveAbsenceDays') || '0'),
@@ -2292,6 +2312,8 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
               manualPastDaysEnabled: boolValue(formData, 'manualPastDaysEnabled'),
               manualMaxPastDays: Number(value(formData, 'manualMaxPastDays') || '0'),
               manualMonthlyCapPerUser: Number(value(formData, 'manualMonthlyCapPerUser') || '0'),
+              incompleteAttendanceRule: value(formData, 'incompleteAttendanceRule') === 'warning_only' ? 'warning_only' : 'correction_required',
+              incompleteAttendance: value(formData, 'incompleteAttendanceRule') !== 'warning_only',
             })
         : familyKey === 'remote'
           ? jsonValue({

@@ -107,7 +107,7 @@ export const POLICY_VARIANTS: Record<PolicyFamilyKey, Array<{ key: PolicyVariant
   shift: [
     { key: 'fixed', title: 'شیفت ثابت', subtitle: 'ساعت شروع و پایان ثابت' },
     { key: 'split', title: 'شیفت دوتیکه', subtitle: 'دو بازه کاری جداگانه' },
-    { key: 'rotate', title: 'شیفت چرخشی', subtitle: 'چرخش روزانه یا هفتگی' },
+    { key: 'rotate', title: 'شیفت چرخشی', subtitle: 'در دست توسعه' },
     { key: 'floating-day', title: 'شیفت شناور شروع روز', subtitle: 'بازه ورود در ابتدای روز' },
     { key: 'floating-absolute', title: 'شیفت شناور مطلق', subtitle: 'حداقل ساعات حضور روزانه' },
   ],
