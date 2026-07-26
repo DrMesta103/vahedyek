@@ -16,6 +16,25 @@ export type PolicyVariantKey =
 
 export type PolicyWorkspaceSectionValues = Record<string, unknown>;
 
+/**
+ * Shift policies are stored per resolved calendar shift type.  Older policies
+ * used the root object, so readers intentionally fall back to that shape.
+ */
+export function getShiftPolicyValues(
+  sectionValues: PolicyWorkspaceSectionValues,
+  variant?: string | null,
+): PolicyWorkspaceSectionValues {
+  const requested = variant ?? (typeof sectionValues.variant === 'string' ? sectionValues.variant : null);
+  const all = sectionValues.shiftPolicies;
+  if (requested && all && typeof all === 'object' && !Array.isArray(all)) {
+    const value = (all as Record<string, unknown>)[requested];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as PolicyWorkspaceSectionValues;
+    }
+  }
+  return sectionValues;
+}
+
 export type PolicyFamilyMeta = {
   key: PolicyFamilyKey;
   title: string;

@@ -2150,6 +2150,9 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
     typeof previousSectionValues[key] === 'boolean' ? (previousSectionValues[key] as boolean) : false;
   const previousCalendarId = typeof previousSectionValues.calendarId === 'string' ? previousSectionValues.calendarId : null;
   const effectiveCalendarId = calendarId || previousCalendarId;
+  if (familyKey === 'shift' && variant === 'rotate') {
+    throw new Error('سیاست شیفت چرخشی تا زمان تکمیل Runtime قابل ذخیره‌سازی نیست.');
+  }
   const previousLeavePolicy =
     previousSectionValues.leavePolicy &&
     typeof previousSectionValues.leavePolicy === 'object' &&
@@ -2371,6 +2374,15 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
            });
 
   const sectionRecord = sectionValues as unknown as Record<string, unknown>;
+  // Keep each shift type isolated. The root fields remain as a compatibility
+  // projection for existing runtime readers and legacy policies.
+  if (familyKey === 'shift' && variant !== 'rotate' && sectionRecord && typeof sectionRecord === 'object') {
+    const previousByType = previousSectionValues.shiftPolicies && typeof previousSectionValues.shiftPolicies === 'object' && !Array.isArray(previousSectionValues.shiftPolicies)
+      ? previousSectionValues.shiftPolicies as Record<string, unknown>
+      : {};
+    const { shiftPolicies: _ignored, ...activeRuleSet } = sectionRecord;
+    sectionRecord.shiftPolicies = { ...previousByType, [variant]: activeRuleSet };
+  }
   const validation = validatePolicyInput({
     title,
     description,
