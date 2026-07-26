@@ -8030,6 +8030,103 @@ body.tenant-select-route {
   height: 30px;
 }
 
+/* Work-groups index polish: keep the header and filters in separate rows. */
+.work-groups-main .module-page-header,
+.work-groups-main .work-groups-list,
+.work-groups-main .work-groups-list-toolbar {
+  width: min(100%, 820px);
+}
+
+.work-groups-main .module-page-header {
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.work-groups-list-toolbar {
+  margin-top: 0;
+  pointer-events: auto;
+}
+
+.work-groups-list-toolbar form {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, .45fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, .14);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, .42);
+}
+
+.work-groups-list-toolbar .work-groups-list-search-icon {
+  position: absolute;
+  margin-inline-start: 14px;
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.work-groups-list-toolbar input {
+  min-height: 42px;
+  padding-inline-start: 42px;
+}
+
+.work-groups-list-toolbar select,
+.work-groups-list-toolbar button {
+  min-height: 42px;
+}
+
+.work-group-card {
+  min-height: 164px;
+  padding: 20px 28px 20px 54px;
+}
+
+.work-group-card-body {
+  gap: 6px;
+}
+
+.work-group-card-body h3 {
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.work-group-card-body p {
+  color: #b8c7dc;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.work-group-add-card {
+  min-height: 116px;
+  border-color: rgba(99, 102, 241, .35);
+  background: linear-gradient(135deg, rgba(79, 70, 229, .08), rgba(15, 23, 42, .28));
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.work-group-add-card:hover {
+  border-color: rgba(129, 140, 248, .72);
+  background: linear-gradient(135deg, rgba(79, 70, 229, .15), rgba(15, 23, 42, .38));
+  transform: translateY(-2px);
+}
+
+@media (max-width: 680px) {
+  .work-groups-list-toolbar form {
+    grid-template-columns: 1fr;
+  }
+
+  .work-groups-list-toolbar .work-groups-list-search-icon {
+    margin-top: 12px;
+  }
+
+  .work-group-card {
+    grid-template-columns: 1fr 76px;
+    padding-inline-start: 44px;
+  }
+}
+
 .work-group-create-page.module-page {
   width: min(100%, 900px);
 }

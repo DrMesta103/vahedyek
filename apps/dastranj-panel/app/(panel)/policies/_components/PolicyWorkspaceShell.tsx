@@ -251,21 +251,33 @@ export function PolicyFamilyListItem({
 export function PolicyVariantTabs({
   familyKey,
   variant,
+  variants: variantsOverride,
 }: {
   familyKey: PolicyFamilyKey;
   variant: string;
+  variants?: Array<{ key: string; title: string; subtitle: string; disabled?: boolean }>;
 }) {
-  const variants = POLICY_VARIANTS[familyKey];
+  const variants = variantsOverride ?? POLICY_VARIANTS[familyKey];
 
   return (
     <div className="policy-variant-tabs">
       {variants.map((item) => {
         const active = item.key === variant;
         const href = item.key === 'default' ? `/policies/${familyKey}` : `/policies/${familyKey}?variant=${item.key}`;
-        return (
-          <Link key={item.key} href={href} className={cn('policy-variant-tab', active && 'is-active')}>
+        const content = (
+          <>
             <span className="policy-variant-tab-title">{item.title}</span>
             <span className="policy-variant-tab-subtitle">{item.subtitle}</span>
+          </>
+        );
+
+        return item.disabled ? (
+          <span key={item.key} aria-disabled="true" className={cn('policy-variant-tab', active && 'is-active', 'is-disabled')}>
+            {content}
+          </span>
+        ) : (
+          <Link key={item.key} href={href} className={cn('policy-variant-tab', active && 'is-active')}>
+            {content}
           </Link>
         );
       })}

@@ -1,4 +1,4 @@
-export { PrismaClient, Prisma } from '../../node_modules/.prisma/client/index.js';
+export { PrismaClient, Prisma } from '@prisma/client';
 
 export type ShiftTemplateType = 'fixed' | 'floating_day_start' | 'floating_absolute' | 'split' | 'rotate';
 

@@ -16,6 +16,25 @@ export type PolicyVariantKey =
 
 export type PolicyWorkspaceSectionValues = Record<string, unknown>;
 
+/**
+ * Shift policies are stored per resolved calendar shift type.  Older policies
+ * used the root object, so readers intentionally fall back to that shape.
+ */
+export function getShiftPolicyValues(
+  sectionValues: PolicyWorkspaceSectionValues,
+  variant?: string | null,
+): PolicyWorkspaceSectionValues {
+  const requested = variant ?? (typeof sectionValues.variant === 'string' ? sectionValues.variant : null);
+  const all = sectionValues.shiftPolicies;
+  if (requested && all && typeof all === 'object' && !Array.isArray(all)) {
+    const value = (all as Record<string, unknown>)[requested];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as PolicyWorkspaceSectionValues;
+    }
+  }
+  return sectionValues;
+}
+
 export type PolicyFamilyMeta = {
   key: PolicyFamilyKey;
   title: string;
@@ -88,7 +107,7 @@ export const POLICY_VARIANTS: Record<PolicyFamilyKey, Array<{ key: PolicyVariant
   shift: [
     { key: 'fixed', title: 'شیفت ثابت', subtitle: 'ساعت شروع و پایان ثابت' },
     { key: 'split', title: 'شیفت دوتیکه', subtitle: 'دو بازه کاری جداگانه' },
-    { key: 'rotate', title: 'شیفت چرخشی', subtitle: 'چرخش روزانه یا هفتگی' },
+    { key: 'rotate', title: 'شیفت چرخشی', subtitle: 'در دست توسعه' },
     { key: 'floating-day', title: 'شیفت شناور شروع روز', subtitle: 'بازه ورود در ابتدای روز' },
     { key: 'floating-absolute', title: 'شیفت شناور مطلق', subtitle: 'حداقل ساعات حضور روزانه' },
   ],
