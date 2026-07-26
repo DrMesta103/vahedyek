@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { Check, Cpu, Database, FolderOpen, MessageSquareText, Plus, Search } from 'lucide-react';
-import { TaavButton, TaavCard } from '@repo/ui/taav';
+import { Archive, Check, Cpu, Database, FolderOpen, MessageSquareText, MoreHorizontal, Plus, Power, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { TaavButton, TaavCard, TaavDialog, TaavDialogContent, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogTitle } from '@repo/ui/taav';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { TaaviaBrandListItem } from '@/app/lib/types/domain';
 import { CreateBrandDialog } from '@/components/taavia/CreateBrandDialog';
@@ -25,8 +25,37 @@ export function TaaviaBrandsClient({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [brands] = useState(initialBrands);
+  const [brands, setBrands] = useState(initialBrands);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TaaviaBrandListItem | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const router = useRouter();
+
+  const updateStatus = async (brand: TaaviaBrandListItem, status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') => {
+    setPendingId(brand.id); setActionError(null); setMenuId(null);
+    try {
+      const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${brand.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message ?? 'تغییر وضعیت برند انجام نشد.');
+      setBrands((current) => current.map((item) => item.id === brand.id ? { ...item, status } : item));
+      router.refresh();
+    } catch (error) { setActionError(error instanceof Error ? error.message : 'تغییر وضعیت برند انجام نشد.'); }
+    finally { setPendingId(null); }
+  };
+
+  const deleteBrand = async () => {
+    if (!deleteTarget) return;
+    setPendingId(deleteTarget.id); setActionError(null);
+    try {
+      const response = await fetch(`/api/businesses/${tenantId}/taavia/brands/${deleteTarget.id}`, { method: 'DELETE' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message ?? 'حذف برند انجام نشد.');
+      setBrands((current) => current.map((item) => item.id === deleteTarget.id ? { ...item, status: 'ARCHIVED' } : item));
+      setDeleteTarget(null); router.refresh();
+    } catch (error) { setActionError(error instanceof Error ? error.message : 'حذف برند انجام نشد.'); }
+    finally { setPendingId(null); }
+  };
 
   const filtered = useMemo(
     () =>
@@ -122,10 +151,18 @@ export function TaaviaBrandsClient({
                       <p className="mt-0.5 text-xs text-[var(--taav-text-muted)]">اسم برند</p>
                     </div>
                   </div>
-                  <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusTone}`}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
-                    {statusLabels[brand.status]}
-                  </span>
+                  <div className="flex shrink-0 items-start gap-1 pointer-events-auto">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusTone}`}><span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />{statusLabels[brand.status]}</span>
+                    <div className="relative">
+                      <button type="button" onClick={() => setMenuId((current) => current === brand.id ? null : brand.id)} aria-label={`عملیات برند ${brand.name}`} className="grid h-8 w-8 place-items-center rounded-lg text-[var(--taav-text-muted)] transition hover:bg-white/5 hover:text-[var(--taav-text-strong)]"><MoreHorizontal className="h-4 w-4" /></button>
+                      {menuId === brand.id ? <div className="absolute left-0 top-9 z-30 min-w-48 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-1.5 text-right shadow-2xl">
+                        <button type="button" disabled={pendingId === brand.id} onClick={() => void updateStatus(brand, brand.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm text-[var(--taav-text-body)] hover:bg-[var(--taav-surface-soft)]">{brand.status === 'ACTIVE' ? <Power className="h-4 w-4 text-amber-300" /> : <RotateCcw className="h-4 w-4 text-emerald-300" />}{brand.status === 'ACTIVE' ? 'غیرفعال کردن' : 'فعال‌سازی'}</button>
+                        {brand.status !== 'ARCHIVED' ? <button type="button" disabled={pendingId === brand.id} onClick={() => void updateStatus(brand, 'ARCHIVED')} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm text-[var(--taav-text-body)] hover:bg-[var(--taav-surface-soft)]"><Archive className="h-4 w-4 text-slate-300" />آرشیو کردن</button> : null}
+                        <div className="my-1 border-t border-[var(--taav-border-subtle)]" />
+                        <button type="button" disabled={pendingId === brand.id} onClick={() => { setMenuId(null); setActionError(null); setDeleteTarget(brand); }} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm text-rose-300 hover:bg-rose-500/10"><Trash2 className="h-4 w-4" />حذف برند</button>
+                      </div> : null}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="relative z-[1] grid gap-2.5 border-t border-[var(--taav-border-subtle)] pt-3 text-sm pointer-events-none">
@@ -202,6 +239,14 @@ export function TaaviaBrandsClient({
           router.push(`/businesses/${tenantId}/products/taavia/brands/${brandId}/sources`);
         }}
       />
+      <TaavDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open && !pendingId) { setDeleteTarget(null); setActionError(null); } }}>
+        <TaavDialogContent size="sm" contentClassName="ai-lab-dialog" dir="rtl">
+          <TaavDialogHeader><div className="flex items-start justify-between gap-3"><div><TaavDialogTitle className="text-right text-lg font-black">حذف برند</TaavDialogTitle><TaavDialogDescription className="mt-2 text-right text-sm leading-7">برند «{deleteTarget?.name}» آرشیو می‌شود و دیگر در چرخهٔ فعال استفاده نخواهد شد. داده‌های نسخه‌ها و منابع آن حذف نمی‌شوند.</TaavDialogDescription></div><button type="button" onClick={() => setDeleteTarget(null)} disabled={Boolean(pendingId)} aria-label="بستن" className="grid h-9 w-9 place-items-center rounded-lg text-[var(--taav-text-muted)] hover:bg-white/5"><X className="h-4 w-4" /></button></div></TaavDialogHeader>
+          {actionError ? <p role="alert" className="mt-3 text-sm text-rose-300">{actionError}</p> : null}
+          <TaavDialogFooter><TaavButton size="sm" variant="secondary" disabled={Boolean(pendingId)} onClick={() => setDeleteTarget(null)}>انصراف</TaavButton><TaavButton size="sm" tone="danger" disabled={Boolean(pendingId)} onClick={() => void deleteBrand()} iconStart={<Trash2 className="h-4 w-4" />}>{pendingId ? 'در حال حذف…' : 'حذف و آرشیو برند'}</TaavButton></TaavDialogFooter>
+        </TaavDialogContent>
+      </TaavDialog>
+      {actionError && !deleteTarget ? <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{actionError}</p> : null}
     </main>
   );
 }
