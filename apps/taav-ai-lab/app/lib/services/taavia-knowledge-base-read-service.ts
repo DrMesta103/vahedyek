@@ -9,10 +9,18 @@ import type { TaaviaBrandDetailsOverview } from "@/app/lib/types/taavia-brand-de
 
 const formatDate = (value: Date) => new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "short", timeStyle: "short" }).format(value);
 const sourceType = (value: string): KnowledgeBaseSourceSnapshot["sourceType"] => (({ TEXT: "BRAND_INFO", IMAGE: "IMAGE", FILE: "FILE", LINK: "LINK", PRODUCT: "PRODUCTS_SERVICES", FAQ: "FAQ" }) as const)[value as "TEXT" | "IMAGE" | "FILE" | "LINK" | "PRODUCT" | "FAQ"] ?? "BRAND_INFO";
+export type InitialBuildReadModel = { id: string; status: string; progress: number; startedAt: string; sourceCount: number; failureMessage: string | null; steps: Array<{ key: string; label: string; status: string; progress: number; errorMessage: string | null }> };
+const stepLabels: Record<string, string> = { PREPARATION: "آماده‌سازی", SOURCE_SNAPSHOT: "ثبت Snapshot منابع", CONTENT_PROCESSING: "پردازش محتوا", CATEGORY_GENERATION: "تولید دسته‌بندی‌ها", KNOWLEDGE_GENERATION: "تولید محتوای دانش", FINALIZATION: "نهایی‌سازی و فعال‌سازی" };
 
 async function scopedBrand(userId: string, tenantId: string, brandId: string) {
   if (!(await assertTenantAccess(userId, tenantId))) return null;
   return prisma.taaviaBrand.findFirst({ where: { id: brandId, tenantId } });
+}
+export async function getInitialBuildReadModel(userId: string, businessId: string, brandId: string): Promise<InitialBuildReadModel | null> {
+  if (!(await scopedBrand(userId, businessId, brandId))) return null;
+  const build = await prisma.taaviaKnowledgeBaseBuild.findFirst({ where: { tenantId: businessId, brandId, status: { in: ["PENDING", "PROCESSING", "FAILED", "CANCELLED"] } }, include: { steps: { orderBy: { stepOrder: "asc" } } }, orderBy: { startedAt: "desc" } });
+  if (!build) return null;
+  return { id: build.id, status: build.status, progress: build.overallProgress, startedAt: formatDate(build.startedAt), sourceCount: Array.isArray(build.selectedSourceIds) ? build.selectedSourceIds.length : 0, failureMessage: build.failureMessage, steps: build.steps.map(step => ({ key: step.key, label: stepLabels[step.key], status: step.status, progress: step.progress, errorMessage: step.errorMessage })) };
 }
 
 export async function getKnowledgeBaseVersionsReadModel(userId: string, businessId: string, brandId: string): Promise<TaaviaKnowledgeBaseVersionsOverview | null> {

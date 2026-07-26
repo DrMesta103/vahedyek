@@ -1,166 +1,30 @@
-"use client";
+'use client';
+import { useMemo, useState, useTransition } from 'react';
+import { Archive, Database, GripVertical, History, MoreHorizontal, Pencil, RotateCcw, Search, Eye, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type { BrandSourceFamily, BrandSourceListItem, BrandSourcesPageData } from '@/app/lib/services/taavia-brand-sources-read-service';
+import { changeBrandSourceStatus, getBrandSourceDetails, getBrandSourceUsageHistory, reorderBrandKnowledgeSources } from '@/app/businesses/[businessId]/products/taavia/brands/[brandId]/sources/actions';
+import { AddBrandIntroductionDialog } from '@/components/taavia/AddBrandIntroductionDialog';
+import { BrandInfoEditDialog } from '@/components/taavia/BrandInfoEditDialog';
 
-import { useMemo, useState, useTransition } from "react";
-import { Archive, Database, MoreHorizontal, RotateCcw, Search } from "lucide-react";
-import type { BrandSourceFamily, BrandSourcesPageData } from "@/app/lib/services/taavia-brand-sources-read-service";
-import { changeBrandSourceStatus } from "@/app/businesses/[businessId]/products/taavia/brands/[brandId]/sources/actions";
-import { AddBrandIntroductionDialog } from "@/components/taavia/AddBrandIntroductionDialog";
+type Tab = 'knowledge' | 'product' | 'faq';
+type Detail = Awaited<ReturnType<typeof getBrandSourceDetails>>;
+type HistoryRow = Awaited<ReturnType<typeof getBrandSourceUsageHistory>>[number];
+const tabs: { id: Tab; label: string }[] = [{ id: 'knowledge', label: 'دانش‌ها' }, { id: 'product', label: 'محصولات' }, { id: 'faq', label: 'سوالات پرتکرار' }];
+const sourceLabel: Record<BrandSourceFamily, string> = { brand_info: 'دانش‌ها', knowledge: 'دانش‌ها', product: 'محصول', faq: 'سوال پرتکرار' };
 
-const tabs: Array<{ id: "all" | BrandSourceFamily; label: string }> = [
-  { id: "all", label: "همه" },
-  { id: "brand_info", label: "معرفی برند" },
-  { id: "knowledge", label: "دانش‌ها" },
-  { id: "product", label: "محصولات" },
-  { id: "faq", label: "سوالات پرتکرار" },
-];
-const typeLabels: Record<BrandSourceFamily, string> = { brand_info: "معرفی برند", knowledge: "دانش", product: "محصول", faq: "سوال پرتکرار" };
+function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) { return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/75 p-4" role="dialog" aria-modal="true" dir="rtl"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl"><div className="flex items-start justify-between gap-3"><h2 className="m-0 text-lg font-black text-white">{title}</h2><button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10" aria-label="بستن"><X className="h-5 w-5" /></button></div>{children}</div></div>; }
 
 export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData }) {
-  const [tab, setTab] = useState<"all" | BrandSourceFamily>("brand_info");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [status, setStatus] = useState("all");
-  const [usage, setUsage] = useState("all");
-  const [search, setSearch] = useState("");
-  const [pending, startTransition] = useTransition();
-  const [notice, setNotice] = useState<string | null>(null);
-  const rows = useMemo(() => data.sources.filter((item) => (tab === "all" || item.sourceType === tab) && (status === "all" || item.status === status) && (usage === "all" || (usage === "active" && item.usedInActiveKnowledgeBase) || (usage === "changed" && item.changedSinceActiveKnowledgeBase) || (usage === "previous" && item.usageStatus === "USED_IN_PREVIOUS_KB_ONLY") || (usage === "never" && item.usageStatus === "NEVER_USED") || (usage === "none" && item.usageStatus === "NO_ACTIVE_KNOWLEDGE_BASE")) && `${item.title} ${item.summary}`.toLocaleLowerCase("fa").includes(search.toLocaleLowerCase("fa"))), [data.sources, tab, status, usage, search]);
-  const clear = () => {
-    setTab("brand_info");
-    setStatus("all");
-    setUsage("all");
-    setSearch("");
-  };
-  const mutate = (sourceId: string, sourceType: BrandSourceFamily, revision: string, nextStatus: "ACTIVE" | "ARCHIVED") => {
-    if (nextStatus === "ARCHIVED" && !window.confirm("این منبع آرشیو می‌شود و در Buildهای بعدی استفاده نخواهد شد. نسخه‌های قبلی Knowledge Base تغییری نمی‌کنند.")) return;
-    startTransition(async () => {
-      const result = await changeBrandSourceStatus({ businessId: data.businessId, brandId: data.brandId, sourceId, sourceType, revision, nextStatus });
-      if (result.ok) setNotice("وضعیت منبع ذخیره شد.");
-      else setNotice("message" in result ? result.message : "ذخیرهٔ تغییر وضعیت انجام نشد.");
-    });
-  };
-  return (
-    <main dir="rtl" className="mx-auto w-full max-w-[1500px] space-y-4 pb-8 text-right">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-5 py-4">
-        <div>
-          <h1 className="m-0 text-xl font-black text-[var(--taav-text-strong)]">مدیریت منابع برند</h1>
-          <p className="mt-1 text-sm text-[var(--taav-text-muted)]">منابع فعلی و قابل ویرایش برند؛ مستقل از Snapshotهای تاریخی Knowledge Base.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setDialogOpen(true)} className="rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
-            افزودن منبع معرفی برند
-          </button>
-          <Database className="h-9 w-9 text-violet-400" aria-hidden />
-        </div>
-      </header>
-      {!data.activeVersionLabel ? <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">هنوز Knowledge Base فعالی وجود ندارد؛ وضعیت استفاده برای منابع ثبت نشده است.</p> : null}
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {[
-          ["کل منابع", data.summary.total],
-          ["منابع فعال", data.summary.active],
-          ["منابع آرشیوشده", data.summary.archived],
-          ["استفاده‌شده در KB فعال", data.summary.usedInActive],
-          ["تغییرکرده پس از Build", data.summary.changedAfterBuild],
-          ["استفاده‌نشده در هیچ KB", data.summary.neverUsed],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4">
-            <p className="m-0 text-xs text-[var(--taav-text-muted)]">{label}</p>
-            <b className="mt-2 block text-2xl text-[var(--taav-text-strong)]">
-              <bdi>{value}</bdi>
-            </b>
-          </div>
-        ))}
-      </section>
-      <section className="rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4">
-        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--taav-border-subtle)] pb-3">
-          {tabs
-            .filter((item) => item.id !== "all")
-            .map((item) => (
-              <button key={item.id} onClick={() => setTab(item.id)} className={`rounded-lg px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400 ${tab === item.id ? "bg-cyan-400/15 text-cyan-300" : "text-[var(--taav-text-muted)]"}`}>
-                {item.label}
-                {item.id !== "all" ? <span className="mr-1 text-xs">({data.typeCounts[item.id]})</span> : null}
-              </button>
-            ))}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <label className="relative min-w-[220px] flex-1">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-[var(--taav-text-muted)]" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="جستجو در عنوان و محتوا…" className="w-full rounded-lg border border-[var(--taav-border-subtle)] bg-transparent py-2 pr-9 pl-3 text-sm outline-none focus:border-cyan-400" />
-          </label>
-          <select value={status} onChange={(event) => setStatus(event.target.value)} className="rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-sm">
-            <option value="all">همه وضعیت‌ها</option>
-            <option value="ACTIVE">فعال</option>
-            <option value="ARCHIVED">آرشیوشده</option>
-          </select>
-          <select value={usage} onChange={(event) => setUsage(event.target.value)} className="rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-sm">
-            <option value="all">همه وضعیت‌های استفاده</option>
-            <option value="active">استفاده‌شده در KB فعال</option>
-            <option value="changed">تغییرکرده بعد از KB فعال</option>
-            <option value="previous">نسخه‌های قبلی</option>
-            <option value="never">استفاده‌نشده</option>
-            <option value="none">بدون KB فعال</option>
-          </select>
-          <button onClick={clear} className="rounded-lg border border-[var(--taav-border-subtle)] px-3 text-sm">
-            پاک کردن فیلترها
-          </button>
-        </div>
-        {notice ? (
-          <p className="mt-3 text-sm text-cyan-300" role="status">
-            {notice}
-          </p>
-        ) : null}
-        <p className="mt-3 text-xs text-[var(--taav-text-muted)]">
-          نمایش <bdi>{rows.length}</bdi> منبع
-        </p>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[940px] text-sm">
-            <thead className="border-y border-[var(--taav-border-subtle)] text-xs text-[var(--taav-text-muted)]">
-              <tr>
-                <th className="p-3 text-right">عنوان منبع</th>
-                <th className="p-3 text-right">نوع منبع</th>
-                <th className="p-3 text-right">وضعیت</th>
-                <th className="p-3 text-right">وضعیت نسبت به KB فعال</th>
-                <th className="p-3 text-right">آخرین ویرایش</th>
-                <th className="p-3 text-right">استفاده در KBها</th>
-                <th className="p-3 text-right">آخرین نسخه</th>
-                <th className="p-3 text-left">عملیات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((item) => (
-                <tr key={`${item.sourceType}:${item.sourceId}`} className="border-b border-[var(--taav-border-subtle)]">
-                  <td className="max-w-64 p-3">
-                    <b className="block text-[var(--taav-text-strong)]">{item.title}</b>
-                    <span className="line-clamp-1 text-xs text-[var(--taav-text-muted)]">{item.summary}</span>
-                  </td>
-                  <td className="p-3">{typeLabels[item.sourceType]}</td>
-                  <td className="p-3">
-                    <span className={item.status === "ACTIVE" ? "rounded bg-emerald-400/15 px-2 py-1 text-emerald-300" : "rounded bg-slate-400/15 px-2 py-1 text-slate-300"}>{item.status === "ACTIVE" ? "فعال" : "آرشیوشده"}</span>
-                  </td>
-                  <td className="p-3">
-                    <span className="rounded bg-blue-400/10 px-2 py-1 text-xs text-blue-200">{item.usageStatusLabel}</span>
-                  </td>
-                  <td className="p-3">
-                    <bdi>{item.updatedAt}</bdi>
-                  </td>
-                  <td className="p-3">
-                    <bdi>{item.knowledgeBaseUsageCount}</bdi> نسخه
-                  </td>
-                  <td className="p-3">
-                    <bdi>{item.latestUsedVersionLabel ?? "—"}</bdi>
-                  </td>
-                  <td className="p-3 text-left">
-                    <button disabled={pending} onClick={() => mutate(item.sourceId, item.sourceType, item.revision, item.status === "ACTIVE" ? "ARCHIVED" : "ACTIVE")} aria-label={item.status === "ACTIVE" ? `آرشیو ${item.title}` : `فعال‌سازی مجدد ${item.title}`} className="rounded-lg border border-[var(--taav-border-subtle)] p-2 disabled:opacity-50">
-                      {item.status === "ACTIVE" ? <Archive className="h-4 w-4 text-rose-300" /> : <RotateCcw className="h-4 w-4 text-cyan-300" />}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {rows.length === 0 ? <div className="py-12 text-center text-sm text-[var(--taav-text-muted)]">{data.sources.length === 0 ? "هنوز منبعی برای این برند ثبت نشده است." : "منبعی مطابق جستجو و فیلترهای انتخاب‌شده پیدا نشد."}</div> : null}
-      </section>
-      <AddBrandIntroductionDialog businessId={data.businessId} brandId={data.brandId} open={dialogOpen} onClose={() => setDialogOpen(false)} />
-    </main>
-  );
+  const router = useRouter(); const [tab, setTab] = useState<Tab>('knowledge'), [status, setStatus] = useState('all'), [usage, setUsage] = useState('all'), [search, setSearch] = useState(''), [menu, setMenu] = useState<string | null>(null), [addOpen, setAddOpen] = useState(false), [editId, setEditId] = useState<string | null>(null), [detail, setDetail] = useState<Detail | null>(null), [history, setHistory] = useState<HistoryRow[] | null>(null), [historyTitle, setHistoryTitle] = useState(''), [notice, setNotice] = useState<string | null>(null), [dragged, setDragged] = useState<string | null>(null), [orderedIds, setOrderedIds] = useState<string[]>([]), [pending, startTransition] = useTransition();
+  const baseRows = useMemo(() => data.sources.filter((item) => tab === 'knowledge' ? item.sourceType === 'brand_info' || item.sourceType === 'knowledge' : item.sourceType === tab), [data.sources, tab]);
+  const rows = useMemo(() => { const filtered = baseRows.filter((x) => (status === 'all' || x.status === status) && (usage === 'all' || (usage === 'active' && x.usedInActiveKnowledgeBase) || (usage === 'changed' && x.changedSinceActiveKnowledgeBase) || (usage === 'previous' && x.usageStatus === 'USED_IN_PREVIOUS_KB_ONLY') || (usage === 'never' && x.usageStatus === 'NEVER_USED')) && `${x.title} ${x.summary}`.toLocaleLowerCase('fa').includes(search.toLocaleLowerCase('fa'))); if (tab !== 'knowledge' || !orderedIds.length) return filtered; const index = new Map(orderedIds.map((id, i) => [id, i])); return [...filtered].sort((a, b) => (index.get(a.sourceId) ?? 99999) - (index.get(b.sourceId) ?? 99999)); }, [baseRows, status, usage, search, tab, orderedIds]);
+  const canReorder = tab === 'knowledge' && status === 'all' && usage === 'all' && !search.trim() && !pending;
+  const count = (id: Tab) => id === 'knowledge' ? data.typeCounts.brand_info + data.typeCounts.knowledge : data.typeCounts[id];
+  const refresh = () => router.refresh();
+  function changeStatus(item: BrandSourceListItem) { const next = item.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE'; if (next === 'ARCHIVED' && !window.confirm('این منبع آرشیو می‌شود و در Buildهای بعدی استفاده نخواهد شد. نسخه‌های قبلی Knowledge Base تغییری نمی‌کنند.')) return; startTransition(async () => { const result = await changeBrandSourceStatus({ businessId: data.businessId, brandId: data.brandId, sourceId: item.sourceId, sourceType: item.sourceType, revision: item.revision, nextStatus: next }); setNotice(result.ok ? 'وضعیت منبع ذخیره شد.' : result.message); if (result.ok) refresh(); }); }
+  async function view(item: BrandSourceListItem) { setMenu(null); try { setDetail(await getBrandSourceDetails({ businessId: data.businessId, brandId: data.brandId, sourceId: item.sourceId })); } catch (e) { setNotice(e instanceof Error ? e.message : 'بارگذاری جزئیات انجام نشد.'); } }
+  async function usageHistory(item: BrandSourceListItem) { setMenu(null); try { setHistoryTitle(item.title); setHistory(await getBrandSourceUsageHistory({ businessId: data.businessId, brandId: data.brandId, sourceId: item.sourceId })); } catch (e) { setNotice(e instanceof Error ? e.message : 'بارگذاری تاریخچه انجام نشد.'); } }
+  function drop(target: string) { if (!dragged || dragged === target) return; const ids = (orderedIds.length ? orderedIds : baseRows.filter((x) => x.sourceType === 'brand_info').map((x) => x.sourceId)); const next = ids.filter((id) => id !== dragged); next.splice(Math.max(0, next.indexOf(target)), 0, dragged); setOrderedIds(next); setDragged(null); startTransition(async () => { const result = await reorderBrandKnowledgeSources({ businessId: data.businessId, brandId: data.brandId, ids: next }); if (!result.ok) { setNotice(result.message); setOrderedIds([]); } else { setNotice('ترتیب منابع ذخیره شد.'); refresh(); } }); }
+  return <main dir="rtl" className="mx-auto w-full max-w-[1500px] space-y-4 pb-8 text-right"><header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-5 py-4"><div><h1 className="m-0 text-xl font-black text-[var(--taav-text-strong)]">مدیریت منابع برند</h1><p className="mt-1 text-sm text-[var(--taav-text-muted)]">منابع فعلی برند؛ مستقل از Snapshotهای تاریخی Knowledge Base.</p></div><button type="button" onClick={() => setAddOpen(true)} className="rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white">افزودن منبع دانش</button><Database className="h-9 w-9 text-violet-400" aria-hidden /></header><section className="rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4"><div className="flex flex-wrap gap-2 border-b border-[var(--taav-border-subtle)] pb-3">{tabs.map((t) => <button key={t.id} onClick={() => setTab(t.id)} className={`rounded-lg px-3 py-2 text-sm ${tab === t.id ? 'bg-cyan-400/15 text-cyan-300' : 'text-[var(--taav-text-muted)]'}`}>{t.label} <bdi>({count(t.id)})</bdi></button>)}</div><div className="mt-3 flex flex-wrap gap-2"><label className="relative min-w-[220px] flex-1"><Search className="absolute right-3 top-3 h-4 w-4 text-[var(--taav-text-muted)]" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جست‌وجو در عنوان و محتوا…" className="w-full rounded-lg border border-[var(--taav-border-subtle)] bg-transparent py-2 pr-9 pl-3 text-sm" /></label><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-sm"><option value="all">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="ARCHIVED">آرشیوشده</option></select><select value={usage} onChange={(e) => setUsage(e.target.value)} className="rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 text-sm"><option value="all">همه وضعیت‌های استفاده</option><option value="active">استفاده‌شده در Knowledge Base فعال</option><option value="changed">تغییرکرده بعد از آخرین Build</option><option value="previous">فقط نسخه‌های قبلی</option><option value="never">استفاده‌نشده</option></select></div>{tab === 'knowledge' && !canReorder ? <p className="mt-3 text-xs text-amber-200">برای تغییر ترتیب، جست‌وجو و فیلترها را پاک کنید.</p> : null}{notice ? <p role="status" className="mt-3 text-sm text-cyan-300">{notice}</p> : null}<div className="mt-3 overflow-x-auto"><table className="w-full min-w-[940px] text-sm"><thead className="border-y border-[var(--taav-border-subtle)] text-xs text-[var(--taav-text-muted)]"><tr><th className="p-3">ترتیب</th><th className="p-3 text-right">عنوان منبع</th><th className="p-3 text-right">نوع</th><th className="p-3 text-right">وضعیت</th><th className="p-3 text-right">وضعیت Knowledge Base</th><th className="p-3 text-right">آخرین ویرایش</th><th className="p-3 text-right">استفاده در KBها</th><th className="p-3 text-left">عملیات</th></tr></thead><tbody>{rows.map((item) => <tr key={`${item.sourceType}:${item.sourceId}`} draggable={canReorder && item.sourceType === 'brand_info'} onDragStart={() => setDragged(item.sourceId)} onDragOver={(e) => { if (canReorder && item.sourceType === 'brand_info') e.preventDefault(); }} onDrop={() => drop(item.sourceId)} className="border-b border-[var(--taav-border-subtle)]"><td className="p-3">{item.sourceType === 'brand_info' ? <GripVertical className={`h-5 w-5 ${canReorder ? 'cursor-grab text-slate-400' : 'text-slate-600'}`} aria-label="جابجایی منبع" /> : '—'}</td><td className="max-w-64 p-3"><b className="block text-[var(--taav-text-strong)]">{item.title}</b><span className="line-clamp-1 text-xs text-[var(--taav-text-muted)]">{item.summary}</span></td><td className="p-3">{sourceLabel[item.sourceType]}</td><td className="p-3">{item.status === 'ACTIVE' ? 'فعال' : 'آرشیوشده'}</td><td className="p-3">{item.usageStatusLabel}</td><td className="p-3"><bdi>{item.updatedAt}</bdi></td><td className="p-3"><bdi>{item.knowledgeBaseUsageCount}</bdi></td><td className="relative p-3 text-left"><button type="button" onClick={() => setMenu(menu === item.sourceId ? null : item.sourceId)} className="grid h-11 w-11 place-items-center rounded-lg border border-[var(--taav-border-subtle)]" aria-label="عملیات منبع"><MoreHorizontal className="h-4 w-4" /></button>{menu === item.sourceId ? <div className="absolute left-3 top-14 z-20 min-w-48 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl"><button onClick={() => void view(item)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-right hover:bg-white/10"><Eye className="h-4 w-4" />مشاهده جزئیات</button><button onClick={() => void usageHistory(item)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-right hover:bg-white/10"><History className="h-4 w-4" />تاریخچه استفاده</button>{item.sourceType === 'brand_info' && item.status === 'ACTIVE' ? <button onClick={() => { setEditId(item.sourceId); setMenu(null); }} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-right hover:bg-white/10"><Pencil className="h-4 w-4" />ویرایش</button> : null}<button onClick={() => changeStatus(item)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-right hover:bg-white/10">{item.status === 'ACTIVE' ? <Archive className="h-4 w-4 text-rose-300" /> : <RotateCcw className="h-4 w-4 text-cyan-300" />}{item.status === 'ACTIVE' ? 'آرشیو' : 'فعال‌سازی مجدد'}</button></div> : null}</td></tr>)}</tbody></table></div>{!rows.length ? <p className="py-12 text-center text-sm text-[var(--taav-text-muted)]">منبعی مطابق فیلترهای انتخاب‌شده پیدا نشد.</p> : null}</section><AddBrandIntroductionDialog businessId={data.businessId} brandId={data.brandId} open={addOpen} onClose={() => setAddOpen(false)} />{editId ? <BrandInfoEditDialog businessId={data.businessId} brandId={data.brandId} sourceId={editId} onClose={() => setEditId(null)} onSaved={() => { setEditId(null); refresh(); }} /> : null}{detail ? <Modal title="جزئیات منبع" onClose={() => setDetail(null)}><dl className="mt-5 grid gap-3 text-sm"><div><dt className="text-slate-400">عنوان</dt><dd className="mt-1 text-white">{detail.title}</dd></div><div><dt className="text-slate-400">نوع محتوا</dt><dd className="mt-1 text-white">{detail.type}</dd></div>{detail.textContent ? <div><dt className="text-slate-400">متن</dt><dd className="mt-1 whitespace-pre-wrap text-white">{detail.textContent}</dd></div> : null}{detail.media ? <div><dt className="text-slate-400">رسانه</dt><dd className="mt-2 text-white"><bdi dir="ltr">{detail.media.name ?? detail.media.extension} · {detail.media.mimeType ?? ''} · {detail.media.size} B</bdi>{detail.type === 'IMAGE' ? <img src={detail.media.previewUrl} alt={detail.title ?? 'تصویر منبع'} className="mt-3 max-h-64 rounded-xl" /> : detail.type === 'VOICE' ? <audio controls src={detail.media.previewUrl} className="mt-3 w-full" /> : detail.type === 'VIDEO' ? <video controls src={detail.media.previewUrl} className="mt-3 max-h-64 rounded-xl" /> : null}</dd></div> : null}<div><dt className="text-slate-400">وضعیت</dt><dd className="mt-1 text-white">{detail.status === 'ACTIVE' ? 'فعال' : 'آرشیوشده'}</dd></div><div><dt className="text-slate-400">ایجاد / آخرین ویرایش</dt><dd className="mt-1 text-white"><bdi>{detail.createdAt}</bdi> / <bdi>{detail.updatedAt}</bdi></dd></div></dl></Modal> : null}{history ? <Modal title={`تاریخچه استفاده: ${historyTitle}`} onClose={() => setHistory(null)}><div className="mt-5 grid gap-3">{history.length ? history.map((h) => <article key={h.snapshotId} className="rounded-xl border border-white/10 p-3 text-sm text-slate-200"><bdi dir="ltr">{h.versionLabel}</bdi> · {h.active ? 'فعال' : 'غیرفعال'} · {h.buildType}<br /><span className="text-slate-400">Snapshot: <bdi>{h.snapshotCreatedAt}</bdi> · {h.contentType} · {h.changed ? 'محتوای فعلی تغییر کرده است' : 'بدون تغییر'}</span><a href={`/businesses/${data.businessId}/products/taavia/brands/${data.brandId}/knowledge-base/sources/${h.snapshotId}`} className="mt-2 block text-cyan-300">مشاهده Snapshot</a></article>) : <p className="text-sm text-slate-300">این منبع هنوز در هیچ Knowledge Base استفاده نشده است.</p>}</div></Modal> : null}</main>;
 }

@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/app/lib/session";
-import { archiveBrandInfo, reactivateBrandInfo } from "@/app/lib/brand-info/service";
+import { archiveBrandInfo, getBrandInfo, reactivateBrandInfo, reorderBrandInfo } from "@/app/lib/brand-info/service";
 import { assertTenantAccess } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 
 type Input = { businessId: string; brandId: string; sourceId: string; sourceType: "brand_info" | "knowledge" | "product" | "faq"; revision: string; nextStatus: "ACTIVE" | "ARCHIVED" };
-export async function changeBrandSourceStatus(input: Input): Promise<{ ok: true } | { ok: false; message: string }> {
+export async function changeBrandSourceStatus(input: Input): Promise<{ ok: true; message?: undefined } | { ok: false; message: string }> {
   const session = await requireSession();
   if (!(await assertTenantAccess(session.userId, input.businessId))) return { ok: false, message: "دسترسی مجاز نیست." };
   const brand = await prisma.taaviaBrand.findFirst({ where: { id: input.brandId, tenantId: input.businessId }, select: { id: true } });
@@ -29,4 +29,39 @@ export async function changeBrandSourceStatus(input: Input): Promise<{ ok: true 
   } catch {
     return { ok: false, message: "ذخیرهٔ تغییر وضعیت انجام نشد." };
   }
+}
+
+type SourceInput = { businessId: string; brandId: string; sourceId: string };
+export async function getBrandSourceDetails(input: SourceInput) {
+  const session = await requireSession();
+  try { return await getBrandInfo(session.userId, input.businessId, input.brandId, input.sourceId); } catch {
+    if (!(await assertTenantAccess(session.userId, input.businessId))) throw new Error("دسترسی مجاز نیست.");
+    const source = await prisma.taaviaBrandKnowledge.findFirst({ where: { id: input.sourceId, tenantId: input.businessId, brandId: input.brandId } });
+    if (!source) throw new Error("منبع پیدا نشد.");
+    return { id: source.id, type: "TEXT" as const, title: source.title, textContent: source.content, media: null, status: source.status, displayOrder: source.sortOrder, revision: source.revision.toString(), createdBy: source.createdBy, updatedBy: source.updatedBy, archivedAt: source.archivedAt?.toISOString() ?? null, archivedBy: source.archivedBy, createdAt: source.createdAt.toISOString(), updatedAt: source.updatedAt.toISOString() };
+  }
+}
+
+export async function getBrandSourceUsageHistory(input: SourceInput) {
+  const session = await requireSession();
+  if (!(await assertTenantAccess(session.userId, input.businessId))) throw new Error("دسترسی مجاز نیست.");
+  const brand = await prisma.taaviaBrand.findFirst({ where: { id: input.brandId, tenantId: input.businessId }, select: { id: true } });
+  if (!brand) throw new Error("برند پیدا نشد.");
+  const current = await prisma.taaviaBrandInfo.findFirst({ where: { id: input.sourceId, tenantId: input.businessId, brandId: input.brandId }, select: { contentHash: true } }) ?? await prisma.taaviaBrandKnowledge.findFirst({ where: { id: input.sourceId, tenantId: input.businessId, brandId: input.brandId }, select: { contentHash: true } });
+  if (!current) throw new Error("منبع پیدا نشد.");
+  const snapshots = await prisma.taaviaKnowledgeSourceSnapshot.findMany({
+    where: { tenantId: input.businessId, brandId: input.brandId, OR: [{ originalSourceId: input.sourceId }, { originalBrandInfoId: input.sourceId }] },
+    include: { knowledgeBase: { include: { build: true } } }, orderBy: { snapshotCreatedAt: "desc" },
+  });
+  return snapshots.map((snapshot) => ({ snapshotId: snapshot.id, versionLabel: snapshot.knowledgeBase.versionLabel || `v${snapshot.knowledgeBase.versionNumber}`, knowledgeBaseId: snapshot.knowledgeBaseId, active: snapshot.knowledgeBase.isActive, buildType: snapshot.knowledgeBase.buildType, completedAt: snapshot.knowledgeBase.build?.completedAt?.toISOString() ?? snapshot.knowledgeBase.build?.finishedAt?.toISOString() ?? null, snapshotCreatedAt: snapshot.snapshotCreatedAt.toISOString(), contentType: snapshot.sourceType, changed: Boolean(snapshot.contentHash && snapshot.contentHash !== current.contentHash) }));
+}
+
+export async function reorderBrandKnowledgeSources(input: { businessId: string; brandId: string; ids: string[] }): Promise<{ ok: true; message?: undefined } | { ok: false; message: string }> {
+  const session = await requireSession();
+  try {
+    await reorderBrandInfo(session.userId, { tenantId: input.businessId, brandId: input.brandId, ids: input.ids });
+    const base = `/businesses/${input.businessId}/products/taavia/brands/${input.brandId}`;
+    revalidatePath(`${base}/sources`); revalidatePath(base);
+    return { ok: true };
+  } catch (error) { return { ok: false, message: error instanceof Error ? error.message : "ذخیره ترتیب انجام نشد." }; }
 }

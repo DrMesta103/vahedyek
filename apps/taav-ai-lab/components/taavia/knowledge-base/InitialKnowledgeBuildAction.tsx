@@ -1,0 +1,7 @@
+"use client";
+import Link from "next/link";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { TaavButton } from "@repo/ui/taav/primitives";
+import { startInitialBuildAction } from "@/app/businesses/[businessId]/products/taavia/brands/[brandId]/knowledge-base/actions";
+export function InitialKnowledgeBuildAction({ businessId, brandId, activeSources, activeBuild }: { businessId: string; brandId: string; activeSources: number; activeBuild: boolean }) { const router = useRouter(); const [pending, start] = useTransition(); const href = `/businesses/${businessId}/products/taavia/brands/${brandId}/knowledge-base`; if (activeBuild) return <Link href={href}><TaavButton size="sm">مشاهده روند ساخت</TaavButton></Link>; if (!activeSources) return <div className="text-right"><TaavButton size="sm" disabled>ساخت اولین <bdi dir="ltr">Knowledge Base</bdi></TaavButton><p className="mt-2 text-xs text-[var(--taav-text-muted)]">ابتدا حداقل یک منبع فعال در بخش منابع برند ثبت کنید.</p><Link className="text-xs text-[var(--taav-brand-strong)]" href={`/businesses/${businessId}/products/taavia/brands/${brandId}/sources`}>مدیریت منابع برند</Link></div>; return <TaavButton size="sm" disabled={pending} onClick={() => start(async () => { await startInitialBuildAction({ businessId, brandId }); router.push(href); router.refresh(); })}>ساخت اولین <bdi dir="ltr">Knowledge Base</bdi></TaavButton>; }

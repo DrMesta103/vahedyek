@@ -6,13 +6,15 @@ import { TaavBadge, TaavButton, TaavCard } from "@repo/ui/taav/primitives";
 import { TaavEmptyState, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell } from "@repo/ui/taav/data-display";
 import type { TaaviaBrand } from "@/app/lib/types/domain";
 import type { TaaviaBrandDetailsOverview, TaaviaBrandKnowledgeBaseListItem } from "@/app/lib/types/taavia-brand-details-dashboard";
-type Props = { tenantId: string; brand: TaaviaBrand; overview: TaaviaBrandDetailsOverview };
+import type { InitialBuildReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
+import { InitialKnowledgeBuildAction } from "@/components/taavia/knowledge-base/InitialKnowledgeBuildAction";
+type Props = { tenantId: string; brand: TaaviaBrand; overview: TaaviaBrandDetailsOverview; initialBuild: InitialBuildReadModel | null };
 const RowBadge = ({ active }: { active: boolean }) => (
   <TaavBadge tone={active ? "success" : "neutral"} variant="soft">
     {active ? "فعال" : "غیرفعال"}
   </TaavBadge>
 );
-export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview }: Props) {
+export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialBuild }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const base = `/businesses/${tenantId}/products/taavia/brands/${brand.id}`;
   const kb = `${base}/knowledge-base`;
@@ -167,7 +169,10 @@ export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview }: Props)
                 </Link>
               </>
             ) : (
-              <TaavEmptyState variant="default" size="sm" title="Knowledge Base فعالی وجود ندارد" />
+              <>
+                <TaavEmptyState variant="default" size="sm" title="Knowledge Base فعالی وجود ندارد" />
+                <div className="mt-3 flex justify-end"><InitialKnowledgeBuildAction businessId={tenantId} brandId={brand.id} activeSources={Object.values(overview.currentSources).reduce((sum, value) => sum + value, 0)} activeBuild={Boolean(initialBuild && ["PENDING", "PROCESSING"].includes(initialBuild.status))} /></div>
+              </>
             )}
           </TaavCard>
         </div>

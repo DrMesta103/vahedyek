@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTaaviaBrandForTenant, getTenantForUser } from "@/app/lib/data";
-import { getTaaviaBrandDashboardReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
+import { getInitialBuildReadModel, getTaaviaBrandDashboardReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
 import { getCurrentTenant, requireSession } from "@/app/lib/session";
 import { AiLabShell } from "@/components/AiLabShell";
 import { TaaviaBrandWorkspaceClient } from "@/components/taavia/TaaviaBrandWorkspaceClient";
@@ -22,12 +22,12 @@ export default async function TaaviaBrandDetailPage({ params }: { params: Promis
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
 
-  const overview = await getTaaviaBrandDashboardReadModel(session.userId, business.id, brand.id);
+  const [overview, initialBuild] = await Promise.all([getTaaviaBrandDashboardReadModel(session.userId, business.id, brand.id), getInitialBuildReadModel(session.userId, business.id, brand.id)]);
   if (!overview) notFound();
 
   return (
     <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
-      <TaaviaBrandWorkspaceClient tenantId={business.id} brand={brand} overview={overview} />
+      <TaaviaBrandWorkspaceClient tenantId={business.id} brand={brand} overview={overview} initialBuild={initialBuild} />
     </AiLabShell>
   );
 }

@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { getTaaviaBrandForTenant, getTenantForUser } from "@/app/lib/data";
-import { getKnowledgeBaseOverviewReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
+import { getInitialBuildReadModel, getKnowledgeBaseOverviewReadModel } from "@/app/lib/services/taavia-knowledge-base-read-service";
 import { getCurrentTenant, requireSession } from "@/app/lib/session";
 import { AiLabShell } from "@/components/AiLabShell";
 import { TaaviaKnowledgeBaseOverviewClient } from "@/components/taavia/knowledge-base/TaaviaKnowledgeBaseOverviewClient";
+import { InitialKnowledgeBuildPanel } from "@/components/taavia/knowledge-base/InitialKnowledgeBuildPanel";
 
 export default async function TaaviaBrandKnowledgeBasePage({ params }: { params: Promise<{ businessId: string; brandId: string }> }) {
   const session = await requireSession();
@@ -22,12 +23,12 @@ export default async function TaaviaBrandKnowledgeBasePage({ params }: { params:
   const brand = await getTaaviaBrandForTenant(session.userId, business.id, brandId);
   if (!brand) notFound();
 
-  const overview = await getKnowledgeBaseOverviewReadModel(session.userId, business.id, brand.id);
+  const [overview, initialBuild] = await Promise.all([getKnowledgeBaseOverviewReadModel(session.userId, business.id, brand.id), getInitialBuildReadModel(session.userId, business.id, brand.id)]);
   if (!overview) notFound();
 
   return (
     <AiLabShell pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/knowledge-base`} fullName={session.fullName} email={session.email} mobile={session.mobile} currentTenantId={business.id} currentTenantName={business.name}>
-      <TaaviaKnowledgeBaseOverviewClient businessId={business.id} brandId={brand.id} brandName={brand.name} brandStatus={brand.status} brandIcon={brand.icon?.previewData ?? null} initialOverview={overview} />
+      {initialBuild ? <InitialKnowledgeBuildPanel businessId={business.id} brandId={brand.id} build={initialBuild} /> : <TaaviaKnowledgeBaseOverviewClient businessId={business.id} brandId={brand.id} brandName={brand.name} brandStatus={brand.status} brandIcon={brand.icon?.previewData ?? null} initialOverview={overview} />}
     </AiLabShell>
   );
 }

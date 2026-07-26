@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { assertTenantAccess } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 import type { Prisma } from "@/app/lib/prisma-client";
-import { BrandInfoConflictError, BrandInfoForbiddenError, BrandInfoNotFoundError } from "./errors";
+import { BrandInfoConflictError, BrandInfoError, BrandInfoForbiddenError, BrandInfoNotFoundError } from "./errors";
 import { calculateBrandInfoHash } from "./hash";
 import { removeBrandInfoMedia, storeBrandInfoMedia } from "./storage";
-import { validateExpectedRevision, validateSourceFields, validateUploadedFile } from "./validation";
+import { isBrandInfoType, validateExpectedRevision, validateSourceFields, validateUploadedFile } from "./validation";
 import type { BrandInfoFilters, BrandInfoDto, BrandInfoMutationResult, BrandInfoType } from "./types";
 
 const newId = () => randomUUID().replaceAll("-", "");
@@ -41,6 +41,8 @@ function dto(row: BrandInfoRow): BrandInfoDto {
           id: row.media.id,
           extension: row.media.extension ?? "",
           size: row.media.sizeBytes ?? 0,
+          name: row.media.originalName,
+          mimeType: row.media.mimeType,
           previewUrl: `/api/businesses/${row.tenantId}/taavia/brands/${row.brandId}/brand-info/${row.id}/media?mode=preview`,
           downloadUrl: `/api/businesses/${row.tenantId}/taavia/brands/${row.brandId}/brand-info/${row.id}/media`,
         }
@@ -121,27 +123,32 @@ export async function createMediaBrandInfo(userId: string, input: { tenantId: st
   }
 }
 
-export async function updateBrandInfo(userId: string, input: { tenantId: string; brandId: string; id: string; expectedRevision: unknown; title?: string | null; textContent?: string | null; file?: File | null }): Promise<BrandInfoMutationResult> {
+export async function updateBrandInfo(userId: string, input: { tenantId: string; brandId: string; id: string; expectedRevision: unknown; type?: BrandInfoType; title?: string | null; textContent?: string | null; file?: File | null }): Promise<BrandInfoMutationResult> {
   const current = await authorizedItem(userId, input.tenantId, input.brandId, input.id, true);
   if (current.status !== "ACTIVE") throw new BrandInfoForbiddenError("منبع آرشیوشده قابل ویرایش نیست.");
   const expectedRevision = validateExpectedRevision(input.expectedRevision);
-  const fields = validateSourceFields(current.type, input.title ?? current.title, current.type === "TEXT" ? (input.textContent ?? current.textContent) : null, Boolean(current.mediaAssetId || input.file));
+  const nextType = input.type ?? current.type;
+  if (!isBrandInfoType(nextType)) throw new BrandInfoError("VALIDATION", "نوع منبع معتبر نیست.");
+  const typeChanged = nextType !== current.type;
+  const keepsCurrentMedia = nextType === current.type && Boolean(current.mediaAssetId) && !input.file;
+  const fields = validateSourceFields(nextType, input.title ?? current.title, nextType === "TEXT" ? (input.textContent ?? current.textContent) : null, nextType !== "TEXT" && Boolean(input.file || keepsCurrentMedia));
   let stored: { key: string } | null = null;
   let newFileInfo: ReturnType<typeof validateUploadedFile> | null = null;
-  if (current.type !== "TEXT" && input.file) {
-    newFileInfo = validateUploadedFile(current.type, input.file);
+  if (nextType !== "TEXT" && input.file) {
+    newFileInfo = validateUploadedFile(nextType, input.file);
     stored = await storeBrandInfoMedia(input.file);
   }
+  if (typeChanged && nextType !== "TEXT" && !input.file) throw new BrandInfoError("VALIDATION", "برای تغییر نوع منبع، یک فایل جدید انتخاب کنید.");
   const now = new Date();
   try {
     const result = await prisma.$transaction(async (tx) => {
       const media = input.file && stored && newFileInfo ? await tx.mediaAsset.create({ data: { id: newId(), tenantId: input.tenantId, extension: newFileInfo.extension, sizeBytes: newFileInfo.size, mimeType: newFileInfo.mimeType, storageKey: stored.key, originalName: input.file.name, previewData: null, storageUrl: null, createdAt: now, updatedAt: now } }) : null;
-      const mediaId = media?.id ?? current.mediaAssetId;
+      const mediaId = nextType === "TEXT" ? null : (media?.id ?? current.mediaAssetId);
       const mediaMeta = media ?? current.media;
-      const hash = calculateBrandInfoHash({ type: current.type, title: fields.title, textContent: fields.textContent, mediaId, extension: mediaMeta?.extension, size: mediaMeta?.sizeBytes });
-      const effective = hash !== current.contentHash || Boolean(media) || fields.title !== current.title || fields.textContent !== current.textContent;
+      const hash = calculateBrandInfoHash({ type: nextType, title: fields.title, textContent: fields.textContent, mediaId, extension: mediaMeta?.extension, size: mediaMeta?.sizeBytes });
+      const effective = hash !== current.contentHash || Boolean(media) || typeChanged || fields.title !== current.title || fields.textContent !== current.textContent;
       if (!effective) return { row: current, changed: false };
-      const updated = await tx.taaviaBrandInfo.updateMany({ where: { id: input.id, tenantId: input.tenantId, brandId: input.brandId, revision: expectedRevision, status: "ACTIVE" }, data: { title: fields.title, textContent: fields.textContent, mediaAssetId: mediaId, contentHash: hash, revision: { increment: BigInt(1) }, updatedBy: userId, updatedAt: now } });
+      const updated = await tx.taaviaBrandInfo.updateMany({ where: { id: input.id, tenantId: input.tenantId, brandId: input.brandId, revision: expectedRevision, status: "ACTIVE" }, data: { type: nextType, title: fields.title, textContent: nextType === "TEXT" ? fields.textContent : null, mediaAssetId: mediaId, contentHash: hash, revision: { increment: BigInt(1) }, updatedBy: userId, updatedAt: now } });
       if (updated.count !== 1) throw new BrandInfoConflictError(dto(await authorizedItem(userId, input.tenantId, input.brandId, input.id)));
       const row = await tx.taaviaBrandInfo.findUniqueOrThrow({ where: { id: input.id }, include: mediaInclude });
       await emitEvent(tx, "taavia-brand-info.source-content-changed", row, now);

@@ -7,6 +7,8 @@ export type BrandInfoMediaDto = {
   id: string;
   extension: string;
   size: number;
+  name: string | null;
+  mimeType: string | null;
   previewUrl: string;
   downloadUrl: string;
 };
