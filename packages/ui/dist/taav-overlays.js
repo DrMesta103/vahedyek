@@ -289,6 +289,55 @@ var TAAV_DURATION = {
   normal: "var(--taav-duration-normal)",
   slow: "var(--taav-duration-slow)"
 };
+var taavDialogShellBackdropClass = "fixed inset-0 z-[var(--taav-z-overlay)] bg-[rgba(22,25,27,0.42)] backdrop-blur-[1.5px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0";
+var taavDialogShellVariants = classVarianceAuthority.cva(
+  [
+    "fixed left-1/2 top-1/2 z-[calc(var(--taav-z-overlay)+1)] flex max-h-[calc(100dvh-32px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden",
+    "rounded-[30px] border-0 bg-[#f6f7f8] text-right text-[#55585b] shadow-[0_18px_38px_rgba(20,24,26,0.28)] outline-none",
+    "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+  ],
+  {
+    variants: {
+      size: {
+        sm: "w-[min(320px,calc(100vw-32px))]",
+        md: "w-[min(350px,calc(100vw-32px))]",
+        lg: "w-[min(480px,calc(100vw-32px))]"
+      },
+      variant: {
+        default: "",
+        form: "",
+        selection: "h-[min(516px,calc(100dvh-32px))]"
+      }
+    },
+    defaultVariants: {
+      size: "md",
+      variant: "default"
+    }
+  }
+);
+var taavDialogShellHeaderClass = "grid shrink-0 gap-[12px] px-[32px] pb-[14px] pt-[30px] text-center";
+var taavDialogShellTitleClass = "m-0 text-center text-[21px] font-bold leading-[1.45] text-[#55585b]";
+var taavDialogShellDescriptionClass = "m-0 text-center text-[12px] font-normal leading-[1.65] text-[#686b6e]";
+var taavDialogShellContentClass = "min-h-0 flex-1 overflow-y-auto px-[32px] pb-[30px]";
+var taavDialogShellFooterVariants = classVarianceAuthority.cva(
+  [
+    "flex min-h-[84px] shrink-0 flex-wrap items-center justify-start gap-[30px] px-[32px] py-[22px]",
+    "bg-[#fafbfc] text-[#009b9f]"
+  ],
+  {
+    variants: {
+      variant: {
+        default: "",
+        sticky: "sticky bottom-0 z-10",
+        separated: "shadow-[0_-5px_12px_rgba(42,49,52,0.05)]"
+      }
+    },
+    defaultVariants: {
+      variant: "separated"
+    }
+  }
+);
+var taavDialogShellActionClass = "inline-flex min-h-[32px] items-center justify-center border-0 bg-transparent p-0 text-[15px] font-bold leading-none text-[#009b9f] transition-colors hover:text-[#007f83] focus-visible:rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80cfd2] disabled:cursor-not-allowed disabled:opacity-45";
 
 // src/primitives/shared/interaction.ts
 var TAAV_INTERACTION = {
@@ -445,7 +494,99 @@ var taavOverlayHeaderClass = "grid gap-[var(--taav-space-2)] pe-10";
 var taavOverlayTitleClass = "text-[length:var(--taav-text-lg)] font-black leading-[var(--taav-leading-tight)] text-[var(--taav-text-strong)]";
 var taavOverlayDescriptionClass = "text-[length:var(--taav-text-sm)] leading-[var(--taav-leading-relaxed)] text-[var(--taav-text-muted)]";
 var taavOverlayFooterClass = "flex flex-wrap items-center justify-end gap-[var(--taav-space-2)]";
-var TaavDialog = DialogPrimitive__namespace.Root;
+function TaavDialogLoadingIcon() {
+  return /* @__PURE__ */ jsxRuntime.jsx(
+    "span",
+    {
+      "aria-hidden": "true",
+      className: "h-[14px] w-[14px] animate-spin rounded-full border-2 border-current border-t-transparent"
+    }
+  );
+}
+function TaavDialog({
+  title,
+  description,
+  children,
+  confirmLabel = "\u062A\u0627\u06CC\u06CC\u062F",
+  cancelLabel = "\u0644\u063A\u0648",
+  onConfirm,
+  onCancel,
+  onOpenChange,
+  showFooter = true,
+  showCancel = true,
+  showConfirm = true,
+  confirmDisabled = false,
+  cancelDisabled = false,
+  loading = false,
+  size,
+  variant,
+  footerVariant,
+  className,
+  contentClassName,
+  footerClassName,
+  ...rootProps
+}) {
+  const usesComposedShell = title !== void 0 || description !== void 0 || size !== void 0 || variant !== void 0 || footerVariant !== void 0 || onConfirm !== void 0 || onCancel !== void 0 || showFooter === false || showCancel === false || showConfirm === false || confirmDisabled || cancelDisabled || loading || className !== void 0 || contentClassName !== void 0 || footerClassName !== void 0;
+  if (!usesComposedShell) {
+    return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Root, { onOpenChange, ...rootProps, children });
+  }
+  const closeDialog = () => {
+    if (loading || cancelDisabled) return;
+    onCancel?.();
+    onOpenChange?.(false);
+  };
+  return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Root, { onOpenChange, ...rootProps, children: /* @__PURE__ */ jsxRuntime.jsxs(DialogPrimitive__namespace.Portal, { children: [
+    /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Overlay, { className: taavDialogShellBackdropClass }),
+    /* @__PURE__ */ jsxRuntime.jsxs(
+      DialogPrimitive__namespace.Content,
+      {
+        dir: "rtl",
+        "aria-busy": loading || void 0,
+        className: cn(taavDialogShellVariants({ size, variant }), className),
+        onEscapeKeyDown: (event) => {
+          if (loading) event.preventDefault();
+        },
+        onPointerDownOutside: (event) => {
+          if (loading) event.preventDefault();
+        },
+        children: [
+          title || description ? /* @__PURE__ */ jsxRuntime.jsxs("header", { className: taavDialogShellHeaderClass, children: [
+            title ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Title, { className: taavDialogShellTitleClass, children: title }) : null,
+            description ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Description, { className: taavDialogShellDescriptionClass, children: description }) : null
+          ] }) : null,
+          !title ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Title, { className: "sr-only", children: "\u062F\u06CC\u0627\u0644\u0648\u06AF" }) : null,
+          !description ? /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Description, { className: "sr-only", children: "\u0645\u062D\u062A\u0648\u0627\u06CC \u067E\u0646\u062C\u0631\u0647 \u0645\u062D\u0627\u0648\u0631\u0647\u200C\u0627\u06CC" }) : null,
+          /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn(taavDialogShellContentClass, contentClassName), children }),
+          showFooter ? /* @__PURE__ */ jsxRuntime.jsxs("footer", { className: cn(taavDialogShellFooterVariants({ variant: footerVariant }), footerClassName), children: [
+            showConfirm ? /* @__PURE__ */ jsxRuntime.jsxs(
+              "button",
+              {
+                type: "button",
+                className: cn(taavDialogShellActionClass, "gap-[7px]"),
+                disabled: confirmDisabled || loading,
+                onClick: onConfirm,
+                children: [
+                  loading ? /* @__PURE__ */ jsxRuntime.jsx(TaavDialogLoadingIcon, {}) : null,
+                  /* @__PURE__ */ jsxRuntime.jsx("span", { children: confirmLabel })
+                ]
+              }
+            ) : null,
+            showCancel ? /* @__PURE__ */ jsxRuntime.jsx(
+              "button",
+              {
+                type: "button",
+                className: taavDialogShellActionClass,
+                disabled: cancelDisabled || loading,
+                onClick: closeDialog,
+                children: cancelLabel
+              }
+            ) : null
+          ] }) : null
+        ]
+      }
+    )
+  ] }) });
+}
 var TaavDialogTrigger = DialogPrimitive__namespace.Trigger;
 var TaavDialogClose = DialogPrimitive__namespace.Close;
 var TaavDialogPortal = DialogPrimitive__namespace.Portal;

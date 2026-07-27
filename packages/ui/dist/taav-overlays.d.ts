@@ -1,11 +1,15 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.js';
-import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as react from 'react';
 import { ComponentPropsWithoutRef, ReactNode } from 'react';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import 'clsx';
+
+type TaavDialogShellSize = 'sm' | 'md' | 'lg';
+type TaavDialogShellVariant = 'default' | 'form' | 'selection';
+type TaavDialogFooterVariant = 'default' | 'sticky' | 'separated';
 
 type TaavOverlayVariant = 'default' | 'elevated' | 'soft';
 type TaavOverlayTone = 'neutral' | 'danger' | 'success' | 'warning' | 'info';
@@ -17,7 +21,29 @@ type TaavPopoverSide = 'top' | 'right' | 'bottom' | 'left';
 type TaavPopoverAlign = 'start' | 'center' | 'end';
 type TaavDropdownItemTone = 'neutral' | 'danger' | 'success' | 'warning' | 'info';
 
-declare const TaavDialog: react.FC<DialogPrimitive.DialogProps>;
+type TaavDialogRootProps = ComponentPropsWithoutRef<typeof DialogPrimitive.Root>;
+type TaavDialogProps = Omit<TaavDialogRootProps, 'children'> & {
+    title?: string;
+    description?: string;
+    children?: ReactNode;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    showFooter?: boolean;
+    showCancel?: boolean;
+    showConfirm?: boolean;
+    confirmDisabled?: boolean;
+    cancelDisabled?: boolean;
+    loading?: boolean;
+    size?: TaavDialogShellSize;
+    variant?: TaavDialogShellVariant;
+    footerVariant?: TaavDialogFooterVariant;
+    className?: string;
+    contentClassName?: string;
+    footerClassName?: string;
+};
+declare function TaavDialog({ title, description, children, confirmLabel, cancelLabel, onConfirm, onCancel, onOpenChange, showFooter, showCancel, showConfirm, confirmDisabled, cancelDisabled, loading, size, variant, footerVariant, className, contentClassName, footerClassName, ...rootProps }: TaavDialogProps): react_jsx_runtime.JSX.Element;
 declare const TaavDialogTrigger: react.ForwardRefExoticComponent<DialogPrimitive.DialogTriggerProps & react.RefAttributes<HTMLButtonElement>>;
 declare const TaavDialogClose: react.ForwardRefExoticComponent<DialogPrimitive.DialogCloseProps & react.RefAttributes<HTMLButtonElement>>;
 declare const TaavDialogPortal: react.FC<DialogPrimitive.DialogPortalProps>;
@@ -100,4 +126,4 @@ declare function TaavDropdownItem({ tone, size, iconStart, iconEnd, shortcut, de
 declare function TaavDropdownLabel({ children, className, ...props }: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>): react_jsx_runtime.JSX.Element;
 declare function TaavDropdownSeparator({ className, ...props }: ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>): react_jsx_runtime.JSX.Element;
 
-export { TaavDialog, TaavDialogClose, TaavDialogContent, type TaavDialogContentProps, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogOverlay, TaavDialogPortal, type TaavDialogSize, TaavDialogTitle, TaavDialogTrigger, TaavDrawer, TaavDrawerClose, TaavDrawerContent, type TaavDrawerContentProps, TaavDrawerDescription, TaavDrawerFooter, TaavDrawerHeader, TaavDrawerOverlay, TaavDrawerPortal, type TaavDrawerSide, type TaavDrawerSize, TaavDrawerTitle, TaavDrawerTrigger, TaavDropdown, TaavDropdownContent, type TaavDropdownContentProps, TaavDropdownGroup, TaavDropdownItem, type TaavDropdownItemProps, type TaavDropdownItemTone, TaavDropdownLabel, TaavDropdownPortal, TaavDropdownSeparator, TaavDropdownTrigger, type TaavOverlayTone, type TaavOverlayVariant, TaavPopover, type TaavPopoverAlign, TaavPopoverAnchor, TaavPopoverClose, TaavPopoverContent, type TaavPopoverContentProps, type TaavPopoverSide, type TaavPopoverSize, TaavPopoverTrigger };
+export { TaavDialog, TaavDialogClose, TaavDialogContent, type TaavDialogContentProps, TaavDialogDescription, TaavDialogFooter, type TaavDialogFooterVariant, TaavDialogHeader, TaavDialogOverlay, TaavDialogPortal, type TaavDialogProps, type TaavDialogShellSize, type TaavDialogShellVariant, type TaavDialogSize, TaavDialogTitle, TaavDialogTrigger, TaavDrawer, TaavDrawerClose, TaavDrawerContent, type TaavDrawerContentProps, TaavDrawerDescription, TaavDrawerFooter, TaavDrawerHeader, TaavDrawerOverlay, TaavDrawerPortal, type TaavDrawerSide, type TaavDrawerSize, TaavDrawerTitle, TaavDrawerTrigger, TaavDropdown, TaavDropdownContent, type TaavDropdownContentProps, TaavDropdownGroup, TaavDropdownItem, type TaavDropdownItemProps, type TaavDropdownItemTone, TaavDropdownLabel, TaavDropdownPortal, TaavDropdownSeparator, TaavDropdownTrigger, type TaavOverlayTone, type TaavOverlayVariant, TaavPopover, type TaavPopoverAlign, TaavPopoverAnchor, TaavPopoverClose, TaavPopoverContent, type TaavPopoverContentProps, type TaavPopoverSide, type TaavPopoverSize, TaavPopoverTrigger };

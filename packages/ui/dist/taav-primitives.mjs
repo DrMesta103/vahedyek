@@ -703,7 +703,17 @@ function TaavFieldHint({
     }
   );
 }
+function TaavDivider({ unsafeClassName, ...props }) {
+  return /* @__PURE__ */ jsx(
+    "hr",
+    {
+      "aria-orientation": "horizontal",
+      ...props,
+      className: cn("m-0 h-[2px] w-full shrink-0 border-0 bg-[#a6b9c1]", unsafeClassName)
+    }
+  );
+}
 
-export { TAAV_BUTTON_HEIGHT, TAAV_DURATION, TAAV_RADIUS, TAAV_SHADOW, TAAV_SPACING, TAAV_TOKEN_CATALOG, TAAV_TOKEN_SECTIONS, TAAV_TONE_LABELS, TaavBadge, TaavButton, TaavCard, TaavFieldHint, TaavTooltip, TaavTooltipProvider, cn };
+export { TAAV_BUTTON_HEIGHT, TAAV_DURATION, TAAV_RADIUS, TAAV_SHADOW, TAAV_SPACING, TAAV_TOKEN_CATALOG, TAAV_TOKEN_SECTIONS, TAAV_TONE_LABELS, TaavBadge, TaavButton, TaavCard, TaavDivider, TaavFieldHint, TaavTooltip, TaavTooltipProvider, cn };
 //# sourceMappingURL=taav-primitives.mjs.map
 //# sourceMappingURL=taav-primitives.mjs.map
