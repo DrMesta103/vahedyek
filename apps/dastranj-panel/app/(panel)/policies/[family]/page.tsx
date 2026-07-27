@@ -242,6 +242,7 @@ export default async function PolicyFamilyPage({
 
   return (
     <PolicyPageShell
+      titleHref={backHref}
       title={familyMeta.pageTitle}
       subtitle={familyMeta.pageHint}
       actionHref={fromWorkHub ? backHref : '/policies'}

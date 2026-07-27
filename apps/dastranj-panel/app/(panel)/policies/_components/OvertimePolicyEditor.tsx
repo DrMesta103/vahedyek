@@ -1,4 +1,4 @@
-import { PolicyFieldLabel, PolicyFieldSelect, PolicyFormActions, PolicyInfoStrip, PolicyToggleField } from './PolicyWorkspaceShell';
+import { PolicyFieldInput, PolicyFieldLabel, PolicyFieldSelect, PolicyFormActions, PolicyInfoStrip, PolicyToggleField } from './PolicyWorkspaceShell';
 
 export function OvertimePolicyEditor({
   backHref,
@@ -7,6 +7,7 @@ export function OvertimePolicyEditor({
   overtimeRequireAttachment,
   overtimeBeforeShift,
   overtimeAfterShift,
+  dailyLimitHours,
   overtimeRule,
   requestRule,
 }: {
@@ -16,6 +17,7 @@ export function OvertimePolicyEditor({
   overtimeRequireAttachment: boolean;
   overtimeBeforeShift: boolean;
   overtimeAfterShift: boolean;
+  dailyLimitHours: number;
   overtimeRule: 'manager_approval' | 'automatic' | 'disabled';
   requestRule: 'leave_and_correction' | 'leave_only' | 'correction_only' | 'none';
 }) {
@@ -34,6 +36,10 @@ export function OvertimePolicyEditor({
         </div>
 
         <div className="overtime-policy-toggles">
+          <label className="policy-field-stack">
+            <PolicyFieldLabel label="سقف اضافه‌کاری روزانه (ساعت)" hint="حداکثر اضافه‌کاری مجاز برای هر روز کاری در این سیاست." />
+            <PolicyFieldInput name="dailyLimitHours" type="number" min="0.25" max="24" step="0.25" defaultValue={dailyLimitHours} required />
+          </label>
           <label className="policy-field-stack">
             <PolicyFieldLabel label="آیا اضافه‌کاری در این سیاست فعال باشد؟" hint="نرخ و محاسبات مالی در حقوق و دستمزد مدیریت می‌شود." />
             <PolicyFieldSelect name="overtimeRule" defaultValue={overtimeRule}>

@@ -14,6 +14,7 @@ export function PolicyPageShell({
   banner,
   actionHref,
   actionLabel,
+  titleHref,
   children,
 }: {
   title: string;
@@ -21,6 +22,7 @@ export function PolicyPageShell({
   banner?: string;
   actionHref?: string;
   actionLabel?: string;
+  titleHref?: string;
   children: ReactNode;
 }) {
   return (
@@ -30,6 +32,7 @@ export function PolicyPageShell({
         subtitle={subtitle}
         addHref={actionHref}
         addLabel={actionLabel}
+        titleHref={titleHref}
       />
 
       {banner ? <PolicyInfoStrip text={banner} /> : null}

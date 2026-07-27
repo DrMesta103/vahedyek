@@ -2196,6 +2196,7 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
           overtimeRequireAttachment: boolValue(formData, 'overtimeRequireAttachment'),
           overtimeBeforeShift: boolValue(formData, 'overtimeBeforeShift'),
           overtimeAfterShift: boolValue(formData, 'overtimeAfterShift'),
+          dailyLimitHours: Math.min(24, Math.max(0.25, Number(value(formData, 'dailyLimitHours') || '4'))),
         })
       : familyKey === 'work' && workSection === 'other'
         ? jsonValue({

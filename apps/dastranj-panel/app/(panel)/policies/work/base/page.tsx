@@ -50,6 +50,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
     overtimeRequireAttachment: boolDefault(sectionValues.overtimeRequireAttachment),
     overtimeBeforeShift: boolDefault(sectionValues.overtimeBeforeShift),
     overtimeAfterShift: boolDefault(sectionValues.overtimeAfterShift),
+    dailyLimitHours: typeof sectionValues.dailyLimitHours === 'number' ? sectionValues.dailyLimitHours : 4,
     overtimeRule: (
       sectionValues.overtimeRule === 'manager_approval' || sectionValues.overtimeRule === 'automatic' || sectionValues.overtimeRule === 'disabled'
         ? sectionValues.overtimeRule
@@ -74,6 +75,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
   if (section === 'other') {
     return (
       <PolicyPageShell
+        titleHref={backHref}
         title="ویرایش سایر سیاست‌ها"
         subtitle="تنظیمات تکمیلی حضور و غیاب"
         actionHref={backHref}
@@ -100,6 +102,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
   if (section === 'overtime') {
     return (
       <PolicyPageShell
+        titleHref={backHref}
         title="ویرایش سیاست‌های اضافه‌کاری"
         subtitle="تعریف قوانین ثبت و محاسبه اضافه‌کاری"
         actionHref={backHref}
@@ -120,6 +123,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
               overtimeRequireAttachment={defaults.overtimeRequireAttachment}
               overtimeBeforeShift={defaults.overtimeBeforeShift}
               overtimeAfterShift={defaults.overtimeAfterShift}
+              dailyLimitHours={defaults.dailyLimitHours}
               overtimeRule={defaults.overtimeRule}
               requestRule={defaults.requestRule}
             />
@@ -134,6 +138,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
 
   return (
     <PolicyPageShell
+      titleHref={backHref}
       title="ویرایش سیاست کاری"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
       actionHref={backHref}

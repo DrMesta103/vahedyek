@@ -1,6 +1,13 @@
 import { draftTemplateLabels } from './constants';
 import { formatFaCurrencyAmount, formatFaMinutes } from './format-fa';
 
+function formatFaHours(value: unknown) {
+  const minutes = Number(value);
+  if (!Number.isFinite(minutes) || minutes <= 0) return 'ثبت نشده';
+  const hours = minutes / 60;
+  return `${hours.toLocaleString('fa-IR', { maximumFractionDigits: 2 })} ساعت`;
+}
+
 export type DraftTemplateBody = {
   base?: {
     title?: string;
@@ -108,7 +115,7 @@ export function getDraftTemplateSummary(bodyRaw: string | null | undefined) {
   return {
     pills,
     fields: {
-      monthlyLeaveLimit: formatFaMinutes(body.attendance?.monthlyLeaveLimit),
+      monthlyLeaveLimit: formatFaHours(body.attendance?.monthlyLeaveLimit),
       leaveTransferLimit: formatFaMinutes(body.attendance?.leaveTransferLimit),
       monthlyOvertimeLimit: formatFaMinutes(body.attendance?.monthlyOvertimeLimit),
       grossPayment: formatFaCurrencyAmount(grossAmount),

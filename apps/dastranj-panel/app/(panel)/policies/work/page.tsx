@@ -47,6 +47,7 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
 
   return (
     <PolicyPageShell
+      titleHref="/policies"
       title={readOnly ? 'جزئیات سیاست کاری' : 'ویرایش سیاست کاری'}
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
     >
