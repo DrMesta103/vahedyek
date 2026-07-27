@@ -7,5 +7,46 @@ export function getTaaviaBrandDetailsOverviewMock(businessId: string, brandId: s
     ['v1', false, 'ساخت اولیه', '۱۴۰۵/۰۱/۱۵ - ۱۶:۱۰', 62, 14, 'ساخت اولیه از منابع برند'],
     ['v0', false, 'ساخت اولیه', '۱۴۰۵/۰۱/۱۰ - ۱۱:۰۵', 34, 10, 'ایجاد اولیه برند در تاویا'],
   ] as const;
-  return { businessId, brandId, website: 'https://www.tausys.com', country: 'ایران', industry: 'فناوری اطلاعات و نرم‌افزار', currentSources: { brandInfo: 1, productsServices: 24, faqs: 8, filesDocuments: 15, links: 3 }, knowledgeBases: records.map(([versionLabel, isActive, buildType, createdAt, categoryCount, sourceSnapshotCount, description]) => ({ knowledgeBaseId: `kb-${brandId}-${versionLabel}`, brandId, versionLabel, isActive, buildType, buildId: `build-${versionLabel}-${brandId}`, createdAt, categoryCount, sourceSnapshotCount, description })), chatbot: { ready: true, lastKnowledgeUpdatedAt: '۱۴۰۵/۰۲/۲۰ - ۱۰:۱۵' } };
+  return {
+    businessId,
+    brandId,
+    website: 'https://www.tausys.com',
+    country: 'ایران',
+    industry: 'فناوری اطلاعات و نرم‌افزار',
+    currentSources: { brandInfo: 1, productsServices: 24, faqs: 8, filesDocuments: 15, links: 3 },
+    modelSlots: [
+      { purpose: 'TEXT_GENERATION', label: 'چت و پاسخ‌گویی', modelName: 'GPT-4.1', accountName: 'OpenAI', assigned: true },
+      { purpose: 'SPEECH_TO_TEXT', label: 'تبدیل صدا به متن', modelName: '—', accountName: '—', assigned: false },
+      { purpose: 'TEXT_TO_SPEECH', label: 'تبدیل متن به صدا', modelName: '—', accountName: '—', assigned: false },
+      { purpose: 'DOCUMENT_EXTRACTION', label: 'خواندن سند و تصویر (OCR)', modelName: 'GPT-4o mini', accountName: 'OpenAI', assigned: true },
+    ],
+    knowledgeBases: records.map(([versionLabel, isActive, buildType, createdAt, categoryCount, sourceSnapshotCount, description]) => ({
+      knowledgeBaseId: `kb-${brandId}-${versionLabel}`,
+      brandId,
+      versionLabel,
+      isActive,
+      buildType,
+      buildId: `build-${versionLabel}-${brandId}`,
+      createdAt,
+      categoryCount,
+      sourceSnapshotCount,
+      description,
+    })),
+    builds: records.map(([versionLabel, , buildType, createdAt]) => ({
+      buildId: `build-${versionLabel}-${brandId}`,
+      brandId,
+      buildType,
+      status: 'موفق',
+      statusTone: 'success' as const,
+      progress: 100,
+      startedAt: createdAt,
+      finishedAt: createdAt,
+      knowledgeBaseId: `kb-${brandId}-${versionLabel}`,
+      versionLabel,
+      failureMessage: null,
+      sourceCount: 12,
+      isInProgress: false,
+    })),
+    chatbot: { ready: true, lastKnowledgeUpdatedAt: '۱۴۰۵/۰۲/۲۰ - ۱۰:۱۵' },
+  };
 }

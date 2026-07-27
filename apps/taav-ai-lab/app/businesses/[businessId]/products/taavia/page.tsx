@@ -24,7 +24,11 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
         currentTenantId={currentTenant?.id ?? session.activeTenantId ?? null}
         currentTenantName={currentTenant?.name ?? null}
       >
-        <AiLabPage eyebrow="عدم دسترسی" title="این کسب‌وکار برای شما در دسترس نیست" description="از فهرست کسب‌وکارها یکی از tenantهای خودتان را انتخاب کنید." />
+        <AiLabPage
+          eyebrow="عدم دسترسی"
+          title="این کسب‌وکار برای شما در دسترس نیست"
+          description="از فهرست کسب‌وکارها یکی از tenantهای خودتان را انتخاب کنید."
+        />
       </AiLabShell>
     );
   }
@@ -56,50 +60,50 @@ export default async function TaaviaPage({ params }: { params: Promise<{ busines
         <div className="taavia-sections-shell">
           <AiLabSectionCard
             title="بخش‌های تاویا"
-            description="از اینجا وارد مدیریت برندها، گزارش‌ها یا اپراتورها شوید."
+            description="از اینجا وارد مدیریت برندها، مستندات فنی، گزارش‌ها یا اپراتورها شوید."
             titleTooltip={AI_LAB_TOOLTIPS.products.brands}
           >
             <div className="ai-lab-card-grid taavia-section-grid">
-            <AiLabFeatureCard
-              icon={<Building2 className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
-              title="برندها"
-              description="ایجاد و مدیریت برندها و ورود به ایجنت مدیریت برند"
-              tooltip={AI_LAB_TOOLTIPS.products.brands}
-              badge={{ label: 'فعال', tone: 'brand' }}
-              href={`/businesses/${business.id}/products/taavia/brands`}
-              buttonLabel="انتخاب"
-            />
-            <AiLabFeatureCard
-              icon={<BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
-              title="گزارش‌ها"
-              description="گزارش عملکرد چت‌بات‌ها و تحلیل مکالمات"
-              tooltip={AI_LAB_TOOLTIPS.products.reports}
-              badge={{ label: 'به‌زودی', tone: 'neutral' }}
-              href={`/businesses/${business.id}/products/taavia/reports`}
-              buttonLabel="مشاهده"
-              buttonVariant="secondary"
-              variant="soft"
-            />
-            <AiLabFeatureCard
-              icon={<Headphones className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
-              title="اپراتورها"
-              description="مدیریت اپراتورهای انسانی و هم‌افزایی با چت‌بات"
-              tooltip={AI_LAB_TOOLTIPS.products.operators}
-              badge={{ label: 'به‌زودی', tone: 'neutral' }}
-              href={`/businesses/${business.id}/products/taavia/operators`}
-              buttonLabel="مشاهده"
-              buttonVariant="secondary"
-              variant="soft"
-            />
-            <AiLabFeatureCard
-              icon={<Workflow className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
-              title="فلوهای ارتباطی فنی"
-              description="مشاهده و بررسی گرافیکی فلوهای ارتباطی بین Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
-              tooltip="گراف فلوهای ارتباطی فنی بین لایه‌های Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
-              badge={{ label: 'فعال', tone: 'brand' }}
-              href={`/businesses/${business.id}/products/taavia/technical-flows`}
-              buttonLabel="انتخاب"
-            />
+              <AiLabFeatureCard
+                icon={<Building2 className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
+                title="برندها"
+                description="ایجاد و مدیریت برندها و ورود به ایجنت مدیریت برند"
+                tooltip={AI_LAB_TOOLTIPS.products.brands}
+                badge={{ label: 'فعال', tone: 'brand' }}
+                href={`/businesses/${business.id}/products/taavia/brands`}
+                buttonLabel="انتخاب"
+              />
+              <AiLabFeatureCard
+                icon={<Workflow className="h-5 w-5 text-[var(--taav-brand-strong)]" />}
+                title="مستندات فنی"
+                description="مشاهده و بررسی فلوهای ارتباطی فنی بین Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
+                tooltip="گراف فلوهای ارتباطی فنی بین لایه‌های Frontend، .NET، Python، RabbitMQ، gRPC و سرویس‌های زیرساختی."
+                badge={{ label: 'فعال', tone: 'brand' }}
+                href={`/businesses/${business.id}/products/taavia/technical-flows`}
+                buttonLabel="انتخاب"
+              />
+              <AiLabFeatureCard
+                icon={<BarChart3 className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
+                title="گزارش‌ها"
+                description="گزارش عملکرد چت‌بات‌ها و تحلیل مکالمات"
+                tooltip={AI_LAB_TOOLTIPS.products.reports}
+                badge={{ label: 'به‌زودی', tone: 'neutral' }}
+                href={`/businesses/${business.id}/products/taavia/reports`}
+                buttonLabel="مشاهده"
+                buttonVariant="secondary"
+                variant="soft"
+              />
+              <AiLabFeatureCard
+                icon={<Headphones className="h-5 w-5 text-[var(--taav-text-subtle)]" />}
+                title="اپراتورها"
+                description="مدیریت اپراتورهای انسانی و هم‌افزایی با چت‌بات"
+                tooltip={AI_LAB_TOOLTIPS.products.operators}
+                badge={{ label: 'به‌زودی', tone: 'neutral' }}
+                href={`/businesses/${business.id}/products/taavia/operators`}
+                buttonLabel="مشاهده"
+                buttonVariant="secondary"
+                variant="soft"
+              />
             </div>
           </AiLabSectionCard>
         </div>

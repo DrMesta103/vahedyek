@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getOptionalSession } from '@/app/lib/session';
 import { BrandInfoError } from '@/app/lib/brand-info/errors';
 import { getBrandInfo, updateBrandInfo } from '@/app/lib/brand-info/service';
+import { isBrandInfoType } from '@/app/lib/brand-info/validation';
 
 type Context = { params: Promise<{ businessId: string; brandId: string; brandInfoId: string }> };
 
@@ -25,11 +26,12 @@ export async function PATCH(request: Request, context: Context) {
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData();
       const file = form.get('file');
-      const result = await updateBrandInfo(session.userId, { tenantId: p.businessId, brandId: p.brandId, id: p.brandInfoId, expectedRevision: form.get('expectedRevision'), title: String(form.get('title') ?? ''), file: file instanceof File ? file : null });
+      const rawType = String(form.get('type') ?? '');
+      const result = await updateBrandInfo(session.userId, { tenantId: p.businessId, brandId: p.brandId, id: p.brandInfoId, expectedRevision: form.get('expectedRevision'), type: isBrandInfoType(rawType) ? rawType : undefined, title: String(form.get('title') ?? ''), textContent: String(form.get('textContent') ?? ''), file: file instanceof File ? file : null });
       return NextResponse.json(result);
     }
     const body = await request.json();
-    const result = await updateBrandInfo(session.userId, { tenantId: p.businessId, brandId: p.brandId, id: p.brandInfoId, expectedRevision: body.expectedRevision, title: body.title, textContent: body.textContent });
+    const result = await updateBrandInfo(session.userId, { tenantId: p.businessId, brandId: p.brandId, id: p.brandInfoId, expectedRevision: body.expectedRevision, type: isBrandInfoType(body.type) ? body.type : undefined, title: body.title, textContent: body.textContent });
     return NextResponse.json(result);
   } catch (error) { return fail(error); }
 }

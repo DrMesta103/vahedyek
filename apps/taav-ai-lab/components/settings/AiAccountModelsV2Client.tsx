@@ -36,6 +36,7 @@ import {
   type AiProviderUsageUnitTypeV2,
 } from '@/app/lib/types/ai-provider-v2';
 import { formatUsd } from '@/app/lib/global-settings-mock';
+import { TAAVIA_BRAND_AI_MODEL_PURPOSES, TAAVIA_PURPOSE_LABELS, type TaaviaBrandAiModelPurpose } from '@/app/lib/taavia-ai-models';
 
 type Props = {
   account: AiProviderAccountV2Public;
@@ -76,6 +77,7 @@ type ModelFormState = {
   modelType: AiProviderModelTypeV2;
   isActive: boolean;
   capabilities: Record<AiProviderModelCapabilityTypeV2, boolean>;
+  recommendedForPurposes: Record<TaaviaBrandAiModelPurpose, boolean>;
   notes: string;
 };
 
@@ -89,6 +91,7 @@ const EMPTY_FORM: ModelFormState = {
   modelType: 'TEXT_GENERATION',
   isActive: true,
   capabilities: { ...EMPTY_CAPS },
+  recommendedForPurposes: Object.fromEntries(TAAVIA_BRAND_AI_MODEL_PURPOSES.map((purpose) => [purpose, false])) as Record<TaaviaBrandAiModelPurpose, boolean>,
   notes: '',
 };
 
@@ -189,12 +192,16 @@ function toFormState(model: AiProviderModelV2Public): ModelFormState {
   for (const cap of model.capabilities) {
     caps[cap] = true;
   }
+  const recommendedForPurposes = Object.fromEntries(
+    TAAVIA_BRAND_AI_MODEL_PURPOSES.map((purpose) => [purpose, model.recommendedForPurposes.includes(purpose)]),
+  ) as Record<TaaviaBrandAiModelPurpose, boolean>;
   return {
     name: model.name,
     providerModelId: model.providerModelId,
     modelType: model.modelType,
     isActive: model.isActive,
     capabilities: caps,
+    recommendedForPurposes,
     notes: '',
   };
 }
@@ -471,6 +478,7 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
       modelType: form.modelType,
       isActive: form.isActive,
       capabilities: extractCapabilities(form.capabilities),
+      recommendedForPurposes: TAAVIA_BRAND_AI_MODEL_PURPOSES.filter((purpose) => form.recommendedForPurposes[purpose]),
     };
 
     if (!payload.name || !payload.providerModelId) {
@@ -655,6 +663,7 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                           {model.isActive ? 'فعال' : 'غیرفعال'}
                         </span>
                       </TaavBadge>
+                      {model.recommendedForPurposes.map((purpose) => <TaavBadge key={purpose} tone="brand" variant="soft" size="sm">پیشنهادی برای {TAAVIA_PURPOSE_LABELS[purpose as TaaviaBrandAiModelPurpose]}</TaavBadge>)}
                     </div>
                   </div>
 
@@ -783,6 +792,23 @@ export function AiAccountModelsV2Client({ account, initialModels }: Props) {
                       setForm((c) => ({ ...c, capabilities: { ...c.capabilities, [cap]: event.target.checked } }))
                     }
                     label={AI_PROVIDER_MODEL_CAPABILITY_LABELS_V2[cap]}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="grid gap-3 rounded-[14px] border border-[color:var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] p-4">
+              <div>
+                <h3 className="m-0 text-[length:var(--taav-text-sm)] font-black text-[var(--taav-text-strong)]">پیشنهاد برای کاربرد برند</h3>
+                <p className="mt-1 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">مدل را برای هر کاربردی که باید در تنظیمات برند پیشنهاد شود، انتخاب کنید.</p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {TAAVIA_BRAND_AI_MODEL_PURPOSES.map((purpose) => (
+                  <TaavCheckbox
+                    key={purpose}
+                    checked={form.recommendedForPurposes[purpose]}
+                    onChange={(event) => setForm((current) => ({ ...current, recommendedForPurposes: { ...current.recommendedForPurposes, [purpose]: event.target.checked } }))}
+                    label={`پیشنهادی برای ${TAAVIA_PURPOSE_LABELS[purpose]}`}
                   />
                 ))}
               </div>

@@ -133,6 +133,7 @@ export type AiProviderAccountV2Public = {
   billingEmail: string | null;
   isSystem: boolean;
   isActive: boolean;
+  isRecommended: boolean;
   description: string | null;
   apiKeyUpdatedAt: string;
   apiKeyUpdatedBy: string;
@@ -176,6 +177,7 @@ export type CreateAiProviderAccountV2Input = {
   billingEmail?: string | null;
   description?: string | null;
   isActive: boolean;
+  isRecommended: boolean;
 };
 
 export type UpdateAiProviderAccountV2Input = {
@@ -185,6 +187,7 @@ export type UpdateAiProviderAccountV2Input = {
   billingEmail?: string | null;
   description?: string | null;
   isActive?: boolean;
+  isRecommended?: boolean;
 };
 
 export type ChangeAiProviderAccountV2ApiKeyInput = {
@@ -222,6 +225,7 @@ export type AiProviderModelV2Public = {
   modelType: AiProviderModelTypeV2;
   isSystem: boolean;
   isActive: boolean;
+  recommendedForPurposes: string[];
   createdBy: string;
   updatedBy: string;
   createdAt: string;
@@ -234,6 +238,7 @@ export type CreateAiProviderModelV2Input = {
   providerModelId: string;
   modelType: AiProviderModelTypeV2;
   isActive: boolean;
+  recommendedForPurposes: string[];
   capabilities: AiProviderModelCapabilityTypeV2[];
 };
 

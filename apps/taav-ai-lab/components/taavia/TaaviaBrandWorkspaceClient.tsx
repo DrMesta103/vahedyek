@@ -1,254 +1,553 @@
-"use client";
-import Link from "next/link";
-import { useState } from "react";
-import { ArrowLeft, Bot, Boxes, CalendarDays, Database, ExternalLink, FileText, FolderTree, Layers3, Link2, MessageCircle, MoreHorizontal, PackageOpen, Tags } from "lucide-react";
-import { TaavBadge, TaavButton, TaavCard } from "@repo/ui/taav/primitives";
-import { TaavEmptyState, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell } from "@repo/ui/taav/data-display";
-import type { TaaviaBrand } from "@/app/lib/types/domain";
-import type { TaaviaBrandDetailsOverview, TaaviaBrandKnowledgeBaseListItem } from "@/app/lib/types/taavia-brand-details-dashboard";
-type Props = { tenantId: string; brand: TaaviaBrand; overview: TaaviaBrandDetailsOverview };
-const RowBadge = ({ active }: { active: boolean }) => (
-  <TaavBadge tone={active ? "success" : "neutral"} variant="soft">
-    {active ? "فعال" : "غیرفعال"}
-  </TaavBadge>
-);
-export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview }: Props) {
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const base = `/businesses/${tenantId}/products/taavia/brands/${brand.id}`;
-  const kb = `${base}/knowledge-base`;
-  const active = overview.knowledgeBases.find((x) => x.isActive) ?? null;
-  const initials = brand.name.slice(0, 2) || "TA";
-  const stat = (label: string, value: string | number, icon: React.ReactNode) => (
-    <div className="flex min-w-[150px] flex-1 items-center justify-between gap-3 border-l border-[var(--taav-border-subtle)] px-4 last:border-0">
-      <div className="text-right">
-        <p className="m-0 text-xs text-[var(--taav-text-muted)]">{label}</p>
-        <strong className="mt-2 block text-xl text-[var(--taav-text-strong)]">{value}</strong>
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState, useTransition } from 'react';
+import {
+  ArrowLeft,
+  Award,
+  CalendarDays,
+  Check,
+  Copy,
+  Cpu,
+  Database,
+  Eye,
+  FileText,
+  FolderOpen,
+  FolderTree,
+  Hammer,
+  Layers3,
+  PackageOpen,
+  Sparkles,
+} from 'lucide-react';
+import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+import { TaavEmptyState } from '@repo/ui/taav/data-display';
+import type { TaaviaBrand } from '@/app/lib/types/domain';
+import type {
+  TaaviaBrandBuildListItem,
+  TaaviaBrandDetailsOverview,
+  TaaviaBrandKnowledgeBaseListItem,
+} from '@/app/lib/types/taavia-brand-details-dashboard';
+import type { InitialBuildReadModel } from '@/app/lib/services/taavia-knowledge-base-read-service';
+import { startKnowledgeBaseUpdateAction } from '@/app/businesses/[businessId]/products/taavia/brands/[brandId]/knowledge-base/actions';
+import { InitialKnowledgeBuildAction } from '@/components/taavia/knowledge-base/InitialKnowledgeBuildAction';
+
+type Props = {
+  tenantId: string;
+  brand: TaaviaBrand;
+  overview: TaaviaBrandDetailsOverview;
+  initialBuild: InitialBuildReadModel | null;
+};
+
+function OverviewMetric({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
+  return (
+    <div className="flex min-h-14 min-w-0 items-center justify-between gap-2 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-3 py-2 text-right shadow-[var(--taav-shadow-sm)]">
+      <div className="min-w-0">
+        <p className="m-0 text-[11px] text-[var(--taav-text-muted)]">{label}</p>
+        <strong className="mt-1 block truncate text-sm tabular-nums text-[var(--taav-text-strong)]">{value}</strong>
       </div>
-      <span className="text-[var(--taav-brand-strong)]">{icon}</span>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300">{icon}</span>
     </div>
   );
+}
+
+function truncateId(id: string) {
+  if (id.length <= 12) return id;
+  return `${id.slice(0, 6)}…${id.slice(-4)}`;
+}
+
+function formatBrandDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+function SourceStat({ label, value }: { label: string; value: number }) {
   return (
-    <main dir="rtl" className="mx-auto grid max-w-7xl gap-4 pb-10">
-      <header className="grid gap-3">
-        <div className="flex items-center justify-between">
-          <nav className="flex items-center gap-2 text-xs text-[var(--taav-text-muted)]">
-            <Link href={`/businesses/${tenantId}/products/taavia/brands`}>برندها</Link>
-            <span>←</span>
-            <strong className="text-[var(--taav-text-body)]">{brand.name}</strong>
-          </nav>
+    <div className="rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-2.5 py-2 text-center">
+      <strong className="block text-sm tabular-nums text-[var(--taav-text-strong)]">{value.toLocaleString('fa-IR')}</strong>
+      <span className="mt-0.5 block text-[10px] text-[var(--taav-text-muted)]">{label}</span>
+    </div>
+  );
+}
+
+function KnowledgeBaseRow({
+  item,
+  href,
+  accent,
+}: {
+  item: TaaviaBrandKnowledgeBaseListItem;
+  href: string;
+  accent?: 'current' | 'previous' | null;
+}) {
+  return (
+    <article
+      className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-right transition ${
+        item.isActive
+          ? 'border-emerald-400/40 bg-emerald-500/[0.07]'
+          : 'border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] hover:border-cyan-400/30'
+      }`}
+    >
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.isActive ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/5 text-cyan-300'}`}>
+        <Layers3 className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="m-0 truncate text-sm font-black text-[var(--taav-text-strong)]">{item.versionLabel}</h3>
+          <TaavBadge tone={item.isActive ? 'success' : 'neutral'} variant="soft" size="sm">
+            {item.isActive ? 'فعال' : 'غیرفعال'}
+          </TaavBadge>
+          <span className="text-[11px] text-[var(--taav-text-muted)]">
+            {accent === 'current' ? 'نسخه فعلی' : accent === 'previous' ? 'نسخه قبلی' : item.buildType}
+          </span>
+        </div>
+        <p className="mt-0.5 text-[11px] text-[var(--taav-text-muted)]">
+          <span dir="ltr">{item.createdAt}</span>
+          {' · '}
+          {item.categoryCount.toLocaleString('fa-IR')} دسته
+          {' · '}
+          {item.sourceSnapshotCount.toLocaleString('fa-IR')} منبع
+        </p>
+      </div>
+      <Link href={href} className="shrink-0">
+        <TaavButton size="sm" variant="secondary" iconStart={<Eye className="h-3.5 w-3.5" />}>
+          جزئیات
+        </TaavButton>
+      </Link>
+    </article>
+  );
+}
+
+function BuildRow({ item, href }: { item: TaaviaBrandBuildListItem; href: string }) {
+  return (
+    <article
+      className={`grid gap-2 rounded-xl border px-3 py-2.5 text-right transition ${
+        item.isInProgress
+          ? 'border-amber-400/45 bg-amber-500/[0.06]'
+          : item.statusTone === 'danger'
+            ? 'border-rose-400/35 bg-rose-500/[0.05]'
+            : 'border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] hover:border-cyan-400/30'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300">
+          <Hammer className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="m-0 truncate text-sm font-black text-[var(--taav-text-strong)]">{item.buildType}</h3>
+            <TaavBadge tone={item.statusTone} variant="soft" size="sm">
+              {item.status}
+            </TaavBadge>
+          </div>
+          <p className="mt-0.5 text-[11px] text-[var(--taav-text-muted)]">
+            {item.versionLabel ? `نسخه ${item.versionLabel}` : 'بدون نسخه نهایی'}
+            {' · '}
+            <span dir="ltr">{item.isInProgress || !item.finishedAt ? item.startedAt : item.finishedAt}</span>
+            {item.sourceCount > 0 ? ` · ${item.sourceCount.toLocaleString('fa-IR')} منبع` : null}
+          </p>
+        </div>
+        <Link href={href} className="shrink-0">
+          <TaavButton size="sm" variant="secondary" iconStart={<Eye className="h-3.5 w-3.5" />}>
+            مشاهده
+          </TaavButton>
+        </Link>
+      </div>
+
+      {item.isInProgress ? (
+        <div className="grid gap-1 pr-11">
+          <div className="flex items-center justify-between text-[11px] text-[var(--taav-text-muted)]">
+            <span>پیشرفت ساخت</span>
+            <span className="tabular-nums font-semibold text-[var(--taav-text-body)]">{item.progress.toLocaleString('fa-IR')}٪</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/30">
+            <div
+              className="h-full rounded-full bg-[var(--taav-brand)] transition-[width]"
+              style={{ width: `${Math.max(0, Math.min(100, item.progress))}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {item.failureMessage ? (
+        <p className="m-0 truncate pr-11 text-[11px] text-rose-300" title={item.failureMessage}>
+          {item.failureMessage}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialBuild }: Props) {
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updatePending, startUpdate] = useTransition();
+  const base = `/businesses/${tenantId}/products/taavia/brands/${brand.id}`;
+  const kb = `${base}/knowledge-base`;
+  const active = overview.knowledgeBases.find((item) => item.isActive) ?? null;
+  const previousActive = overview.knowledgeBases.find((item) => !item.isActive) ?? null;
+  const initials = brand.name.trim().slice(0, 2) || 'تا';
+  const activeSourcesTotal = useMemo(
+    () => Object.values(overview.currentSources).reduce((sum, value) => sum + value, 0),
+    [overview.currentSources],
+  );
+  const activeBuildId = initialBuild?.id ?? overview.builds.find((item) => item.isInProgress)?.buildId ?? null;
+  const buildInProgress = Boolean(activeBuildId || (initialBuild && ['PENDING', 'PROCESSING', 'RUNNING'].includes(initialBuild.status)));
+  const activeBuildHref = activeBuildId ? `${kb}/builds/${activeBuildId}` : kb;
+  const canCreateKb = overview.knowledgeBases.length < 5;
+
+  const copyBrandId = async () => {
+    try {
+      await navigator.clipboard.writeText(brand.id);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const startUpdateBuild = () => {
+    if (!active) return;
+    setUpdateError(null);
+    startUpdate(async () => {
+      try {
+        const buildId = await startKnowledgeBaseUpdateAction({
+          businessId: tenantId,
+          brandId: brand.id,
+          knowledgeBaseId: active.knowledgeBaseId,
+        });
+        router.push(`${kb}/builds/${buildId}`);
+        router.refresh();
+      } catch (error) {
+        setUpdateError(error instanceof Error ? error.message : 'شروع بروزرسانی ناموفق بود.');
+      }
+    });
+  };
+
+  return (
+    <main dir="rtl" className="mx-auto grid max-w-7xl gap-3 pb-6 text-right">
+      <TaavCard variant="outlined" padding="md" radius="xl">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cyan-400/15 text-lg font-black text-cyan-200 ring-1 ring-cyan-400/20">
+              {brand.icon?.previewData ? <img src={brand.icon.previewData} alt="" className="h-full w-full object-cover" /> : initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="m-0 text-[clamp(1rem,1.5vw,1.2rem)] font-black text-[var(--taav-text-strong)]">{brand.name}</h1>
+                <TaavBadge tone={brand.status === 'ACTIVE' ? 'success' : 'neutral'} variant="soft" size="sm">
+                  {brand.status === 'ACTIVE' ? 'فعال' : brand.status === 'ARCHIVED' ? 'آرشیو' : 'غیرفعال'}
+                </TaavBadge>
+              </div>
+              <p className="mt-1.5 max-w-2xl text-xs leading-6 text-[var(--taav-text-muted)]">
+                {brand.description?.trim() || 'مرکز مدیریت برند و دانش سازمانی آن'}
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void copyBrandId()}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-2.5 py-1.5 text-[11px] text-[var(--taav-text-muted)] transition hover:border-cyan-400/40 hover:text-cyan-300"
+                  title={`کپی شناسه: ${brand.id}`}
+                  aria-label="کپی شناسه برند"
+                >
+                  <span>شناسه</span>
+                  <bdi className="font-semibold tabular-nums text-[var(--taav-text-body)]" dir="ltr">
+                    {truncateId(brand.id)}
+                  </bdi>
+                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                </button>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-2.5 py-1.5 text-[11px] text-[var(--taav-text-muted)]">
+                  <CalendarDays className="h-3.5 w-3.5 text-cyan-300" aria-hidden />
+                  <span>آخرین تغییر</span>
+                  <bdi className="font-semibold tabular-nums text-[var(--taav-text-body)]" dir="ltr">
+                    {formatBrandDate(brand.updatedAt)}
+                  </bdi>
+                </span>
+                {copied ? <span className="text-[11px] text-cyan-300">کپی شد</span> : null}
+              </div>
+            </div>
+          </div>
+
           <Link href={`/businesses/${tenantId}/products/taavia/brands`}>
             <TaavButton size="sm" variant="secondary" iconStart={<ArrowLeft className="h-4 w-4" />}>
               بازگشت به فهرست برندها
             </TaavButton>
           </Link>
         </div>
-        <TaavCard variant="outlined" padding="md" radius="xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4 text-right">
-              <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[var(--taav-radius-xl)] border border-[var(--taav-border-subtle)] bg-[var(--taav-brand-soft)] text-3xl font-black text-[var(--taav-brand-strong)]">{brand.icon?.previewData ? <img src={brand.icon.previewData} alt="" className="h-full w-full object-cover" /> : initials}</div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="m-0 text-2xl font-black text-[var(--taav-text-strong)]">{brand.name}</h1>
-                  <TaavBadge tone={brand.status === "ACTIVE" ? "success" : "neutral"} variant="soft">
-                    {brand.status === "ACTIVE" ? "فعال" : "غیرفعال"}
-                  </TaavBadge>
-                </div>
-                <p className="mt-2 max-w-xl text-sm leading-7 text-[var(--taav-text-muted)]">{brand.description || "مرکز مدیریت برند و دانش سازمانی آن"}</p>
-                <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-3">
-                  <span>
-                    شناسه برند: <b dir="ltr">{brand.id}</b>
-                  </span>
-                  <span>
-                    ایجاد: <b dir="ltr">{brand.createdAt}</b>
-                  </span>
-                  <a href={overview.website} className="text-[var(--taav-brand-strong)]">
-                    وب‌سایت <ExternalLink className="mr-1 inline h-3 w-3" />
-                  </a>
-                  <span>کشور: {overview.country}</span>
-                  <span>صنعت: {overview.industry}</span>
-                  <span>
-                    آخرین تغییر: <b dir="ltr">{brand.updatedAt}</b>
-                  </span>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </TaavCard>
-      </header>
-      {feedback ? (
-        <div role="status" className="rounded-xl border border-[var(--taav-info)]/30 bg-[var(--taav-info)]/10 p-3 text-right text-sm">
-          {feedback}
-        </div>
-      ) : null}
-      <TaavCard variant="outlined" padding="md" radius="xl">
-        <div className="flex flex-wrap">
-          {stat("آخرین Build", active?.createdAt || "—", <CalendarDays className="h-5 w-5" />)}
-          {stat("دسته‌بندی‌های KB فعال", active?.categoryCount || 0, <FolderTree className="h-5 w-5" />)}
-          {stat("منابع Snapshot", active?.sourceSnapshotCount || 0, <FileText className="h-5 w-5" />)}
-          {stat("تعداد Knowledge Baseها", overview.knowledgeBases.length, <Layers3 className="h-5 w-5" />)}
-        </div>
       </TaavCard>
-      <section dir="ltr" className="grid gap-4 xl:grid-cols-3">
-        <div dir="rtl">
-          <TaavCard variant="outlined" padding="md" radius="xl">
-            <h2 className="m-0 text-right font-black">منابع برند (فعلی)</h2>
-            <p className="mt-1 text-right text-xs text-[var(--taav-text-muted)]">منابع زنده و قابل ویرایش؛ جدا از Snapshotهای Knowledge Base</p>
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-              {[
-                ["معرفی برند", overview.currentSources.brandInfo],
-                ["محصولات و خدمات", overview.currentSources.productsServices],
-                ["سوالات متداول", overview.currentSources.faqs],
-                ["فایل‌ها و مستندات", overview.currentSources.filesDocuments],
-                ["لینک‌ها", overview.currentSources.links],
-              ].map(([l, v]) => (
-                <div key={String(l)} className="rounded-lg bg-[var(--taav-surface-soft)] p-3">
-                  <span className="text-xs text-[var(--taav-text-muted)]">{l}</span>
-                  <b className="mt-1 block text-[var(--taav-text-strong)]">{v}</b>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="خلاصه وضعیت برند">
+        <OverviewMetric label="منابع فعال" value={activeSourcesTotal.toLocaleString('fa-IR')} icon={<FolderOpen className="h-5 w-5" />} />
+        <OverviewMetric label="Knowledge Base ها" value={overview.knowledgeBases.length.toLocaleString('fa-IR')} icon={<Layers3 className="h-5 w-5" />} />
+        <OverviewMetric label="نسخه فعال" value={active?.versionLabel || '—'} icon={<Award className="h-5 w-5" />} />
+        <OverviewMetric label="آخرین Build" value={active?.createdAt || '—'} icon={<CalendarDays className="h-5 w-5" />} />
+      </section>
+
+      {/* RTL: first column appears on the right */}
+      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <TaavCard variant="outlined" padding="md" radius="xl">
+          <div>
+            <h2 className="m-0 text-base font-black text-[var(--taav-text-strong)]">منابع فعلی برند</h2>
+            <p className="mt-1 text-xs leading-6 text-[var(--taav-text-muted)]">منابع در دسترس این برند برای ساخت و بروزرسانی Knowledge Base</p>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <SourceStat label="دانش‌ها" value={overview.currentSources.brandInfo} />
+            <SourceStat label="محصولات" value={overview.currentSources.productsServices} />
+            <SourceStat label="سوالات پرتکرار" value={overview.currentSources.faqs} />
+            <SourceStat label="مستندات" value={overview.currentSources.filesDocuments} />
+          </div>
+          <Link href={`${base}/sources`} className="mt-4 block">
+            <TaavButton size="sm" variant="secondary" unsafeClassName="w-full" iconStart={<FileText className="h-4 w-4" />}>
+              مدیریت منابع برند
+            </TaavButton>
+          </Link>
+        </TaavCard>
+
+        <TaavCard variant="outlined" padding="md" radius="xl">
+          <div>
+            <h2 className="m-0 text-base font-black text-[var(--taav-text-strong)]">مدل‌های Knowledge Base</h2>
+            <p className="mt-1 text-xs leading-6 text-[var(--taav-text-muted)]">
+              تخصیص مدل‌های هوش مصنوعی برند برای OCR و چت تحلیل
+            </p>
+          </div>
+          <div className="mt-4 grid gap-2">
+            {overview.modelSlots.map((slot) => (
+              <div
+                key={slot.purpose}
+                className="flex items-center justify-between gap-3 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface-soft)] px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="m-0 text-[11px] text-[var(--taav-text-muted)]">{slot.label}</p>
+                  <strong className="mt-0.5 block truncate text-sm text-[var(--taav-text-strong)]">
+                    {slot.modelName ?? 'تنظیم نشده'}
+                  </strong>
+                  {slot.accountName ? (
+                    <p className="mt-0.5 truncate text-[11px] text-[var(--taav-text-muted)]">{slot.accountName}</p>
+                  ) : null}
                 </div>
-              ))}
-            </div>
-            <Link href={`${base}/sources`} className="mt-4 grid">
-              <TaavButton size="sm" variant="secondary" iconStart={<PackageOpen className="h-4 w-4" />}>
-                مشاهده و مدیریت منابع برند
-              </TaavButton>
-            </Link>
-          </TaavCard>
-        </div>
-        <div dir="rtl">
-          <TaavCard variant="outlined" padding="md" radius="xl">
-            <h2 className="m-0 text-right font-black">تست چت‌بات برند</h2>
-            <p className="mt-1 text-right text-xs text-[var(--taav-text-muted)]">پاسخ‌های چت‌بات با Knowledge Base فعال این برند آزمایش می‌شوند.</p>
-            <div className="mt-4 rounded-xl bg-violet-500/10 p-4 text-right">
-              <p className="m-0 text-sm">
-                Knowledge Base فعال: <b className="text-violet-300">{active?.versionLabel || "—"}</b>
-              </p>
-              <p className="mt-3 text-sm">
-                وضعیت چت‌بات: <b className="text-[var(--taav-success-strong)]">{overview.chatbot.ready ? "آماده" : "غیرفعال"}</b>
-              </p>
-              <p className="mt-3 text-xs text-[var(--taav-text-muted)]">
-                آخرین بروزرسانی دانش: <span dir="ltr">{overview.chatbot.lastKnowledgeUpdatedAt}</span>
-              </p>
-            </div>
+                <TaavBadge tone={slot.assigned ? 'success' : 'warning'} variant="soft" size="sm">
+                  {slot.assigned ? 'فعال' : 'خالی'}
+                </TaavBadge>
+              </div>
+            ))}
+          </div>
+          <Link href={`${base}/model-settings`} className="mt-4 block">
+            <TaavButton size="sm" variant="secondary" unsafeClassName="w-full" iconStart={<Cpu className="h-4 w-4" />}>
+              مدیریت مدل‌های برند
+            </TaavButton>
+          </Link>
+        </TaavCard>
+
+        <TaavCard variant="outlined" padding="md" radius="xl">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="m-0 text-base font-black text-[var(--taav-text-strong)]">Knowledge Base فعال</h2>
             {active ? (
-              <Link href={`${base}/test`} className="mt-4 grid">
-                <TaavButton size="sm" iconStart={<MessageCircle className="h-4 w-4" />}>
-                  شروع تست چت‌بات
-                </TaavButton>
-              </Link>
-            ) : (
-              <TaavButton size="sm" disabled>
-                ابتدا یک Knowledge Base فعال ایجاد کنید.
-              </TaavButton>
-            )}
-          </TaavCard>
-        </div>
-        <div dir="rtl">
-          <TaavCard variant="outlined" padding="md" radius="xl">
-            <h2 className="m-0 text-right font-black">Knowledge Base فعال برند</h2>
-            {active ? (
-              <>
-                <div className="mt-4 flex items-center justify-between rounded-xl border border-[var(--taav-brand)]/30 bg-[var(--taav-brand-soft)] p-4">
-                  <div>
-                    <b className="text-lg">{active.versionLabel}</b>
-                    <p className="mt-1 text-xs">
-                      {active.buildType} · <span dir="ltr">{active.createdAt}</span>
-                    </p>
-                  </div>
-                  <RowBadge active />
+              <TaavBadge tone="success" variant="soft" size="sm">
+                فعال
+              </TaavBadge>
+            ) : null}
+          </div>
+
+          {active ? (
+            <>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl bg-[var(--taav-surface-soft)] px-3 py-3">
+                  <p className="m-0 text-[11px] text-[var(--taav-text-muted)]">نسخه</p>
+                  <strong className="mt-1 block text-sm text-[var(--taav-text-strong)]">{active.versionLabel}</strong>
+                  <p className="mt-1 text-[11px] text-[var(--taav-text-muted)]">
+                    {active.buildType}
+                    <br />
+                    <span dir="ltr">{active.createdAt}</span>
+                  </p>
                 </div>
-                <div className="mt-3 flex justify-between text-sm">
-                  <span>دسته‌ها: {active.categoryCount}</span>
-                  <span>Snapshotها: {active.sourceSnapshotCount}</span>
+                <div className="rounded-xl bg-[var(--taav-surface-soft)] px-3 py-3">
+                  <p className="m-0 text-[11px] text-[var(--taav-text-muted)]">منابع Snapshot</p>
+                  <strong className="mt-1 block text-sm tabular-nums text-[var(--taav-text-strong)]">
+                    {active.sourceSnapshotCount.toLocaleString('fa-IR')}
+                  </strong>
                 </div>
-                <Link href={kb} className="mt-4 grid">
-                  <TaavButton size="sm" iconStart={<Database className="h-4 w-4" />}>
-                    مدیریت Knowledge Base فعال
+                <div className="rounded-xl bg-[var(--taav-surface-soft)] px-3 py-3">
+                  <p className="m-0 text-[11px] text-[var(--taav-text-muted)]">دسته‌بندی‌ها</p>
+                  <strong className="mt-1 block text-sm tabular-nums text-[var(--taav-text-strong)]">
+                    {active.categoryCount.toLocaleString('fa-IR')}
+                  </strong>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <Link href={`${kb}/${active.knowledgeBaseId}/categories`}>
+                  <TaavButton size="sm" variant="secondary" unsafeClassName="w-full" iconStart={<FolderTree className="h-4 w-4" />}>
+                    مشاهده دسته‌بندی‌ها
                   </TaavButton>
                 </Link>
-              </>
-            ) : (
-              <TaavEmptyState variant="default" size="sm" title="Knowledge Base فعالی وجود ندارد" />
-            )}
-          </TaavCard>
-        </div>
-      </section>
-      <section dir="ltr" className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <div dir="rtl">
-          <TaavCard variant="outlined" padding="md" radius="xl">
-            <div className="flex items-center justify-between">
-              <h2 className="m-0 font-black">خلاصه نسخه‌های Knowledge Base</h2>
-              <Link href={`${kb}/versions`}>
-                <TaavButton size="sm" variant="secondary">
-                  مشاهده همه نسخه‌ها
-                </TaavButton>
-              </Link>
+                <Link href={`${kb}/${active.knowledgeBaseId}`}>
+                  <TaavButton size="sm" unsafeClassName="w-full min-w-[200px]" iconStart={<Database className="h-4 w-4" />}>
+                    مدیریت Knowledge Base
+                  </TaavButton>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 grid gap-3">
+              <p className="m-0 text-sm text-[var(--taav-text-muted)]">هنوز Knowledge Base فعالی برای این برند وجود ندارد.</p>
+              <InitialKnowledgeBuildAction
+                businessId={tenantId}
+                brandId={brand.id}
+                activeSources={activeSourcesTotal}
+                activeBuild={buildInProgress}
+                activeBuildId={activeBuildId}
+              />
             </div>
-            <div className="mt-3 space-y-2">
+          )}
+        </TaavCard>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        {/* RTL: first column = right = Knowledge Bases */}
+        <div className="flex min-h-[280px] flex-col rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="m-0 text-sm font-black text-[var(--taav-text-strong)]">فهرست Knowledge Base ها</h2>
+              <p className="mt-1 text-[11px] text-[var(--taav-text-muted)]">نسخه‌های دانشنامه این برند</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span title="ساخت هوشمند به‌زودی فعال می‌شود" className="inline-flex">
+                <TaavBadge tone="info" variant="soft" size="sm">
+                  <span className="inline-flex items-center gap-1 opacity-70">
+                    <Sparkles className="h-3 w-3" />
+                    ساخت هوشمند
+                  </span>
+                </TaavBadge>
+              </span>
+              {overview.knowledgeBases.length === 0 ? (
+                <InitialKnowledgeBuildAction
+                  businessId={tenantId}
+                  brandId={brand.id}
+                  activeSources={activeSourcesTotal}
+                  activeBuild={buildInProgress}
+                  activeBuildId={activeBuildId}
+                />
+              ) : buildInProgress ? (
+                <Link href={activeBuildHref}>
+                  <TaavButton size="sm" iconStart={<Database className="h-4 w-4" />}>
+                    مشاهده روند ساخت
+                  </TaavButton>
+                </Link>
+              ) : (
+                <TaavButton
+                  size="sm"
+                  disabled={!canCreateKb || !active || updatePending}
+                  iconStart={<PackageOpen className="h-4 w-4" />}
+                  onClick={startUpdateBuild}
+                >
+                  {updatePending ? 'در حال شروع…' : '+ Knowledge Base جدید'}
+                </TaavButton>
+              )}
+            </div>
+          </div>
+
+          {!canCreateKb ? (
+            <p className="mt-2 text-xs text-amber-200">برای ساخت نسخه جدید ابتدا یکی از نسخه‌های غیرفعال را حذف کنید.</p>
+          ) : null}
+          {updateError ? (
+            <p role="alert" className="mt-2 text-xs text-rose-300">
+              {updateError}
+            </p>
+          ) : null}
+
+          {overview.knowledgeBases.length ? (
+            <div className="mt-3 grid flex-1 content-start gap-2">
               {overview.knowledgeBases.map((item) => (
-                <div key={item.knowledgeBaseId} className="flex items-center justify-between rounded-lg bg-[var(--taav-surface-soft)] p-3 text-sm">
-                  <div>
-                    <b>{item.versionLabel}</b>
-                    <span className="mr-3 text-xs text-[var(--taav-text-muted)]">
-                      {item.buildType} · {item.createdAt}
-                    </span>
-                  </div>
-                  <RowBadge active={item.isActive} />
-                </div>
+                <KnowledgeBaseRow
+                  key={item.knowledgeBaseId}
+                  item={item}
+                  href={`${kb}/${item.knowledgeBaseId}`}
+                  accent={
+                    item.knowledgeBaseId === active?.knowledgeBaseId
+                      ? 'current'
+                      : item.knowledgeBaseId === previousActive?.knowledgeBaseId
+                        ? 'previous'
+                        : null
+                  }
+                />
               ))}
             </div>
-          </TaavCard>
+          ) : (
+            <div className="mt-4 flex flex-1 items-center justify-center">
+              <TaavEmptyState
+                size="md"
+                title="هنوز نسخه‌ای ساخته نشده است"
+                description="با ساخت اولین Knowledge Base، نسخه اینجا نمایش داده می‌شود."
+                primaryAction={
+                  <InitialKnowledgeBuildAction
+                    businessId={tenantId}
+                    brandId={brand.id}
+                    activeSources={activeSourcesTotal}
+                    activeBuild={buildInProgress}
+                    activeBuildId={activeBuildId}
+                  />
+                }
+              />
+            </div>
+          )}
         </div>
-        <div dir="rtl">
-          <TaavCard variant="outlined" padding="md" radius="xl">
-            <div className="flex items-center justify-between">
-              <h2 className="m-0 font-black">همه Knowledge Baseهای برند</h2>
-              <TaavButton size="sm" variant="secondary" disabled={overview.knowledgeBases.length >= 5} iconStart={<Database className="h-4 w-4" />}>
-                Knowledge Base جدید
-              </TaavButton>
+
+        <div className="flex min-h-[280px] flex-col rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="m-0 text-sm font-black text-[var(--taav-text-strong)]">فهرست بیلدها</h2>
+              <p className="mt-1 text-[11px] text-[var(--taav-text-muted)]">وضعیت ساخت و بروزرسانی دانشنامه</p>
             </div>
-            {overview.knowledgeBases.length >= 5 ? <p className="mt-2 text-xs text-[var(--taav-warning-strong)]">برای ساخت نسخه جدید ابتدا یکی از نسخه‌های غیرفعال را حذف کنید.</p> : null}
-            <div className="mt-4 overflow-x-auto">
-              <TaavTableShell variant="bordered" density="compact">
-                <TaavTableHeader>
-                  <TaavTableRow>
-                    <TaavTableHead>وضعیت</TaavTableHead>
-                    <TaavTableHead>نسخه</TaavTableHead>
-                    <TaavTableHead>نوع Build</TaavTableHead>
-                    <TaavTableHead>تاریخ ساخت</TaavTableHead>
-                    <TaavTableHead>دسته‌ها</TaavTableHead>
-                    <TaavTableHead>Snapshotها</TaavTableHead>
-                    <TaavTableHead>توضیحات</TaavTableHead>
-                    <TaavTableActions>عملیات</TaavTableActions>
-                  </TaavTableRow>
-                </TaavTableHeader>
-                <TaavTableBody>
-                  {overview.knowledgeBases.map((item: TaaviaBrandKnowledgeBaseListItem) => (
-                    <TaavTableRow key={item.knowledgeBaseId}>
-                      <TaavTableCell>
-                        <RowBadge active={item.isActive} />
-                      </TaavTableCell>
-                      <TaavTableCell>
-                        <b>{item.versionLabel}</b>
-                      </TaavTableCell>
-                      <TaavTableCell>{item.buildType}</TaavTableCell>
-                      <TaavTableCell dir="ltr">{item.createdAt}</TaavTableCell>
-                      <TaavTableCell>{item.categoryCount}</TaavTableCell>
-                      <TaavTableCell>{item.sourceSnapshotCount}</TaavTableCell>
-                      <TaavTableCell>{item.description}</TaavTableCell>
-                      <TaavTableActions>
-                        <Link href={item.isActive ? kb : "#"}>
-                          <TaavButton size="sm" variant="secondary">
-                            مشاهده جزئیات
-                          </TaavButton>
-                        </Link>
-                        <MoreHorizontal className="mr-2 inline h-4 w-4 text-[var(--taav-text-muted)]" />
-                      </TaavTableActions>
-                    </TaavTableRow>
-                  ))}
-                </TaavTableBody>
-              </TaavTableShell>
+            <div className="flex items-center gap-2">
+              <TaavBadge tone="neutral" variant="soft" size="sm">
+                {overview.builds.length.toLocaleString('fa-IR')} مورد
+              </TaavBadge>
+              {buildInProgress ? (
+                <Link href={activeBuildHref}>
+                  <TaavButton size="sm" variant="secondary">
+                    مشاهده روند ساخت
+                  </TaavButton>
+                </Link>
+              ) : null}
             </div>
-          </TaavCard>
+          </div>
+
+          {overview.builds.length ? (
+            <div className="mt-3 grid flex-1 content-start gap-2">
+              {overview.builds.map((item) => (
+                <BuildRow key={item.buildId} item={item} href={`${kb}/builds/${item.buildId}`} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-1 items-center justify-center">
+              <TaavEmptyState
+                size="md"
+                title="هنوز بیلدی ثبت نشده است"
+                description="با شروع ساخت Knowledge Base، وضعیت بیلد اینجا ظاهر می‌شود."
+                primaryAction={
+                  overview.knowledgeBases.length === 0 ? (
+                    <InitialKnowledgeBuildAction
+                      businessId={tenantId}
+                      brandId={brand.id}
+                      activeSources={activeSourcesTotal}
+                      activeBuild={buildInProgress}
+                      activeBuildId={activeBuildId}
+                    />
+                  ) : (
+                    <TaavButton
+                      size="sm"
+                      disabled={!canCreateKb || !active || updatePending}
+                      iconStart={<PackageOpen className="h-4 w-4" />}
+                      onClick={startUpdateBuild}
+                    >
+                      شروع بیلد جدید
+                    </TaavButton>
+                  )
+                }
+              />
+            </div>
+          )}
         </div>
       </section>
     </main>

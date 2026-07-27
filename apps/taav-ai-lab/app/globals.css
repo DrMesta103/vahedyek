@@ -360,6 +360,223 @@ textarea {
   text-align: right;
 }
 
+/* Compact density for Taavia brands / KB / sources area */
+.ai-lab-container.taavia-density-compact {
+  --taav-space-2: 6px;
+  --taav-space-3: 8px;
+  --taav-space-4: 10px;
+  --taav-space-5: 12px;
+  --taav-space-6: 14px;
+  --taav-space-8: 18px;
+  --taav-space-10: 22px;
+  --taav-space-12: 28px;
+
+  --taav-text-2xs: 0.5625rem;
+  --taav-text-xs: 0.625rem;
+  --taav-text-sm: 0.6875rem;
+  --taav-text-md: 0.75rem;
+  --taav-text-lg: 0.8125rem;
+  --taav-text-xl: 0.875rem;
+  --taav-text-2xl: 1.0625rem;
+  --taav-text-3xl: 1.25rem;
+  --taav-leading-normal: 1.45;
+  --taav-leading-relaxed: 1.55;
+
+  --taav-radius-lg: 10px;
+  --taav-radius-xl: 12px;
+  --taav-radius-xxl: 16px;
+
+  --taav-btn-height-xs: 24px;
+  --taav-btn-height-sm: 28px;
+  --taav-btn-height-md: 32px;
+  --taav-btn-height-lg: 36px;
+  --taav-btn-height-xl: 40px;
+  --taav-btn-px-xs: 8px;
+  --taav-btn-px-sm: 10px;
+  --taav-btn-px-md: 12px;
+  --taav-btn-px-lg: 14px;
+  --taav-btn-px-xl: 16px;
+
+  --taav-badge-height-sm: 20px;
+  --taav-badge-height-md: 22px;
+  --taav-badge-height-lg: 24px;
+  --taav-badge-px-sm: 6px;
+  --taav-badge-px-md: 8px;
+  --taav-badge-px-lg: 10px;
+
+  --taav-card-padding-sm: 8px;
+  --taav-card-padding-md: 12px;
+  --taav-card-padding-lg: 16px;
+  --taav-card-header-py: 10px;
+  --taav-card-header-px: 12px;
+
+  padding: var(--taav-space-4) clamp(12px, 1.5vw, 18px) var(--taav-space-8);
+}
+
+.ai-lab-container.taavia-density-compact main.mx-auto {
+  gap: 0.65rem;
+  padding-bottom: 1.25rem;
+}
+
+.ai-lab-container.taavia-density-compact main.mx-auto.gap-4,
+.ai-lab-container.taavia-density-compact main.mx-auto.gap-5 {
+  gap: 0.65rem;
+}
+
+.ai-lab-container.taavia-density-compact h1 {
+  font-size: clamp(1rem, 1.4vw, 1.2rem) !important;
+  line-height: 1.35;
+}
+
+.ai-lab-container.taavia-density-compact h2 {
+  font-size: 0.8125rem !important;
+  line-height: 1.4;
+}
+
+.ai-lab-container.taavia-density-compact h3 {
+  font-size: 0.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .text-2xl {
+  font-size: 1.0625rem !important;
+  line-height: 1.35;
+}
+
+.ai-lab-container.taavia-density-compact .text-xl {
+  font-size: 0.875rem !important;
+  line-height: 1.4;
+}
+
+.ai-lab-container.taavia-density-compact .text-lg {
+  font-size: 0.8125rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .text-base {
+  font-size: 0.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .text-sm {
+  font-size: 0.6875rem !important;
+  line-height: 1.45;
+}
+
+.ai-lab-container.taavia-density-compact .leading-7 {
+  line-height: 1.45 !important;
+}
+
+.ai-lab-container.taavia-density-compact .leading-8 {
+  line-height: 1.5 !important;
+}
+
+.ai-lab-container.taavia-density-compact .h-\[88px\],
+.ai-lab-container.taavia-density-compact .w-\[88px\] {
+  height: 2.75rem !important;
+  width: 2.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .h-28,
+.ai-lab-container.taavia-density-compact .w-28 {
+  height: 3rem !important;
+  width: 3rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .h-20,
+.ai-lab-container.taavia-density-compact .w-20 {
+  height: 2.75rem !important;
+  width: 2.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .h-16,
+.ai-lab-container.taavia-density-compact .w-16 {
+  height: 2.5rem !important;
+  width: 2.5rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .h-14,
+.ai-lab-container.taavia-density-compact .w-14 {
+  height: 2.25rem !important;
+  width: 2.25rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .min-h-\[88px\] {
+  min-height: 3.25rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .min-h-\[188px\],
+.ai-lab-container.taavia-density-compact .min-h-\[160px\] {
+  min-height: 7.5rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .min-h-\[72px\] {
+  min-height: 3rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .min-h-12,
+.ai-lab-container.taavia-density-compact .min-h-11,
+.ai-lab-container.taavia-density-compact .min-h-10 {
+  min-height: 2rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .p-5,
+.ai-lab-container.taavia-density-compact .md\:p-5 {
+  padding: 0.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .p-4,
+.ai-lab-container.taavia-density-compact .md\:p-4 {
+  padding: 0.65rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .px-5 {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .py-4 {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .gap-5 {
+  gap: 0.65rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .gap-4 {
+  gap: 0.55rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .gap-3 {
+  gap: 0.45rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.55rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .pb-10 {
+  padding-bottom: 1.25rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .pb-8 {
+  padding-bottom: 1rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .mt-5 {
+  margin-top: 0.65rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .mt-4 {
+  margin-top: 0.55rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .mt-3 {
+  margin-top: 0.4rem !important;
+}
+
+.ai-lab-container.taavia-density-compact .text-3xl {
+  font-size: 1.125rem !important;
+}
+
 .ai-lab-page-stack {
   display: grid;
   gap: var(--taav-space-6);
