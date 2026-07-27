@@ -1303,3 +1303,5 @@ Creating turbopack project {
  GET /api/notifications 200 in 15ms (next.js: 5ms, proxy.ts: 4ms, application-code: 6ms)
  GET /api/notifications 200 in 30ms (next.js: 1867µs, proxy.ts: 4ms, application-code: 24ms)
  GET /api/notifications 200 in 15ms (next.js: 1699µs, proxy.ts: 6ms, application-code: 8ms)
+ GET /api/notifications 200 in 14ms (next.js: 1647µs, proxy.ts: 4ms, application-code: 9ms)
+[?25h

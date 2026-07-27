@@ -2467,3 +2467,10 @@ https://react.dev/link/hydration-mismatch
           ...
         ...
  
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path C:\Users\Administrator\Desktop\vahed2\vahedyek\apps\taav-ai-lab
+npm error workspace @apps/taav-ai-lab@0.1.0
+npm error location C:\Users\Administrator\Desktop\vahed2\vahedyek\apps\taav-ai-lab
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev -p 3070 --hostname 0.0.0.0
