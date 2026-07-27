@@ -41,7 +41,7 @@ export const CREATE_BUILD_AND_OUTBOX_CARDS: BuildVersionStepDocCard[] = [
     tag: 'بک',
     kind: 'event',
     eventName: 'TaaviaKnowledgeBaseBuildRequestedV1',
-    eventChips: ['eventId', 'eventType', 'tenantId', 'brandId', 'buildId', 'buildType = InitialBuild'],
+    eventChips: ['eventId', 'eventType', 'tenantId', 'brandId', 'buildId', 'buildType = InitialBuild', 'modelAssignments'],
     note: 'نسخه Contract در انتهای نام کلاس و eventType قرار دارد و فیلد جداگانه version نداریم.',
     actionLabel: 'مشاهده Payload',
     detail: {
@@ -57,7 +57,19 @@ export const CREATE_BUILD_AND_OUTBOX_CARDS: BuildVersionStepDocCard[] = [
     "tenantId": "tenant-100",
     "brandId": "brand-200",
     "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
-    "buildType": "InitialBuild"
+    "buildType": "InitialBuild",
+    "modelAssignments": [
+      {
+        "modelType": "document_extraction",
+        "providerType": "mistral",
+        "model": "mistral-ocr-latest"
+      },
+      {
+        "modelType": "text_generation",
+        "providerType": "deepseek",
+        "model": "deepseek-chat"
+      }
+    ]
   }
 }`,
     },

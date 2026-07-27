@@ -1,21 +1,2469 @@
 Loaded Prisma config from prisma.config.ts.
 
 Prisma config detected, skipping environment variable loading.
-Error: 
-EPERM: operation not permitted, rename 'C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab\node_modules\.prisma\client\query_engine-windows.dll.node.tmp9352' -> 'C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab\node_modules\.prisma\client\query_engine-windows.dll.node'
+Loaded Prisma config from prisma.config.ts.
 
+Prisma config detected, skipping environment variable loading.
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
-npm error Lifecycle script `prisma:generate` failed with error:
-npm error code 1
-npm error path C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
-npm error workspace @apps/taav-ai-lab@0.1.0
-npm error location C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
-npm error command failed
-npm error command C:\Windows\system32\cmd.exe /d /s /c prisma generate
-npm error Lifecycle script `dev` failed with error:
-npm error code 1
-npm error path C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
-npm error workspace @apps/taav-ai-lab@0.1.0
-npm error location C:\Users\Administrator\Desktop\first-unit-next\vahedyek\apps\taav-ai-lab
-npm error command failed
-npm error command C:\Windows\system32\cmd.exe /d /s /c npm run prisma:generate && npm --workspace @repo/ui run build
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+            ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <SegmentViewNode type="page" pagePath="login/page...">
+      <SegmentTrieNode>
+      <LoginPage>
+        <LoginForm>
+          <Suspense fallback={<div>}>
+            <LoginFormContent>
+              <div className="ai-lab-aut...">
+                <div className="mx-auto fl...">
+                  <TaavCard variant="outlined" padding="lg" radius="xl" wrapperClassName="ai-lab-aut...">
+                    <div className="relative f...">
+                      <div className="">
+                        <div className="grid gap-6...">
+                          <div className="ai-lab-aut...">
+                            <div>
+                            <div className="grid gap-3">
+                              <TaavBadge>
+                              <h1
+                                className="m-0 text-3xl font-black text-white"
+-                               data-cursor-ref="e5"
+                              >
++                               ورود به آزمایشگاه هوش مصنوعی تاو
+                              <p
+                                className="m-0 text-sm leading-8 text-slate-300"
+-                               data-cursor-ref="e6"
+                              >
++                               این مسیر ورود فعلا برای شبیه‌ساز داخلی فعال است و بعد از آن شما را مستقیم به فهرست کسب‌...
+                          <TaavCard variant="soft" padding="lg" radius="xl" wrapperClassName="ai-lab-aut...">
+                            <div className="relative f...">
+                              <div className="">
+                                <div className="grid gap-2">
+                                  <TaavBadge>
+                                  <h2
+                                    className="m-0 text-2xl font-black text-[var(--taav-text-strong)]"
+-                                   data-cursor-ref="e7"
+                                  >
++                                   با ایمیل یا موبایل وارد شوید
+                                  <p
+                                    className="m-0 text-sm leading-7 text-[var(--taav-text-muted)]"
+-                                   data-cursor-ref="e8"
+                                  >
++                                   بعد از ورود، مستقیم وارد فهرست کسب‌وکارها می‌شوید.
+                                <form className="mt-6 grid ..." onSubmit={function handleSubmit}>
+                                  <TaavFieldBlock label={<AiLabLabelWithTooltip>} required={true} htmlFor="login-iden...">
+                                    <div className="grid w-ful..." data-disabled={undefined} data-invalid={undefined} ...>
+                                      <TaavLabel htmlFor="login-iden..." required={true} optional={false} ...>
+                                        <label
+                                          htmlFor="login-identifier"
+                                          className="inline-flex w-full items-center gap-[var(--taav-space-1)] font-[v..."
+-                                         data-cursor-ref="e9"
+                                        >
+                                      <div className="w-full min...">
+                                        <TaavInput id="login-iden..." type="text" value="" onChange={function onChange} ...>
+                                          <div className="flex items...">
+                                            <span>
+                                            <span>
+                                            <input
+                                              type="text"
+                                              disabled={false}
+                                              readOnly={undefined}
+                                              required={true}
+                                              aria-invalid={undefined}
+                                              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[length:var(-..."
+                                              id="login-identifier"
+                                              value=""
+                                              onChange={function onChange}
+                                              dir="ltr"
+                                              inputMode="numeric"
+                                              maxLength={10}
+                                              placeholder="9352720114"
+                                              aria-describedby={undefined}
+-                                             data-cursor-ref="e1"
+                                            >
+                                  <TaavFieldBlock label={<AiLabLabelWithTooltip>} required={true} htmlFor="login-pass...">
+                                    <div className="grid w-ful..." data-disabled={undefined} data-invalid={undefined} ...>
+                                      <TaavLabel htmlFor="login-pass..." required={true} optional={false} ...>
+                                        <label
+                                          htmlFor="login-password"
+                                          className="inline-flex w-full items-center gap-[var(--taav-space-1)] font-[v..."
+-                                         data-cursor-ref="e10"
+                                        >
+                                      <div className="w-full min...">
+                                        <TaavInput id="login-pass..." type="password" value="" ...>
+                                          <div className="flex items...">
+                                            <span>
+                                            <input
+                                              type="password"
+                                              disabled={false}
+                                              readOnly={undefined}
+                                              required={true}
+                                              aria-invalid={undefined}
+                                              className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[length:var(-..."
+                                              id="login-password"
+                                              value=""
+                                              onChange={function onChange}
+                                              aria-describedby={undefined}
+-                                             data-cursor-ref="e2"
+                                            >
+                                  <TaavButton type="submit" loading={false} width="full">
+                                    <button
+                                      type="submit"
+                                      disabled={false}
+                                      aria-busy={undefined}
+                                      aria-label={undefined}
+                                      className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] fon..."
+-                                     data-cursor-ref="e3"
+                                    >
+                                  <p
+                                    className="m-0 text-center text-sm text-[var(--taav-text-muted)]"
+-                                   data-cursor-ref="e11"
+                                  >
+                                    <LinkComponent href="/register" className="font-bold ...">
+                                      <a
+                                        className="font-bold text-[var(--taav-brand-strong)] hover:underline"
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/register"
+-                                       data-cursor-ref="e4"
+                                      >
++                                       ثبت‌نام
+    ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/businesses" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+                          <div className="flex min-h..." dir="ltr">
+                            <div className="relative f..." dir="rtl">
+                              <div className="relative z...">
+                                <BusinessSidebarNavPath items={[...]} className={undefined}>
+                                  <nav
+                                    dir="rtl"
+                                    aria-label="مسیر صفحه"
+                                    className="flex w-full shrink-0 items-center justify-start min-h-[var(--taav-busin..."
+-                                   data-cursor-ref="e16"
+                                  >
+                                    <ol className="m-0 flex m...">
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e17"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e1"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e18"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e2"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e19"
+                                      >
+                              ...
+                                <div className="ai-lab-con...">
+                                  <BusinessesClient businesses={[...]}>
+                                    <section className="ai-lab-bus...">
+                                      <header className="ai-lab-bus...">
+                                        <div className="ai-lab-bus...">
+                                          <h1
+-                                           data-cursor-ref="e20"
+                                          >
++                                           فهرست کسب‌وکارهای شما
+                                          <p
+                                            className="ai-lab-businesses-summary"
+-                                           data-cursor-ref="e21"
+                                          >
++                                           ۱ کسب‌وکار فعال
+                                        <TaavButton unsafeClassName="ai-lab-bus..." iconStart={<Plus>} ...>
+                                          <button
+                                            type="button"
+                                            disabled={false}
+                                            aria-busy={undefined}
+                                            aria-label={undefined}
+                                            className="inline-flex items-center justify-center gap-[var(--taav-btn-gap..."
+                                            onClick={function openCreateTenantFlow}
+-                                           data-cursor-ref="e3"
+                                          >
+                                      <section
+                                        className="ai-lab-business-list"
+                                        aria-label="فهرست کسب‌وکارها"
+-                                       data-cursor-ref="e22"
+                                      >
+                                        ...
+                                          <div className="ai-lab-bus..." dir="rtl">
+                                            <div className="ai-lab-bus...">
+                                              <div>
+                                              <div className="ai-lab-bus...">
+                                                <h2
+-                                                 data-cursor-ref="e23"
+                                                >
++                                                 آزمایشگاه نام و نام خانوادگی خریدار
+                                                <p
+                                                  className="ai-lab-business-card-usage-label"
+-                                                 data-cursor-ref="e24"
+                                                >
++                                                 توکن مصرف‌شده
+                                                <p
+                                                  className="ai-lab-business-card-usage-value"
+                                                  dir="ltr"
+-                                                 data-cursor-ref="e25"
+                                                >
+                                            <UsageRing>
+                                            <div className="ai-lab-bus...">
+                                              <TaavBadge>
+                                              <TaavButton type="button" variant="secondary" tone="neutral" size="sm" ...>
+                                                <button
+                                                  type="button"
+                                                  disabled={false}
+                                                  aria-busy={false}
+                                                  aria-label={undefined}
+                                                  className="inline-flex items-center justify-center gap-[var(--taav-b..."
+                                                  onClick={function onClick}
+-                                                 data-cursor-ref="e4"
+                                                >
+                            ...
+                              <div className="flex h-ful...">
+                                <aside dir="rtl" data-taav-business-sidebar={true} data-variant="dastranj" ...>
+                                  <div>
+                                  <div className="flex shrin...">
+                                    <div>
+                                    <div>
+                                    <button
+                                      type="button"
+                                      title="تغییر کسب و کار"
+                                      aria-label="تغییر کسب و کار"
+                                      onClick={function onTenantSwitch}
+                                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full..."
+-                                     data-cursor-ref="e5"
+                                    >
+                                  <div className="flex shrin...">
+                                    <SidebarIconButton label="خروج" icon={<LogOut>} onClick={function onClick} ...>
+                                      <button
+                                        type="button"
+                                        title="خروج"
+                                        aria-label="خروج"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e6"
+                                      >
+                                    <SidebarIconButton label="داشبورد" icon={<House>} active={false} href="/businesses" ...>
+                                      <a
+                                        href="/businesses"
+                                        title="داشبورد"
+                                        aria-label="داشبورد"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e7"
+                                      >
+                                    <SidebarIconButton label="کسب‌وکارها" icon={<Building2>} active={true} ...>
+                                      <a
+                                        href="/businesses"
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e8"
+                                      >
+                                    <SidebarIconButton label="ابزارهای ه..." icon={<Cpu>} active={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e9"
+                                      >
+                                    <SidebarIconButton label="محصولات" icon={<Boxes>} active={false} href="/businesses" ...>
+                                      <a
+                                        href="/businesses"
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e10"
+                                      >
+                                  <nav
+                                    className="taav-scrollarea taav-scrollarea--minimal taav-sidebar-scrollarea min-h-..."
+                                    aria-label="منوی اصلی"
+-                                   data-cursor-ref="e26"
+                                  >
+                                    <SidebarNavItem>
+                                    <SidebarNavItem>
+                                    <SidebarNavItem item={{id:"busine...", ...}} active={true} collapsed={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        aria-current="page"
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e11"
+                                      >
+                                    <SidebarNavItem item={{id:"settings", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/settings"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="پنل تاو ادمین"
+                                        aria-label="پنل تاو ادمین"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e12"
+                                      >
+                                  <div
+                                    className="shrink-0 px-3 py-3.5 text-center cursor-pointer"
+                                    style={{background:"var(--taav..."}}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={function onTenantPanelClick}
+                                    onKeyDown={function onKeyDown}
+-                                   data-cursor-ref="e13"
+                                  >
+                                    <p
+                                      className="m-0 mb-2.5 text-[10px] text-[var(--taav-business-sidebar-tenant-text)]"
+-                                     data-cursor-ref="e27"
+                                    >
++                                     tenant غیرفعال
+                                    <button
+                                      type="button"
+                                      className="w-full rounded-[10px] border-0 px-3 text-[11px] font-bold min-h-[var(..."
+                                      style={{background:"var(--taav..."}}
+                                      onClick={function onClick}
+-                                     data-cursor-ref="e14"
+                                    >
++                                     آزمایشگاه
+                                  ...
+                                    <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                      <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                        <span className="inline-fle..." aria-describedby={undefined} data-state="closed" ...>
+                                          <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center border-0 bg-transparent..."
+                                            title="جمع کردن سایدبار"
+                                            aria-label="جمع کردن سایدبار"
+                                            aria-expanded={true}
+                                            onClick={function onClick}
+-                                           data-cursor-ref="e15"
+                                          >
+            ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/businesse..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+                          <div className="flex min-h..." dir="ltr">
+                            <div className="relative f..." dir="rtl">
+                              <div className="relative z...">
+                                <BusinessSidebarNavPath items={[...]} className={undefined}>
+                                  <nav
+                                    dir="rtl"
+                                    aria-label="مسیر صفحه"
+                                    className="flex w-full shrink-0 items-center justify-start min-h-[var(--taav-busin..."
+-                                   data-cursor-ref="e30"
+                                  >
+                                    <ol className="m-0 flex m...">
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e31"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e1"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e32"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e2"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e33"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e3"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e34"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e4"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e35"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e5"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e36"
+                                      >
+                              ...
+                                <main dir="rtl" className="mx-auto gr...">
+                                  <header className="flex flex-...">
+                                    <div>
+                                      <h1
+                                        className="m-0 text-[clamp(1.35rem,2vw,1.75rem)] font-black text-[var(--taav-t..."
+-                                       data-cursor-ref="e37"
+                                      >
++                                       برندها
+                                      <p
+                                        className="mt-1 text-sm text-[var(--taav-text-muted)]"
+-                                       data-cursor-ref="e38"
+                                      >
++                                       ۲ برند
+                                    <div className="flex min-w...">
+                                      <label className="relative m...">
+                                        <Search>
+                                        <input
+                                          value=""
+                                          onChange={function onChange}
+                                          placeholder="جستجوی برند..."
+                                          className="min-h-10 w-full rounded-xl border border-[var(--taav-border-subtl..."
+-                                         data-cursor-ref="e6"
+                                        >
+                                      <button
+                                        type="button"
+                                        onClick={function onClick}
+                                        className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-cyan..."
+-                                       data-cursor-ref="e7"
+                                      >
+                                  <section className="grid gap-4...">
+                                    <article className="relative f...">
+                                      <LinkComponent href="/businesse..." className="absolute i..." ...>
+                                        <a
+                                          className="absolute inset-0 z-0 rounded-2xl"
+                                          aria-label="باز کردن داشبورد برند برند آزمایشی اصلی"
+                                          ref={function}
+                                          onClick={function onClick}
+                                          onMouseEnter={function onMouseEnter}
+                                          onTouchStart={function onTouchStart}
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-de..."
+-                                         data-cursor-ref="e8"
+                                        >
+                                      <div className="relative z...">
+                                        <div className="flex min-w...">
+                                          <div>
+                                          <div className="min-w-0">
+                                            <h2
+                                              className="m-0 truncate text-base font-black text-[var(--taav-text-strong)]"
+-                                             data-cursor-ref="e39"
+                                            >
++                                             برند آزمایشی اصلی
+                                            <p
+                                              className="mt-0.5 text-xs text-[var(--taav-text-muted)]"
+-                                             data-cursor-ref="e40"
+                                            >
++                                             اسم برند
+                                        <div className="flex shrin...">
+                                          <span>
+                                          <div className="relative">
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              aria-label="عملیات برند برند آزمایشی اصلی"
+                                              className="grid h-8 w-8 place-items-center rounded-lg text-[var(--taav-t..."
+-                                             data-cursor-ref="e9"
+                                            >
+                                      <div>
+                                      <div className="relative z...">
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e10"
+                                          >
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e11"
+                                          >
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e12"
+                                          >
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e13"
+                                          >
+                                    <article className="relative f...">
+                                      <div className="relative z...">
+                                        <div className="flex min-w...">
+                                          <div>
+                                          <div className="min-w-0">
+                                            <h2
+                                              className="m-0 truncate text-base font-black text-[var(--taav-text-strong)]"
+-                                             data-cursor-ref="e41"
+                                            >
++                                             برند خدمات سازمانی
+                                            <p
+                                              className="mt-0.5 text-xs text-[var(--taav-text-muted)]"
+-                                             data-cursor-ref="e42"
+                                            >
++                                             اسم برند
+                                        <div className="flex shrin...">
+                                          <span>
+                                          <div className="relative">
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              aria-label="عملیات برند برند خدمات سازمانی"
+                                              className="grid h-8 w-8 place-items-center rounded-lg text-[var(--taav-t..."
+-                                             data-cursor-ref="e14"
+                                            >
+                                      <div>
+                                      <div className="relative z...">
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e15"
+                                          >
+                                        <LinkComponent href="/businesse..." className="inline-fle...">
+                                          <a
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-..."
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e16"
+                                          >
+                                  ...
+                            ...
+                              <div className="flex h-ful...">
+                                <aside dir="rtl" data-taav-business-sidebar={true} data-variant="dastranj" ...>
+                                  <div>
+                                  <div className="flex shrin...">
+                                    <div>
+                                    <div>
+                                    <button
+                                      type="button"
+                                      title="تغییر کسب و کار"
+                                      aria-label="تغییر کسب و کار"
+                                      onClick={function onTenantSwitch}
+                                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full..."
+-                                     data-cursor-ref="e17"
+                                    >
+                                  <div className="flex shrin...">
+                                    <SidebarIconButton label="خروج" icon={<LogOut>} onClick={function onClick} ...>
+                                      <button
+                                        type="button"
+                                        title="خروج"
+                                        aria-label="خروج"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e18"
+                                      >
+                                    <SidebarIconButton label="داشبورد" icon={<House>} active={false} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                        title="داشبورد"
+                                        aria-label="داشبورد"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e19"
+                                      >
+                                    <SidebarIconButton label="کسب‌وکارها" icon={<Building2>} active={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e20"
+                                      >
+                                    <SidebarIconButton label="ابزارهای ه..." icon={<Cpu>} active={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e21"
+                                      >
+                                    <SidebarIconButton label="محصولات" icon={<Boxes>} active={true} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e22"
+                                      >
+                                  <nav
+                                    className="taav-scrollarea taav-scrollarea--minimal taav-sidebar-scrollarea min-h-..."
+                                    aria-label="منوی اصلی"
+-                                   data-cursor-ref="e43"
+                                  >
+                                    <SidebarNavItem item={{id:"ai-tools", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e23"
+                                      >
+                                    <SidebarNavItem item={{id:"products", ...}} active={true} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        aria-current="page"
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e24"
+                                      >
+                                    <SidebarNavItem item={{id:"busine...", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e25"
+                                      >
+                                    <SidebarNavItem item={{id:"settings", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/settings"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="پنل تاو ادمین"
+                                        aria-label="پنل تاو ادمین"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e26"
+                                      >
+                                  <div
+                                    className="shrink-0 px-3 py-3.5 text-center cursor-pointer"
+                                    style={{background:"var(--taav..."}}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={function onTenantPanelClick}
+                                    onKeyDown={function onKeyDown}
+-                                   data-cursor-ref="e27"
+                                  >
+                                    <p
+                                      className="m-0 mb-2.5 text-[10px] text-[var(--taav-business-sidebar-tenant-text)]"
+-                                     data-cursor-ref="e44"
+                                    >
++                                     tenant فعال
+                                    <button
+                                      type="button"
+                                      className="w-full rounded-[10px] border-0 px-3 text-[11px] font-bold min-h-[var(..."
+                                      style={{background:"var(--taav..."}}
+                                      onClick={function onClick}
+-                                     data-cursor-ref="e28"
+                                    >
++                                     آزمایشگاه نام و نام خانوادگی خریدار
+                                  ...
+                                    <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                      <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                        <span className="inline-fle..." aria-describedby={undefined} data-state="closed" ...>
+                                          <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center border-0 bg-transparent..."
+                                            title="جمع کردن سایدبار"
+                                            aria-label="جمع کردن سایدبار"
+                                            aria-expanded={true}
+                                            onClick={function onClick}
+-                                           data-cursor-ref="e29"
+                                          >
+            ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/businesse..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+                          <div className="flex min-h..." dir="ltr">
+                            <div className="relative f..." dir="rtl">
+                              <div className="relative z...">
+                                <BusinessSidebarNavPath items={[...]} className={undefined}>
+                                  <nav
+                                    dir="rtl"
+                                    aria-label="مسیر صفحه"
+                                    className="flex w-full shrink-0 items-center justify-start min-h-[var(--taav-busin..."
+-                                   data-cursor-ref="e36"
+                                  >
+                                    <ol className="m-0 flex m...">
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e37"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e1"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e38"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e2"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e39"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e3"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e40"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e4"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e41"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e5"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e42"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e6"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e43"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-de..."
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e7"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e44"
+                                      >
+                              ...
+                                <div className="ai-lab-con...">
+                                  <TaaviaBrandModelSettingsPageClient tenantId="cmr7d2n5h0..." brandId="taavia-dem..." ...>
+                                    <div dir="rtl" className="mx-auto gr...">
+                                      <div className="flex flex-...">
+                                        <LinkComponent href="/businesse...">
+                                          <a
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e8"
+                                          >
+                                            <TaavButton variant="secondary" size="sm" iconStart={<ArrowLeft>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+-                                               data-cursor-ref="e9"
+                                              >
+                                      <header className="rounded-[1...">
+                                        <div className="flex flex-...">
+                                          <div className="min-w-0">
+                                            <div>
+                                            <div className="mt-2 flex ...">
+                                              <h1
+                                                className="m-0 text-2xl font-black text-[var(--taav-text-strong)] md:t..."
+-                                               data-cursor-ref="e45"
+                                              >
++                                               برند آزمایشی اصلی
+                                              <LinkComponent href="/businesse..." className="inline-fle..." ...>
+                                                <a
+                                                  className="inline-flex h-8 w-8 items-center justify-center rounded-f..."
+                                                  aria-label="ویرایش برند"
+                                                  ref={function}
+                                                  onClick={function onClick}
+                                                  onMouseEnter={function onMouseEnter}
+                                                  onTouchStart={function onTouchStart}
+                                                  href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/t..."
+-                                                 data-cursor-ref="e10"
+                                                >
+                                              ...
+                                            <p
+                                              className="mt-3 max-w-3xl text-sm leading-7 text-[var(--taav-text-muted)]"
+-                                             data-cursor-ref="e46"
+                                            >
++                                             برای هر نوع مدل هوش مصنوعی، حساب ارائه‌دهنده و مدل مناسب را انتخاب کنید.
+                                        ...
+                                      <div className="grid gap-4">
+                                        <section className="rounded-[1...">
+                                          <div className="flex flex-...">
+                                            <div className="flex min-w...">
+                                              <div>
+                                              <div className="min-w-0">
+                                                <h2
+                                                  className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                                 data-cursor-ref="e47"
+                                                >
++                                                 OCR
+                                                <p
+                                                  className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                                 data-cursor-ref="e48"
+                                                >
++                                                 مدل استخراج اطلاعات از سند و تصویر
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-..."
+-                                             data-cursor-ref="e11"
+                                            >
+                                          <div className="mt-5 grid ...">
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهنده">
+                                                <SelectionChip selected={true} recommended={true} label="OpenAi" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e12"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="DeepSeek" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e13"
+                                                  >
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="مدل">
+                                                <SelectionChip selected={true} recommended={true} showStar={true} ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={false}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e14"
+                                                  >
+                                          <div className="mt-5 flex ...">
+                                            <TaavButton disabled={false} onClick={function onClick} iconStart={<Save>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+                                                onClick={function onClick}
+-                                               data-cursor-ref="e15"
+                                              >
+                                        <section className="rounded-[1...">
+                                          <div className="flex flex-...">
+                                            <div className="flex min-w...">
+                                              <div>
+                                              <div className="min-w-0">
+                                                <h2
+                                                  className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                                 data-cursor-ref="e49"
+                                                >
++                                                 چت (تحلیل)
+                                                <p
+                                                  className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                                 data-cursor-ref="e50"
+                                                >
++                                                 مدل تولید متن برای گفتگو، تحلیل و خروجی محتوای طولانی
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-..."
+-                                             data-cursor-ref="e16"
+                                            >
+                                          <div className="mt-5 grid ...">
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهنده">
+                                                <SelectionChip selected={true} recommended={true} label="OpenAi" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e17"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="GoogleGemini" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e18"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="DeepSeek" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e19"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="Grok" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e20"
+                                                  >
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="مدل">
+                                                <SelectionChip selected={true} recommended={true} showStar={true} ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={false}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e21"
+                                                  >
+                                          <div className="mt-5 flex ...">
+                                            <TaavButton disabled={false} onClick={function onClick} iconStart={<Save>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+                                                onClick={function onClick}
+-                                               data-cursor-ref="e22"
+                                              >
+                                      <p
+                                        className="flex items-start gap-2 text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                       data-cursor-ref="e51"
+                                      >
+                            ...
+                              <div className="flex h-ful...">
+                                <aside dir="rtl" data-taav-business-sidebar={true} data-variant="dastranj" ...>
+                                  <div>
+                                  <div className="flex shrin...">
+                                    <div>
+                                    <div>
+                                    <button
+                                      type="button"
+                                      title="تغییر کسب و کار"
+                                      aria-label="تغییر کسب و کار"
+                                      onClick={function onTenantSwitch}
+                                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full..."
+-                                     data-cursor-ref="e23"
+                                    >
+                                  <div className="flex shrin...">
+                                    <SidebarIconButton label="خروج" icon={<LogOut>} onClick={function onClick} ...>
+                                      <button
+                                        type="button"
+                                        title="خروج"
+                                        aria-label="خروج"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e24"
+                                      >
+                                    <SidebarIconButton label="داشبورد" icon={<House>} active={false} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                        title="داشبورد"
+                                        aria-label="داشبورد"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e25"
+                                      >
+                                    <SidebarIconButton label="کسب‌وکارها" icon={<Building2>} active={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e26"
+                                      >
+                                    <SidebarIconButton label="ابزارهای ه..." icon={<Cpu>} active={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e27"
+                                      >
+                                    <SidebarIconButton label="محصولات" icon={<Boxes>} active={true} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e28"
+                                      >
+                                  <nav
+                                    className="taav-scrollarea taav-scrollarea--minimal taav-sidebar-scrollarea min-h-..."
+                                    aria-label="منوی اصلی"
+-                                   data-cursor-ref="e52"
+                                  >
+                                    <SidebarNavItem item={{id:"ai-tools", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e29"
+                                      >
+                                    <SidebarNavItem item={{id:"products", ...}} active={true} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        aria-current="page"
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e30"
+                                      >
+                                    <SidebarNavItem item={{id:"busine...", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e31"
+                                      >
+                                    <SidebarNavItem item={{id:"settings", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/settings"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="پنل تاو ادمین"
+                                        aria-label="پنل تاو ادمین"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e32"
+                                      >
+                                  <div
+                                    className="shrink-0 px-3 py-3.5 text-center cursor-pointer"
+                                    style={{background:"var(--taav..."}}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={function onTenantPanelClick}
+                                    onKeyDown={function onKeyDown}
+-                                   data-cursor-ref="e33"
+                                  >
+                                    <p
+                                      className="m-0 mb-2.5 text-[10px] text-[var(--taav-business-sidebar-tenant-text)]"
+-                                     data-cursor-ref="e53"
+                                    >
++                                     tenant فعال
+                                    <button
+                                      type="button"
+                                      className="w-full rounded-[10px] border-0 px-3 text-[11px] font-bold min-h-[var(..."
+                                      style={{background:"var(--taav..."}}
+                                      onClick={function onClick}
+-                                     data-cursor-ref="e34"
+                                    >
++                                     آزمایشگاه نام و نام خانوادگی خریدار
+                                  ...
+                                    <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                      <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                        <span className="inline-fle..." aria-describedby={undefined} data-state="closed" ...>
+                                          <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center border-0 bg-transparent..."
+                                            title="جمع کردن سایدبار"
+                                            aria-label="جمع کردن سایدبار"
+                                            aria-expanded={true}
+                                            onClick={function onClick}
+-                                           data-cursor-ref="e35"
+                                          >
+            ...
+ 
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/businesse..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+                          <div className="flex min-h..." dir="ltr">
+                            <div className="relative f..." dir="rtl">
+                              <div className="relative z...">
+                                <BusinessSidebarNavPath items={[...]} className={undefined}>
+                                  <nav
+                                    dir="rtl"
+                                    aria-label="مسیر صفحه"
+                                    className="flex w-full shrink-0 items-center justify-start min-h-[var(--taav-busin..."
+-                                   data-cursor-ref="e36"
+                                  >
+                                    <ol className="m-0 flex m...">
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e37"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e1"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e38"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e2"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e39"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e3"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e40"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e4"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e41"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e5"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e42"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e6"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e43"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-de..."
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e7"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e44"
+                                      >
+                              ...
+                                <div className="ai-lab-con...">
+                                  <TaaviaBrandModelSettingsPageClient tenantId="cmr7d2n5h0..." brandId="taavia-dem..." ...>
+                                    <div dir="rtl" className="mx-auto gr...">
+                                      <div className="flex flex-...">
+                                        <LinkComponent href="/businesse...">
+                                          <a
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-..."
+-                                           data-cursor-ref="e8"
+                                          >
+                                            <TaavButton variant="secondary" size="sm" iconStart={<ArrowLeft>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+-                                               data-cursor-ref="e9"
+                                              >
+                                      <header className="rounded-[1...">
+                                        <div className="flex flex-...">
+                                          <div className="min-w-0">
+                                            <div>
+                                            <div className="mt-2 flex ...">
+                                              <h1
+                                                className="m-0 text-2xl font-black text-[var(--taav-text-strong)] md:t..."
+-                                               data-cursor-ref="e45"
+                                              >
++                                               برند آزمایشی اصلی
+                                              <LinkComponent href="/businesse..." className="inline-fle..." ...>
+                                                <a
+                                                  className="inline-flex h-8 w-8 items-center justify-center rounded-f..."
+                                                  aria-label="ویرایش برند"
+                                                  ref={function}
+                                                  onClick={function onClick}
+                                                  onMouseEnter={function onMouseEnter}
+                                                  onTouchStart={function onTouchStart}
+                                                  href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/t..."
+-                                                 data-cursor-ref="e10"
+                                                >
+                                              ...
+                                            <p
+                                              className="mt-3 max-w-3xl text-sm leading-7 text-[var(--taav-text-muted)]"
+-                                             data-cursor-ref="e46"
+                                            >
++                                             برای هر نوع مدل هوش مصنوعی، حساب ارائه‌دهنده و مدل مناسب را انتخاب کنید.
+                                        ...
+                                      <div className="grid gap-4">
+                                        <section className="rounded-[1...">
+                                          <div className="flex flex-...">
+                                            <div className="flex min-w...">
+                                              <div>
+                                              <div className="min-w-0">
+                                                <h2
+                                                  className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                                 data-cursor-ref="e47"
+                                                >
++                                                 OCR
+                                                <p
+                                                  className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                                 data-cursor-ref="e48"
+                                                >
++                                                 مدل استخراج اطلاعات از سند و تصویر
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-..."
+-                                             data-cursor-ref="e11"
+                                            >
+                                          <div className="mt-5 grid ...">
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهنده">
+                                                <SelectionChip selected={true} recommended={true} label="OpenAI" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e12"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="DeepSeek" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e13"
+                                                  >
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="مدل">
+                                                <SelectionChip selected={true} recommended={true} showStar={true} ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={false}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e14"
+                                                  >
+                                          <div className="mt-5 flex ...">
+                                            <TaavButton disabled={false} onClick={function onClick} iconStart={<Save>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+                                                onClick={function onClick}
+-                                               data-cursor-ref="e15"
+                                              >
+                                        <section className="rounded-[1...">
+                                          <div className="flex flex-...">
+                                            <div className="flex min-w...">
+                                              <div>
+                                              <div className="min-w-0">
+                                                <h2
+                                                  className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                                 data-cursor-ref="e49"
+                                                >
++                                                 چت (تحلیل)
+                                                <p
+                                                  className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                                 data-cursor-ref="e50"
+                                                >
++                                                 مدل تولید متن برای گفتگو، تحلیل و خروجی محتوای طولانی
+                                            <button
+                                              type="button"
+                                              onClick={function onClick}
+                                              className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-..."
+-                                             data-cursor-ref="e16"
+                                            >
+                                          <div className="mt-5 grid ...">
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهنده">
+                                                <SelectionChip selected={true} recommended={true} label="OpenAI" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e17"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="Gemini" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e18"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="DeepSeek" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e19"
+                                                  >
+                                                <SelectionChip selected={false} recommended={false} label="Grok" ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={false}
+                                                    disabled={undefined}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e20"
+                                                  >
+                                            <div>
+                                              <div>
+                                              <div className="flex flex-..." role="radiogroup" aria-label="مدل">
+                                                <SelectionChip selected={true} recommended={true} showStar={true} ...>
+                                                  <button
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={true}
+                                                    disabled={false}
+                                                    onClick={function onClick}
+                                                    className="group relative flex min-h-[3.25rem] min-w-[8.5rem] flex..."
+-                                                   data-cursor-ref="e21"
+                                                  >
+                                          <div className="mt-5 flex ...">
+                                            <TaavButton disabled={false} onClick={function onClick} iconStart={<Save>}>
+                                              <button
+                                                type="button"
+                                                disabled={false}
+                                                aria-busy={undefined}
+                                                aria-label={undefined}
+                                                className="inline-flex items-center justify-center gap-[var(--taav-btn..."
+                                                onClick={function onClick}
+-                                               data-cursor-ref="e22"
+                                              >
+                                      <p
+                                        className="flex items-start gap-2 text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                       data-cursor-ref="e51"
+                                      >
+                            ...
+                              <div className="flex h-ful...">
+                                <aside dir="rtl" data-taav-business-sidebar={true} data-variant="dastranj" ...>
+                                  <div>
+                                  <div className="flex shrin...">
+                                    <div>
+                                    <div>
+                                    <button
+                                      type="button"
+                                      title="تغییر کسب و کار"
+                                      aria-label="تغییر کسب و کار"
+                                      onClick={function onTenantSwitch}
+                                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full..."
+-                                     data-cursor-ref="e23"
+                                    >
+                                  <div className="flex shrin...">
+                                    <SidebarIconButton label="خروج" icon={<LogOut>} onClick={function onClick} ...>
+                                      <button
+                                        type="button"
+                                        title="خروج"
+                                        aria-label="خروج"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e24"
+                                      >
+                                    <SidebarIconButton label="داشبورد" icon={<House>} active={false} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                        title="داشبورد"
+                                        aria-label="داشبورد"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e25"
+                                      >
+                                    <SidebarIconButton label="کسب‌وکارها" icon={<Building2>} active={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e26"
+                                      >
+                                    <SidebarIconButton label="ابزارهای ه..." icon={<Cpu>} active={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e27"
+                                      >
+                                    <SidebarIconButton label="محصولات" icon={<Boxes>} active={true} href="/businesse..." ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        className={"relative inline-flex items-center justify-center border-0 bg-tran..."}
+                                        onClick={undefined}
+-                                       data-cursor-ref="e28"
+                                      >
+                                  <nav
+                                    className="taav-scrollarea taav-scrollarea--minimal taav-sidebar-scrollarea min-h-..."
+                                    aria-label="منوی اصلی"
+-                                   data-cursor-ref="e52"
+                                  >
+                                    <SidebarNavItem item={{id:"ai-tools", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="ابزارهای هوش مصنوعی"
+                                        aria-label="ابزارهای هوش مصنوعی"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e29"
+                                      >
+                                    <SidebarNavItem item={{id:"products", ...}} active={true} collapsed={false} ...>
+                                      <a
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="محصولات"
+                                        aria-label="محصولات"
+                                        aria-current="page"
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e30"
+                                      >
+                                    <SidebarNavItem item={{id:"busine...", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/businesses"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="کسب‌وکارها"
+                                        aria-label="کسب‌وکارها"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e31"
+                                      >
+                                    <SidebarNavItem item={{id:"settings", ...}} active={false} collapsed={false} ...>
+                                      <a
+                                        href="/settings"
+                                        className="relative flex w-full items-center gap-[7px] border-0 bg-transparent..."
+                                        title="پنل تاو ادمین"
+                                        aria-label="پنل تاو ادمین"
+                                        aria-current={undefined}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e32"
+                                      >
+                                  <div
+                                    className="shrink-0 px-3 py-3.5 text-center cursor-pointer"
+                                    style={{background:"var(--taav..."}}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={function onTenantPanelClick}
+                                    onKeyDown={function onKeyDown}
+-                                   data-cursor-ref="e33"
+                                  >
+                                    <p
+                                      className="m-0 mb-2.5 text-[10px] text-[var(--taav-business-sidebar-tenant-text)]"
+-                                     data-cursor-ref="e53"
+                                    >
++                                     tenant فعال
+                                    <button
+                                      type="button"
+                                      className="w-full rounded-[10px] border-0 px-3 text-[11px] font-bold min-h-[var(..."
+                                      style={{background:"var(--taav..."}}
+                                      onClick={function onClick}
+-                                     data-cursor-ref="e34"
+                                    >
++                                     آزمایشگاه نام و نام خانوادگی خریدار
+                                  ...
+                                    <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                      <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                        <span className="inline-fle..." aria-describedby={undefined} data-state="closed" ...>
+                                          <button
+                                            type="button"
+                                            className="inline-flex items-center justify-center border-0 bg-transparent..."
+                                            title="جمع کردن سایدبار"
+                                            aria-label="جمع کردن سایدبار"
+                                            aria-expanded={true}
+                                            onClick={function onClick}
+-                                           data-cursor-ref="e35"
+                                          >
+            ...
+ 
+[browser] Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead. 
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+      <HTTPAccessFallbackErrorBoundary pathname="/businesse..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <Head>
+            <__next_root_layout_boundary__>
+              <SegmentViewNode type="layout" pagePath="layout.tsx">
+                <SegmentTrieNode>
+                <link>
+                <script>
+                <script>
+                <script>
+                <RootLayout>
+                  <html lang="fa" dir="rtl" className="iransans_5..." suppressHydrationWarning={true}>
+                    <body className="iransans_5...">
+                      <AiLabThemeProvider>
+                        <ThemeInitScript>
+                        <ThemeFloatingToggle>
+                          <div className="fixed left...">
+                            <ThemeToggle compact={true}>
+                              <TaavButton type="button" variant="ghost" tone="neutral" size="sm" ...>
+                                <button
+                                  type="button"
+                                  disabled={false}
+                                  aria-busy={undefined}
+                                  aria-label={undefined}
+                                  className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)] font-[v..."
+                                  onClick={function AiLabThemeProvider.useMemo[value]}
+-                                 data-cursor-ref="e0"
+                                >
+                        ...
+                          <div className="flex min-h..." dir="ltr">
+                            <div className="relative f..." dir="rtl">
+                              <div className="relative z...">
+                                <BusinessSidebarNavPath items={[...]} className={undefined}>
+                                  <nav
+                                    dir="rtl"
+                                    aria-label="مسیر صفحه"
+                                    className="flex w-full shrink-0 items-center justify-start min-h-[var(--taav-busin..."
+-                                   data-cursor-ref="e36"
+                                  >
+                                    <ol className="m-0 flex m...">
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e37"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e1"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e38"
+                                      >
+                                        <a
+                                          href="/businesses"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e2"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e39"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e3"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e40"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e4"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e41"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e5"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e42"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands"
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e6"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e43"
+                                      >
+                                        <a
+                                          href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-de..."
+                                          className="inline-flex min-w-0 items-center border-0 bg-transparent p-0 no-u..."
+                                          onClick={undefined}
+-                                         data-cursor-ref="e7"
+                                        >
+                                      <li>
+                                      <li
+                                        className="inline-flex min-w-0 max-w-full items-center"
+-                                       data-cursor-ref="e44"
+                                      >
+                              ...
+                                <div dir="rtl" className="mx-auto gr...">
+                                  <div className="flex flex-...">
+                                    <LinkComponent href="/businesse...">
+                                      <a
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavia-demo..."
+-                                       data-cursor-ref="e8"
+                                      >
+                                        <TaavButton variant="secondary" size="sm" iconStart={<ArrowLeft>}>
+                                          <button
+                                            type="button"
+                                            disabled={false}
+                                            aria-busy={undefined}
+                                            aria-label={undefined}
+                                            className="inline-flex items-center justify-center gap-[var(--taav-btn-gap..."
+-                                           data-cursor-ref="e9"
+                                          >
+                                  <header className="rounded-[1...">
+                                    <div className="flex flex-...">
+                                      <div className="min-w-0">
+                                        <div>
+                                        <div className="mt-2 flex ...">
+                                          <h1
+                                            className="m-0 text-2xl font-black text-[var(--taav-text-strong)] md:text-..."
+-                                           data-cursor-ref="e45"
+                                          >
++                                           برند آزمایشی اصلی
+                                          <LinkComponent href="/businesse..." className="inline-fle..." ...>
+                                            <a
+                                              className="inline-flex h-8 w-8 items-center justify-center rounded-full ..."
+                                              aria-label="ویرایش برند"
+                                              ref={function}
+                                              onClick={function onClick}
+                                              onMouseEnter={function onMouseEnter}
+                                              onTouchStart={function onTouchStart}
+                                              href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products/taavia/brands/taavi..."
+-                                             data-cursor-ref="e10"
+                                            >
+                                          ...
+                                        <p
+                                          className="mt-3 max-w-3xl text-sm leading-7 text-[var(--taav-text-muted)]"
+-                                         data-cursor-ref="e46"
+                                        >
++                                         برای هر نوع مدل هوش مصنوعی، حساب ارائه‌دهنده و مدل مناسب را انتخاب کنید.
+                                    ...
+                                  <div className="grid gap-4">
+                                    <section className="rounded-[1...">
+                                      <div className="flex flex-...">
+                                        <div className="flex min-w...">
+                                          <div>
+                                          <div className="min-w-0">
+                                            <h2
+                                              className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                             data-cursor-ref="e47"
+                                            >
++                                             OCR
+                                            <p
+                                              className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                             data-cursor-ref="e48"
+                                            >
++                                             مدل استخراج اطلاعات از سند و تصویر
+                                        <button
+                                          type="button"
+                                          onClick={function onClick}
+                                          className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm f..."
+-                                         data-cursor-ref="e11"
+                                        >
+                                      <div className="mt-5 grid ...">
+                                        <div>
+                                          <div>
+                                          <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهنده">
+                                            <SelectionChip selected={true} recommended={true} icon={<ProviderMark>} ...>
+                                              <button
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={true}
+                                                disabled={undefined}
+                                                onClick={function onClick}
+                                                className="group relative flex min-h-[3.25rem] min-w-[8.75rem] flex-co..."
+-                                               data-cursor-ref="e12"
+                                              >
+                                                <span className="flex items...">
+                                                  <span className="flex min-w...">
+                                                    <ProviderMark providerType="OpenAi">
+                                                      <span
++                                                       className="inline-flex h-5 w-5 shrink-0 items-center justify-c..."
+-                                                       className="truncate text-sm font-bold"
++                                                       aria-hidden={true}
+-                                                       aria-hidden={null}
+-                                                       dir="auto"
+                                                      >
++                                                       ✦
+-                                                       OpenAI
+                                                    ...
+                                                  ...
+                                                ...
+                                            ...
+                                        ...
+                                      ...
+                                    ...
+                                  ...
+                            ...
+            ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at span (<anonymous>)
+    at TaaviaBrandModelSettingsPage (app\businesses\[businessId]\products\taavia\brands\[brandId]\model-settings\page.tsx:51:9)
+  49 |       currentTenantName={business.name}
+  50 |     >
+> 51 |         <TaaviaBrandModelSettingsPageClient
+     |         ^
+  52 |           tenantId={business.id}
+  53 |           brandId={brandId}
+  54 |           initialData={settings!}
+[browser] Uncaught ReferenceError: ProviderMark is not defined
+    at eval (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:419:34)
+    at Array.map (<anonymous>)
+    at eval (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:414:42)
+    at Array.map (<anonymous>)
+    at TaaviaBrandModelSettingsPageClient (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:356:24)
+    at TaaviaBrandModelSettingsPage (app\businesses\[businessId]\products\taavia\brands\[brandId]\model-settings\page.tsx:51:9)
+  417 |                           selected={accountId === item.id}
+  418 |                           recommended={item.isRecommended}
+> 419 |                           icon={<ProviderMark providerType={item.providerType} />}
+      |                                  ^
+  420 |                           label={providerLabel(item.providerType)}
+  421 |                           onClick={() => {
+  422 |                             setSelectedAccount((value) => ({ ...value, [purpose.code]: it...
+[browser] Uncaught ReferenceError: ProviderMark is not defined
+    at eval (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:419:34)
+    at Array.map (<anonymous>)
+    at eval (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:414:42)
+    at Array.map (<anonymous>)
+    at TaaviaBrandModelSettingsPageClient (components/taavia/TaaviaBrandModelSettingsPageClient.tsx:356:24)
+    at TaaviaBrandModelSettingsPage (app\businesses\[businessId]\products\taavia\brands\[brandId]\model-settings\page.tsx:51:9)
+  417 |                           selected={accountId === item.id}
+  418 |                           recommended={item.isRecommended}
+> 419 |                           icon={<ProviderMark providerType={item.providerType} />}
+      |                                  ^
+  420 |                           label={providerLabel(item.providerType)}
+  421 |                           onClick={() => {
+  422 |                             setSelectedAccount((value) => ({ ...value, [purpose.code]: it...
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/businesse..." tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} ...>
+          <SegmentViewNode type="page" pagePath="businesses...">
+            <SegmentTrieNode>
+            <TaaviaBrandModelSettingsPage>
+              <AiLabShell pathname="/businesse..." fullName="Admin Local" email="admin@loca..." mobile={null} ...>
+                <TaavBusinessSidebar className="h-full" user={{name:"Admi...", ...}} tenant={{label:"آزم...", ...}} ...>
+                  <div className="flex min-h..." dir="ltr">
+                    <div className="relative f..." dir="rtl">
+                      <div>
+                      <div className="relative m...">
+                        <UserNotificationListener>
+                        <div className="ai-lab-pan...">
+                          <div className="ai-lab-con...">
+                            <TaaviaBrandModelSettingsPageClient tenantId="cmr7d2n5h0..." brandId="taavia-dem..." ...>
+                              <div dir="rtl" className="mx-auto gr...">
+                                <div>
+                                <header>
+                                <div className="grid gap-4">
+                                  <section>
+                                  <section>
+                                  <section className="rounded-[1...">
+                                    <div>
+                                    <div>
+                                    ...
+                                      <HelpTip content={{text:"نسخه...", ...}} label="راهنمای ان...">
+                                        <AiLabTooltipWrap content={{text:"نسخه...", ...}} className="inline-flex">
+                                          <span className="ai-lab-too..." style={undefined}>
+                                            <button
+                                              type="button"
+                                              className="inline-flex h-7 w-7 items-center justify-center rounded-full ..."
+                                              aria-label="راهنمای انتخاب مدل"
+-                                             data-cursor-ref="e30"
+                                            >
+                                            ...
+                                    <div className="mt-5 flex ...">
+                                      <p
+                                        className="max-w-xl text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                       data-cursor-ref="e76"
+                                      >
++                                       اگر بخواهید جواب چت‌بات با صدا پخش شود، این مدل متن را به گفتار تبدیل می‌کند.
+                                      <TaavButton disabled={true} onClick={function onClick} iconStart={<Save>}>
+                                        <button
+                                          type="button"
+                                          disabled={true}
+                                          aria-busy={undefined}
+                                          aria-label={undefined}
+                                          className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)]..."
+                                          onClick={function onClick}
+-                                         data-cursor-ref="e31"
+                                        >
+                                  <section className="rounded-[1...">
+                                    <div className="flex flex-...">
+                                      <div className="flex min-w...">
+                                        <div>
+                                        <div className="min-w-0">
+                                          <div className="flex flex-...">
+                                            <h2
+                                              className="m-0 text-lg font-black text-[var(--taav-text-strong)]"
+-                                             data-cursor-ref="e77"
+                                            >
++                                             خواندن سند و تصویر (OCR)
+                                            <HelpTip content={{text:"این ...", ...}} label="راهنمای خو...">
+                                              <AiLabTooltipWrap content={{text:"این ...", ...}} className="inline-flex">
+                                                <span className="ai-lab-too..." style={undefined}>
+                                                  <button
+                                                    type="button"
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded..."
+                                                    aria-label="راهنمای خواندن سند و تصویر (OCR)"
+-                                                   data-cursor-ref="e32"
+                                                  >
+                                                  ...
+                                            ...
+                                          <p
+                                            className="mt-1 text-sm leading-6 text-[var(--taav-text-muted)]"
+-                                           data-cursor-ref="e78"
+                                          >
++                                           از عکس یا فایل (مثل کاتالوگ، فاکتور یا کارت ویزیت) اطلاعات را می‌خواند و اس...
+                                          <p
+                                            className="mt-2 text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                           data-cursor-ref="e79"
+                                          >
+                                      <button
+                                        type="button"
+                                        onClick={function onClick}
+                                        className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm fon..."
+-                                       data-cursor-ref="e33"
+                                      >
+                                    <div>
+                                    <div className="mt-5 grid ...">
+                                      <div>
+                                        <div className="mb-2.5 fle...">
+                                          <span>
+                                          <HelpTip content={{text:"شرکت...", ...}} label="راهنمای ار...">
+                                            <AiLabTooltipWrap content={{text:"شرکت...", ...}} className="inline-flex">
+                                              <span className="ai-lab-too..." style={undefined}>
+                                                <button
+                                                  type="button"
+                                                  className="inline-flex h-7 w-7 items-center justify-center rounded-f..."
+                                                  aria-label="راهنمای ارائه‌دهنده"
+-                                                 data-cursor-ref="e34"
+                                                >
+                                                ...
+                                        <div className="flex flex-..." role="radiogroup" aria-label="ارائه‌دهند...">
+                                          <SelectionChip selected={true} recommended={true} label="OpenAI" ...>
+                                            <button
+                                              type="button"
+                                              role="radio"
+                                              aria-checked={true}
+                                              disabled={undefined}
+                                              onClick={function onClick}
+                                              className="group relative flex min-h-[3.25rem] min-w-[8.75rem] flex-col ..."
+-                                             data-cursor-ref="e35"
+                                            >
+                                          <SelectionChip selected={false} recommended={false} label="DeepSeek" ...>
+                                            <button
+                                              type="button"
+                                              role="radio"
+                                              aria-checked={false}
+                                              disabled={undefined}
+                                              onClick={function onClick}
+                                              className="group relative flex min-h-[3.25rem] min-w-[8.75rem] flex-col ..."
+-                                             data-cursor-ref="e36"
+                                            >
+                                      <div>
+                                        <div className="mb-2.5 fle...">
+                                          <span>
+                                          <HelpTip content={{text:"نسخه...", ...}} label="راهنمای ان...">
+                                            <AiLabTooltipWrap content={{text:"نسخه...", ...}} className="inline-flex">
+                                              <span className="ai-lab-too..." style={undefined}>
+                                                <button
+                                                  type="button"
+                                                  className="inline-flex h-7 w-7 items-center justify-center rounded-f..."
+                                                  aria-label="راهنمای انتخاب مدل"
+-                                                 data-cursor-ref="e37"
+                                                >
+                                                ...
+                                        <div className="flex flex-..." role="radiogroup" aria-label="مدل خواندن...">
+                                          <SelectionChip selected={true} recommended={true} showStar={true} ...>
+                                            <button
+                                              type="button"
+                                              role="radio"
+                                              aria-checked={true}
+                                              disabled={false}
+                                              onClick={function onClick}
+                                              className="group relative flex min-h-[3.25rem] min-w-[8.75rem] flex-col ..."
+-                                             data-cursor-ref="e38"
+                                            >
+                                    <div className="mt-5 flex ...">
+                                      <p
+                                        className="max-w-xl text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                       data-cursor-ref="e80"
+                                      >
++                                       این مدل متن و اطلاعات داخل عکس یا PDF را می‌خواند؛ مثل اینکه کسی سند را برایتان...
+                                      <TaavButton disabled={false} onClick={function onClick} iconStart={<Save>}>
+                                        <button
+                                          type="button"
+                                          disabled={false}
+                                          aria-busy={undefined}
+                                          aria-label={undefined}
+                                          className="inline-flex items-center justify-center gap-[var(--taav-btn-gap)]..."
+                                          onClick={function onClick}
+-                                         data-cursor-ref="e39"
+                                        >
+                                <p
+                                  className="flex items-start gap-2 text-xs leading-6 text-[var(--taav-text-muted)]"
+-                                 data-cursor-ref="e81"
+                                >
+                    <TaavTooltipProvider>
+                      <TooltipProvider delayDuration={200} skipDelayDuration={100}>
+                        <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={200} ...>
+                          <div className="flex h-ful...">
+                            <aside dir="rtl" data-taav-business-sidebar={true} data-variant="dastranj" ...>
+                              <div>
+                              <div className="flex shrin...">
+                                <div>
+                                <div>
+                                <button
+                                  type="button"
+                                  title="تغییر کسب و کار"
+                                  aria-label="تغییر کسب و کار"
+                                  onClick={function onTenantSwitch}
+                                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bor..."
+-                                 data-cursor-ref="e40"
+                                >
+                              <div className="flex shrin...">
+                                <SidebarIconButton label="خروج" icon={<LogOut>} onClick={function onClick} ...>
+                                  <button
+                                    type="button"
+                                    title="خروج"
+                                    aria-label="خروج"
+                                    className={"relative inline-flex items-center justify-center border-0 bg-transpar..."}
+                                    onClick={function onClick}
+-                                   data-cursor-ref="e41"
+                                  >
+                                <SidebarIconButton label="داشبورد" icon={<House>} active={false} href="/businesse..." ...>
+                                  <a
+                                    href="/businesses/cmr7d2n5h0001wc58h5mddwg6"
+                                    title="داشبورد"
+                                    aria-label="داشبورد"
+                                    className={"relative inline-flex items-center justify-center border-0 bg-transpar..."}
+                                    onClick={undefined}
+-                                   data-cursor-ref="e42"
+                                  >
+                                <SidebarIconButton label="کسب‌وکارها" icon={<Building2>} active={false} ...>
+                                  <a
+                                    href="/businesses"
+                                    title="کسب‌وکارها"
+                                    aria-label="کسب‌وکارها"
+                                    className={"relative inline-flex items-center justify-center border-0 bg-transpar..."}
+                                    onClick={undefined}
+-                                   data-cursor-ref="e43"
+                                  >
+                                <SidebarIconButton label="ابزارهای ه..." icon={<Cpu>} active={false} href="/businesse..." ...>
+                                  <a
+                                    href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                    title="ابزارهای هوش مصنوعی"
+                                    aria-label="ابزارهای هوش مصنوعی"
+                                    className={"relative inline-flex items-center justify-center border-0 bg-transpar..."}
+                                    onClick={undefined}
+-                                   data-cursor-ref="e44"
+                                  >
+                                <SidebarIconButton label="محصولات" icon={<Boxes>} active={true} href="/businesse..." ...>
+                                  <a
+                                    href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                    title="محصولات"
+                                    aria-label="محصولات"
+                                    className={"relative inline-flex items-center justify-center border-0 bg-transpar..."}
+                                    onClick={undefined}
+-                                   data-cursor-ref="e45"
+                                  >
+                              <nav
+                                className="taav-scrollarea taav-scrollarea--minimal taav-sidebar-scrollarea min-h-0 fl..."
+                                aria-label="منوی اصلی"
+-                               data-cursor-ref="e82"
+                              >
+                                <SidebarNavItem item={{id:"ai-tools", ...}} active={false} collapsed={false} ...>
+                                  <a
+                                    href="/businesses/cmr7d2n5h0001wc58h5mddwg6/ai-tools"
+                                    className="relative flex w-full items-center gap-[7px] border-0 bg-transparent tex..."
+                                    title="ابزارهای هوش مصنوعی"
+                                    aria-label="ابزارهای هوش مصنوعی"
+                                    aria-current={undefined}
+                                    onClick={function onClick}
+-                                   data-cursor-ref="e46"
+                                  >
+                                <SidebarNavItem item={{id:"products", ...}} active={true} collapsed={false} ...>
+                                  <a
+                                    href="/businesses/cmr7d2n5h0001wc58h5mddwg6/products"
+                                    className="relative flex w-full items-center gap-[7px] border-0 bg-transparent tex..."
+                                    title="محصولات"
+                                    aria-label="محصولات"
+                                    aria-current="page"
+                                    onClick={function onClick}
+-                                   data-cursor-ref="e47"
+                                  >
+                                <SidebarNavItem item={{id:"busine...", ...}} active={false} collapsed={false} ...>
+                                  <a
+                                    href="/businesses"
+                                    className="relative flex w-full items-center gap-[7px] border-0 bg-transparent tex..."
+                                    title="کسب‌وکارها"
+                                    aria-label="کسب‌وکارها"
+                                    aria-current={undefined}
+                                    onClick={function onClick}
+-                                   data-cursor-ref="e48"
+                                  >
+                                <SidebarNavItem item={{id:"settings", ...}} active={false} collapsed={false} ...>
+                                  <a
+                                    href="/settings"
+                                    className="relative flex w-full items-center gap-[7px] border-0 bg-transparent tex..."
+                                    title="پنل تاو ادمین"
+                                    aria-label="پنل تاو ادمین"
+                                    aria-current={undefined}
+                                    onClick={function onClick}
+-                                   data-cursor-ref="e49"
+                                  >
+                              <div
+                                className="shrink-0 px-3 py-3.5 text-center cursor-pointer"
+                                style={{background:"var(--taav..."}}
+                                role="button"
+                                tabIndex={0}
+                                onClick={function onTenantPanelClick}
+                                onKeyDown={function onKeyDown}
+-                               data-cursor-ref="e50"
+                              >
+                                <p
+                                  className="m-0 mb-2.5 text-[10px] text-[var(--taav-business-sidebar-tenant-text)]"
+-                                 data-cursor-ref="e83"
+                                >
++                                 tenant فعال
+                                <button
+                                  type="button"
+                                  className="w-full rounded-[10px] border-0 px-3 text-[11px] font-bold min-h-[var(--ta..."
+                                  style={{background:"var(--taav..."}}
+                                  onClick={function onClick}
+-                                 data-cursor-ref="e51"
+                                >
++                                 آزمایشگاه نام و نام خانوادگی خریدار
+                              ...
+                                <Primitive.button aria-describedby={undefined} data-state="closed" asChild={true} ...>
+                                  <Primitive.button.Slot aria-describedby={undefined} data-state="closed" ...>
+                                    <span className="inline-fle..." aria-describedby={undefined} data-state="closed" ...>
+                                      <button
+                                        type="button"
+                                        className="inline-flex items-center justify-center border-0 bg-transparent p-0..."
+                                        title="جمع کردن سایدبار"
+                                        aria-label="جمع کردن سایدبار"
+                                        aria-expanded={true}
+                                        onClick={function onClick}
+-                                       data-cursor-ref="e52"
+                                      >
+          ...
+        ...
+ 

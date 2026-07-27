@@ -1,4 +1,5 @@
 import { prisma } from '../prisma';
+import type { TaaviaBrandAiModelPurpose } from '../prisma-client';
 import type { AiProviderModelV2Public, CreateAiProviderModelV2Input, UpdateAiProviderModelV2Input } from '../types/ai-provider-v2';
 import {
   mapCapabilityToPrisma,
@@ -63,6 +64,7 @@ export async function createAiProviderModelV2(input: {
         modelType: mapModelTypeToPrisma(input.data.modelType),
         isSystem: false,
         isActive: input.data.isActive,
+        recommendedForPurposes: (input.data.recommendedForPurposes ?? []) as TaaviaBrandAiModelPurpose[],
         createdBy: input.actorUserId,
         updatedBy: input.actorUserId,
         createdAt: now,
@@ -114,6 +116,7 @@ export async function updateAiProviderModelV2(input: {
         ...(input.data.providerModelId !== undefined ? { providerModelId: input.data.providerModelId.trim() } : {}),
         ...(input.data.modelType !== undefined ? { modelType: mapModelTypeToPrisma(input.data.modelType) } : {}),
         ...(input.data.isActive !== undefined ? { isActive: input.data.isActive } : {}),
+        ...(input.data.recommendedForPurposes !== undefined ? { recommendedForPurposes: input.data.recommendedForPurposes as TaaviaBrandAiModelPurpose[] } : {}),
         updatedBy: input.actorUserId,
         updatedAt: now,
       },

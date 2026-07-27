@@ -152,7 +152,13 @@ export type {
 } from './types/ai-provider-models';
 
 export type { TaaviaBrandAiModelPurpose } from './taavia-ai-models';
-export { TAAVIA_BRAND_AI_MODEL_PURPOSES, TAAVIA_PURPOSE_LABELS, TAAVIA_PURPOSE_DESCRIPTIONS } from './taavia-ai-models';
+export {
+  TAAVIA_BRAND_AI_MODEL_PURPOSES,
+  TAAVIA_PURPOSE_LABELS,
+  TAAVIA_PURPOSE_DESCRIPTIONS,
+  TAAVIA_PURPOSE_GUIDES,
+  TAAVIA_ALL_PURPOSE_DESCRIPTIONS,
+} from './taavia-ai-models';
 
 export {
   getTaaviaBrandModelAssignments,

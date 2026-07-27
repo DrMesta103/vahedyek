@@ -874,6 +874,7 @@ model AiProviderAccountV2 {
 
   isSystem    Boolean @default(false)
   isActive    Boolean @default(true)
+  isRecommended Boolean @default(false)
   description String? @db.Text
 
   apiKeyUpdatedAt DateTime
@@ -929,6 +930,7 @@ model AiProviderModelV2 {
 
   isSystem Boolean @default(false)
   isActive Boolean @default(true)
+  recommendedForPurposes TaaviaBrandAiModelPurpose[] @default([])
 
   createdBy String
   updatedBy String

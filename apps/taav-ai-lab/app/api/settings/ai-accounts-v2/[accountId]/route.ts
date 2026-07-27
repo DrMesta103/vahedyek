@@ -16,6 +16,7 @@ type UpdatePayload = {
   billingEmail?: string | null;
   description?: string | null;
   isActive?: boolean;
+  isRecommended?: boolean;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -50,6 +51,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         ...(body?.billingEmail !== undefined ? { billingEmail: body.billingEmail } : {}),
         ...(body?.description !== undefined ? { description: body.description } : {}),
         ...(body?.isActive !== undefined ? { isActive: Boolean(body.isActive) } : {}),
+        ...(body?.isRecommended !== undefined ? { isRecommended: Boolean(body.isRecommended) } : {}),
       },
     });
     if (!account) return NextResponse.json({ message: 'اکانت یافت نشد.' }, { status: 404 });

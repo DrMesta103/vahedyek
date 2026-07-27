@@ -13,8 +13,6 @@ const statusLabels = { ACTIVE: 'فعال', INACTIVE: 'غیرفعال', ARCHIVED:
 
 const actionClass =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/55 bg-transparent px-2 text-xs font-bold text-cyan-300 transition hover:bg-cyan-400/10';
-const actionMutedClass =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/35 bg-transparent px-2 text-xs font-bold text-cyan-300/80 transition hover:bg-cyan-400/10';
 
 export function TaaviaBrandsClient({
   tenantId,
@@ -202,18 +200,11 @@ export function TaaviaBrandsClient({
                     <Cpu className="h-4 w-4" />
                     مدیریت مدل‌ها
                   </Link>
-                  {hasSources ? (
-                    brand.activeKnowledgeBaseId ? (
-                      <Link href={kbHref} className={actionClass}>
-                        <Database className="h-4 w-4" />
-                        مدیریت KB فعال
-                      </Link>
-                    ) : (
-                      <Link href={`${base}/knowledge-base`} className={actionMutedClass}>
-                        <Database className="h-4 w-4" />
-                        مدیریت KB
-                      </Link>
-                    )
+                  {brand.activeKnowledgeBaseId ? (
+                    <Link href={kbHref} className={actionClass}>
+                      <Database className="h-4 w-4" />
+                      مدیریت KB فعال
+                    </Link>
                   ) : null}
                   {canOpenDashboard ? (
                     <Link href={`${base}/test`} className={actionClass}>

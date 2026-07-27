@@ -13,6 +13,7 @@ type CreatePayload = {
   billingEmail?: string | null;
   description?: string | null;
   isActive?: boolean;
+  isRecommended?: boolean;
 };
 
 export async function GET() {
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
         billingEmail: body?.billingEmail ?? null,
         description: body?.description ?? null,
         isActive: body?.isActive !== false,
+        isRecommended: body?.isRecommended === true,
       },
       actorUserId: session.userId,
     });

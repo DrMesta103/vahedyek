@@ -170,6 +170,7 @@ export function mapAccountPublic(row: {
   billingEmail: string | null;
   isSystem: boolean;
   isActive: boolean;
+  isRecommended: boolean;
   description: string | null;
   apiKeyUpdatedAt: Date;
   apiKeyUpdatedBy: string;
@@ -190,6 +191,7 @@ export function mapAccountPublic(row: {
     billingEmail: row.billingEmail,
     isSystem: row.isSystem,
     isActive: row.isActive,
+    isRecommended: row.isRecommended,
     description: row.description,
     apiKeyUpdatedAt: row.apiKeyUpdatedAt.toISOString(),
     apiKeyUpdatedBy: row.apiKeyUpdatedBy,
@@ -224,6 +226,7 @@ export function mapModelPublic(row: {
   modelType: PrismaModelTypeV2;
   isSystem: boolean;
   isActive: boolean;
+  recommendedForPurposes: string[];
   createdBy: string;
   updatedBy: string;
   createdAt: Date;
@@ -238,6 +241,7 @@ export function mapModelPublic(row: {
     modelType: mapModelTypeFromPrisma(row.modelType),
     isSystem: row.isSystem,
     isActive: row.isActive,
+    recommendedForPurposes: row.recommendedForPurposes,
     createdBy: row.createdBy,
     updatedBy: row.updatedBy,
     createdAt: row.createdAt.toISOString(),

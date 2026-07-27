@@ -97,7 +97,7 @@ export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_CARDS: BuildVersionStepDocCard[]
     tag: 'بک',
     kind: 'event',
     eventName: 'TaaviaKnowledgeBaseBuildRequestedV1',
-    eventChips: ['eventId', 'eventType', 'occurredAt', 'tenantId', 'brandId', 'buildId', 'buildType'],
+    eventChips: ['eventId', 'eventType', 'occurredAt', 'tenantId', 'brandId', 'buildId', 'buildType', 'modelAssignments'],
     note: 'فیلد اختیاری جدید در V1 نباید Consumer را متوقف کند؛ فیلدهای الزامی باید وجود داشته باشند.',
     actionLabel: 'مشاهده Payload',
     detail: {
@@ -113,7 +113,19 @@ export const RECEIVE_EVENT_AND_CREATE_INBOX_JOB_CARDS: BuildVersionStepDocCard[]
     "tenantId": "tenant-100",
     "brandId": "brand-200",
     "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
-    "buildType": "InitialBuild"
+    "buildType": "InitialBuild",
+    "modelAssignments": [
+      {
+        "modelType": "document_extraction",
+        "providerType": "mistral",
+        "model": "mistral-ocr-latest"
+      },
+      {
+        "modelType": "text_generation",
+        "providerType": "deepseek",
+        "model": "deepseek-chat"
+      }
+    ]
   }
 }`,
       fields: [

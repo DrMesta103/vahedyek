@@ -71,7 +71,19 @@ taavia-ai.knowledge-base.build.requested.v1.dlq
     "tenantId": "tenant-100",
     "brandId": "brand-200",
     "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
-    "buildType": "InitialBuild"
+    "buildType": "InitialBuild",
+    "modelAssignments": [
+      {
+        "modelType": "document_extraction",
+        "providerType": "mistral",
+        "model": "mistral-ocr-latest"
+      },
+      {
+        "modelType": "text_generation",
+        "providerType": "deepseek",
+        "model": "deepseek-chat"
+      }
+    ]
   }
 }
 ```
