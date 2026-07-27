@@ -9,6 +9,7 @@ export default async function NewPolicyPage() {
 
   return (
     <PolicyPageShell
+      titleHref="/policies"
       title="ثبت سیاست کاری جدید"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
     >

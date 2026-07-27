@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Plus, Search, UsersRound } from 'lucide-react';
+import { Plus, UsersRound } from 'lucide-react';
 import { ModulePageHeader } from '../../components/module-page/ModulePageHeader';
 import { listCalendars, listEmployees, listLocations, listPolicies, listWorkGroups } from '../../lib/data';
 import { WorkGroupFiltersSidebar } from './_components/WorkGroupFiltersSidebar';
 import { WorkGroupCardActions } from './_components/WorkGroupCardActions';
+import { WorkGroupFiltersForm } from './_components/WorkGroupFiltersForm';
 import { getWorkGroupAccess } from '../../lib/work-group-access';
 import { formatPersianDate } from '../../lib/format-date';
 
@@ -110,15 +111,17 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
         />
 
         <div className="work-groups-list-toolbar">
-          <form className="flex gap-2" method="get">
-            <Search className="work-groups-list-search-icon" aria-hidden />
-            <input name="q" defaultValue={q} placeholder="جست‌وجوی عنوان گروه کاری" />
-            <select name="status" defaultValue={status || 'ALL'}><option value="ALL">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="INACTIVE">غیرفعال</option></select>
-            <button type="submit">اعمال</button>
-          </form>
+          <WorkGroupFiltersForm query={q} status={status} />
         </div>
 
         <div className="work-groups-list">
+          {access.canCreate ? <Link href="/work-groups/new" className="work-group-add-card">
+            <span className="work-group-add-copy">برای افزودن گروه کاری کلیک کنید.</span>
+            <span className="work-group-add-icon" aria-hidden>
+              <Plus />
+            </span>
+          </Link> : null}
+
           {filteredItems.map((item) => {
             const currentMembers = item.members.filter((member) => member.isCurrent);
 
@@ -168,13 +171,6 @@ export default async function WorkGroupsPage({ searchParams }: WorkGroupsPagePro
               </article>
             );
           })}
-
-          {access.canCreate ? <Link href="/work-groups/new" className="work-group-add-card">
-            <span className="work-group-add-copy">برای افزودن گروه کاری کلیک کنید.</span>
-            <span className="work-group-add-icon" aria-hidden>
-              <Plus />
-            </span>
-          </Link> : null}
 
           {filteredItems.length === 0 ? <div className="work-groups-empty">گروه کاری مطابق فیلترهای انتخاب‌شده پیدا نشد.</div> : null}
         </div>

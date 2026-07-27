@@ -255,10 +255,12 @@ export function PolicyVariantTabs({
   familyKey,
   variant,
   variants: variantsOverride,
+  policyId,
 }: {
   familyKey: PolicyFamilyKey;
   variant: string;
   variants?: Array<{ key: string; title: string; subtitle: string; disabled?: boolean }>;
+  policyId?: string;
 }) {
   const variants = variantsOverride ?? POLICY_VARIANTS[familyKey];
 
@@ -266,7 +268,11 @@ export function PolicyVariantTabs({
     <div className="policy-variant-tabs">
       {variants.map((item) => {
         const active = item.key === variant;
-        const href = item.key === 'default' ? `/policies/${familyKey}` : `/policies/${familyKey}?variant=${item.key}`;
+        const params = new URLSearchParams();
+        if (item.key !== 'default') params.set('variant', item.key);
+        if (policyId) params.set('policyId', policyId);
+        const query = params.toString();
+        const href = query ? `/policies/${familyKey}?${query}` : `/policies/${familyKey}`;
         const content = (
           <>
             <span className="policy-variant-tab-title">{item.title}</span>

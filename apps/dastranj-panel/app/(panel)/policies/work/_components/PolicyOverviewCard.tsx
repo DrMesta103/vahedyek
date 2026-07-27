@@ -16,6 +16,7 @@ type PolicyOverviewCardProps = {
   calendars: Array<{ id: string; title: string; yearLabel: string }>;
   groupCount: number;
   readOnly?: boolean;
+  showDescription?: boolean;
 };
 
 function resolveCalendarTitle(calendarTitle: string) {
@@ -38,6 +39,7 @@ export function PolicyOverviewCard({
   calendars,
   groupCount,
   readOnly = false,
+  showDescription = true,
 }: PolicyOverviewCardProps) {
   const [open, setOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(title);
@@ -79,10 +81,10 @@ export function PolicyOverviewCard({
             <span className="policy-overview-field-value is-title">{titleValue}</span>
           </div>
 
-          <div className="policy-overview-field">
+          {showDescription ? <div className="policy-overview-field">
             <span className="policy-overview-field-label">توضیحات</span>
             <span className="policy-overview-field-value">{descriptionValue}</span>
-          </div>
+          </div> : null}
 
           <div className="policy-overview-field is-readonly">
             <span className="policy-overview-field-label">عنوان تقویم</span>

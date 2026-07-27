@@ -1,7 +1,7 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.js';
-import * as react_jsx_runtime from 'react/jsx-runtime';
+import * as react from 'react';
 import { ReactNode, ButtonHTMLAttributes, TdHTMLAttributes, HTMLAttributes, ThHTMLAttributes } from 'react';
-export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-D6Hiep5s.js';
+export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-DIgz50nH.js';
 import 'clsx';
 import './taav-badge.variants-DM1buIc6.js';
 
@@ -36,7 +36,7 @@ type TaavChipProps = {
     itemClassName?: string;
     unsafeClassName?: string;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'>;
-declare function TaavChip({ variant, tone, size, shape, width, selected, disabled, loading, behavior, iconStart, iconEnd, removeLabel, onRemove, onClick, children, itemClassName, unsafeClassName, ...props }: TaavChipProps): react_jsx_runtime.JSX.Element;
+declare function TaavChip({ variant, tone, size, shape, width, selected, disabled, loading, behavior, iconStart, iconEnd, removeLabel, onRemove, onClick, children, itemClassName, unsafeClassName, ...props }: TaavChipProps): react.JSX.Element;
 
 type TaavEmptyStateVariant = 'default' | 'search' | 'error' | 'permission' | 'setup' | 'compact';
 type TaavEmptyStateSize = 'sm' | 'md' | 'lg';
@@ -54,7 +54,7 @@ type TaavEmptyStateProps = {
     contentClassName?: string;
     wrapperClassName?: string;
 };
-declare function TaavEmptyState({ variant, size, tone, icon, title, description, primaryAction, secondaryAction, children, contentClassName, wrapperClassName, }: TaavEmptyStateProps): react_jsx_runtime.JSX.Element;
+declare function TaavEmptyState({ variant, size, tone, icon, title, description, primaryAction, secondaryAction, children, contentClassName, wrapperClassName, }: TaavEmptyStateProps): react.JSX.Element;
 
 type TaavSkeletonVariant = 'text' | 'title' | 'avatar' | 'button' | 'card' | 'row' | 'table' | 'custom';
 type TaavSkeletonSize = 'sm' | 'md' | 'lg';
@@ -71,7 +71,7 @@ type TaavSkeletonProps = {
     contentClassName?: string;
     wrapperClassName?: string;
 };
-declare function TaavSkeleton({ variant, size, lines, width, height, radius, animated, count, contentClassName, wrapperClassName, }: TaavSkeletonProps): react_jsx_runtime.JSX.Element;
+declare function TaavSkeleton({ variant, size, lines, width, height, radius, animated, count, contentClassName, wrapperClassName, }: TaavSkeletonProps): react.JSX.Element;
 
 type TaavTableShellProps = {
     variant?: TaavTableVariant;
@@ -84,16 +84,16 @@ type TaavTableShellProps = {
     wrapperClassName?: string;
     contentClassName?: string;
 };
-declare function TaavTableShell({ variant, density, loading, empty, emptyState, footer, children, wrapperClassName, contentClassName, }: TaavTableShellProps): react_jsx_runtime.JSX.Element;
-declare function TaavTableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>): react_jsx_runtime.JSX.Element;
-declare function TaavTableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>): react_jsx_runtime.JSX.Element;
+declare function TaavTableShell({ variant, density, loading, empty, emptyState, footer, children, wrapperClassName, contentClassName, }: TaavTableShellProps): react.JSX.Element;
+declare function TaavTableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>): react.JSX.Element;
+declare function TaavTableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>): react.JSX.Element;
 type TaavTableRowProps = HTMLAttributes<HTMLTableRowElement> & {
     striped?: boolean;
 };
-declare function TaavTableRow({ className, striped, ...props }: TaavTableRowProps): react_jsx_runtime.JSX.Element;
-declare function TaavTableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>): react_jsx_runtime.JSX.Element;
-declare function TaavTableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>): react_jsx_runtime.JSX.Element;
-declare function TaavTableActions({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>): react_jsx_runtime.JSX.Element;
+declare function TaavTableRow({ className, striped, ...props }: TaavTableRowProps): react.JSX.Element;
+declare function TaavTableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>): react.JSX.Element;
+declare function TaavTableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>): react.JSX.Element;
+declare function TaavTableActions({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>): react.JSX.Element;
 
 type TaavKeyValueItemTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
 type TaavKeyValueItem = {
@@ -115,6 +115,6 @@ type TaavKeyValueProps = {
     wrapperClassName?: string;
     contentClassName?: string;
 };
-declare function TaavKeyValue({ items, layout, size, density, labelWidth, emptyText, separator, children, wrapperClassName, contentClassName, }: TaavKeyValueProps): react_jsx_runtime.JSX.Element;
+declare function TaavKeyValue({ items, layout, size, density, labelWidth, emptyText, separator, children, wrapperClassName, contentClassName, }: TaavKeyValueProps): react.JSX.Element;
 
 export { TaavChip, type TaavChipBehavior, type TaavChipGap, type TaavChipProps, type TaavChipShape, type TaavChipSize, type TaavChipTone, type TaavChipVariant, type TaavChipWidth, TaavEmptyState, type TaavEmptyStateProps, type TaavEmptyStateSize, type TaavEmptyStateTone, type TaavEmptyStateVariant, TaavKeyValue, type TaavKeyValueDensity, type TaavKeyValueItem, type TaavKeyValueItemTone, type TaavKeyValueLayout, type TaavKeyValueProps, type TaavKeyValueSize, TaavSkeleton, type TaavSkeletonProps, type TaavSkeletonRadius, type TaavSkeletonSize, type TaavSkeletonVariant, TaavTableActions, TaavTableBody, TaavTableCell, type TaavTableDensity, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell, type TaavTableShellProps, type TaavTableVariant };

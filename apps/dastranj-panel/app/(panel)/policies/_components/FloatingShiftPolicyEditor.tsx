@@ -85,12 +85,14 @@ export function FloatingShiftPolicyEditor({
   delayCalculationMode,
   maxDelayMinutes,
   preservedRequiredHours,
+  backHref,
 }: {
   variant: FloatingShiftVariant;
   entryGraceMinutes: number;
   delayCalculationMode: string;
   maxDelayMinutes: number;
   preservedRequiredHours?: number;
+  backHref: string;
 }) {
   const section = SECTION_COPY[variant];
   const [graceMinutes, setGraceMinutes] = useState(entryGraceMinutes);
@@ -205,7 +207,7 @@ export function FloatingShiftPolicyEditor({
         <input type="hidden" name="requiredHours" value={preservedRequiredHours} />
       ) : null}
 
-      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+      <PolicyFormActions cancelHref={backHref} submitLabel="ویرایش" />
     </TaavTooltipProvider>
   );
 }

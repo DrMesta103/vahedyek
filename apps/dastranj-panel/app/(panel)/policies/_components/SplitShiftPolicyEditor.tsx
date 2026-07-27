@@ -101,9 +101,11 @@ function SplitSegmentRuleFields({
 export function SplitShiftPolicyEditor({
   segments,
   calculationOptions,
+  backHref,
 }: {
   segments: SplitShiftSegmentRules[];
   calculationOptions: Array<{ value: string; label: string; hint?: string }>;
+  backHref: string;
 }) {
   const [segment1, segment2] = segments;
 
@@ -119,7 +121,7 @@ export function SplitShiftPolicyEditor({
           <SplitSegmentRuleFields prefix="2" segment={segment2} calculationOptions={calculationOptions} />
         </section>
       ) : null}
-      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+      <PolicyFormActions cancelHref={backHref} submitLabel="ویرایش" />
     </div>
   );
 }

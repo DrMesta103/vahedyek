@@ -78,8 +78,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
         titleHref={backHref}
         title="ویرایش سایر سیاست‌ها"
         subtitle="تنظیمات تکمیلی حضور و غیاب"
-        actionHref={backHref}
-        actionLabel="بازگشت به سیاست کاری"
       >
         <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
@@ -105,8 +103,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
         titleHref={backHref}
         title="ویرایش سیاست‌های اضافه‌کاری"
         subtitle="تعریف قوانین ثبت و محاسبه اضافه‌کاری"
-        actionHref={backHref}
-        actionLabel="بازگشت به سیاست کاری"
       >
         <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
@@ -141,8 +137,6 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
       titleHref={backHref}
       title="ویرایش سیاست کاری"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
-      actionHref={backHref}
-      actionLabel="بازگشت به سیاست کاری"
     >
       <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
         <input type="hidden" name="familyKey" value="work" />

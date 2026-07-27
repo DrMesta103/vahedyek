@@ -148,11 +148,13 @@ export default async function PolicyFamilyPage({
   const shiftTypes = [...new Set(calendarShifts.map((shift) => SHIFT_VARIANT_BY_TYPE[shift.shiftType]).filter(Boolean))];
   const availableVariants = POLICY_VARIANTS[familyKey].map((item) => item.key as string);
   const activeVariant =
-    typeof sectionValues.variant === 'string' && availableVariants.includes(sectionValues.variant)
-      ? (sectionValues.variant as string)
-      : availableVariants.includes(requestedVariant)
-        ? requestedVariant
-        : availableVariants[0] ?? 'default';
+    typeof resolvedSearchParams?.variant === 'string' && availableVariants.includes(resolvedSearchParams.variant)
+      ? resolvedSearchParams.variant
+      : typeof sectionValues.variant === 'string' && availableVariants.includes(sectionValues.variant)
+        ? (sectionValues.variant as string)
+        : availableVariants.includes(requestedVariant)
+          ? requestedVariant
+          : availableVariants[0] ?? 'default';
   // Shift policy configuration is available for every supported shift model;
   // a calendar may be connected later without hiding these policy controls.
   const discoveredVariants = POLICY_VARIANTS.shift;
@@ -236,7 +238,7 @@ export default async function PolicyFamilyPage({
   const remoteWorkPolicy = parseRemoteWorkPolicy(sectionValues);
 
   const fromWorkHub =
-    (familyKey === 'leave' || familyKey === 'manual' || familyKey === 'night' || familyKey === 'remote') &&
+    (familyKey === 'shift' || familyKey === 'leave' || familyKey === 'manual' || familyKey === 'night' || familyKey === 'remote') &&
     Boolean(policyId);
   const backHref = fromWorkHub ? `/policies/work?policyId=${policyId}` : '/policies';
 
@@ -245,8 +247,6 @@ export default async function PolicyFamilyPage({
       titleHref={backHref}
       title={familyMeta.pageTitle}
       subtitle={familyMeta.pageHint}
-      actionHref={fromWorkHub ? backHref : '/policies'}
-      actionLabel={fromWorkHub ? 'بازگشت به سیاست کاری' : 'بازگشت به فهرست'}
     >
       {familyKey !== 'shift' && familyKey !== 'leave' && familyPolicies.length > 0 && !fromWorkHub ? (
         <PolicyFamilyList
@@ -305,7 +305,7 @@ export default async function PolicyFamilyPage({
                 <PolicyToggleField name="allowManualApproval" label="محاسبه خودکار" hint="در صورت فعال بودن، قواعد به صورت خودکار اعمال شوند." defaultChecked={defaults.allowManualApproval} />
                 <PolicyToggleField name="breakDeduct" label="کسر از ساعات کاری" hint="بعضی کسرها در سطح سیاست کاری قابل محاسبه است." defaultChecked={defaults.breakDeduct} />
               </div>
-              <PolicyFormActions cancelHref="/policies" submitLabel="ذخیره تغییرات" />
+              <PolicyFormActions cancelHref={backHref} submitLabel="ذخیره تغییرات" />
             </div>
           ) : null}
 
@@ -315,13 +315,13 @@ export default async function PolicyFamilyPage({
               <input type="hidden" name="description" value={familyMeta.subtitle} />
               <PolicyInfoStrip text={calendarShifts.length === 0 ? 'تنظیمات همه مدل‌های شیفت از پیش در دسترس است؛ با اتصال شیفت به تقویم، همین قواعد روی آن اعمال می‌شود.' : `نوع شیفت از تقویم «${policy?.calendar?.title ?? 'تقویم انتخاب‌شده'}» خوانده شده است؛ زمان‌بندی و ساختار شیفت فقط به‌صورت خواندنی نمایش داده می‌شود.`} />
               {selectedShiftSummary ? <div className="policy-info-strip"><strong>{selectedCalendarShift?.title}</strong> · {selectedShiftSummary.shiftTypeLabel} · {selectedShiftSummary.timeRange || 'بازه زمانی در قالب شیفت ثبت نشده است'}</div> : null}
-              <PolicyVariantTabs familyKey={familyKey} variant={effectiveShiftVariant} variants={discoveredVariants.map((item) => ({ ...item, disabled: item.key === 'rotate' }))} />
+              <PolicyVariantTabs familyKey={familyKey} variant={effectiveShiftVariant} policyId={policyId} variants={discoveredVariants.map((item) => ({ ...item, disabled: item.key === 'rotate' }))} />
 
               <div className="shift-policy-sections">
                 {effectiveShiftVariant === 'rotate' ? (
                   <PolicyInfoStrip text="شیفت چرخشی تا زمان تکمیل Runtime در دست توسعه است و قابل ذخیره‌سازی نیست." />
                 ) : effectiveShiftVariant === 'split' ? (
-                  <SplitShiftPolicyEditor segments={splitShiftSegments} calculationOptions={calculationOptions} />
+                  <SplitShiftPolicyEditor segments={splitShiftSegments} calculationOptions={calculationOptions} backHref={backHref} />
                 ) : (
                   <>
                     {effectiveShiftVariant === 'fixed' ? (
@@ -344,6 +344,7 @@ export default async function PolicyFamilyPage({
                         entryGraceMinutes={defaults.entryGraceMinutes}
                         delayCalculationMode={defaults.delayCalculationMode}
                         maxDelayMinutes={defaults.maxDelayMinutes}
+                        backHref={backHref}
                         preservedRequiredHours={
                           effectiveShiftVariant === 'floating-absolute' ? defaults.requiredHours : undefined
                         }
@@ -351,7 +352,7 @@ export default async function PolicyFamilyPage({
                     ) : null}
 
                     {effectiveShiftVariant !== 'floating-day' && effectiveShiftVariant !== 'floating-absolute' && effectiveShiftVariant !== 'rotate' ? (
-                      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+                      <PolicyFormActions cancelHref={backHref} submitLabel="ویرایش" />
                     ) : null}
                   </>
                 )}
@@ -514,7 +515,7 @@ export default async function PolicyFamilyPage({
                   </div>
                 ) : null}
 
-                <PolicyFormActions cancelHref="/policies" submitLabel="ذخیره تغییرات" />
+                <PolicyFormActions cancelHref={backHref} submitLabel="ذخیره تغییرات" />
               </div>
             </div>
           ) : null}
