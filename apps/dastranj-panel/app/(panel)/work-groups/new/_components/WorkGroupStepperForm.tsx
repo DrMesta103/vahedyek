@@ -755,8 +755,10 @@ export function WorkGroupStepperForm({
             </form>
           </div>}
           {mode === 'edit' ? <button type="button" className="work-group-step-next" onClick={() => {
-            document.getElementById('work-group-policy-schedule')?.requestSubmit();
-            document.getElementById('work-group-location-schedule')?.requestSubmit();
+            const policyScheduleForm = document.getElementById('work-group-policy-schedule');
+            const locationScheduleForm = document.getElementById('work-group-location-schedule');
+            if (policyScheduleForm instanceof HTMLFormElement) policyScheduleForm.requestSubmit();
+            if (locationScheduleForm instanceof HTMLFormElement) locationScheduleForm.requestSubmit();
             markStepCompleted(5);
             setStep(6);
           }}>ثبت همه تغییرات</button> : null}
