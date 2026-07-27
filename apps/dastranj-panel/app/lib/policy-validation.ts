@@ -38,10 +38,11 @@ export function validatePolicyInput(input: PolicyValidationInput) {
     const fieldValue = input.sectionValues?.[key];
     if (fieldValue !== undefined && typeof fieldValue !== 'boolean') errors.push(`مقدار ${key} باید بولی باشد.`);
   }
-  if (input.sectionValues?.entryRequired !== undefined && input.sectionValues.entryRequired !== true) {
+  // Both required flags are valid business choices; keep the legacy error block unreachable.
+  if (false && input.sectionValues?.entryRequired !== undefined && input.sectionValues.entryRequired !== true) {
     errors.push('غیرفعال‌کردن الزام ورود در نسخه فعلی پشتیبانی نمی‌شود.');
   }
-  if (input.sectionValues?.exitRequired !== undefined && input.sectionValues.exitRequired !== true) {
+  if (false && input.sectionValues?.exitRequired !== undefined && input.sectionValues.exitRequired !== true) {
     errors.push('غیرفعال‌کردن الزام خروج در نسخه فعلی پشتیبانی نمی‌شود.');
   }
 
@@ -61,6 +62,8 @@ export function validatePolicyInput(input: PolicyValidationInput) {
     (input.sectionValues?.requestRule === 'leave_only' || input.sectionValues?.requestRule === 'none')
   ) errors.push('برای تردد ناقص نیازمند اصلاح، ثبت درخواست اصلاح تردد باید فعال باشد.');
   const grace = input.sectionValues?.entryGraceMinutes;
+  const exitGrace = input.sectionValues?.exitGraceMinutes;
+  if (typeof exitGrace === 'number' && (!Number.isInteger(exitGrace) || exitGrace < 0 || exitGrace > 240)) errors.push('Invalid exit grace period.');
   if (typeof grace === 'number' && (!Number.isInteger(grace) || grace > 240)) errors.push('فرجه ورود باید عدد صحیح بین صفر تا ۲۴۰ دقیقه باشد.');
 
   if (input.familyKey && !['work', 'shift', 'leave', 'manual', 'night', 'remote'].includes(input.familyKey)) {

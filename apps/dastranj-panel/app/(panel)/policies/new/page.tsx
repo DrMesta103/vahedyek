@@ -12,7 +12,7 @@ export default async function NewPolicyPage() {
       title="ثبت سیاست کاری جدید"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
     >
-      <PolicyCreateForm calendars={calendars.map((calendar) => ({ id: calendar.id, title: calendar.title, yearLabel: calendar.yearLabel, status: calendar.status }))} />
+      <PolicyCreateForm calendars={calendars.map((calendar) => ({ id: calendar.id, title: calendar.title, yearLabel: calendar.yearLabel, status: calendar.status, shiftTypes: calendar.shiftTypes }))} />
     </PolicyPageShell>
   );
 }

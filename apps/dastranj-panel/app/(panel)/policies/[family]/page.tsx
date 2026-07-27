@@ -6,6 +6,7 @@ import {
   findPolicyByFamilyKey,
   getPolicyFamilyMeta,
   getPolicySectionValues,
+  getShiftPolicyValues,
   listPoliciesByFamilyKey,
   type PolicyFamilyKey,
 } from '../../../lib/policy-workspaces';
@@ -35,6 +36,8 @@ import { SplitShiftPolicyEditor } from '../_components/SplitShiftPolicyEditor';
 import { SearchablePolicySelect } from '../_components/SearchablePolicySelect';
 import { parseSplitShiftSegmentRules } from '../../../lib/split-shift-policy';
 import { parseRemoteWorkPolicy } from '../../../lib/remote-work-policy';
+import { listCalendarShifts, type CalendarShiftType, type StoredCalendarShift } from '../../../lib/calendar-shifts';
+import { summarizeShiftForDayPanel } from '../../../lib/calendar-shift-display';
 
 function fieldNumber(value: unknown, fallback = 0) {
   return typeof value === 'number' ? value : fallback;
@@ -43,6 +46,14 @@ function fieldNumber(value: unknown, fallback = 0) {
 function fieldString(value: unknown, fallback = '') {
   return typeof value === 'string' ? value : fallback;
 }
+
+const SHIFT_VARIANT_BY_TYPE: Record<CalendarShiftType, 'fixed' | 'floating-day' | 'floating-absolute' | 'split' | 'rotate'> = {
+  fixed: 'fixed',
+  'float-day': 'floating-day',
+  'float-abs': 'floating-absolute',
+  split: 'split',
+  rotate: 'rotate',
+};
 
 function ShiftPolicyField({
   name,
@@ -133,6 +144,8 @@ export default async function PolicyFamilyPage({
         : defaultPolicyForFamily;
   const policyId = policy?.id ?? '';
   const sectionValues = getPolicySectionValues(policy);
+  const calendarShifts = policy?.calendar ? listCalendarShifts(policy.calendar.shiftConfig) : [];
+  const shiftTypes = [...new Set(calendarShifts.map((shift) => SHIFT_VARIANT_BY_TYPE[shift.shiftType]).filter(Boolean))];
   const availableVariants = POLICY_VARIANTS[familyKey].map((item) => item.key as string);
   const activeVariant =
     typeof sectionValues.variant === 'string' && availableVariants.includes(sectionValues.variant)
@@ -140,17 +153,28 @@ export default async function PolicyFamilyPage({
       : availableVariants.includes(requestedVariant)
         ? requestedVariant
         : availableVariants[0] ?? 'default';
+  // Shift policy configuration is available for every supported shift model;
+  // a calendar may be connected later without hiding these policy controls.
+  const discoveredVariants = POLICY_VARIANTS.shift;
+  const effectiveShiftVariant = discoveredVariants.some((item) => item.key === activeVariant)
+    ? activeVariant
+    : discoveredVariants[0]?.key ?? activeVariant;
+  const selectedCalendarShift: StoredCalendarShift | null = calendarShifts.find((shift) => SHIFT_VARIANT_BY_TYPE[shift.shiftType] === effectiveShiftVariant) ?? null;
+  const selectedShiftSummary = selectedCalendarShift ? summarizeShiftForDayPanel(selectedCalendarShift) : null;
+  const effectiveSectionValues = familyKey === 'shift'
+    ? getShiftPolicyValues(sectionValues, effectiveShiftVariant)
+    : sectionValues;
 
   const defaults = {
     title: typeof sectionValues.title === 'string' ? sectionValues.title : familyMeta.title,
     description: typeof sectionValues.description === 'string' ? sectionValues.description : familyMeta.subtitle,
-    startTime: typeof sectionValues.startTime === 'string' ? sectionValues.startTime : '',
-    endTime: typeof sectionValues.endTime === 'string' ? sectionValues.endTime : '',
+    startTime: typeof effectiveSectionValues.startTime === 'string' ? effectiveSectionValues.startTime : '',
+    endTime: typeof effectiveSectionValues.endTime === 'string' ? effectiveSectionValues.endTime : '',
     requiredMinutes: typeof sectionValues.requiredMinutes === 'number' ? sectionValues.requiredMinutes : 0,
     workStartWindow: typeof sectionValues.workStartWindow === 'string' ? sectionValues.workStartWindow : '',
     workEndWindow: typeof sectionValues.workEndWindow === 'string' ? sectionValues.workEndWindow : '',
     corePresence: typeof sectionValues.corePresence === 'string' ? sectionValues.corePresence : '',
-    maxDelayMinutes: typeof sectionValues.maxDelayMinutes === 'number' ? sectionValues.maxDelayMinutes : 0,
+    maxDelayMinutes: typeof effectiveSectionValues.maxDelayMinutes === 'number' ? effectiveSectionValues.maxDelayMinutes : 0,
     breakMode: typeof sectionValues.breakMode === 'string' ? sectionValues.breakMode : 'fixed',
     breakStart: typeof sectionValues.breakStart === 'string' ? sectionValues.breakStart : '',
     breakEnd: typeof sectionValues.breakEnd === 'string' ? sectionValues.breakEnd : '',
@@ -180,6 +204,7 @@ export default async function PolicyFamilyPage({
         : typeof sectionValues.monthlyLimit === 'number'
           ? sectionValues.monthlyLimit
           : 0,
+    incompleteAttendanceRule: sectionValues.incompleteAttendanceRule === 'warning_only' ? 'warning_only' as const : 'correction_required' as const,
     requiresManagerApproval: Boolean(sectionValues.requiresManagerApproval),
     maxMissionHours: typeof sectionValues.maxMissionHours === 'number' ? sectionValues.maxMissionHours : 0,
     nightEnabled:
@@ -194,20 +219,20 @@ export default async function PolicyFamilyPage({
     cycleCount: typeof sectionValues.cycleCount === 'number' ? sectionValues.cycleCount : 2,
     cycleType: typeof sectionValues.cycleType === 'string' ? sectionValues.cycleType : 'daily',
     note: typeof sectionValues.note === 'string' ? sectionValues.note : '',
-    entryGraceMinutes: fieldNumber(sectionValues.entryGraceMinutes, 0),
-    exitGraceMinutes: fieldNumber(sectionValues.exitGraceMinutes, 0),
-    maxEarlyLeaveMinutes: fieldNumber(sectionValues.maxEarlyLeaveMinutes, 0),
-    delayCalculationMode: fieldString(sectionValues.delayCalculationMode, 'lenient'),
-    earlyLeaveCalculationMode: fieldString(sectionValues.earlyLeaveCalculationMode, 'lenient'),
+    entryGraceMinutes: fieldNumber(effectiveSectionValues.entryGraceMinutes, 0),
+    exitGraceMinutes: fieldNumber(effectiveSectionValues.exitGraceMinutes, 0),
+    maxEarlyLeaveMinutes: fieldNumber(effectiveSectionValues.maxEarlyLeaveMinutes, 0),
+    delayCalculationMode: fieldString(effectiveSectionValues.delayCalculationMode, 'lenient'),
+    earlyLeaveCalculationMode: fieldString(effectiveSectionValues.earlyLeaveCalculationMode, 'lenient'),
     bufferOverflowPolicy: fieldString(sectionValues.bufferOverflowPolicy, 'late-only'),
-    requiredHours: fieldNumber(sectionValues.requiredHours, 0),
+    requiredHours: fieldNumber(effectiveSectionValues.requiredHours, 0),
     dailyEntryExitLimit: fieldString(sectionValues.dailyEntryExitLimit, 'unlimited'),
   };
   const calculationOptions = [
     { value: 'lenient', label: 'ملایم', hint: 'فقط مازادِ فرجه به عنوان تاخیر یا تعجیل محاسبه می‌شود.' },
     { value: 'strict', label: 'سخت گیرانه', hint: 'کل تاخیر یا تعجیل از همان نقطه شروع محاسبه می‌شود.' },
   ];
-  const splitShiftSegments = parseSplitShiftSegmentRules(sectionValues);
+  const splitShiftSegments = parseSplitShiftSegmentRules(effectiveSectionValues);
   const remoteWorkPolicy = parseRemoteWorkPolicy(sectionValues);
 
   const fromWorkHub =
@@ -241,8 +266,9 @@ export default async function PolicyFamilyPage({
 
       <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
         <input type="hidden" name="familyKey" value={familyKey} />
-        <input type="hidden" name="variant" value={activeVariant} />
+        <input type="hidden" name="variant" value={familyKey === 'shift' ? effectiveShiftVariant : activeVariant} />
         <input type="hidden" name="policyId" value={policyId} />
+        <input type="hidden" name="calendarId" value={policy?.calendarId ?? ''} />
         <PolicySectionCard title={familyMeta.title} description={familyMeta.subtitle}>
           {familyKey === 'work' ? (
             <div className="policy-form-card">
@@ -286,14 +312,18 @@ export default async function PolicyFamilyPage({
             <div className="policy-form-card shift-policy-editor">
               <input type="hidden" name="title" value={familyMeta.title} />
               <input type="hidden" name="description" value={familyMeta.subtitle} />
-              <PolicyVariantTabs familyKey={familyKey} variant={activeVariant} />
+              <PolicyInfoStrip text={calendarShifts.length === 0 ? 'تنظیمات همه مدل‌های شیفت از پیش در دسترس است؛ با اتصال شیفت به تقویم، همین قواعد روی آن اعمال می‌شود.' : `نوع شیفت از تقویم «${policy?.calendar?.title ?? 'تقویم انتخاب‌شده'}» خوانده شده است؛ زمان‌بندی و ساختار شیفت فقط به‌صورت خواندنی نمایش داده می‌شود.`} />
+              {selectedShiftSummary ? <div className="policy-info-strip"><strong>{selectedCalendarShift?.title}</strong> · {selectedShiftSummary.shiftTypeLabel} · {selectedShiftSummary.timeRange || 'بازه زمانی در قالب شیفت ثبت نشده است'}</div> : null}
+              <PolicyVariantTabs familyKey={familyKey} variant={effectiveShiftVariant} variants={discoveredVariants.map((item) => ({ ...item, disabled: item.key === 'rotate' }))} />
 
               <div className="shift-policy-sections">
-                {activeVariant === 'split' ? (
+                {effectiveShiftVariant === 'rotate' ? (
+                  <PolicyInfoStrip text="شیفت چرخشی تا زمان تکمیل Runtime در دست توسعه است و قابل ذخیره‌سازی نیست." />
+                ) : effectiveShiftVariant === 'split' ? (
                   <SplitShiftPolicyEditor segments={splitShiftSegments} calculationOptions={calculationOptions} />
                 ) : (
                   <>
-                    {activeVariant === 'fixed' || activeVariant === 'rotate' ? (
+                    {effectiveShiftVariant === 'fixed' ? (
                       <>
                         <ShiftPolicyPanel title="قوانین ورود">
                           <ShiftPolicyField name="entryGraceMinutes" label="فرجه مجاز ورود" required unit="دقیقه" defaultValue={defaults.entryGraceMinutes} hint="کارمند می‌تواند تا این مدت بعد از شروع شیفت وارد شود." />
@@ -307,19 +337,19 @@ export default async function PolicyFamilyPage({
                       </>
                     ) : null}
 
-                    {activeVariant === 'floating-day' || activeVariant === 'floating-absolute' ? (
+                    {effectiveShiftVariant === 'floating-day' || effectiveShiftVariant === 'floating-absolute' ? (
                       <FloatingShiftPolicyEditor
-                        variant={activeVariant}
+                        variant={effectiveShiftVariant}
                         entryGraceMinutes={defaults.entryGraceMinutes}
                         delayCalculationMode={defaults.delayCalculationMode}
                         maxDelayMinutes={defaults.maxDelayMinutes}
                         preservedRequiredHours={
-                          activeVariant === 'floating-absolute' ? defaults.requiredHours : undefined
+                          effectiveShiftVariant === 'floating-absolute' ? defaults.requiredHours : undefined
                         }
                       />
                     ) : null}
 
-                    {activeVariant !== 'floating-day' && activeVariant !== 'floating-absolute' ? (
+                    {effectiveShiftVariant !== 'floating-day' && effectiveShiftVariant !== 'floating-absolute' && effectiveShiftVariant !== 'rotate' ? (
                       <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
                     ) : null}
                   </>
@@ -506,6 +536,7 @@ export default async function PolicyFamilyPage({
               manualPastDaysEnabled={defaults.manualPastDaysEnabled}
               manualMaxPastDays={defaults.manualMaxPastDays}
               manualMonthlyCapPerUser={defaults.manualMonthlyCapPerUser}
+              incompleteAttendanceRule={defaults.incompleteAttendanceRule}
             />
           ) : null}
 

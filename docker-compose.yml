@@ -1,4 +1,17 @@
 services:
+  dastranj-db:
+    image: postgres:16
+    container_name: dastranj-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dastranj
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "55432:5432"
+    volumes:
+      - dastranj-postgres-data:/var/lib/postgresql/data
+
   vahedyek-panel:
     image: vahedyek-panel:latest
     container_name: vahedyek-panel
@@ -22,3 +35,6 @@ services:
       context: .
       dockerfile: apps/taav-ai-lab/Dockerfile
     restart: unless-stopped
+
+volumes:
+  dastranj-postgres-data:

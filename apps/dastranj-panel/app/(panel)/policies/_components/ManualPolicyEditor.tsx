@@ -1,6 +1,7 @@
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
+  PolicyFieldSelect,
   PolicyFormActions,
   PolicyToggleField,
 } from './PolicyWorkspaceShell';
@@ -43,6 +44,7 @@ export function ManualPolicyEditor({
   manualPastDaysEnabled,
   manualMaxPastDays,
   manualMonthlyCapPerUser,
+  incompleteAttendanceRule,
 }: {
   backHref: string;
   policyId: string;
@@ -52,6 +54,7 @@ export function ManualPolicyEditor({
   manualPastDaysEnabled: boolean;
   manualMaxPastDays: number;
   manualMonthlyCapPerUser: number;
+  incompleteAttendanceRule: 'correction_required' | 'warning_only';
 }) {
   const returnPath = policyId ? `/policies/manual?policyId=${policyId}` : '/policies/manual';
 
@@ -64,6 +67,13 @@ export function ManualPolicyEditor({
         </div>
 
         <div className="manual-policy-toggles">
+          <label className="policy-field-stack">
+            <PolicyFieldLabel label="اگر ورود یا خروج کامل ثبت نشود، سیستم چه کند؟" />
+            <PolicyFieldSelect name="incompleteAttendanceRule" defaultValue={incompleteAttendanceRule}>
+              <option value="correction_required">تردد ناقص و درخواست اصلاح لازم باشد</option>
+              <option value="warning_only">فقط هشدار ثبت شود</option>
+            </PolicyFieldSelect>
+          </label>
           <PolicyToggleField
             name="manualEntryEnabled"
             label="فعال‌سازی تردد دستی"

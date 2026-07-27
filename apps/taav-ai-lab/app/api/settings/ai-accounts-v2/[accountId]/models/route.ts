@@ -3,6 +3,7 @@ import { handlePrismaApiError } from '@/app/lib/prismaApiError';
 import { getOptionalSession } from '@/app/lib/session';
 import { createAiProviderModelV2, listAiProviderModelsV2 } from '@/app/lib/repositories/ai-provider-models-v2';
 import { AI_PROVIDER_MODEL_CAPABILITY_TYPES_V2, AI_PROVIDER_MODEL_TYPES_V2 } from '@/app/lib/types/ai-provider-v2';
+import { TAAVIA_BRAND_AI_MODEL_PURPOSES } from '@/app/lib/taavia-ai-models';
 
 type RouteContext = { params: Promise<{ accountId: string }> };
 
@@ -12,6 +13,7 @@ type CreatePayload = {
   modelType?: string;
   isActive?: boolean;
   capabilities?: string[];
+  recommendedForPurposes?: string[];
 };
 
 function parseModelType(value: unknown) {
@@ -28,6 +30,12 @@ function parseCapabilities(value: unknown) {
     .filter(Boolean);
   const allowed = new Set(AI_PROVIDER_MODEL_CAPABILITY_TYPES_V2 as readonly string[]);
   return normalized.filter((v) => allowed.has(v)) as any[];
+}
+
+function parseRecommendedPurposes(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  const allowed = new Set(TAAVIA_BRAND_AI_MODEL_PURPOSES as readonly string[]);
+  return Array.from(new Set(value.filter((item): item is string => typeof item === 'string').filter((item) => allowed.has(item))));
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -70,6 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
         modelType,
         isActive: body?.isActive !== false,
         capabilities,
+        recommendedForPurposes: parseRecommendedPurposes(body?.recommendedForPurposes),
       },
     });
     if (!model) return NextResponse.json({ message: 'اکانت یافت نشد.' }, { status: 404 });

@@ -1,4 +1,4 @@
-import { PolicyFormActions, PolicyInfoStrip, PolicyToggleField } from './PolicyWorkspaceShell';
+import { PolicyFieldLabel, PolicyFieldSelect, PolicyFormActions, PolicyInfoStrip, PolicyToggleField } from './PolicyWorkspaceShell';
 
 export function OvertimePolicyEditor({
   backHref,
@@ -7,6 +7,8 @@ export function OvertimePolicyEditor({
   overtimeRequireAttachment,
   overtimeBeforeShift,
   overtimeAfterShift,
+  overtimeRule,
+  requestRule,
 }: {
   backHref: string;
   policyId: string;
@@ -14,6 +16,8 @@ export function OvertimePolicyEditor({
   overtimeRequireAttachment: boolean;
   overtimeBeforeShift: boolean;
   overtimeAfterShift: boolean;
+  overtimeRule: 'manager_approval' | 'automatic' | 'disabled';
+  requestRule: 'leave_and_correction' | 'leave_only' | 'correction_only' | 'none';
 }) {
   const returnPath = policyId
     ? `/policies/work/base?policyId=${policyId}&section=overtime`
@@ -30,6 +34,23 @@ export function OvertimePolicyEditor({
         </div>
 
         <div className="overtime-policy-toggles">
+          <label className="policy-field-stack">
+            <PolicyFieldLabel label="آیا اضافه‌کاری در این سیاست فعال باشد؟" hint="نرخ و محاسبات مالی در حقوق و دستمزد مدیریت می‌شود." />
+            <PolicyFieldSelect name="overtimeRule" defaultValue={overtimeRule}>
+              <option value="manager_approval">فعال، فقط با تأیید مدیر</option>
+              <option value="automatic">فعال، بدون تأیید مدیر</option>
+              <option value="disabled">غیرفعال</option>
+            </PolicyFieldSelect>
+          </label>
+          <label className="policy-field-stack">
+            <PolicyFieldLabel label="آیا درخواست مرخصی و اصلاح تردد فعال باشد؟" />
+            <PolicyFieldSelect name="requestRule" defaultValue={requestRule}>
+              <option value="leave_and_correction">هر دو فعال</option>
+              <option value="leave_only">فقط مرخصی</option>
+              <option value="correction_only">فقط اصلاح تردد</option>
+              <option value="none">هیچ‌کدام</option>
+            </PolicyFieldSelect>
+          </label>
           <PolicyToggleField
             name="overtimeFromAttendance"
             label="محاسبه خودکار از تردد"

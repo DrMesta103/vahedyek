@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: 'پنل چند tenant فارسی',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -15,6 +15,7 @@
     "prisma:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:verify": "tsx scripts/verify-db-persistence.ts",
+    "test:initial-kb": "tsx scripts/initial-kb-build.test.ts",
     "db:import-simulator": "tsx scripts/import-simulator-json.ts"
   },
   "dependencies": {
@@ -22,7 +23,8 @@
     "@repo/ui": "*",
     "dotenv": "^16.5.0",
     "lucide-react": "^0.487.0",
-    "next": "^16.2.4",
+    "next": "^16.2.11",
+    "nodemailer": "9.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

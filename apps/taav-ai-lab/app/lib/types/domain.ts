@@ -65,6 +65,12 @@ export type TaaviaBrand = {
   updatedAt: string;
 };
 
+export type TaaviaBrandListItem = TaaviaBrand & {
+  sourceCount: number;
+  knowledgeBaseVersionCount: number;
+  activeKnowledgeBaseId: string | null;
+};
+
 export type TaaviaBrandModelServiceKey =
   | 'adminAgent'
   | 'knowledgeBase'

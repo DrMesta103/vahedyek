@@ -1,6 +1,7 @@
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
+  PolicyFieldSelect,
   PolicyFormActions,
   PolicyInfoStrip,
   PolicyToggleField,
@@ -40,6 +41,7 @@ export function OtherPolicyEditor({
   faceRecognitionInFlow,
   consecutiveAbsenceWarning,
   maxConsecutiveAbsenceDays,
+  locationRule,
 }: {
   backHref: string;
   policyId: string;
@@ -47,6 +49,7 @@ export function OtherPolicyEditor({
   faceRecognitionInFlow: boolean;
   consecutiveAbsenceWarning: boolean;
   maxConsecutiveAbsenceDays: number;
+  locationRule: 'workplace_only' | 'unrestricted';
 }) {
   const returnPath = policyId
     ? `/policies/work/base?policyId=${policyId}&section=other`
@@ -63,6 +66,13 @@ export function OtherPolicyEditor({
         </div>
 
         <div className="other-policy-toggles">
+          <label className="policy-field-stack">
+            <PolicyFieldLabel label="کارمند از کجا اجازه ثبت تردد دارد؟" />
+            <PolicyFieldSelect name="locationRule" defaultValue={locationRule}>
+              <option value="workplace_only">فقط در محل کار</option>
+              <option value="unrestricted">بدون محدودیت مکانی</option>
+            </PolicyFieldSelect>
+          </label>
           <PolicyToggleField
             name="requireGeofence"
             label="الزام محدوده مکانی (Geofence)"

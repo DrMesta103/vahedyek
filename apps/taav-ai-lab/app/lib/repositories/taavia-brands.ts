@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { assertTenantAccess, assertTenantManagementAccess } from '../auth';
 import { prisma } from '../prisma';
-import type { CreateTaaviaBrandInput, TaaviaBrand, UpdateTaaviaBrandInput } from '../types/domain';
+import type { CreateTaaviaBrandInput, TaaviaBrand, TaaviaBrandListItem, UpdateTaaviaBrandInput } from '../types/domain';
 
 const MAX_NAME_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 1000;
@@ -71,6 +71,68 @@ export async function getTaaviaBrandsForTenant(userId: string, tenantId: string)
     orderBy: { updatedAt: 'desc' },
   });
   return brands.map(mapBrand);
+}
+
+const activeSourceCountSelect = {
+  brandInfos: { where: { status: 'ACTIVE' as const } },
+  knowledgeSources: { where: { status: 'ACTIVE' as const } },
+  products: { where: { status: 'ACTIVE' as const } },
+  faqs: { where: { status: 'ACTIVE' as const } },
+} as const;
+
+function sumActiveSourceCounts(counts: {
+  brandInfos: number;
+  knowledgeSources: number;
+  products: number;
+  faqs: number;
+}) {
+  return counts.brandInfos + counts.knowledgeSources + counts.products + counts.faqs;
+}
+
+export async function getTaaviaBrandListItemsForTenant(userId: string, tenantId: string): Promise<TaaviaBrandListItem[]> {
+  if (!(await findAuthorizedTenant(userId, tenantId))) return [];
+  const brands = await prisma.taaviaBrand.findMany({
+    where: { tenantId },
+    include: {
+      ...brandInclude,
+      _count: {
+        select: {
+          knowledgeBases: true,
+          ...activeSourceCountSelect,
+        },
+      },
+      knowledgeBases: {
+        where: { isActive: true },
+        select: { id: true },
+        take: 1,
+      },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+  return brands.map((row) => ({
+    ...mapBrand(row),
+    sourceCount: sumActiveSourceCounts(row._count),
+    knowledgeBaseVersionCount: row._count.knowledgeBases,
+    activeKnowledgeBaseId: row.knowledgeBases[0]?.id ?? null,
+  }));
+}
+
+/** Dashboard requires at least one active source and at least one knowledge base version. */
+export async function canOpenTaaviaBrandDashboard(userId: string, tenantId: string, brandId: string): Promise<boolean> {
+  if (!(await findAuthorizedTenant(userId, tenantId))) return false;
+  const brand = await prisma.taaviaBrand.findFirst({
+    where: { id: brandId, tenantId },
+    select: {
+      _count: {
+        select: {
+          knowledgeBases: true,
+          ...activeSourceCountSelect,
+        },
+      },
+    },
+  });
+  if (!brand) return false;
+  return sumActiveSourceCounts(brand._count) > 0 && brand._count.knowledgeBases > 0;
 }
 
 export async function getTaaviaBrandForTenant(userId: string, tenantId: string, brandId: string): Promise<TaaviaBrand | null> {

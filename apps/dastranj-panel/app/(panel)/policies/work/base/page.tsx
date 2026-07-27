@@ -50,9 +50,20 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
     overtimeRequireAttachment: boolDefault(sectionValues.overtimeRequireAttachment),
     overtimeBeforeShift: boolDefault(sectionValues.overtimeBeforeShift),
     overtimeAfterShift: boolDefault(sectionValues.overtimeAfterShift),
+    overtimeRule: (
+      sectionValues.overtimeRule === 'manager_approval' || sectionValues.overtimeRule === 'automatic' || sectionValues.overtimeRule === 'disabled'
+        ? sectionValues.overtimeRule
+        : boolDefault(sectionValues.overtimeFromAttendance) ? 'automatic' : 'disabled'
+    ) as 'manager_approval' | 'automatic' | 'disabled',
+    requestRule: (
+      sectionValues.requestRule === 'leave_and_correction' || sectionValues.requestRule === 'leave_only' || sectionValues.requestRule === 'correction_only' || sectionValues.requestRule === 'none'
+        ? sectionValues.requestRule
+        : sectionValues.requestEnabled === true ? 'leave_and_correction' : 'none'
+    ) as 'leave_and_correction' | 'leave_only' | 'correction_only' | 'none',
   };
 
   const otherDefaults = {
+    locationRule: sectionValues.locationRule === 'unrestricted' ? 'unrestricted' as const : 'workplace_only' as const,
     requireGeofence: boolDefault(sectionValues.requireGeofence),
     faceRecognitionInFlow: boolDefault(sectionValues.faceRecognitionInFlow),
     consecutiveAbsenceWarning: boolDefault(sectionValues.consecutiveAbsenceWarning),
@@ -109,6 +120,8 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
               overtimeRequireAttachment={defaults.overtimeRequireAttachment}
               overtimeBeforeShift={defaults.overtimeBeforeShift}
               overtimeAfterShift={defaults.overtimeAfterShift}
+              overtimeRule={defaults.overtimeRule}
+              requestRule={defaults.requestRule}
             />
           </PolicySectionCard>
         </PolicyImpactForm>

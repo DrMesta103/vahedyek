@@ -104,7 +104,9 @@ function normalizeGraceComparable(value: unknown): string | null {
   const raw = String(value).trim();
   if (raw === 'other' || raw === 'روزانه') return 'other';
   const digits = raw.replace(/[^\d]/g, '');
-  return digits || normalizeComparable(raw);
+  if (digits) return digits;
+  const normalized = normalizeComparable(raw);
+  return normalized === null ? null : String(normalized);
 }
 
 function makeHint(referenceValue: unknown, currentValue: unknown, normalize = normalizeComparable): DomainFieldHint {

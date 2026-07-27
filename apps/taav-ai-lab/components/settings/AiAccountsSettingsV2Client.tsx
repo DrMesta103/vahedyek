@@ -19,7 +19,7 @@ import {
 } from '@repo/ui/taav';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
-import { TaavFieldBlock, TaavInput, TaavTextarea, TaavChoiceChipGroup } from '@repo/ui/taav/forms';
+import { TaavFieldBlock, TaavInput, TaavTextarea, TaavChoiceChipGroup, TaavCheckbox } from '@repo/ui/taav/forms';
 import {
   AI_PROVIDER_LABELS_V2,
   AI_PROVIDER_TYPES_V2,
@@ -42,6 +42,7 @@ type AccountFormState = {
   billingEmail: string;
   description: string;
   isActive: boolean;
+  isRecommended: boolean;
 };
 
 const EMPTY_FORM: AccountFormState = {
@@ -53,6 +54,7 @@ const EMPTY_FORM: AccountFormState = {
   billingEmail: '',
   description: '',
   isActive: true,
+  isRecommended: false,
 };
 
 const PROVIDER_OPTIONS = AI_PROVIDER_TYPES_V2.map((p) => ({ label: AI_PROVIDER_LABELS_V2[p], value: p }));
@@ -85,6 +87,7 @@ function toFormState(account: AiProviderAccountV2ListItem): AccountFormState {
     billingEmail: account.billingEmail ?? '',
     description: account.description ?? '',
     isActive: account.isActive,
+    isRecommended: account.isRecommended,
   };
 }
 
@@ -250,6 +253,7 @@ export function AiAccountsSettingsV2Client({ initialData }: Props) {
       billingEmail: form.billingEmail.trim() || null,
       description: form.description.trim() || null,
       isActive: form.isActive,
+      isRecommended: form.isRecommended,
     };
 
     try {
@@ -449,6 +453,7 @@ export function AiAccountsSettingsV2Client({ initialData }: Props) {
                       <TaavBadge tone={account.isActive ? 'success' : 'neutral'} variant="soft" size="sm">
                         {account.isActive ? 'فعال' : 'غیرفعال'}
                       </TaavBadge>
+                      {account.isRecommended ? <TaavBadge tone="brand" variant="soft" size="sm">پیشنهادی</TaavBadge> : null}
                     </div>
 
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-[length:var(--taav-text-xs)] text-[var(--taav-text-muted)]">
@@ -529,6 +534,13 @@ export function AiAccountsSettingsV2Client({ initialData }: Props) {
                   />
                 )}
               </TaavFieldBlock>
+
+              <TaavCheckbox
+                checked={form.isRecommended}
+                onChange={(event) => setForm((current) => ({ ...current, isRecommended: event.target.checked }))}
+                label="اکانت پیشنهادی"
+                description="این اکانت در تنظیمات مدل برند به‌عنوان گزینهٔ پیشنهادی نمایش داده می‌شود."
+              />
 
               <TaavFieldBlock label="API Key" required={!editing} htmlFor="v2-account-api-key">
                 {editing ? (

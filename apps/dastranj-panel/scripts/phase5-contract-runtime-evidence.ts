@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { PrismaClient, type Prisma } from '../node_modules/.prisma/client';
+import { PrismaClient, type Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const ROLLBACK = 'PHASE5_EVIDENCE_ROLLBACK';

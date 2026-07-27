@@ -114,7 +114,7 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
     tag: 'بک',
     kind: 'event',
     eventName: 'TaaviaKnowledgeBaseBuildRequestedV1',
-    eventChips: ['eventId', 'tenantId', 'brandId', 'buildId', 'buildType = InitialBuild'],
+    eventChips: ['eventId', 'tenantId', 'brandId', 'buildId', 'buildType = InitialBuild', 'modelAssignments'],
     note: 'KnowledgeBaseVersionId داخل Event ارسال نمی‌شود',
     actionLabel: 'مشاهده Payload',
     detail: {
@@ -129,7 +129,19 @@ export const START_BUILD_FRONTEND_CARDS: BuildVersionStepDocCard[] = [
   "tenantId": "tenant-100",
   "brandId": "brand-200",
   "buildId": "7f04c30ae78547d9bc173c3557a0bc91",
-  "buildType": "InitialBuild"
+  "buildType": "InitialBuild",
+  "modelAssignments": [
+    {
+      "modelType": "document_extraction",
+      "providerType": "mistral",
+      "model": "mistral-ocr-latest"
+    },
+    {
+      "modelType": "text_generation",
+      "providerType": "deepseek",
+      "model": "deepseek-chat"
+    }
+  ]
 }`,
     },
   },

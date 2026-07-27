@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { AUTH_COOKIE, verifyAuthToken } from './app/lib/auth-token';
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest)  {
   const { pathname } = request.nextUrl;
 
-  if (
+  if  (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/fonts') ||
     pathname.includes('.') ||

@@ -7,6 +7,7 @@ import {
   getPurposeCompatibility,
   TAAVIA_BRAND_AI_MODEL_PURPOSES,
   TAAVIA_PURPOSE_DESCRIPTIONS,
+  TAAVIA_PURPOSE_GUIDES,
   TAAVIA_PURPOSE_LABELS,
   type TaaviaBrandAiModelPurpose,
 } from '../taavia-ai-models';
@@ -84,7 +85,7 @@ export async function getTaaviaBrandModelAssignments(userId: string, tenantId: s
     prisma.taaviaBrandAiModelAssignment.findMany({ where: { tenantId, brandId, effectiveTo: null, purpose: { in: [...TAAVIA_BRAND_AI_MODEL_PURPOSES] } }, include: assignmentInclude, orderBy: { purpose: 'asc' } }),
     prisma.aiProviderAccountV2.findMany({
       where: { isActive: true },
-      orderBy: [{ providerType: 'asc' }, { name: 'asc' }],
+      orderBy: [{ isRecommended: 'desc' }, { providerType: 'asc' }, { name: 'asc' }],
       include: {
         models: {
           where: { isActive: true },
@@ -100,19 +101,28 @@ export async function getTaaviaBrandModelAssignments(userId: string, tenantId: s
 
   return {
     brand: { id: brand.id, tenantId: brand.tenantId, name: brand.name, description: brand.description, status: brand.status, setupMode: brand.setupMode, icon: brand.mediaAsset },
-    purposes: TAAVIA_BRAND_AI_MODEL_PURPOSES.map((purpose) => ({ code: purpose, label: TAAVIA_PURPOSE_LABELS[purpose], description: TAAVIA_PURPOSE_DESCRIPTIONS[purpose] })),
+    purposes: TAAVIA_BRAND_AI_MODEL_PURPOSES.map((purpose) => ({
+      code: purpose,
+      label: TAAVIA_PURPOSE_LABELS[purpose],
+      description: TAAVIA_PURPOSE_DESCRIPTIONS[purpose],
+      tip: TAAVIA_PURPOSE_GUIDES[purpose].tip,
+      example: TAAVIA_PURPOSE_GUIDES[purpose].example,
+      whenToUse: TAAVIA_PURPOSE_GUIDES[purpose].whenToUse,
+    })),
     assignments: assignments.map(mapAssignment),
     accounts: accounts.map((account) => ({
       id: account.id,
       name: account.name,
       providerType: account.providerType,
       isActive: account.isActive,
+      isRecommended: account.isRecommended,
       models: account.models.map((model) => ({
         id: model.id,
         name: model.name,
         providerModelId: model.providerModelId,
         modelType: model.modelType,
         isActive: model.isActive,
+        recommendedForPurposes: model.recommendedForPurposes,
         capabilities: model.capabilities.map((item) => item.capabilityType),
         pricing: currentPricing(model),
       })),
