@@ -2,8 +2,6 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PrismaClient } from '../node_modules/.prisma/client/index.js';
-
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function loadLocalEnv() {
@@ -32,6 +30,9 @@ function run(command) {
 
 async function assertMigrationHistoryIsClean() {
   loadLocalEnv();
+  // Prisma Client may not exist in a freshly built/deployed container yet.
+  // Load it only after `prisma generate` has completed below.
+  const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient();
 
   try {
@@ -70,6 +71,12 @@ async function assertMigrationHistoryIsClean() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+const generate = run('prisma generate');
+if (generate.status !== 0) {
+  console.error('Prisma Client generation failed.');
+  process.exit(generate.status ?? 1);
 }
 
 const migrate = run('prisma migrate deploy');
