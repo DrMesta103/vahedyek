@@ -3,20 +3,32 @@
 import { useMemo, useState, useTransition } from 'react';
 import {
   Archive,
-  Database,
   Eye,
+  FolderPlus,
   GripVertical,
   History,
+  Layers,
   MoreHorizontal,
   PackageOpen,
   Pencil,
+  RefreshCw,
   RotateCcw,
   Search,
+  Sparkles,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { TaavBadge, TaavButton } from '@repo/ui/taav/primitives';
+import {
+  TaavButton,
+  TaavDialog,
+  TaavDialogContent,
+  TaavDialogDescription,
+  TaavDialogFooter,
+  TaavDialogHeader,
+  TaavDialogTitle,
+} from '@repo/ui/taav';
+import { TaavBadge } from '@repo/ui/taav/primitives';
 import type { BrandSourceFamily, BrandSourceListItem, BrandSourcesPageData } from '@/app/lib/services/taavia-brand-sources-read-service';
 import {
   changeBrandSourceStatus,
@@ -24,14 +36,21 @@ import {
   getBrandSourceUsageHistory,
   reorderBrandKnowledgeSources,
 } from '@/app/businesses/[businessId]/products/taavia/brands/[brandId]/sources/actions';
-import { startKnowledgeBaseUpdateAction } from '@/app/businesses/[businessId]/products/taavia/brands/[brandId]/knowledge-base/actions';
+import {
+  startInitialBuildAction,
+  startKnowledgeBaseNewVersionAction,
+  startKnowledgeBaseRebuildAction,
+} from '@/app/businesses/[businessId]/products/taavia/brands/[brandId]/knowledge-base/actions';
 import { AddBrandIntroductionDialog } from '@/components/taavia/AddBrandIntroductionDialog';
 import { BrandInfoEditDialog } from '@/components/taavia/BrandInfoEditDialog';
-import { InitialKnowledgeBuildAction } from '@/components/taavia/knowledge-base/InitialKnowledgeBuildAction';
 
 type Tab = 'knowledge' | 'product' | 'faq';
 type Detail = Awaited<ReturnType<typeof getBrandSourceDetails>>;
 type HistoryRow = Awaited<ReturnType<typeof getBrandSourceUsageHistory>>[number];
+type ConfirmBuildKind = 'initial' | 'newVersion' | 'rebuild' | null;
+
+const VERSION_RETENTION_NOTE =
+  'سیستم بیشتر از ۵ نسخه نگه نمی‌دارد و نسخه‌های قدیمی‌تر را حذف می‌کند.';
 
 const tabs: { id: Tab; label: string }[] = [
   { id: 'knowledge', label: 'دانش‌ها' },
@@ -79,6 +98,7 @@ export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData 
   const [orderedIds, setOrderedIds] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
   const [updatePending, startUpdate] = useTransition();
+  const [confirmBuild, setConfirmBuild] = useState<ConfirmBuildKind>(null);
 
   const baseRows = useMemo(
     () =>
@@ -110,34 +130,42 @@ export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData 
   const count = (id: Tab) => (id === 'knowledge' ? data.typeCounts.brand_info + data.typeCounts.knowledge : data.typeCounts[id]);
   const refresh = () => router.refresh();
   const kbBase = `/businesses/${data.businessId}/products/taavia/brands/${data.brandId}/knowledge-base`;
-  const buildsHref = data.activeBuildId ? `${kbBase}/builds/${data.activeBuildId}` : kbBase;
+  const categoriesHref = `${kbBase}/categories`;
 
-  function goToBuild(buildId: string) {
-    router.push(`${kbBase}/builds/${buildId}`);
+  function goToCategoriesProgress() {
+    router.push(categoriesHref);
     router.refresh();
   }
 
-  function startOrOpenKnowledgeBuild() {
+  function runConfirmedBuild(kind: Exclude<ConfirmBuildKind, null>) {
     setNotice(null);
-    if (data.activeBuildId) {
-      goToBuild(data.activeBuildId);
-      return;
-    }
-    if (!data.activeKnowledgeBaseId) {
-      router.push(kbBase);
-      return;
-    }
+    setConfirmBuild(null);
     startUpdate(async () => {
       try {
-        const buildId = await startKnowledgeBaseUpdateAction({
-          businessId: data.businessId,
-          brandId: data.brandId,
-          knowledgeBaseId: data.activeKnowledgeBaseId!,
-          force: true,
-        });
-        goToBuild(buildId);
+        if (kind === 'initial') {
+          await startInitialBuildAction({
+            businessId: data.businessId,
+            brandId: data.brandId,
+          });
+        } else if (!data.activeKnowledgeBaseId) {
+          throw new Error('نسخهٔ فعال Knowledge Base پیدا نشد.');
+        } else if (kind === 'rebuild') {
+          await startKnowledgeBaseRebuildAction({
+            businessId: data.businessId,
+            brandId: data.brandId,
+            knowledgeBaseId: data.activeKnowledgeBaseId,
+          });
+        } else {
+          await startKnowledgeBaseNewVersionAction({
+            businessId: data.businessId,
+            brandId: data.brandId,
+            knowledgeBaseId: data.activeKnowledgeBaseId,
+          });
+        }
+        goToCategoriesProgress();
       } catch (e) {
         setNotice(e instanceof Error ? e.message : 'شروع ساخت Knowledge Base ناموفق بود.');
+        router.refresh();
       }
     });
   }
@@ -202,64 +230,80 @@ export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData 
     });
   }
 
+  const hasActiveSources = data.summary.active > 0;
+  const needsFirstKb = !data.hasKnowledgeBase;
+  const canStartBuild = !buildInProgress && !updatePending;
+
   return (
     <main dir="rtl" className="mx-auto w-full max-w-7xl space-y-3 pb-6 text-right">
-      <header className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-3 py-3">
-        <div className="min-w-0">
-          <h1 className="m-0 text-base font-black text-[var(--taav-text-strong)]">مدیریت منابع برند</h1>
-          <p className="mt-1 text-xs text-[var(--taav-text-muted)]">منابع فعلی برند؛ مستقل از Snapshotهای تاریخی Knowledge Base.</p>
-          {notice ? (
-            <p role="status" className="mt-2 text-xs text-rose-300">
-              {notice}
-            </p>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-col items-end gap-1">
+      <header className="rounded-xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] px-4 py-3">
+        <h1 className="m-0 text-base font-black text-[var(--taav-text-strong)]">مدیریت منابع برند</h1>
+        <p className="mt-1 text-xs text-[var(--taav-text-muted)]">منابع فعلی برند؛ مستقل از Snapshotهای تاریخی Knowledge Base.</p>
+        {notice ? (
+          <p role="status" className="mt-2 text-xs text-rose-300">
+            {notice}
+          </p>
+        ) : null}
+      </header>
+
+      <div className="flex flex-wrap items-center justify-start gap-2">
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          disabled={buildInProgress}
+          title={buildInProgress ? 'تا پایان یا خطای بیلد فعال، افزودن منبع مجاز نیست.' : undefined}
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <FolderPlus className="h-4 w-4" />
+          افزودن منبع دانش
+        </button>
+
+        {buildInProgress ? (
+          <Link href={categoriesHref}>
+            <TaavButton size="sm" iconStart={<RefreshCw className="h-4 w-4" />}>
+              مشاهده روند ساخت
+            </TaavButton>
+          </Link>
+        ) : needsFirstKb ? (
+          <button
+            type="button"
+            onClick={() => setConfirmBuild('initial')}
+            disabled={!hasActiveSources || updatePending}
+            title={!hasActiveSources ? 'ابتدا حداقل یک منبع فعال اضافه کنید' : undefined}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <Sparkles className="h-4 w-4" />
+            {updatePending ? 'در حال شروع…' : 'ساخت اولین نالج‌بیس'}
+          </button>
+        ) : data.activeKnowledgeBaseId ? (
+          <>
             <button
               type="button"
-              onClick={() => setAddOpen(true)}
-              disabled={buildInProgress}
-              title={buildInProgress ? 'تا پایان یا خطای بیلد فعال، افزودن منبع مجاز نیست.' : undefined}
-              className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => setConfirmBuild('rebuild')}
+              disabled={!canStartBuild}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-rose-400/45 bg-rose-500/10 px-4 text-sm font-bold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              افزودن منبع دانش
+              <RefreshCw className="h-4 w-4" />
+              ریبلد
             </button>
-            {buildInProgress ? (
-              <p className="m-0 max-w-56 text-[11px] leading-5 text-[var(--taav-text-muted)]">
-                بیلد فعال است؛{' '}
-                <Link href={buildsHref} className="text-cyan-300 underline-offset-2 hover:underline">
-                  مشاهده روند ساخت
-                </Link>
-              </p>
-            ) : null}
-          </div>
-          {buildInProgress ? (
-            <Link href={buildsHref}>
-              <TaavButton size="sm">مشاهده روند ساخت</TaavButton>
-            </Link>
-          ) : !data.hasKnowledgeBase ? (
-            <InitialKnowledgeBuildAction
-              businessId={data.businessId}
-              brandId={data.brandId}
-              activeSources={data.summary.active}
-              activeBuild={false}
-              activeBuildId={null}
-            />
-          ) : data.activeKnowledgeBaseId ? (
-            <TaavButton size="sm" disabled={updatePending} iconStart={<PackageOpen className="h-4 w-4" />} onClick={startOrOpenKnowledgeBuild}>
-              {updatePending ? 'در حال شروع…' : 'ساخت / بروزرسانی Knowledge Base'}
+            <button
+              type="button"
+              onClick={() => setConfirmBuild('newVersion')}
+              disabled={!canStartBuild}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-cyan-400 px-4 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Layers className="h-4 w-4" />
+              بیلد نسخهٔ جدید
+            </button>
+          </>
+        ) : (
+          <Link href={kbBase}>
+            <TaavButton size="sm" iconStart={<PackageOpen className="h-4 w-4" />}>
+              مدیریت Knowledge Base
             </TaavButton>
-          ) : (
-            <Link href={kbBase}>
-              <TaavButton size="sm" iconStart={<PackageOpen className="h-4 w-4" />}>
-                مدیریت Knowledge Base
-              </TaavButton>
-            </Link>
-          )}
-          <Database className="h-7 w-7 text-violet-400" aria-hidden />
-        </div>
-      </header>
+          </Link>
+        )}
+      </div>
 
       <section className="rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4">
         <div className="flex flex-wrap gap-2 border-b border-[var(--taav-border-subtle)] pb-3">
@@ -313,8 +357,8 @@ export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData 
             className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs leading-6 text-amber-100"
           >
             بیلد فعال است؛ تا اتمام یا خطا، تغییر منابع ممکن نیست.{' '}
-            <Link href={buildsHref} className="font-bold text-cyan-300 underline-offset-2 hover:underline">
-              مشاهده روند ساخت
+            <Link href={categoriesHref} className="font-bold text-cyan-300 underline-offset-2 hover:underline">
+              مشاهده روند ساخت در دسته‌بندی‌ها
             </Link>
           </p>
         ) : null}
@@ -561,6 +605,101 @@ export function TaaviaBrandSourcesClient({ data }: { data: BrandSourcesPageData 
           </div>
         </Modal>
       ) : null}
+
+      <TaavDialog
+        open={confirmBuild === 'initial'}
+        onOpenChange={(open) => {
+          if (!open && !updatePending) setConfirmBuild(null);
+        }}
+      >
+        <TaavDialogContent size="sm" contentClassName="ai-lab-dialog" dir="rtl">
+          <TaavDialogHeader>
+            <TaavDialogTitle className="text-right text-lg font-black">ساخت اولین نالج‌بیس</TaavDialogTitle>
+            <TaavDialogDescription className="mt-2 text-right text-sm leading-7">
+              مطمئن هستید که می‌خواهید با منابع فعال فعلی، اولین نسخهٔ Knowledge Base را بسازید؟
+              پیشرفت ساخت را در صفحهٔ مدیریت دسته‌بندی‌ها می‌بینید.
+            </TaavDialogDescription>
+          </TaavDialogHeader>
+          <TaavDialogFooter>
+            <TaavButton size="sm" variant="secondary" disabled={updatePending} onClick={() => setConfirmBuild(null)}>
+              انصراف
+            </TaavButton>
+            <TaavButton
+              size="sm"
+              disabled={updatePending}
+              onClick={() => runConfirmedBuild('initial')}
+              iconStart={<Sparkles className="h-4 w-4" />}
+            >
+              {updatePending ? 'در حال شروع…' : 'بله، بساز'}
+            </TaavButton>
+          </TaavDialogFooter>
+        </TaavDialogContent>
+      </TaavDialog>
+
+      <TaavDialog
+        open={confirmBuild === 'rebuild'}
+        onOpenChange={(open) => {
+          if (!open && !updatePending) setConfirmBuild(null);
+        }}
+      >
+        <TaavDialogContent size="sm" contentClassName="ai-lab-dialog" dir="rtl">
+          <TaavDialogHeader>
+            <TaavDialogTitle className="text-right text-lg font-black">ریبلد همین نسخه</TaavDialogTitle>
+            <TaavDialogDescription className="mt-2 text-right text-sm leading-7">
+              مطمئن هستید؟ با ریبلد، محتوای نسخهٔ فعلی با منابع کنونی دوباره ساخته می‌شود و شمارهٔ نسخه عوض نمی‌شود.
+              این کار قابل بازگشت نیست.
+              <br />
+              <span className="mt-2 block text-[var(--taav-text-muted)]">{VERSION_RETENTION_NOTE}</span>
+            </TaavDialogDescription>
+          </TaavDialogHeader>
+          <TaavDialogFooter>
+            <TaavButton size="sm" variant="secondary" disabled={updatePending} onClick={() => setConfirmBuild(null)}>
+              انصراف
+            </TaavButton>
+            <TaavButton
+              size="sm"
+              tone="danger"
+              disabled={updatePending}
+              onClick={() => runConfirmedBuild('rebuild')}
+              iconStart={<RefreshCw className="h-4 w-4" />}
+            >
+              {updatePending ? 'در حال شروع…' : 'ریبلد همین نسخه'}
+            </TaavButton>
+          </TaavDialogFooter>
+        </TaavDialogContent>
+      </TaavDialog>
+
+      <TaavDialog
+        open={confirmBuild === 'newVersion'}
+        onOpenChange={(open) => {
+          if (!open && !updatePending) setConfirmBuild(null);
+        }}
+      >
+        <TaavDialogContent size="sm" contentClassName="ai-lab-dialog" dir="rtl">
+          <TaavDialogHeader>
+            <TaavDialogTitle className="text-right text-lg font-black">ساخت نسخهٔ جدید</TaavDialogTitle>
+            <TaavDialogDescription className="mt-2 text-right text-sm leading-7">
+              مطمئن هستید که می‌خواهید با منابع فعلی یک نسخهٔ جدید بسازید؟ نسخهٔ قبلی به‌صورت غیرفعال می‌ماند.
+              پیشرفت ساخت را در صفحهٔ مدیریت دسته‌بندی‌ها می‌بینید.
+              <br />
+              <span className="mt-2 block text-[var(--taav-text-muted)]">{VERSION_RETENTION_NOTE}</span>
+            </TaavDialogDescription>
+          </TaavDialogHeader>
+          <TaavDialogFooter>
+            <TaavButton size="sm" variant="secondary" disabled={updatePending} onClick={() => setConfirmBuild(null)}>
+              انصراف
+            </TaavButton>
+            <TaavButton
+              size="sm"
+              disabled={updatePending}
+              onClick={() => runConfirmedBuild('newVersion')}
+              iconStart={<Layers className="h-4 w-4" />}
+            >
+              {updatePending ? 'در حال شروع…' : 'ساخت نسخهٔ جدید'}
+            </TaavButton>
+          </TaavDialogFooter>
+        </TaavDialogContent>
+      </TaavDialog>
     </main>
   );
 }

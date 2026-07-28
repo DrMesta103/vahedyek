@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { assertTenantAccess, assertTenantManagementAccess } from '../auth';
 import { prisma } from '../prisma';
+import { ACTIVE_BUILD_STATUSES } from '../taavia-active-build';
 import type { CreateTaaviaBrandInput, TaaviaBrand, TaaviaBrandListItem, UpdateTaaviaBrandInput } from '../types/domain';
 
 const MAX_NAME_LENGTH = 120;
@@ -106,6 +107,12 @@ export async function getTaaviaBrandListItemsForTenant(userId: string, tenantId:
         select: { id: true },
         take: 1,
       },
+      knowledgeBuilds: {
+        where: { status: { in: [...ACTIVE_BUILD_STATUSES] } },
+        select: { id: true },
+        take: 1,
+        orderBy: { startedAt: 'desc' },
+      },
     },
     orderBy: { updatedAt: 'desc' },
   });
@@ -114,6 +121,8 @@ export async function getTaaviaBrandListItemsForTenant(userId: string, tenantId:
     sourceCount: sumActiveSourceCounts(row._count),
     knowledgeBaseVersionCount: row._count.knowledgeBases,
     activeKnowledgeBaseId: row.knowledgeBases[0]?.id ?? null,
+    hasActiveBuild: row.knowledgeBuilds.length > 0,
+    activeBuildId: row.knowledgeBuilds[0]?.id ?? null,
   }));
 }
 

@@ -1,5 +1,5 @@
 import { assertTenantAccess } from "@/app/lib/auth";
-import { findActiveBuild } from "@/app/lib/taavia-active-build";
+import { ACTIVE_BUILD_STATUSES, findActiveBuild } from "@/app/lib/taavia-active-build";
 import { prisma } from "@/app/lib/prisma";
 import type { KnowledgeBaseCategoriesPageData } from "@/app/lib/types/taavia-knowledge-base-categories";
 import type { KnowledgeBaseOverview } from "@/app/lib/types/taavia-knowledge-base";
@@ -17,6 +17,32 @@ const formatDate = (value: Date) => new Intl.DateTimeFormat("fa-IR-u-ca-persian"
 const sourceType = (value: string): KnowledgeBaseSourceSnapshot["sourceType"] => (({ TEXT: "BRAND_INFO", IMAGE: "IMAGE", FILE: "FILE", LINK: "LINK", PRODUCT: "PRODUCTS_SERVICES", FAQ: "FAQ" }) as const)[value as "TEXT" | "IMAGE" | "FILE" | "LINK" | "PRODUCT" | "FAQ"] ?? "BRAND_INFO";
 export type InitialBuildReadModel = { id: string; status: string; progress: number; startedAt: string; sourceCount: number; failureMessage: string | null; steps: Array<{ key: string; label: string; status: string; progress: number; errorMessage: string | null }> };
 const stepLabels: Record<string, string> = { PREPARATION: "آماده‌سازی", SOURCE_SNAPSHOT: "ثبت Snapshot منابع", CONTENT_PROCESSING: "پردازش محتوا", CATEGORY_GENERATION: "تولید دسته‌بندی‌ها", KNOWLEDGE_GENERATION: "تولید محتوای دانش", FINALIZATION: "نهایی‌سازی و فعال‌سازی" };
+
+function mapBuildReadModel(build: {
+  id: string;
+  status: string;
+  overallProgress: number;
+  startedAt: Date;
+  selectedSourceIds: unknown;
+  failureMessage: string | null;
+  steps: Array<{ key: string; status: string; progress: number; errorMessage: string | null }>;
+}): InitialBuildReadModel {
+  return {
+    id: build.id,
+    status: build.status,
+    progress: build.overallProgress,
+    startedAt: formatDate(build.startedAt),
+    sourceCount: Array.isArray(build.selectedSourceIds) ? build.selectedSourceIds.length : 0,
+    failureMessage: build.failureMessage,
+    steps: build.steps.map((step) => ({
+      key: step.key,
+      label: stepLabels[step.key] ?? step.key,
+      status: step.status,
+      progress: step.progress,
+      errorMessage: step.errorMessage,
+    })),
+  };
+}
 
 async function scopedBrand(userId: string, tenantId: string, brandId: string) {
   if (!(await assertTenantAccess(userId, tenantId))) return null;
@@ -270,6 +296,17 @@ export async function getKnowledgeBaseCategoryDetailsPageData(userId: string, bu
   const knowledgeBase = await prisma.taaviaKnowledgeBase.findFirst({
     where: { id: knowledgeBaseId, tenantId: businessId, brandId },
     include: {
+      snapshots: {
+        select: {
+          originalSourceId: true,
+          originalBrandInfoId: true,
+          sourceGroup: true,
+          sourceType: true,
+          contentHash: true,
+          title: true,
+          content: true,
+        },
+      },
       categories: {
         include: { parent: { select: { title: true } }, _count: { select: { children: true } }, sourceReferences: { include: { snapshot: true }, orderBy: { usedAt: "desc" } } },
         orderBy: [{ level: "asc" }, { title: "asc" }],
@@ -278,9 +315,24 @@ export async function getKnowledgeBaseCategoryDetailsPageData(userId: string, bu
   });
   if (!knowledgeBase) return null;
 
-  const createdByUser = knowledgeBase.createdByUserId
-    ? await prisma.appUser.findUnique({ where: { id: knowledgeBase.createdByUserId }, select: { fullName: true } })
-    : null;
+  const [createdByUser, activeBuildRow, lastBuildRow, currentSources] = await Promise.all([
+    knowledgeBase.createdByUserId
+      ? prisma.appUser.findUnique({ where: { id: knowledgeBase.createdByUserId }, select: { fullName: true } })
+      : Promise.resolve(null),
+    prisma.taaviaKnowledgeBaseBuild.findFirst({
+      where: { tenantId: businessId, brandId, status: { in: [...ACTIVE_BUILD_STATUSES] } },
+      include: { steps: { orderBy: { stepOrder: "asc" } } },
+      orderBy: { startedAt: "desc" },
+    }),
+    prisma.taaviaKnowledgeBaseBuild.findFirst({
+      where: { tenantId: businessId, brandId, knowledgeBaseId, status: "COMPLETED" },
+      orderBy: { finishedAt: "desc" },
+    }),
+    getActiveBrandKnowledgeSources(businessId, brandId),
+  ]);
+
+  const synchronization = compareKnowledgeBaseSources(currentSources, knowledgeBase.snapshots);
+  const changeCount = synchronization.added + synchronization.edited + synchronization.archived;
   const versionLabel = knowledgeBase.versionLabel || `v${knowledgeBase.versionNumber}`;
   const sourceTypeLabels: Record<string, string> = { TEXT: "متن", PRODUCT: "محصول", FAQ: "سوال پرتکرار", FILE: "فایل", IMAGE: "تصویر", LINK: "لینک" };
 
@@ -294,6 +346,29 @@ export async function getKnowledgeBaseCategoryDetailsPageData(userId: string, bu
     updatedAt: formatDate(knowledgeBase.updatedAt),
     createdBy: createdByUser?.fullName ?? knowledgeBase.createdByUserId,
     totalCategories: knowledgeBase.categories.length,
+    activeBuild: activeBuildRow ? mapBuildReadModel(activeBuildRow) : null,
+    lastBuild: lastBuildRow
+      ? {
+          id: lastBuildRow.id,
+          buildType: formatBuildType(lastBuildRow.buildType),
+          status: formatBuildStatus(lastBuildRow.status),
+          startedAt: formatDate(lastBuildRow.startedAt),
+          finishedAt: lastBuildRow.finishedAt ? formatDate(lastBuildRow.finishedAt) : null,
+          sourceCount: Array.isArray(lastBuildRow.selectedSourceIds) ? lastBuildRow.selectedSourceIds.length : 0,
+        }
+      : null,
+    update: {
+      isSynchronized: synchronization.isSynchronized,
+      canStart: knowledgeBase.isActive && !synchronization.isSynchronized && !activeBuildRow,
+      changeCount,
+      reason: activeBuildRow
+        ? "یک فرآیند ساخت برای این برند در حال انجام است."
+        : !knowledgeBase.isActive
+          ? "این نسخه غیرفعال است و قابل بروزرسانی نیست."
+          : synchronization.isSynchronized
+            ? "دانشنامه با منابع فعلی همگام است."
+            : `${changeCount.toLocaleString("fa-IR")} تغییر در منابع؛ برای همگام‌سازی، نالج‌بیس را بروزرسانی کنید.`,
+    },
     categories: knowledgeBase.categories.map((category) => {
       const resources = category.sourceReferences.map((reference) => ({
         snapshotId: reference.snapshotId,
@@ -319,17 +394,52 @@ export async function getKnowledgeBaseCategoryDetailsPageData(userId: string, bu
     }),
   };
 }
+
+export async function getBuildingKnowledgeBaseCategoryDetailsPageData(
+  userId: string,
+  businessId: string,
+  brandId: string,
+  brandName: string,
+): Promise<KnowledgeBaseCategoryDetailsPageData | null> {
+  if (!(await scopedBrand(userId, businessId, brandId))) return null;
+  const activeBuildRow = await prisma.taaviaKnowledgeBaseBuild.findFirst({
+    where: { tenantId: businessId, brandId, status: { in: [...ACTIVE_BUILD_STATUSES] } },
+    include: { steps: { orderBy: { stepOrder: "asc" } } },
+    orderBy: { startedAt: "desc" },
+  });
+  if (!activeBuildRow) return null;
+  return {
+    businessId,
+    brandId,
+    knowledgeBaseId: null,
+    brandName,
+    versionLabel: "در حال ساخت",
+    isActive: false,
+    updatedAt: formatDate(activeBuildRow.startedAt),
+    createdBy: null,
+    totalCategories: 0,
+    activeBuild: mapBuildReadModel(activeBuildRow),
+    lastBuild: null,
+    update: null,
+    categories: [],
+  };
+}
+
 export async function getInitialBuildReadModel(userId: string, businessId: string, brandId: string): Promise<InitialBuildReadModel | null> {
   if (!(await scopedBrand(userId, businessId, brandId))) return null;
-  const build = await prisma.taaviaKnowledgeBaseBuild.findFirst({ where: { tenantId: businessId, brandId, status: { in: ["PENDING", "PROCESSING", "FAILED", "CANCELLED"] } }, include: { steps: { orderBy: { stepOrder: "asc" } } }, orderBy: { startedAt: "desc" } });
+  const build = await prisma.taaviaKnowledgeBaseBuild.findFirst({
+    where: { tenantId: businessId, brandId, status: { in: [...ACTIVE_BUILD_STATUSES, "FAILED", "CANCELLED"] } },
+    include: { steps: { orderBy: { stepOrder: "asc" } } },
+    orderBy: { startedAt: "desc" },
+  });
   if (!build) return null;
-  return { id: build.id, status: build.status, progress: build.overallProgress, startedAt: formatDate(build.startedAt), sourceCount: Array.isArray(build.selectedSourceIds) ? build.selectedSourceIds.length : 0, failureMessage: build.failureMessage, steps: build.steps.map(step => ({ key: step.key, label: stepLabels[step.key], status: step.status, progress: step.progress, errorMessage: step.errorMessage })) };
+  return mapBuildReadModel(build);
 }
 export async function getKnowledgeBaseBuildReadModel(userId: string, businessId: string, brandId: string, buildId: string): Promise<(InitialBuildReadModel & { knowledgeBaseId: string | null }) | null> {
   if (!(await scopedBrand(userId, businessId, brandId))) return null;
   const build = await prisma.taaviaKnowledgeBaseBuild.findFirst({ where: { id: buildId, tenantId: businessId, brandId }, include: { steps: { orderBy: { stepOrder: "asc" } } } });
   if (!build) return null;
-  return { id: build.id, status: build.status, progress: build.overallProgress, startedAt: formatDate(build.startedAt), sourceCount: Array.isArray(build.selectedSourceIds) ? build.selectedSourceIds.length : 0, failureMessage: build.failureMessage, knowledgeBaseId: build.knowledgeBaseId, steps: build.steps.map((step) => ({ key: step.key, label: stepLabels[step.key], status: step.status, progress: step.progress, errorMessage: step.errorMessage })) };
+  return { ...mapBuildReadModel(build), knowledgeBaseId: build.knowledgeBaseId };
 }
 
 export async function getKnowledgeBaseVersionsReadModel(userId: string, businessId: string, brandId: string): Promise<TaaviaKnowledgeBaseVersionsOverview | null> {

@@ -1,4 +1,5 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.mjs';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as react from 'react';
 import { ComponentPropsWithoutRef, ReactNode } from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
@@ -21,14 +22,14 @@ type TaavTabsListProps = ComponentPropsWithoutRef<typeof TabsPrimitive.List> & {
     tone?: TaavTabsTone;
     orientation?: TaavTabsOrientation;
 };
-declare function TaavTabsList({ variant, size, tone, orientation, className, ...props }: TaavTabsListProps): react.JSX.Element;
+declare function TaavTabsList({ variant, size, tone, orientation, className, ...props }: TaavTabsListProps): react_jsx_runtime.JSX.Element;
 type TaavTabsTriggerProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & {
     variant?: TaavTabsVariant;
     size?: TaavTabsSize;
     tone?: TaavTabsTone;
 };
-declare function TaavTabsTrigger({ variant, size, tone, className, ...props }: TaavTabsTriggerProps): react.JSX.Element;
-declare function TaavTabsContent({ className, ...props }: ComponentPropsWithoutRef<typeof TabsPrimitive.Content>): react.JSX.Element;
+declare function TaavTabsTrigger({ variant, size, tone, className, ...props }: TaavTabsTriggerProps): react_jsx_runtime.JSX.Element;
+declare function TaavTabsContent({ className, ...props }: ComponentPropsWithoutRef<typeof TabsPrimitive.Content>): react_jsx_runtime.JSX.Element;
 
 type TaavStep = {
     id: string;
@@ -51,6 +52,6 @@ type TaavStepperProps = {
     wrapperClassName?: string;
     contentClassName?: string;
 };
-declare function TaavStepper({ steps, currentStep, orientation, size, variant, showProgress, allowClick, onStepClick, wrapperClassName, contentClassName, }: TaavStepperProps): react.JSX.Element;
+declare function TaavStepper({ steps, currentStep, orientation, size, variant, showProgress, allowClick, onStepClick, wrapperClassName, contentClassName, }: TaavStepperProps): react_jsx_runtime.JSX.Element;
 
 export { type TaavStep, type TaavStepStatus, TaavStepper, type TaavStepperOrientation, type TaavStepperProps, type TaavStepperSize, type TaavStepperTone, type TaavStepperVariant, TaavTabs, TaavTabsContent, TaavTabsList, type TaavTabsListProps, type TaavTabsOrientation, type TaavTabsSize, type TaavTabsTone, TaavTabsTrigger, type TaavTabsTriggerProps, type TaavTabsVariant };

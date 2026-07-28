@@ -14,13 +14,20 @@ import {
   Eye,
   FileText,
   FolderOpen,
-  FolderTree,
   Hammer,
   Layers3,
   PackageOpen,
   Sparkles,
 } from 'lucide-react';
 import { TaavBadge, TaavButton, TaavCard } from '@repo/ui/taav/primitives';
+import {
+  TaavDialog,
+  TaavDialogContent,
+  TaavDialogDescription,
+  TaavDialogFooter,
+  TaavDialogHeader,
+  TaavDialogTitle,
+} from '@repo/ui/taav';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { TaaviaBrand } from '@/app/lib/types/domain';
 import type {
@@ -139,10 +146,13 @@ function BuildRow({ item, href }: { item: TaaviaBrandBuildListItem; href: string
             <TaavBadge tone={item.statusTone} variant="soft" size="sm">
               {item.status}
             </TaavBadge>
+            {item.versionLabel ? (
+              <TaavBadge tone="info" variant="soft" size="sm">
+                <bdi dir="ltr">{item.versionLabel}</bdi>
+              </TaavBadge>
+            ) : null}
           </div>
           <p className="mt-0.5 text-[11px] text-[var(--taav-text-muted)]">
-            {item.versionLabel ? `نسخه ${item.versionLabel}` : 'بدون نسخه نهایی'}
-            {' · '}
             <span dir="ltr">{item.isInProgress || !item.finishedAt ? item.startedAt : item.finishedAt}</span>
             {item.sourceCount > 0 ? ` · ${item.sourceCount.toLocaleString('fa-IR')} منبع` : null}
           </p>
@@ -181,6 +191,7 @@ function BuildRow({ item, href }: { item: TaaviaBrandBuildListItem; href: string
 export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialBuild }: Props) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [smartBuildOpen, setSmartBuildOpen] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updatePending, startUpdate] = useTransition();
   const base = `/businesses/${tenantId}/products/taavia/brands/${brand.id}`;
@@ -375,14 +386,9 @@ export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialB
                   </strong>
                 </div>
               </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+              <div className="mt-4">
                 <Link href={`${kb}/${active.knowledgeBaseId}/categories`}>
-                  <TaavButton size="sm" variant="secondary" unsafeClassName="w-full" iconStart={<FolderTree className="h-4 w-4" />}>
-                    مشاهده دسته‌بندی‌ها
-                  </TaavButton>
-                </Link>
-                <Link href={`${kb}/${active.knowledgeBaseId}`}>
-                  <TaavButton size="sm" unsafeClassName="w-full min-w-[200px]" iconStart={<Database className="h-4 w-4" />}>
+                  <TaavButton size="sm" unsafeClassName="w-full" iconStart={<Database className="h-4 w-4" />}>
                     مدیریت Knowledge Base
                   </TaavButton>
                 </Link>
@@ -412,14 +418,14 @@ export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialB
               <p className="mt-1 text-[11px] text-[var(--taav-text-muted)]">نسخه‌های دانشنامه این برند</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span title="ساخت هوشمند به‌زودی فعال می‌شود" className="inline-flex">
-                <TaavBadge tone="info" variant="soft" size="sm">
-                  <span className="inline-flex items-center gap-1 opacity-70">
-                    <Sparkles className="h-3 w-3" />
-                    ساخت هوشمند
-                  </span>
-                </TaavBadge>
-              </span>
+              <button
+                type="button"
+                onClick={() => setSmartBuildOpen(true)}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-sky-400/40 bg-sky-500/15 px-4 text-sm font-bold text-sky-100 transition hover:bg-sky-500/25"
+              >
+                <Sparkles className="h-4 w-4" />
+                ساخت هوشمند با AI
+              </button>
               {overview.knowledgeBases.length === 0 ? (
                 <InitialKnowledgeBuildAction
                   businessId={tenantId}
@@ -434,22 +440,10 @@ export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialB
                     مشاهده روند ساخت
                   </TaavButton>
                 </Link>
-              ) : (
-                <TaavButton
-                  size="sm"
-                  disabled={!canCreateKb || !active || updatePending}
-                  iconStart={<PackageOpen className="h-4 w-4" />}
-                  onClick={startUpdateBuild}
-                >
-                  {updatePending ? 'در حال شروع…' : '+ Knowledge Base جدید'}
-                </TaavButton>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {!canCreateKb ? (
-            <p className="mt-2 text-xs text-amber-200">برای ساخت نسخه جدید ابتدا یکی از نسخه‌های غیرفعال را حذف کنید.</p>
-          ) : null}
           {updateError ? (
             <p role="alert" className="mt-2 text-xs text-rose-300">
               {updateError}
@@ -550,6 +544,22 @@ export function TaaviaBrandWorkspaceClient({ tenantId, brand, overview, initialB
           )}
         </div>
       </section>
+
+      <TaavDialog open={smartBuildOpen} onOpenChange={setSmartBuildOpen}>
+        <TaavDialogContent size="sm" contentClassName="ai-lab-dialog" dir="rtl">
+          <TaavDialogHeader>
+            <TaavDialogTitle className="text-right text-lg font-black">ساخت هوشمند با AI</TaavDialogTitle>
+            <TaavDialogDescription className="mt-2 text-right text-sm leading-7">
+              به‌زودی این قابلیت اضافه می‌شود. با ساخت هوشمند، AI می‌تواند به‌صورت خودکار Knowledge Base را از منابع برند بسازد.
+            </TaavDialogDescription>
+          </TaavDialogHeader>
+          <TaavDialogFooter>
+            <TaavButton size="sm" onClick={() => setSmartBuildOpen(false)}>
+              متوجه شدم
+            </TaavButton>
+          </TaavDialogFooter>
+        </TaavDialogContent>
+      </TaavDialog>
     </main>
   );
 }

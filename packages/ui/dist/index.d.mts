@@ -5,7 +5,7 @@ export { TaavCheckbox, TaavCheckboxProps, TaavChoiceChipGap, TaavChoiceChipGroup
 export { TaavDialog, TaavDialogClose, TaavDialogContent, TaavDialogContentProps, TaavDialogDescription, TaavDialogFooter, TaavDialogFooterVariant, TaavDialogHeader, TaavDialogOverlay, TaavDialogPortal, TaavDialogProps, TaavDialogShellSize, TaavDialogShellVariant, TaavDialogSize, TaavDialogTitle, TaavDialogTrigger, TaavDrawer, TaavDrawerClose, TaavDrawerContent, TaavDrawerContentProps, TaavDrawerDescription, TaavDrawerFooter, TaavDrawerHeader, TaavDrawerOverlay, TaavDrawerPortal, TaavDrawerSide, TaavDrawerSize, TaavDrawerTitle, TaavDrawerTrigger, TaavDropdown, TaavDropdownContent, TaavDropdownContentProps, TaavDropdownGroup, TaavDropdownItem, TaavDropdownItemProps, TaavDropdownItemTone, TaavDropdownLabel, TaavDropdownPortal, TaavDropdownSeparator, TaavDropdownTrigger, TaavOverlayTone, TaavOverlayVariant, TaavPopover, TaavPopoverAlign, TaavPopoverAnchor, TaavPopoverClose, TaavPopoverContent, TaavPopoverContentProps, TaavPopoverSide, TaavPopoverSize, TaavPopoverTrigger } from './taav-overlays.mjs';
 export { TaavStep, TaavStepStatus, TaavStepper, TaavStepperOrientation, TaavStepperProps, TaavStepperSize, TaavStepperTone, TaavStepperVariant, TaavTabs, TaavTabsContent, TaavTabsList, TaavTabsListProps, TaavTabsOrientation, TaavTabsSize, TaavTabsTone, TaavTabsTrigger, TaavTabsTriggerProps, TaavTabsVariant } from './taav-navigation.mjs';
 export { TaavChip, TaavChipBehavior, TaavChipGap, TaavChipProps, TaavChipShape, TaavChipSize, TaavChipTone, TaavChipVariant, TaavChipWidth, TaavEmptyState, TaavEmptyStateProps, TaavEmptyStateSize, TaavEmptyStateTone, TaavEmptyStateVariant, TaavKeyValue, TaavKeyValueDensity, TaavKeyValueItem, TaavKeyValueItemTone, TaavKeyValueLayout, TaavKeyValueProps, TaavKeyValueSize, TaavSkeleton, TaavSkeletonProps, TaavSkeletonRadius, TaavSkeletonSize, TaavSkeletonVariant, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableDensity, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell, TaavTableShellProps, TaavTableVariant } from './taav-data-display.mjs';
-export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-D7oJ_XVZ.mjs';
+export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-Bkr6L0VQ.mjs';
 export { TaavChipGroup, TaavChipGroupProps, TaavChipGroupSelectionMode, TaavChipOption, TaavFilterBar, TaavFilterBarDensity, TaavFilterBarLayout, TaavFilterBarProps, TaavPagination, TaavPaginationProps, TaavPaginationSize, TaavPaginationVariant } from './taav-data-display-interactive.mjs';
 export { TaavDetailHeader, TaavDetailHeaderProps, TaavDetailHeaderVariant, TaavPageHeader, TaavPageHeaderProps, TaavPageHeaderSize, TaavPageHeaderVariant, TaavPageShell, TaavPageShellProps, TaavPageShellVariant, TaavPageShellWidth, TaavProgressSummary, TaavProgressSummaryItem, TaavProgressSummaryProps, TaavProgressSummarySize, TaavProgressSummaryVariant, TaavSettingsSection, TaavSettingsSectionProps, TaavSettingsSectionVariant, TaavStatsCard, TaavStatsCardProps, TaavStatsCardSize, TaavStatsCardVariant, TaavStatsTrend, TaavStickyActionBar, TaavStickyActionBarAlign, TaavStickyActionBarPosition, TaavStickyActionBarProps, TaavStickyActionBarVariant } from './taav-layout.mjs';
 export { TaavSection, TaavSectionProps, TaavSectionVariant, TaavSidebarPanel, TaavSidebarPanelProps, TaavSidebarPanelVariant, TaavSidebarPanelWidth } from './taav-layout-interactive.mjs';
@@ -13,6 +13,7 @@ export { T as TaavLayoutDensity, a as TaavLayoutPadding, b as TaavLayoutTone } f
 export { DEFAULT_BUSINESS_NAV_PATH, DEFAULT_BUSINESS_SIDEBAR_NAV_PATH, TaavActivationSwitch, TaavActivationSwitchProps, TaavActivationSwitchSize, TaavActivationSwitchTone, TaavActivationSwitchValue, TaavApprovalUser, TaavApprovalUserForm, TaavApprovalUserFormProps, TaavBankAccountInfoInputCard, TaavBankAccountInfoInputCardProps, TaavBankAccountNumberInput, TaavBankAccountNumberInputProps, TaavBankCardNumberInput, TaavBankCardNumberInputProps, TaavBusinessAccountInfoCard, TaavBusinessAccountInfoCardProps, TaavBusinessFormDialogCard, TaavBusinessFormDialogCardProps, TaavBusinessFormDialogField, TaavBusinessHeaderCard, TaavBusinessHeaderCardAction, TaavBusinessHeaderCardDetailLink, TaavBusinessHeaderCardProps, TaavBusinessHeaderCardSearch, TaavBusinessHeaderCardToggleLabels, TaavBusinessHeaderCardVariant, TaavBusinessIconChoiceGroup, TaavBusinessIconChoiceGroupProps, TaavBusinessIconOption, TaavBusinessIntroCard, TaavBusinessIntroCardHeadingLevel, TaavBusinessIntroCardLayout, TaavBusinessIntroCardProps, TaavBusinessIntroCardSize, TaavBusinessIntroCardThemeMode, TaavBusinessIntroCardTone, TaavBusinessIntroCardVariant, TaavBusinessIntroCardWidth, TaavBusinessModuleLink, TaavBusinessModuleLinkGrid, TaavBusinessModuleLinkGridProps, TaavBusinessModuleLinkItem, TaavBusinessModuleLinkProps, TaavBusinessNavPathItem, TaavBusinessOwnerCard, TaavBusinessOwnerCardProps, TaavBusinessOwnershipCard, TaavBusinessOwnershipCardProps, TaavBusinessOwnershipValue, TaavBusinessProfileSummaryCard, TaavBusinessProfileSummaryCardProps, TaavBusinessRecommendationCard, TaavBusinessRecommendationCardActivationValue, TaavBusinessRecommendationCardProps, TaavBusinessRecommendationCardSize, TaavBusinessRecommendationCardThemeMode, TaavBusinessRecommendationCardTone, TaavBusinessRecommendationCardVariant, TaavBusinessRecommendationCardWidth, TaavBusinessSectionToolbarCard, TaavBusinessSectionToolbarCardProps, TaavBusinessSidebar, TaavBusinessSidebarItem, TaavBusinessSidebarNavPathItem, TaavBusinessSidebarPlacement, TaavBusinessSidebarProps, TaavBusinessSidebarQuickAction, TaavBusinessSidebarTenant, TaavBusinessSidebarTenantStatus, TaavBusinessSidebarUser, TaavBusinessSidebarVariant, TaavBusinessSidebarWidth, TaavBusinessToggleCard, TaavBusinessToggleCardProps, TaavBusinessToggleCardVariant, TaavCommunicationChannel, TaavCommunicationChannels, TaavCommunicationChannelsCard, TaavCommunicationChannelsCardItem, TaavCommunicationChannelsCardProps, TaavCommunicationChannelsProps, TaavDetailsLink, TaavDetailsLinkProps, TaavDetailsLinkSize, TaavDetailsLinkTone, TaavDetailsLinkUnderline, TaavFormStep, TaavFormStepIndicator, TaavFormStepIndicatorProps, TaavMobileNumberInputCard, TaavMobileNumberInputCardProps, TaavModuleCard, TaavModuleCardAlign, TaavModuleCardDirection, TaavModuleCardGrid, TaavModuleCardGridColumns, TaavModuleCardGridDensity, TaavModuleCardGridGap, TaavModuleCardGridItem, TaavModuleCardGridItemProps, TaavModuleCardGridProps, TaavModuleCardGridSpan, TaavModuleCardHeaderPattern, TaavModuleCardProps, TaavModuleCardSize, TaavModuleCardStatus, TaavModuleCardThemeMode, TaavModuleCardTone, TaavModuleCardVariant, TaavModuleCardWidth, TaavPlateForm, TaavPlateFormProps, TaavProjectStructureCard, TaavProjectStructureCardAction, TaavProjectStructureCardProps, TaavProjectTechnicalInfoForm, TaavProjectTechnicalInfoFormProps, TaavShebaNumberInput, TaavShebaNumberInputProps } from './taav-business.mjs';
 import * as react from 'react';
 import { CSSProperties, ReactNode, ElementType } from 'react';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 export { DataTable, EmptyState, FormCard, PageIntro, PrimaryLink, StatGrid } from './server.mjs';
 import 'clsx';
 import '@radix-ui/react-dialog';
@@ -40,7 +41,7 @@ interface PersianDatePickerProps {
     withCalendarIcon?: boolean;
     calendarIconAriaLabel?: string;
 }
-declare function PersianDatePicker({ value, onChange, placeholder, className, containerClassName, withCalendarIcon, calendarIconAriaLabel, }: PersianDatePickerProps): react.JSX.Element;
+declare function PersianDatePicker({ value, onChange, placeholder, className, containerClassName, withCalendarIcon, calendarIconAriaLabel, }: PersianDatePickerProps): react_jsx_runtime.JSX.Element;
 
 /** @deprecated Use `BusinessSwitch` — this export wraps it for backwards compatibility. */
 declare function SegmentedToggle({ checked, onChange, activeLabel, inactiveLabel, }: {
@@ -48,7 +49,7 @@ declare function SegmentedToggle({ checked, onChange, activeLabel, inactiveLabel
     onChange: (value: boolean) => void;
     activeLabel?: string;
     inactiveLabel?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare const formControlStyle: CSSProperties;
 declare const compactTextareaStyle: CSSProperties;
@@ -77,14 +78,14 @@ declare function BusinessSwitch({ checked, onChange, activeLabel, inactiveLabel,
     activeLabel?: string;
     inactiveLabel?: string;
     className?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare function RuleAmountInput({ value, onChange, placeholder, suffix, }: {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
     suffix?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 /** Single-line text fields without a leading suffix chip. */
 declare const RULE_PANEL_TEXT_INPUT_CLASSNAME: string;
@@ -99,14 +100,14 @@ declare function RuleFieldLabel({ label, required, rightSlot }: {
     label: ReactNode;
     required?: boolean;
     rightSlot?: ReactNode;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare function RuleTabButton({ title, icon: Icon, active, onClick, }: {
     title: string;
     icon: ElementType;
     active: boolean;
     onClick: () => void;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare function TagPills<T extends string>({ options, value, onChange, wrap, className, }: {
     options: {
@@ -117,7 +118,7 @@ declare function TagPills<T extends string>({ options, value, onChange, wrap, cl
     onChange: (value: T) => void;
     wrap?: boolean;
     className?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type ExpandableTagGroupItem = {
     id: string;
@@ -137,19 +138,19 @@ declare function ExpandableTagGroup({ label, items, selectedId, onSelect, emptyT
     showSearch?: boolean;
     invalid?: boolean;
     onDisabledSelect?: (id: string) => void;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type ContractType = 'sale' | 'pre-sale';
 declare function ContractTypeTags({ value, onChange, }: {
     value: ContractType;
     onChange: (value: ContractType) => void;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type ContractIssuerType = 'self' | 'former' | 'staff';
 declare function ContractIssuerTags({ value, onChange, }: {
     value: ContractIssuerType;
     onChange: (value: ContractIssuerType) => void;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type ShareMode = 'percent' | 'dang';
 declare function ShareModePills({ label, value, onChange, className, }: {
@@ -157,7 +158,7 @@ declare function ShareModePills({ label, value, onChange, className, }: {
     value: ShareMode;
     onChange: (value: ShareMode) => void;
     className?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type SearchableSelectOption = {
     value: string;
@@ -172,7 +173,7 @@ declare function SearchableSelect({ options, value, onSelect, placeholder, searc
     emptyText: string;
     disabled?: boolean;
     className?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare function StickySubmitBar({ label, onClick, disabled, loadingLabel, embedded, submitId, }: {
     label: string;
@@ -181,7 +182,7 @@ declare function StickySubmitBar({ label, onClick, disabled, loadingLabel, embed
     loadingLabel?: string;
     embedded?: boolean;
     submitId?: string;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 type ChoicePillsOption<T extends string> = {
     value: T;
@@ -196,7 +197,7 @@ declare function ChoicePills<T extends string>({ options, value, onChange, ariaL
     className?: string;
     pillClassName?: string;
     showActiveIndicator?: boolean;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, ariaLabel, options, value, onChange, wrap, className, labelClassName, pillsClassName, pillClassName, showActiveIndicator, invalid, }: {
     label: string;
@@ -212,7 +213,7 @@ declare function ChoicePillsField<T extends string>({ label, labelAs: LabelAs, a
     pillClassName?: string;
     showActiveIndicator?: boolean;
     invalid?: boolean;
-}): react.JSX.Element;
+}): react_jsx_runtime.JSX.Element;
 
 declare const DEV_DOC_THREAD_PRIORITIES: readonly ["p0", "p1", "p2", "p3"];
 declare const DEV_DOC_THREAD_STATUSES: readonly ["todo", "in_progress", "done"];
@@ -259,7 +260,7 @@ type DevDocThreadsBoardProps = {
     title?: string;
     description?: string;
 };
-declare function DevDocThreadsBoard({ appName, listEndpoint, updateEndpoint, deleteEndpoint, title, description, }: DevDocThreadsBoardProps): react.JSX.Element;
+declare function DevDocThreadsBoard({ appName, listEndpoint, updateEndpoint, deleteEndpoint, title, description, }: DevDocThreadsBoardProps): react_jsx_runtime.JSX.Element;
 
 type AppThemeTokens = {
     primary: string;
