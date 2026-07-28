@@ -1,6 +1,7 @@
 import { prisma } from "@/app/lib/prisma";
 import { ACTIVE_BUILD_EXISTS_MESSAGE, findActiveBuild } from "@/app/lib/taavia-active-build";
 import { compareKnowledgeBaseSources, getActiveBrandKnowledgeSources, type KnowledgeBaseBuildSource } from "@/app/lib/taavia-knowledge-base-synchronization";
+import type { Prisma } from "@/app/lib/prisma-client";
 
 export const BUILD_STEPS = [
   ["PREPARATION", "آماده‌سازی", 10], ["SOURCE_SNAPSHOT", "ثبت Snapshot منابع", 25],
@@ -8,8 +9,12 @@ export const BUILD_STEPS = [
   ["KNOWLEDGE_GENERATION", "تولید محتوای دانش", 85], ["FINALIZATION", "نهایی‌سازی و فعال‌سازی", 100],
 ] as const;
 type StepKey = (typeof BUILD_STEPS)[number][0];
+type BuildType = "INITIAL" | "UPDATE" | "FULL_REBUILD";
+type Tx = Prisma.TransactionClient;
 
-async function createBuild(input: { tenantId: string; brandId: string; userId: string; buildType: "INITIAL" | "UPDATE" }) {
+export const MAX_KNOWLEDGE_BASE_VERSIONS = 5;
+
+async function createBuild(input: { tenantId: string; brandId: string; userId: string; buildType: BuildType }) {
   if (await findActiveBuild(input.tenantId, input.brandId)) throw new Error(ACTIVE_BUILD_EXISTS_MESSAGE);
   const selected = await getActiveBrandKnowledgeSources(input.tenantId, input.brandId);
   if (!selected.length) throw new Error("برای ساخت Knowledge Base حداقل یک منبع فعال لازم است.");
@@ -44,9 +49,69 @@ export async function startUpdateKnowledgeBuild(input: { tenantId: string; brand
   return createBuild({ ...input, buildType: "UPDATE" });
 }
 
+export async function startRebuildKnowledgeBuild(input: { tenantId: string; brandId: string; userId: string }) {
+  const activeKnowledgeBase = await prisma.taaviaKnowledgeBase.findFirst({
+    where: { tenantId: input.tenantId, brandId: input.brandId, isActive: true },
+    select: { id: true },
+  });
+  if (!activeKnowledgeBase) throw new Error("نسخهٔ فعال Knowledge Base پیدا نشد.");
+  return createBuild({ ...input, buildType: "FULL_REBUILD" });
+}
+
 function selectedSources(value: unknown, tenantId: string, brandId: string, ids: unknown) {
   if (Array.isArray(value)) return Promise.resolve(value.filter((item): item is KnowledgeBaseBuildSource => Boolean(item && typeof item === "object" && typeof (item as { id?: unknown }).id === "string" && typeof (item as { title?: unknown }).title === "string" && typeof (item as { content?: unknown }).content === "string" && typeof (item as { contentHash?: unknown }).contentHash === "string" && ["TEXT", "PRODUCT", "FAQ"].includes((item as { type?: string }).type ?? "") && ["brand_info", "knowledge", "products_services", "faq"].includes((item as { sourceGroup?: string }).sourceGroup ?? ""))));
   return getActiveBrandKnowledgeSources(tenantId, brandId).then((sources) => sources.filter((source) => Array.isArray(ids) && ids.includes(source.id)));
+}
+
+async function clearKnowledgeBaseContent(tx: Tx, knowledgeBaseId: string) {
+  const categoryIds = (
+    await tx.taaviaKnowledgeCategory.findMany({ where: { knowledgeBaseId }, select: { id: true } })
+  ).map((item) => item.id);
+  if (categoryIds.length) {
+    await tx.taaviaKnowledgeCategorySourceReference.deleteMany({ where: { categoryId: { in: categoryIds } } });
+  }
+  await tx.taaviaKnowledgeCategory.deleteMany({ where: { knowledgeBaseId, level: 2 } });
+  await tx.taaviaKnowledgeCategory.deleteMany({ where: { knowledgeBaseId, level: 1 } });
+  await tx.taaviaKnowledgeSourceSnapshot.deleteMany({ where: { knowledgeBaseId } });
+}
+
+async function deleteKnowledgeBaseVersionSafe(tx: Tx, knowledgeBaseId: string) {
+  const linkedBuilds = await tx.taaviaKnowledgeBaseBuild.findMany({
+    where: { knowledgeBaseId },
+    select: { id: true },
+  });
+  await tx.taaviaKnowledgeBaseBuild.updateMany({ where: { knowledgeBaseId }, data: { knowledgeBaseId: null } });
+  await clearKnowledgeBaseContent(tx, knowledgeBaseId);
+  if (linkedBuilds.length) {
+    await tx.taaviaKnowledgeBaseBuild.deleteMany({ where: { id: { in: linkedBuilds.map((item) => item.id) } } });
+  }
+  await tx.taaviaKnowledgeBase.delete({ where: { id: knowledgeBaseId } });
+}
+
+async function pruneOldKnowledgeBaseVersions(tx: Tx, tenantId: string, brandId: string) {
+  const versions = await tx.taaviaKnowledgeBase.findMany({
+    where: { tenantId, brandId },
+    orderBy: { versionNumber: "asc" },
+    select: { id: true, isActive: true },
+  });
+  if (versions.length <= MAX_KNOWLEDGE_BASE_VERSIONS) return;
+  const excess = versions.length - MAX_KNOWLEDGE_BASE_VERSIONS;
+  const toDelete = versions.filter((item) => !item.isActive).slice(0, excess);
+  for (const version of toDelete) {
+    await deleteKnowledgeBaseVersionSafe(tx, version.id);
+  }
+}
+
+async function attachBuildOutputsToKnowledgeBase(tx: Tx, buildId: string, tenantId: string, brandId: string, knowledgeBaseId: string) {
+  await tx.taaviaKnowledgeSourceSnapshot.updateMany({ where: { tenantId, brandId, buildId }, data: { knowledgeBaseId } });
+  await tx.taaviaKnowledgeCategory.updateMany({
+    where: { tenantId, brandId, buildId },
+    data: { knowledgeBaseId },
+  });
+  await tx.taaviaKnowledgeCategorySourceReference.updateMany({
+    where: { tenantId, brandId, buildId },
+    data: { knowledgeBaseId },
+  });
 }
 
 async function executeStep(buildId: string, key: StepKey) {
@@ -66,17 +131,35 @@ async function executeStep(buildId: string, key: StepKey) {
   if (key === "FINALIZATION") {
     await prisma.$transaction(async (tx) => {
       const active = await tx.taaviaKnowledgeBase.findFirst({ where: { tenantId: build.tenantId, brandId: build.brandId, isActive: true } });
+
+      if (build.buildType === "FULL_REBUILD") {
+        if (!active) throw new Error("برای ریبلد، نسخهٔ فعال Knowledge Base لازم است.");
+        await tx.taaviaKnowledgeBaseBuild.updateMany({ where: { knowledgeBaseId: active.id }, data: { knowledgeBaseId: null } });
+        await clearKnowledgeBaseContent(tx, active.id);
+        await attachBuildOutputsToKnowledgeBase(tx, buildId, build.tenantId, build.brandId, active.id);
+        await tx.taaviaKnowledgeBase.update({
+          where: { id: active.id },
+          data: { buildType: "FULL_REBUILD", updatedAt: new Date() },
+        });
+        await tx.taaviaKnowledgeBaseBuild.update({
+          where: { id: buildId },
+          data: { knowledgeBaseId: active.id, status: "COMPLETED", overallProgress: 100, completedAt: new Date(), finishedAt: new Date() },
+        });
+        return;
+      }
+
       if (build.buildType === "INITIAL" && active) throw new Error("Knowledge Base فعال از قبل وجود دارد.");
       if (build.buildType === "UPDATE" && !active) throw new Error("برای بروزرسانی، نسخهٔ فعال Knowledge Base لازم است.");
       const latest = await tx.taaviaKnowledgeBase.aggregate({ where: { tenantId: build.tenantId, brandId: build.brandId }, _max: { versionNumber: true } });
       const versionNumber = (latest._max.versionNumber ?? 0) + 1;
       const kb = await tx.taaviaKnowledgeBase.create({ data: { tenantId: build.tenantId, brandId: build.brandId, versionNumber, versionLabel: `v${versionNumber}`, isActive: false, buildType: build.buildType, createdByUserId: build.createdByUserId, activatedByUserId: build.createdByUserId, activatedAt: new Date() } });
-      await tx.taaviaKnowledgeSourceSnapshot.updateMany({ where: { tenantId: build.tenantId, brandId: build.brandId, buildId }, data: { knowledgeBaseId: kb.id } });
-      await tx.taaviaKnowledgeCategory.updateMany({ where: { tenantId: build.tenantId, brandId: build.brandId, sourceReferences: { some: { snapshot: { buildId } } } }, data: { knowledgeBaseId: kb.id } });
-      await tx.taaviaKnowledgeCategorySourceReference.updateMany({ where: { tenantId: build.tenantId, brandId: build.brandId, snapshot: { buildId } }, data: { knowledgeBaseId: kb.id } });
+      await attachBuildOutputsToKnowledgeBase(tx, buildId, build.tenantId, build.brandId, kb.id);
       await tx.taaviaKnowledgeBase.updateMany({ where: { tenantId: build.tenantId, brandId: build.brandId, isActive: true }, data: { isActive: false } });
       await tx.taaviaKnowledgeBase.update({ where: { id: kb.id }, data: { isActive: true } });
       await tx.taaviaKnowledgeBaseBuild.update({ where: { id: buildId }, data: { knowledgeBaseId: kb.id, status: "COMPLETED", overallProgress: 100, completedAt: new Date(), finishedAt: new Date() } });
+      if (build.buildType === "UPDATE") {
+        await pruneOldKnowledgeBaseVersions(tx, build.tenantId, build.brandId);
+      }
     });
   }
 }

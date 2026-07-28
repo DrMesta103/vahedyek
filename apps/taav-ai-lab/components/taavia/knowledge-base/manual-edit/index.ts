@@ -1,0 +1,1 @@
+export { KnowledgeBaseManualEditor } from './KnowledgeBaseManualEditor';
