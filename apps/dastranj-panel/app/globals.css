@@ -11826,9 +11826,9 @@ select option:checked {
   width: 100%;
 }
 
-.policy-page > .module-page-header{grid-row:1;order:1}
+.policy-page > .policy-page-header-card{grid-row:1;order:1}
 .policy-page > .policy-page-body{grid-row:2;order:2}
-.policy-page > .module-page-header{width:min(100%,760px);margin-inline:auto}
+.policy-page > .policy-page-header-card{width:min(100%,712px);margin-inline:auto}
 .policy-page-body form .policy-section-card:has(.policy-blueprint-option:only-child){display:none}
 
 .policy-page.module-page {
@@ -12089,6 +12089,12 @@ select option:checked {
   flex-shrink: 0;
 }
 
+.policy-toggle--segmented {
+  width: auto;
+  height: auto;
+  min-width: 168px;
+}
+
 .policy-toggle-track {
   display: block;
   width: 100%;
@@ -12115,6 +12121,53 @@ select option:checked {
 
 .policy-toggle .peer:checked ~ .policy-toggle-thumb {
   transform: translateX(-20px);
+}
+
+.policy-toggle-segment-track {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  min-width: 168px;
+  min-height: 34px;
+  padding: 3px;
+  border: 1px solid #9ca3af;
+  border-radius: 999px;
+  background: #9ca3af;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.16);
+}
+
+.policy-toggle-segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0.82;
+  transform: scale(0.98);
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 0.2s ease;
+}
+
+.policy-toggle .peer:not(:checked) ~ .policy-toggle-segment-track .is-off,
+.policy-toggle .peer:checked ~ .policy-toggle-segment-track .is-on {
+  background: #4f46e5;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+  opacity: 1;
+  transform: scale(1);
+}
+
+.policy-toggle--segmented:focus-within .policy-toggle-segment-track {
+  outline: 2px solid rgba(99, 102, 241, 0.45);
+  outline-offset: 2px;
 }
 
 .policy-form-actions {
@@ -12586,40 +12639,66 @@ select option:checked {
 
 .policy-variant-tabs {
   display: grid;
-  gap: 12px;
+  gap: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   direction: rtl;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .policy-variant-tab {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.45);
-  padding: 12px 14px;
-  text-align: right;
+  min-height: 64px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 10px 14px;
+  text-align: center;
   text-decoration: none;
   transition:
     border-color 0.18s ease,
-    background 0.18s ease;
+    color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.policy-variant-tab:hover {
+  background: rgba(148, 163, 184, 0.06);
 }
 
 .policy-variant-tab.is-active {
-  border-color: rgba(99, 102, 241, 0.65);
-  background: rgba(99, 102, 241, 0.12);
+  border-bottom-color: #e2e8f0;
+  background: transparent;
+}
+
+.policy-variant-tab.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .policy-variant-tab-title {
-  color: #f8fafc;
+  color: #94a3b8;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.policy-variant-tab.is-active .policy-variant-tab-title {
+  color: #f8fafc;
 }
 
 .policy-variant-tab-subtitle {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.policy-variant-tab.is-active .policy-variant-tab-subtitle {
   color: #94a3b8;
-  font-size: 12px;
-  line-height: 1.7;
 }
 
 .policy-family-list-header {
@@ -12770,14 +12849,14 @@ select option:checked {
 }
 
 .leave-policy-editor .policy-variant-tabs {
-  gap: 8px;
+  gap: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .leave-policy-editor .policy-variant-tab {
-  min-height: 56px;
-  border-radius: 8px;
-  padding: 9px 14px;
+  min-height: 72px;
+  border-radius: 0;
+  padding: 12px 8px 14px;
   align-content: center;
   text-align: center;
 }
@@ -12821,6 +12900,14 @@ select option:checked {
 
 .leave-policy-field {
   max-width: 100%;
+}
+
+.minutes-equivalent-hint,
+.leave-policy-minutes-equivalent {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .leave-policy-editor .policy-toggle-field {
@@ -12931,14 +13018,14 @@ select option:checked {
 }
 
 .shift-policy-editor .policy-variant-tabs {
-  gap: 8px;
+  gap: 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .shift-policy-editor .policy-variant-tab {
-  min-height: 56px;
-  border-radius: 8px;
-  padding: 9px 14px;
+  min-height: 72px;
+  border-radius: 0;
+  padding: 12px 8px 14px;
   align-content: center;
   text-align: center;
 }
@@ -13396,9 +13483,14 @@ select option:checked {
 
 @media (max-width: 900px) {
   .policy-field-grid-2,
-  .policy-variant-tabs,
   .policy-family-nav {
     grid-template-columns: 1fr;
+  }
+
+  .policy-variant-tabs,
+  .leave-policy-editor .policy-variant-tabs,
+  .shift-policy-editor .policy-variant-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .policy-family-list-header {
@@ -13416,9 +13508,7 @@ select option:checked {
   }
 
   .shift-policy-panel-grid,
-  .floating-shift-policy-panel-grid,
-  .shift-policy-editor .policy-variant-tabs,
-  .leave-policy-editor .policy-variant-tabs {
+  .floating-shift-policy-panel-grid {
     grid-template-columns: 1fr;
   }
 
@@ -28370,7 +28460,7 @@ select option:checked {
 .policy-next-pages-header{padding-bottom:14px;border-bottom:1px solid rgba(148,163,184,.12)}
 .policy-next-pages-header h2{font-size:20px;letter-spacing:-.02em}
 .policy-next-pages-header p{max-width:48ch}
-@media(min-width:1080px){.policy-page>.module-page-header{display:grid;grid-template-columns:minmax(280px,.62fr) minmax(0,1.38fr);width:100%;margin:0;direction:ltr}.policy-page>.module-page-header .module-page-header-copy{grid-column:2;direction:rtl;justify-self:stretch;padding-bottom:10px;border-bottom:1px solid rgba(148,163,184,.1)}}
+@media(min-width:1080px){.policy-page>.policy-page-header-card{width:min(100%,712px);margin-inline:auto}}
 @media(max-width:640px){.policy-next-pages .policy-work-sections{grid-template-columns:1fr!important}}
 .policy-work-sections [data-taav-module-card] h3{font-size:17px;font-weight:850;line-height:1.55}
 .policy-work-sections>[data-taav-module-card-grid-item]:first-child{grid-column:1/-1}

@@ -1,3 +1,4 @@
+import { CalendarClock, ClipboardList, MoonStar, NotebookPen, Plane, Umbrella } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { listPolicies } from '../../../lib/data';
@@ -33,11 +34,21 @@ import { NightPolicyEditor } from '../_components/NightPolicyEditor';
 import { RemotePolicyEditor } from '../_components/RemotePolicyEditor';
 import { FloatingShiftPolicyEditor } from '../_components/FloatingShiftPolicyEditor';
 import { SplitShiftPolicyEditor } from '../_components/SplitShiftPolicyEditor';
+import { PolicyMinutesField } from '../_components/PolicyMinutesField';
 import { SearchablePolicySelect } from '../_components/SearchablePolicySelect';
 import { parseSplitShiftSegmentRules } from '../../../lib/split-shift-policy';
 import { parseRemoteWorkPolicy } from '../../../lib/remote-work-policy';
 import { listCalendarShifts, type CalendarShiftType, type StoredCalendarShift } from '../../../lib/calendar-shifts';
 import { summarizeShiftForDayPanel } from '../../../lib/calendar-shift-display';
+
+const POLICY_FAMILY_HEADER_ICON: Record<PolicyFamilyKey, ReactNode> = {
+  work: <ClipboardList className="h-6 w-6" strokeWidth={2.2} />,
+  shift: <CalendarClock className="h-6 w-6" strokeWidth={2.2} />,
+  leave: <Umbrella className="h-6 w-6" strokeWidth={2.2} />,
+  manual: <NotebookPen className="h-6 w-6" strokeWidth={2.2} />,
+  night: <MoonStar className="h-6 w-6" strokeWidth={2.2} />,
+  remote: <Plane className="h-6 w-6" strokeWidth={2.2} />,
+};
 
 function fieldNumber(value: unknown, fallback = 0) {
   return typeof value === 'number' ? value : fallback;
@@ -70,6 +81,18 @@ function ShiftPolicyField({
   defaultValue: string | number;
   hint: string;
 }) {
+  if (unit === 'دقیقه') {
+    return (
+      <PolicyMinutesField
+        name={name}
+        label={label}
+        required={required}
+        defaultValue={defaultValue}
+        hint={hint}
+      />
+    );
+  }
+
   return (
     <label className="policy-field-stack shift-policy-field">
       <PolicyFieldLabel label={label} required={required} />
@@ -247,6 +270,7 @@ export default async function PolicyFamilyPage({
       titleHref={backHref}
       title={familyMeta.pageTitle}
       subtitle={familyMeta.pageHint}
+      icon={POLICY_FAMILY_HEADER_ICON[familyKey]}
     >
       {familyKey !== 'shift' && familyKey !== 'leave' && familyPolicies.length > 0 && !fromWorkHub ? (
         <PolicyFamilyList
@@ -295,10 +319,13 @@ export default async function PolicyFamilyPage({
                 </label>
               </div>
               <div className="policy-field-grid policy-field-grid-2">
-                <label className="policy-field-stack">
-                  <PolicyFieldLabel label="حداکثر تاخیر برای غیبت" required hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود." />
-                  <PolicyFieldInput name="maxDelayMinutes" type="number" defaultValue={defaults.maxDelayMinutes || 60} />
-                </label>
+                <PolicyMinutesField
+                  name="maxDelayMinutes"
+                  label="حداکثر تاخیر برای غیبت"
+                  required
+                  defaultValue={defaults.maxDelayMinutes || 60}
+                  hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود."
+                />
                 <PolicyToggleField name="requireAttachment" label="الزام به پیوست فایل" hint="برای ثبت‌های خاص پیوست اجباری باشد." defaultChecked={defaults.requireAttachment} />
               </div>
               <div className="policy-field-grid policy-field-grid-2">
@@ -391,10 +418,12 @@ export default async function PolicyFamilyPage({
                       </label>
                     </div>
                     <div className="policy-field-grid policy-field-grid-2">
-                      <label className="policy-field-stack">
-                        <PolicyFieldLabel label="ساعت کار موظفی" hint="مقدار استاندارد روزانه" />
-                        <PolicyFieldInput name="requiredMinutes" type="number" defaultValue={defaults.requiredMinutes || 510} />
-                      </label>
+                      <PolicyMinutesField
+                        name="requiredMinutes"
+                        label="ساعت کار موظفی"
+                        defaultValue={defaults.requiredMinutes || 510}
+                        hint="مقدار استاندارد روزانه"
+                      />
                       <PolicyToggleField name="endsNextDay" label="پایان در روز بعد" hint="اگر پایان از شروع عبور کند یا روز بعد باشد فعال شود." defaultChecked={defaults.endsNextDay} />
                     </div>
                     <PolicyToggleField name="breakDeduct" label="کسر از ساعات کاری" hint="استراحت‌هایی که باید از ساعات کار کسر شوند." defaultChecked={defaults.breakDeduct} />
@@ -414,10 +443,12 @@ export default async function PolicyFamilyPage({
                       </label>
                     </div>
                     <div className="policy-field-grid policy-field-grid-2">
-                      <label className="policy-field-stack">
-                        <PolicyFieldLabel label="ساعت کار موظفی" hint="مدت لازم برای ثبت کامل روز" />
-                        <PolicyFieldInput name="requiredMinutes" type="number" defaultValue={defaults.requiredMinutes || 510} />
-                      </label>
+                      <PolicyMinutesField
+                        name="requiredMinutes"
+                        label="ساعت کار موظفی"
+                        defaultValue={defaults.requiredMinutes || 510}
+                        hint="مدت لازم برای ثبت کامل روز"
+                      />
                       <label className="policy-field-stack">
                         <PolicyFieldLabel label="هسته حضور" hint="بازه‌ای که باید داخل روز جاری باشد" />
                         <PolicyFieldInput name="corePresence" type="time" defaultValue={defaults.corePresence || '10:00'} />
@@ -443,14 +474,18 @@ export default async function PolicyFamilyPage({
                       </label>
                     </div>
                     <div className="policy-field-grid policy-field-grid-2">
-                      <label className="policy-field-stack">
-                        <PolicyFieldLabel label="ساعت کار موظفی" hint="مقدار لازم برای تکمیل روز" />
-                        <PolicyFieldInput name="requiredMinutes" type="number" defaultValue={defaults.requiredMinutes || 510} />
-                      </label>
-                      <label className="policy-field-stack">
-                        <PolicyFieldLabel label="حداکثر تاخیر" hint="حداکثر مقدار دیرکرد" />
-                        <PolicyFieldInput name="maxDelayMinutes" type="number" defaultValue={defaults.maxDelayMinutes || 30} />
-                      </label>
+                      <PolicyMinutesField
+                        name="requiredMinutes"
+                        label="ساعت کار موظفی"
+                        defaultValue={defaults.requiredMinutes || 510}
+                        hint="مقدار لازم برای تکمیل روز"
+                      />
+                      <PolicyMinutesField
+                        name="maxDelayMinutes"
+                        label="حداکثر تاخیر"
+                        defaultValue={defaults.maxDelayMinutes || 30}
+                        hint="حداکثر مقدار دیرکرد"
+                      />
                     </div>
                   </>
                 ) : null}

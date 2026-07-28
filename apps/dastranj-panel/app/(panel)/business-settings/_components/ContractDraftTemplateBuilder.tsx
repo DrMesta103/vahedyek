@@ -24,6 +24,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { MinutesEquivalentHint } from '../../../components/MinutesEquivalentHint';
 import { PanelFormModal, PanelFormModalActions } from '../../../components/PanelFormModal';
 import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
 import { VariablePaymentItemDialog, type VariablePaymentDialogValue } from '../../../components/VariablePaymentItemDialog';
@@ -449,6 +450,7 @@ function FieldShell({
         />
         <b>{unit}</b>
       </span>
+      {unit === 'دقیقه' ? <MinutesEquivalentHint minutes={Number.isFinite(value) ? value : null} /> : null}
       {error ? <em>{error}</em> : null}
     </label>
   );

@@ -5,6 +5,7 @@ import { findPolicyByFamilyKey, getPolicySectionValues } from '../../../../lib/p
 import { OvertimePolicyEditor } from '../../_components/OvertimePolicyEditor';
 import { OtherPolicyEditor } from '../../_components/OtherPolicyEditor';
 import { PolicyImpactForm } from '../../_components/PolicyImpactForm';
+import { PolicyMinutesField } from '../../_components/PolicyMinutesField';
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
@@ -172,10 +173,13 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
             </div>
 
             <div className="policy-field-grid policy-field-grid-2">
-              <label className="policy-field-stack">
-                <PolicyFieldLabel label="حداکثر تاخیر برای غیبت" required hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود." />
-                <PolicyFieldInput name="maxDelayMinutes" type="number" defaultValue={defaults.maxDelayMinutes} />
-              </label>
+              <PolicyMinutesField
+                name="maxDelayMinutes"
+                label="حداکثر تاخیر برای غیبت"
+                required
+                defaultValue={defaults.maxDelayMinutes}
+                hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود."
+              />
               <PolicyToggleField
                 name="requireAttachment"
                 label="الزام به پیوست فایل"

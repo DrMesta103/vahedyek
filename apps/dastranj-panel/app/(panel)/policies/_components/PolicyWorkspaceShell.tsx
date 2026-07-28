@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { Check, ChevronLeft, Info } from 'lucide-react';
-import { ModulePageHeader } from '../../../components/module-page/ModulePageHeader';
 import { POLICY_FAMILIES, POLICY_VARIANTS, type PolicyFamilyKey } from '../../../lib/policy-workspaces';
+import { PolicyPageHeaderCard } from './PolicyPageHeaderCard';
 
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ');
@@ -15,6 +15,7 @@ export function PolicyPageShell({
   actionHref,
   actionLabel,
   titleHref,
+  icon,
   children,
 }: {
   title: string;
@@ -23,17 +24,20 @@ export function PolicyPageShell({
   actionHref?: string;
   actionLabel?: string;
   titleHref?: string;
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="page-stack module-page policy-page" dir="rtl" lang="fa">
-      <ModulePageHeader
-        title={title}
-        subtitle={subtitle}
-        addHref={actionHref}
-        addLabel={actionLabel}
-        titleHref={titleHref}
-      />
+      <PolicyPageHeaderCard title={title} subtitle={subtitle} titleHref={titleHref} icon={icon} />
+
+      {actionHref && actionLabel ? (
+        <div className="policy-page-header-extra-action">
+          <Link href={actionHref} className="policy-btn policy-btn-primary">
+            {actionLabel}
+          </Link>
+        </div>
+      ) : null}
 
       {banner ? <PolicyInfoStrip text={banner} /> : null}
 
@@ -145,7 +149,7 @@ export function PolicyToggleField({
         <span className="policy-toggle-label">{label}</span>
         {hint ? <span className="policy-toggle-hint">{hint}</span> : null}
       </span>
-      <span className="policy-toggle">
+      <span className="policy-toggle policy-toggle--segmented">
         <input
           name={name}
           type="checkbox"
@@ -154,8 +158,10 @@ export function PolicyToggleField({
             ? { checked, onChange: (event) => onCheckedChange?.(event.target.checked) }
             : { defaultChecked })}
         />
-        <span className="policy-toggle-track" aria-hidden />
-        <span className="policy-toggle-thumb" aria-hidden />
+        <span className="policy-toggle-segment-track" aria-hidden>
+          <span className="policy-toggle-segment is-on">فعال</span>
+          <span className="policy-toggle-segment is-off">غیر فعال</span>
+        </span>
       </span>
     </label>
   );

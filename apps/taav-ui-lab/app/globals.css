@@ -146,6 +146,27 @@ body {
   gap: var(--taav-space-8);
 }
 
+.lab-doc-inspector {
+  display: none;
+  width: 320px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
+  border-right: var(--taav-border-width) solid var(--taav-border);
+  background: color-mix(in srgb, var(--taav-surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  padding: var(--taav-space-4);
+}
+
+@media (min-width: 1280px) {
+  .lab-doc-inspector {
+    display: block;
+  }
+}
+
 .lab-breadcrumb {
   display: flex;
   flex-wrap: wrap;
