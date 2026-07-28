@@ -5,6 +5,7 @@ import { findPolicyByFamilyKey, getPolicySectionValues } from '../../../../lib/p
 import { OvertimePolicyEditor } from '../../_components/OvertimePolicyEditor';
 import { OtherPolicyEditor } from '../../_components/OtherPolicyEditor';
 import { PolicyImpactForm } from '../../_components/PolicyImpactForm';
+import { PolicyMinutesField } from '../../_components/PolicyMinutesField';
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
@@ -50,6 +51,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
     overtimeRequireAttachment: boolDefault(sectionValues.overtimeRequireAttachment),
     overtimeBeforeShift: boolDefault(sectionValues.overtimeBeforeShift),
     overtimeAfterShift: boolDefault(sectionValues.overtimeAfterShift),
+    dailyLimitHours: typeof sectionValues.dailyLimitHours === 'number' ? sectionValues.dailyLimitHours : 4,
     overtimeRule: (
       sectionValues.overtimeRule === 'manager_approval' || sectionValues.overtimeRule === 'automatic' || sectionValues.overtimeRule === 'disabled'
         ? sectionValues.overtimeRule
@@ -74,10 +76,9 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
   if (section === 'other') {
     return (
       <PolicyPageShell
+        titleHref={backHref}
         title="ویرایش سایر سیاست‌ها"
         subtitle="تنظیمات تکمیلی حضور و غیاب"
-        actionHref={backHref}
-        actionLabel="بازگشت به سیاست کاری"
       >
         <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
@@ -100,10 +101,9 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
   if (section === 'overtime') {
     return (
       <PolicyPageShell
+        titleHref={backHref}
         title="ویرایش سیاست‌های اضافه‌کاری"
         subtitle="تعریف قوانین ثبت و محاسبه اضافه‌کاری"
-        actionHref={backHref}
-        actionLabel="بازگشت به سیاست کاری"
       >
         <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
           <input type="hidden" name="familyKey" value="work" />
@@ -120,6 +120,7 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
               overtimeRequireAttachment={defaults.overtimeRequireAttachment}
               overtimeBeforeShift={defaults.overtimeBeforeShift}
               overtimeAfterShift={defaults.overtimeAfterShift}
+              dailyLimitHours={defaults.dailyLimitHours}
               overtimeRule={defaults.overtimeRule}
               requestRule={defaults.requestRule}
             />
@@ -134,10 +135,9 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
 
   return (
     <PolicyPageShell
+      titleHref={backHref}
       title="ویرایش سیاست کاری"
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
-      actionHref={backHref}
-      actionLabel="بازگشت به سیاست کاری"
     >
       <PolicyImpactForm action={savePolicyWorkspaceAction} groupCount={policy?.groupCount ?? 0} className="policy-form-stack">
         <input type="hidden" name="familyKey" value="work" />
@@ -173,10 +173,13 @@ export default async function WorkPolicyBasePage({ searchParams }: WorkPolicyBas
             </div>
 
             <div className="policy-field-grid policy-field-grid-2">
-              <label className="policy-field-stack">
-                <PolicyFieldLabel label="حداکثر تاخیر برای غیبت" required hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود." />
-                <PolicyFieldInput name="maxDelayMinutes" type="number" defaultValue={defaults.maxDelayMinutes} />
-              </label>
+              <PolicyMinutesField
+                name="maxDelayMinutes"
+                label="حداکثر تاخیر برای غیبت"
+                required
+                defaultValue={defaults.maxDelayMinutes}
+                hint="اگر بیش از این مقدار ثبت نشود، غیبت محسوب می‌شود."
+              />
               <PolicyToggleField
                 name="requireAttachment"
                 label="الزام به پیوست فایل"

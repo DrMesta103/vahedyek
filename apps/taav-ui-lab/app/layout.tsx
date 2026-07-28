@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { LabHeaderCardTokenOverrides } from '@/components/lab/LabHeaderCardTokenOverrides';
 import { LabThemeProvider } from '@/components/lab/LabThemeProvider';
 import { TaavProviders } from '@/components/lab/TaavProviders';
 
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fa" dir="rtl" className="dark" suppressHydrationWarning>
       <body>
         <LabThemeProvider>
-          <TaavProviders>{children}</TaavProviders>
+          <TaavProviders>
+            <LabHeaderCardTokenOverrides />
+            {children}
+          </TaavProviders>
         </LabThemeProvider>
       </body>
     </html>

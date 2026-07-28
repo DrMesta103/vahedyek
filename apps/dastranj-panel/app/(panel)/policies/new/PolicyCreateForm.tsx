@@ -53,7 +53,7 @@ export function PolicyCreateForm({ calendars }: { calendars: CalendarOption[] })
     <PolicyFormActions cancelHref="/policies" submitLabel="ادامه" />
   </div>;
 
-  return <form action={createPolicyAction as never} className="policy-form-stack">
+  return <form action={createPolicyAction as never} className="policy-form-stack policy-create-form">
     <input type="hidden" name="creationMode" value={creationMode} />
     <input type="hidden" name="blueprintKey" value={blueprintKey} />
     <input type="hidden" name="shiftPolicyOverrides" value={JSON.stringify(shiftOverrides)} />
@@ -76,11 +76,11 @@ export function PolicyCreateForm({ calendars }: { calendars: CalendarOption[] })
       </div></PolicySectionCard>
       <PolicySectionCard title="۲. تقویم کاری"><div className="policy-form-card"><label className="policy-field-stack"><PolicyFieldLabel label="این سیاست بر اساس کدام تقویم کاری اجرا شود؟" required /><PolicyFieldSelect name="customCalendarId" value={calendarId} onChange={(event) => setCalendarId(event.target.value)} required><option value="">انتخاب کنید</option>{calendars.filter((item) => item.status === 'active').map((item) => <option key={item.id} value={item.id}>{item.title} {item.yearLabel ? `- ${item.yearLabel}` : ''}</option>)}</PolicyFieldSelect></label></div></PolicySectionCard>
     </> : null}
-    {step === 2 ? null : null}
+    
     {step === 1 ? <PolicySectionCard title="۳. انتخاب قواعد پایه"><div className="policy-form-card policy-blueprint-grid">{POLICY_BLUEPRINTS.filter((item) => item.key === 'custom').map((item) => <button key={item.key} type="button" className="policy-blueprint-option is-selected"><strong>سفارشی</strong><span>قواعد را در مرحله بعد تنظیم می‌کنید.</span></button>)}</div></PolicySectionCard> : null}
     {step === 2 ? <PolicySectionCard title="۳. قواعد سیاست کاری"><div className="policy-form-card"><PolicyInfoStrip text="قواعد سیاست کاری را در این مرحله بررسی و تنظیم کنید." /></div></PolicySectionCard> : null}
     </>}
-    {(isTemplate || step === 2) ? <>
+    {false ? <>
     <PolicySectionCard title="۴. قواعد ضروری"><div className="policy-form-card policy-field-grid policy-field-grid-2">
       {shiftTypes.map((type) => { const current = shiftOverrides[type] ?? { entryRequired: true, exitRequired: true }; return <div key={type} className="policy-field-stack">
         <PolicyFieldLabel label={type === 'fixed' ? 'شیفت ثابت' : type === 'float-day' ? 'شیفت شناور - شروع روز' : type === 'float-abs' ? 'شیفت شناور مطلق' : type === 'split' ? 'شیفت دو تکه' : type} hint="قواعد ثبت ورود و خروج برای همین نوع شیفت ذخیره می‌شود." />
@@ -92,6 +92,6 @@ export function PolicyCreateForm({ calendars }: { calendars: CalendarOption[] })
     <PolicySectionCard title="۵. خلاصه پیش از ایجاد"><div className="policy-form-card"><PolicyInfoStrip text={summary.join(' ')} /></div></PolicySectionCard>
     {!calendars.some((item) => item.status === 'active') ? <PolicyInfoStrip text="برای ثبت سیاست، ابتدا یک تقویم کاری فعال ایجاد کنید." /> : null}
     </> : null}
-    {!isTemplate && step === 1 ? <div className="policy-form-actions"><button type="button" className="policy-primary-action" onClick={() => setStep(2)}>ادامه به تنظیمات</button><a className="policy-secondary-action" href="/policies">انصراف</a></div> : <PolicyFormActions cancelHref="/policies" submitLabel="ایجاد سیاست کاری" disabled={!calendars.some((item) => item.status === 'active')} />}
+    {!isTemplate && step === 1 ? <div className="policy-form-actions"><button type="submit" className="policy-primary-action" disabled={!title.trim() || !calendars.some((item) => item.status === 'active')}>ایجاد و ویرایش سیاست</button><a className="policy-secondary-action" href="/policies">انصراف</a></div> : <PolicyFormActions cancelHref="/policies" submitLabel={isTemplate ? 'ایجاد سیاست کاری' : 'ادامه به تنظیمات سیاست‌ها'} disabled={!calendars.some((item) => item.status === 'active')} />}
   </form>;
 }

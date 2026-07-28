@@ -20,6 +20,7 @@ import {
 import { useMemo, useState, type ReactNode } from 'react';
 import { CardMenu } from '../../../components/CardMenu';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { MinutesEquivalentHint } from '../../../components/MinutesEquivalentHint';
 import { createCalendarDraftFromDefaultAction, updateCalendarFromQuickSetupAction, updateCalendarHolidaysFromQuickSetupAction } from '../../../lib/actions';
 import { getPersianWeekdayName, parsePersianYmd, persianToDate, PERSIAN_MONTH_NAMES } from '../../../lib/calendar-dates';
 import {
@@ -766,6 +767,7 @@ function DurationAmountField({
           </div>
         </div>
       </div>
+      {unit === 'minutes' ? <MinutesEquivalentHint minutes={value} /> : null}
     </label>
   );
 }
@@ -1068,6 +1070,9 @@ function BreakEditor({
                   onChange={(event) => updateItem(item.id, { duration: Number(event.target.value) || 0 })}
                   className="w-full rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-white outline-none"
                 />
+                {item.unit === 'minutes' ? (
+                  <MinutesEquivalentHint minutes={item.duration} />
+                ) : null}
               </label>
               <div className="flex flex-row-reverse flex-wrap justify-end gap-2">
                 {(['minutes', 'hours'] as RestUnit[]).map((unit) => (

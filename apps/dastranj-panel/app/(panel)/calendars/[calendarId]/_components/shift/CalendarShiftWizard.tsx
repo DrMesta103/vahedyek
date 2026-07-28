@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ConfirmDialog } from '../../../../../components/ConfirmDialog';
+import { MinutesEquivalentHint } from '../../../../../components/MinutesEquivalentHint';
 import { addCalendarShiftAction } from '../../../../../lib/actions';
 import { normalizePersianDateInput } from '../../../../../lib/calendar-events';
 import { getCalendarShiftTypeLabel, resolveCalendarShiftTitle } from '../../../../../lib/calendar-shifts';
@@ -586,6 +587,7 @@ function DurationAmountField({
           </div>
         </div>
       </div>
+      {unit === 'minutes' ? <MinutesEquivalentHint minutes={value} /> : null}
     </label>
   );
 }
@@ -882,6 +884,7 @@ function BreakEditor({
                   onChange={(event) => updateItem(item.id, { duration: Number(event.target.value) || 0 })}
                   className="w-full rounded-xl border border-slate-600 bg-slate-700/40 px-4 py-3 text-right text-sm font-bold text-white outline-none"
                 />
+                {item.unit === 'minutes' ? <MinutesEquivalentHint minutes={item.duration} /> : null}
               </label>
               <div className="flex justify-start">
                 <DeductToggle checked={item.deductFromWork} onChange={(checked) => updateItem(item.id, { deductFromWork: checked })} />

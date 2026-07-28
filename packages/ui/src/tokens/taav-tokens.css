@@ -546,6 +546,33 @@
   --taav-business-nav-path-separator: #64748b;
   --taav-business-nav-path-separator-size: 13px;
 
+  /* Business header card tokens — TaavBusinessHeaderCard */
+  --taav-business-header-card-radius: 16px;
+  --taav-business-header-card-radius-compact: 14px;
+  --taav-business-header-card-icon-radius: 16px;
+  --taav-business-header-card-action-radius: 14px;
+  --taav-business-header-card-title-size: 18px;
+  --taav-business-header-card-title-leading: 26px;
+  --taav-business-header-card-title-leading-tight: 22px;
+  --taav-business-header-card-desc-size: 12.5px;
+  --taav-business-header-card-desc-leading: 22px;
+  --taav-business-header-card-desc-leading-tight: 20px;
+  --taav-business-header-card-action-size: 14px;
+  --taav-business-header-card-search-size: 12.5px;
+  --taav-business-header-card-surface: #162032;
+  --taav-business-header-card-surface-hover: #436b80;
+  --taav-business-header-card-border: rgba(145, 170, 190, 0.5);
+  --taav-business-header-card-title-color: #30343b;
+  --taav-business-header-card-description-color: #c9cccf;
+  --taav-business-header-card-accent: #008f8f;
+  --taav-business-header-card-icon-bg: rgba(0, 143, 143, 0.1);
+  --taav-business-header-card-action-text: #ffffff;
+  --taav-business-header-card-action-hover: #007e7e;
+  --taav-business-header-card-action-active: #007070;
+  --taav-business-header-card-action-focus: color-mix(in srgb, #008f8f 22%, transparent);
+  --taav-business-header-card-search-bg: #dfe4ea;
+  --taav-business-header-card-search-text: #64748b;
+
   /* Module card tokens */
   --taav-module-card-surface: #ffffff;
   --taav-module-card-surface-hover: #fbfcfd;
@@ -1602,5 +1629,92 @@
   --taav-details-link-text-hover: #cbd5e1;
 }
 
+/* TaavBusinessHeaderCard — bind visual tokens (works even when dist still has fixed Tailwind sizes) */
+[data-taav-business-header-card] {
+  border-radius: var(--taav-business-header-card-radius) !important;
+  background-color: var(--taav-business-header-card-surface) !important;
+  border-color: var(--taav-business-header-card-border) !important;
+}
 
+[data-taav-business-header-card]:hover {
+  background-color: var(--taav-business-header-card-surface-hover) !important;
+}
+
+[data-taav-business-header-card][data-variant='actionWithSearch'] {
+  border-radius: var(--taav-business-header-card-radius-compact) !important;
+}
+
+[data-taav-business-header-card] [data-part='icon'],
+[data-taav-business-header-card] span.h-\[56px\].w-\[56px\] {
+  border-radius: var(--taav-business-header-card-icon-radius) !important;
+  background-color: var(--taav-business-header-card-icon-bg) !important;
+  color: var(--taav-business-header-card-accent) !important;
+}
+
+[data-taav-business-header-card] a[aria-label='بازگشت'],
+[data-taav-business-header-card] button[aria-label='بازگشت'] {
+  color: var(--taav-business-header-card-accent) !important;
+}
+
+[data-taav-business-header-card] [data-part='title'],
+[data-taav-business-header-card] h3 {
+  font-size: var(--taav-business-header-card-title-size) !important;
+  line-height: var(--taav-business-header-card-title-leading) !important;
+  color: var(--taav-business-header-card-title-color) !important;
+}
+
+[data-taav-business-header-card][data-variant='navigation'] [data-part='title'],
+[data-taav-business-header-card][data-variant='navigation'] h3 {
+  line-height: var(--taav-business-header-card-title-leading-tight) !important;
+}
+
+[data-taav-business-header-card] [data-part='description'],
+[data-taav-business-header-card] p {
+  font-size: var(--taav-business-header-card-desc-size) !important;
+  line-height: var(--taav-business-header-card-desc-leading) !important;
+  color: var(--taav-business-header-card-description-color) !important;
+}
+
+[data-taav-business-header-card][data-variant='navigation'] [data-part='description'],
+[data-taav-business-header-card][data-variant='navigation'] p {
+  line-height: var(--taav-business-header-card-desc-leading-tight) !important;
+}
+
+[data-taav-business-header-card] [data-part='action'],
+[data-taav-business-header-card] button.min-w-\[148px\],
+[data-taav-business-header-card] button.min-w-\[170px\] {
+  border-radius: var(--taav-business-header-card-action-radius) !important;
+  font-size: var(--taav-business-header-card-action-size) !important;
+  background-color: var(--taav-business-header-card-accent) !important;
+  color: var(--taav-business-header-card-action-text) !important;
+}
+
+[data-taav-business-header-card] [data-part='action']:hover,
+[data-taav-business-header-card] button.min-w-\[148px\]:hover,
+[data-taav-business-header-card] button.min-w-\[170px\]:hover {
+  background-color: var(--taav-business-header-card-action-hover) !important;
+}
+
+[data-taav-business-header-card] [data-part='action']:active,
+[data-taav-business-header-card] button.min-w-\[148px\]:active,
+[data-taav-business-header-card] button.min-w-\[170px\]:active {
+  background-color: var(--taav-business-header-card-action-active) !important;
+}
+
+[data-taav-business-header-card] [data-part='search'],
+[data-taav-business-header-card] input {
+  font-size: var(--taav-business-header-card-search-size) !important;
+  color: var(--taav-business-header-card-search-text) !important;
+}
+
+[data-taav-business-header-card] [data-part='search']::placeholder,
+[data-taav-business-header-card] input::placeholder {
+  color: var(--taav-business-header-card-search-text) !important;
+}
+
+[data-taav-business-header-card] .rounded-full.bg-\[\#dfe4ea\],
+[data-taav-business-header-card] div.rounded-full {
+  background-color: var(--taav-business-header-card-search-bg);
+  color: var(--taav-business-header-card-search-text);
+}
 

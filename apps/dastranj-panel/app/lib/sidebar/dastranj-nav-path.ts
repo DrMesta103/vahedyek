@@ -24,6 +24,10 @@ export function resolveDastRanjNavPath(pathname: string): TaavBusinessSidebarNav
       items.push({
         label,
         id: `${normalized}-${index}`,
+        // Full-path overrides still need a real destination for every
+        // non-current breadcrumb item. Previously these entries were plain
+        // labels, so clicking «سیاست‌ها» had no navigation effect.
+        href: index === 0 && normalized.startsWith('/policies/') ? '/policies' : undefined,
       });
     });
     return items;

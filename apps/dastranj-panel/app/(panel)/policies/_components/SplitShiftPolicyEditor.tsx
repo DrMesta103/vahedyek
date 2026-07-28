@@ -1,8 +1,10 @@
+'use client';
+
 import {
-  PolicyFieldInput,
   PolicyFieldLabel,
   PolicyFormActions,
 } from './PolicyWorkspaceShell';
+import { PolicyMinutesField } from './PolicyMinutesField';
 import { SearchablePolicySelect } from './SearchablePolicySelect';
 import type { SplitShiftSegmentRules } from '../../../lib/split-shift-policy';
 
@@ -27,33 +29,21 @@ function SplitSegmentRuleFields({
       </div>
 
       <div className="shift-policy-panel-grid">
-        <label className="policy-field-stack shift-policy-field">
-          <PolicyFieldLabel label="فرجه مجاز ورود" required />
-          <div className="shift-policy-control-wrap">
-            <PolicyFieldInput
-              name={`splitSegment${prefix}EntryGraceMinutes`}
-              type="number"
-              defaultValue={segment.entryGraceMinutes}
-              min={0}
-            />
-            <span className="shift-policy-unit">دقیقه</span>
-          </div>
-          <p className="shift-policy-hint">کارمند در این بخش می‌تواند تا این مدت بعد از شروع وارد شود.</p>
-        </label>
+        <PolicyMinutesField
+          name={`splitSegment${prefix}EntryGraceMinutes`}
+          label="فرجه مجاز ورود"
+          required
+          defaultValue={segment.entryGraceMinutes}
+          hint="کارمند در این بخش می‌تواند تا این مدت بعد از شروع وارد شود."
+        />
 
-        <label className="policy-field-stack shift-policy-field">
-          <PolicyFieldLabel label="فرجه مجاز خروج" required />
-          <div className="shift-policy-control-wrap">
-            <PolicyFieldInput
-              name={`splitSegment${prefix}ExitGraceMinutes`}
-              type="number"
-              defaultValue={segment.exitGraceMinutes}
-              min={0}
-            />
-            <span className="shift-policy-unit">دقیقه</span>
-          </div>
-          <p className="shift-policy-hint">کارمند می‌تواند تا این مدت زودتر از پایان بخش خارج شود.</p>
-        </label>
+        <PolicyMinutesField
+          name={`splitSegment${prefix}ExitGraceMinutes`}
+          label="فرجه مجاز خروج"
+          required
+          defaultValue={segment.exitGraceMinutes}
+          hint="کارمند می‌تواند تا این مدت زودتر از پایان بخش خارج شود."
+        />
 
         <label className="policy-field-stack shift-policy-field">
           <PolicyFieldLabel label="نحوه محاسبه تأخیر" required />
@@ -77,19 +67,13 @@ function SplitSegmentRuleFields({
           <p className="shift-policy-hint">ملایم: فقط مازاد فرجه. سخت‌گیرانه: کل تعجیل.</p>
         </label>
 
-        <label className="policy-field-stack shift-policy-field">
-          <PolicyFieldLabel label="حداکثر تأخیر برای غیبت" required />
-          <div className="shift-policy-control-wrap">
-            <PolicyFieldInput
-              name={`splitSegment${prefix}MaxDelayBeforeAbsenceMinutes`}
-              type="number"
-              defaultValue={segment.maxDelayBeforeAbsenceMinutes}
-              min={0}
-            />
-            <span className="shift-policy-unit">دقیقه</span>
-          </div>
-          <p className="shift-policy-hint">اگر تأخیر این بخش از این مقدار بیشتر شود، آن بخش غیبت محسوب می‌شود.</p>
-        </label>
+        <PolicyMinutesField
+          name={`splitSegment${prefix}MaxDelayBeforeAbsenceMinutes`}
+          label="حداکثر تأخیر برای غیبت"
+          required
+          defaultValue={segment.maxDelayBeforeAbsenceMinutes}
+          hint="اگر تأخیر این بخش از این مقدار بیشتر شود، آن بخش غیبت محسوب می‌شود."
+        />
 
         <input type="hidden" name={`splitSegment${prefix}StartTime`} value={segment.startTime ?? ''} />
         <input type="hidden" name={`splitSegment${prefix}EndTime`} value={segment.endTime ?? ''} />
@@ -101,9 +85,11 @@ function SplitSegmentRuleFields({
 export function SplitShiftPolicyEditor({
   segments,
   calculationOptions,
+  backHref,
 }: {
   segments: SplitShiftSegmentRules[];
   calculationOptions: Array<{ value: string; label: string; hint?: string }>;
+  backHref: string;
 }) {
   const [segment1, segment2] = segments;
 
@@ -119,7 +105,7 @@ export function SplitShiftPolicyEditor({
           <SplitSegmentRuleFields prefix="2" segment={segment2} calculationOptions={calculationOptions} />
         </section>
       ) : null}
-      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+      <PolicyFormActions cancelHref={backHref} submitLabel="ویرایش" />
     </div>
   );
 }

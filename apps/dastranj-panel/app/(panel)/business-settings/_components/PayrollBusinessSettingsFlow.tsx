@@ -18,6 +18,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { MinimalScroll } from '../../../components/MinimalScroll';
+import { MinutesEquivalentHint } from '../../../components/MinutesEquivalentHint';
 import { PayrollBaseSummaryPanel, type PayrollBaseSummaryItem } from '../../../components/PayrollBaseSummaryPanel';
 import { DayTypePaymentRuleCard } from '../../../components/DayTypePaymentRuleDialog';
 import { VariablePaymentItemDialog, type VariablePaymentDialogValue } from '../../../components/VariablePaymentItemDialog';
@@ -271,6 +272,7 @@ function NumericField({
         />
         <b>{unit}</b>
       </span>
+      {unit === 'دقیقه' ? <MinutesEquivalentHint minutes={Number.isFinite(value) ? value : null} /> : null}
       <DualDifferenceBadges difference={difference} secondaryDifference={secondaryDifference} />
       {helper ? <small>{helper}</small> : null}
       {error ? <em>{error}</em> : null}

@@ -84,11 +84,33 @@ function normalizeDisplay(value: string | null | undefined) {
   return trimmed ? trimmed : 'ثبت نشده';
 }
 
+function formatMaritalStatus(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    single: 'مجرد',
+    married: 'متأهل',
+    divorced: 'مطلقه',
+    widowed: 'بیوه',
+  };
+  return value ? labels[value.toLowerCase()] ?? value : 'ثبت نشده';
+}
+
+function formatMembershipRole(value: string | null | undefined) {
+  const labels: Record<string, string> = {
+    owner: 'مالک',
+    admin: 'مدیر',
+    manager: 'مدیر',
+    member: 'عضو',
+    employee: 'کارمند',
+    viewer: 'مشاهده‌گر',
+  };
+  return value ? labels[value.toLowerCase()] ?? value : 'ثبت نشده';
+}
+
 function resolveLifecycleStatus(employee: Pick<EmployeeDetailData, 'isActive' | 'quickSetupStatus' | 'quickSetupInvitationStatus'>, hasEndedContract: boolean) {
-  if (hasEndedContract) return 'Ended employment';
-  if (employee.quickSetupStatus === 'invite_sent' || employee.quickSetupInvitationStatus === 'sent') return 'Invited';
-  if (employee.quickSetupStatus === 'pending_completion' || employee.quickSetupStatus === 'in_progress') return 'Incomplete';
-  return employee.isActive ? 'Active' : 'Inactive';
+  if (hasEndedContract) return 'همکاری پایان‌یافته';
+  if (employee.quickSetupStatus === 'invite_sent' || employee.quickSetupInvitationStatus === 'sent') return 'دعوت‌شده';
+  if (employee.quickSetupStatus === 'pending_completion' || employee.quickSetupStatus === 'in_progress') return 'ناقص';
+  return employee.isActive ? 'فعال' : 'غیرفعال';
 }
 
 function buildSections(employeeId: string, canHistoryView: boolean): Array<{ title: string; cards: EmployeeDetailSection[]; layout?: 'default' | 'contract' }> {
@@ -307,7 +329,7 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
   const workGroups = employee.workGroups ?? [];
   const currentContract = employee.currentContract ?? null;
   const contractDisplayKind = currentContract?.status === 'active' ? 'active' : currentContract ? 'historical' : 'none';
-  const contractDisplayLabel = contractDisplayKind === 'active' ? 'Active contract' : contractDisplayKind === 'historical' ? 'Historical contract' : 'No active contract';
+  const contractDisplayLabel = contractDisplayKind === 'active' ? 'قرارداد فعال' : contractDisplayKind === 'historical' ? 'قرارداد پیشین' : 'قرارداد فعالی ثبت نشده است';
   const contractProgress = getEmployeeContractProfileProgress(currentContract);
   const contractTimeline = getEmployeeContractTimelineProgress(currentContract);
   const profileCompletion = computeSupplementalCompleteness(employee.supplemental, employee);
@@ -331,30 +353,30 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               </div>
               <div className="employee-detail-hero-profile-copy">
                 <h2>{fullName || 'بدون نام'}</h2>
-                <p>Personnel code: {normalizeDisplay(employee.personnelCode)}</p>
+                <p>کد پرسنلی: {normalizeDisplay(employee.personnelCode)}</p>
                 <p>کد ملی: {normalizeDisplay(employee.nationalId)}</p>
               </div>
             </div>
             <div className="employee-detail-hero-contact-icons">
-              <span title={employee.mobile1 ?? 'Mobile not registered'}>
+              <span title={employee.mobile1 ?? 'موبایل ثبت نشده است'}>
                 <Phone className="h-4 w-4" aria-hidden />
                 <small>{normalizeDisplay(employee.mobile1)}</small>
               </span>
-              <span title={employee.email ?? 'Email not registered'}>
+              <span title={employee.email ?? 'ایمیل ثبت نشده است'}>
                 <Mail className="h-4 w-4" aria-hidden />
                 <small>{normalizeDisplay(employee.email)}</small>
               </span>
-              <span title={primaryAssignment?.title ?? 'Organization unit not registered'}>
+              <span title={primaryAssignment?.title ?? 'واحد سازمانی ثبت نشده است'}>
                 <MapPin className="h-4 w-4" aria-hidden />
                 <small>{normalizeDisplay(primaryAssignment?.title)}</small>
               </span>
             </div>
             <div className="employee-detail-status-badges employee-detail-status-badges--summary">
               <span className="employee-detail-status-badge is-solid">{lifecycleStatus}</span>
-              <span className="employee-detail-status-badge is-outline">{employee.accountState ?? (employee.userTenantMembership ? 'User connected' : 'No user account')}</span>
+              <span className="employee-detail-status-badge is-outline">{employee.accountState ?? (employee.userTenantMembership ? 'کاربر متصل است' : 'حساب کاربری ثبت نشده است')}</span>
               <span className="employee-detail-status-badge is-outline">{employee.workLocation ? `محل کار: ${employee.workLocation}` : 'محل کار ثبت نشده است.'}</span>
               <span className="employee-detail-status-badge is-outline">{employee.employmentStartDate ? `شروع همکاری: ${formatPersianDate(employee.employmentStartDate)}` : 'تاریخ شروع همکاری ثبت نشده است.'}</span>
-              <span className="employee-detail-status-badge is-outline">{profileCompletion}% profile</span>
+              <span className="employee-detail-status-badge is-outline">تکمیل پرونده: {profileCompletion}%</span>
             </div>
             <div className="employee-detail-hero-profile-actions">
               {employee.permissions.canUpdate ? (
@@ -365,12 +387,12 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
               ) : null}
               {employee.permissions.canDisable ? (
                 <form action={toggleEmployeeActiveAction} onSubmit={(event) => {
-                  if (!window.confirm(employee.isActive ? 'Disable this employee account?' : 'Reactivate this employee account?')) event.preventDefault();
+                  if (!window.confirm(employee.isActive ? 'حساب این کارمند غیرفعال شود؟' : 'حساب این کارمند دوباره فعال شود؟')) event.preventDefault();
                 }}>
                   <input type="hidden" name="id" value={employee.id} />
                   <input type="hidden" name="isActive" value={employee.isActive ? 'false' : 'true'} />
                   <button type="submit" className="employee-detail-action-btn">
-                    {employee.isActive ? 'Disable' : 'Reactivate'}
+                    {employee.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی مجدد'}
                   </button>
                 </form>
               ) : null}
@@ -456,45 +478,45 @@ export function EmployeeDetailView({ employee }: { employee: EmployeeDetailData 
           </article>
         </section>
 
-        <section className="employee-detail-summary-grid" aria-label="Employee record summary">
+        <section className="employee-detail-summary-grid" aria-label="خلاصه پرونده کارمند">
           <article className="employee-detail-summary-card">
-            <h3>Basic information</h3>
-            <div><span>Mobile</span><strong>{normalizeDisplay(employee.mobile1)}</strong></div>
-            <div><span>Email</span><strong>{normalizeDisplay(employee.email)}</strong></div>
-            <div><span>Marital status</span><strong>{normalizeDisplay(employee.maritalStatus)}</strong></div>
-            <div><span>Children</span><strong>{formatFaNumber(employee.childrenCount, { useGrouping: false })}</strong></div>
+            <h3>اطلاعات پایه</h3>
+            <div><span>موبایل</span><strong>{normalizeDisplay(employee.mobile1)}</strong></div>
+            <div><span>ایمیل</span><strong>{normalizeDisplay(employee.email)}</strong></div>
+            <div><span>وضعیت تأهل</span><strong>{formatMaritalStatus(employee.maritalStatus)}</strong></div>
+            <div><span>فرزندان</span><strong>{formatFaNumber(employee.childrenCount, { useGrouping: false })}</strong></div>
           </article>
           <article className="employee-detail-summary-card">
-            <h3>Organization</h3>
-            <div><span>Unit</span><strong>{normalizeDisplay(primaryAssignment?.title)}</strong></div>
-            <div><span>Position</span><strong>{normalizeDisplay(primaryAssignment?.position?.title)}</strong></div>
-            <div><span>Manager</span><strong>{primaryAssignment?.manager ? `${primaryAssignment.manager.firstName} ${primaryAssignment.manager.lastName}` : 'Not registered'}</strong></div>
-            <div><span>Work group</span><strong>{workGroups.length ? workGroups.map((item) => item.title).join('، ') : 'Not registered'}</strong></div>
+            <h3>ساختار سازمانی</h3>
+            <div><span>واحد</span><strong>{normalizeDisplay(primaryAssignment?.title)}</strong></div>
+            <div><span>سمت</span><strong>{normalizeDisplay(primaryAssignment?.position?.title)}</strong></div>
+            <div><span>مدیر</span><strong>{primaryAssignment?.manager ? `${primaryAssignment.manager.firstName} ${primaryAssignment.manager.lastName}` : 'ثبت نشده'}</strong></div>
+            <div><span>گروه کاری</span><strong>{workGroups.length ? workGroups.map((item) => item.title).join('، ') : 'ثبت نشده'}</strong></div>
           </article>
           <article className="employee-detail-summary-card">
-            <h3>Account</h3>
-            <div><span>Account status</span><strong>{employee.userTenantMembership ? 'Connected' : 'No user account'}</strong></div>
-            <div><span>User</span><strong>{employee.userTenantMembership ? `${employee.userTenantMembership.user.firstName} ${employee.userTenantMembership.user.lastName}` : 'Not registered'}</strong></div>
-            <div><span>Membership role</span><strong>{employee.userTenantMembership?.role ?? 'Not registered'}</strong></div>
-            <div><span>Profile status</span><strong>{profileCompletion >= 70 ? 'Complete' : 'Incomplete'}</strong></div>
+            <h3>حساب کاربری</h3>
+            <div><span>وضعیت حساب</span><strong>{employee.userTenantMembership ? 'متصل' : 'حساب کاربری ثبت نشده است'}</strong></div>
+            <div><span>کاربر</span><strong>{employee.userTenantMembership ? `${employee.userTenantMembership.user.firstName} ${employee.userTenantMembership.user.lastName}` : 'ثبت نشده'}</strong></div>
+            <div><span>نقش عضویت</span><strong>{formatMembershipRole(employee.userTenantMembership?.role)}</strong></div>
+            <div><span>وضعیت پرونده</span><strong>{profileCompletion >= 70 ? 'کامل' : 'ناقص'}</strong></div>
           </article>
         </section>
 
-        <section className="employee-detail-contract-timeline" aria-label="Contract timeline">
+        <section className="employee-detail-contract-timeline" aria-label="زمان‌بندی قرارداد">
           <div className="employee-detail-section-head">
-            <h3>Contract timeline</h3>
+            <h3>زمان‌بندی قرارداد</h3>
             <span className="employee-detail-status-badge is-outline">{contractDisplayLabel}</span>
           </div>
           {contractTimeline.hasTimeline ? (
             <div className="employee-detail-timeline-grid">
-              <div><span>Start</span><strong>{normalizeDisplay(contractTimeline.startDate)}</strong></div>
-              <div><span>End</span><strong>{normalizeDisplay(contractTimeline.endDate)}</strong></div>
-              <div><span>Total days</span><strong>{formatFaNumber(contractTimeline.totalDays, { useGrouping: false })}</strong></div>
-              <div><span>Elapsed</span><strong>{formatFaNumber(contractTimeline.elapsedDays, { useGrouping: false })} ({contractTimeline.elapsedPercent}%)</strong></div>
-              <div><span>Remaining</span><strong>{formatFaNumber(contractTimeline.remainingDays, { useGrouping: false })} ({contractTimeline.remainingPercent}%)</strong></div>
+              <div><span>شروع</span><strong>{normalizeDisplay(contractTimeline.startDate)}</strong></div>
+              <div><span>پایان</span><strong>{normalizeDisplay(contractTimeline.endDate)}</strong></div>
+              <div><span>کل روزها</span><strong>{formatFaNumber(contractTimeline.totalDays, { useGrouping: false })}</strong></div>
+              <div><span>سپری‌شده</span><strong>{formatFaNumber(contractTimeline.elapsedDays, { useGrouping: false })} ({contractTimeline.elapsedPercent}%)</strong></div>
+              <div><span>باقی‌مانده</span><strong>{formatFaNumber(contractTimeline.remainingDays, { useGrouping: false })} ({contractTimeline.remainingPercent}%)</strong></div>
             </div>
           ) : (
-            <p className="employee-detail-empty-note">No contract timeline is available.</p>
+            <p className="employee-detail-empty-note">زمان‌بندی قراردادی ثبت نشده است.</p>
           )}
         </section>
 
