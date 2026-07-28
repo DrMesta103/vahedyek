@@ -1,3 +1,5 @@
+'use client';
+
 import {
   getLeavePolicyDefaultsFromSectionValues,
   LEAVE_TYPE_MODE_TOOLTIPS,
@@ -5,37 +7,8 @@ import {
   LEAVE_VARIANT_TO_TYPE,
 } from '../../../lib/leave-policy';
 import type { PolicyFamilyKey, PolicyWorkspaceSectionValues } from '../../../lib/policy-workspaces';
-import {
-  PolicyFieldInput,
-  PolicyFieldLabel,
-  PolicyFormActions,
-  PolicyInfoStrip,
-  PolicyToggleField,
-  PolicyVariantTabs,
-} from './PolicyWorkspaceShell';
-
-function LeavePolicyNumberField({
-  name,
-  label,
-  defaultValue,
-  hint,
-}: {
-  name: string;
-  label: string;
-  defaultValue: number | null;
-  hint: string;
-}) {
-  return (
-    <label className="policy-field-stack shift-policy-field leave-policy-field">
-      <PolicyFieldLabel label={label} />
-      <div className="shift-policy-control-wrap">
-        <PolicyFieldInput name={name} type="number" defaultValue={defaultValue ?? ''} min={0} />
-        <span className="shift-policy-unit">دقیقه</span>
-      </div>
-      <p className="shift-policy-hint">{hint}</p>
-    </label>
-  );
-}
+import { PolicyFormActions, PolicyInfoStrip, PolicyToggleField, PolicyVariantTabs } from './PolicyWorkspaceShell';
+import { PolicyMinutesField } from './PolicyMinutesField';
 
 export function LeavePolicyEditor({
   familyKey,
@@ -113,9 +86,10 @@ export function LeavePolicyEditor({
           />
 
           {supportsMonthlyCap ? (
-            <LeavePolicyNumberField
+            <PolicyMinutesField
               name="monthlyLimit"
               label="سقف مصرف ماهانه"
+              className="policy-field-stack shift-policy-field leave-policy-field"
               defaultValue={rule.monthlyUsageCapHours != null ? rule.monthlyUsageCapHours * 60 : null}
               hint="در صورت نیاز، سقف مصرف ماهانه این نوع مرخصی را مشخص کنید."
             />
@@ -124,9 +98,10 @@ export function LeavePolicyEditor({
           )}
 
           {supportsMaxUsage ? (
-            <LeavePolicyNumberField
+            <PolicyMinutesField
               name="maxUsageHours"
               label="حداکثر مدت مجاز"
+              className="policy-field-stack shift-policy-field leave-policy-field"
               defaultValue={rule.maxUsageHours != null ? rule.maxUsageHours * 60 : null}
               hint="در صورت نیاز، سقف مدت مجاز برای این نوع مرخصی را مشخص کنید."
             />

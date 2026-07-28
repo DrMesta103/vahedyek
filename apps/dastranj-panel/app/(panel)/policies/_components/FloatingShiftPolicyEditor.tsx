@@ -3,6 +3,7 @@
 import { CircleHelp } from 'lucide-react';
 import { useState, type InvalidEvent, type ReactNode } from 'react';
 import { TaavTooltip, TaavTooltipProvider } from '@repo/ui/taav/primitives';
+import { MinutesEquivalentHint } from '../../../components/MinutesEquivalentHint';
 import {
   PolicyFieldInput,
   PolicyFieldLabel,
@@ -85,15 +86,18 @@ export function FloatingShiftPolicyEditor({
   delayCalculationMode,
   maxDelayMinutes,
   preservedRequiredHours,
+  backHref,
 }: {
   variant: FloatingShiftVariant;
   entryGraceMinutes: number;
   delayCalculationMode: string;
   maxDelayMinutes: number;
   preservedRequiredHours?: number;
+  backHref: string;
 }) {
   const section = SECTION_COPY[variant];
   const [graceMinutes, setGraceMinutes] = useState(entryGraceMinutes);
+  const [maxShortageMinutes, setMaxShortageMinutes] = useState(maxDelayMinutes);
 
   const clearValidity = (event: React.FormEvent<HTMLInputElement>) => {
     event.currentTarget.setCustomValidity('');
@@ -160,6 +164,7 @@ export function FloatingShiftPolicyEditor({
               />
               <span className="shift-policy-unit">دقیقه</span>
             </div>
+            <MinutesEquivalentHint minutes={graceMinutes} />
             <p className="shift-policy-hint">
               اگر کارکرد روزانه تا این مقدار کمتر از مدت کار مورد انتظار باشد، کم‌کاری ثبت نمی‌شود.
             </p>
@@ -189,11 +194,16 @@ export function FloatingShiftPolicyEditor({
                 min={0}
                 required
                 defaultValue={maxDelayMinutes}
+                onChange={(event) => {
+                  clearValidity(event);
+                  setMaxShortageMinutes(Number(event.currentTarget.value) || 0);
+                }}
                 onInput={clearValidity}
                 onInvalid={validateMaxShortageMinutes}
               />
               <span className="shift-policy-unit">دقیقه</span>
             </div>
+            <MinutesEquivalentHint minutes={maxShortageMinutes} />
             <p className="shift-policy-hint">
               اگر کمبود کارکرد از این مقدار بیشتر شود، روز می‌تواند به‌عنوان غیبت ثبت شود.
             </p>
@@ -205,7 +215,7 @@ export function FloatingShiftPolicyEditor({
         <input type="hidden" name="requiredHours" value={preservedRequiredHours} />
       ) : null}
 
-      <PolicyFormActions cancelHref="/policies" submitLabel="ویرایش" />
+      <PolicyFormActions cancelHref={backHref} submitLabel="ویرایش" />
     </TaavTooltipProvider>
   );
 }

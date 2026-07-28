@@ -3,8 +3,9 @@ import { listCalendars, listPolicies } from '../../../lib/data';
 import { getPolicyBlueprint } from '../../../lib/policy-blueprints';
 import { getPolicyAccess } from '../../../lib/policy-access';
 import { getPolicyFamilyKey, getPolicySectionValues } from '../../../lib/policy-workspaces';
-import { PolicyInfoStrip, PolicyNavLink, PolicyPageShell } from '../_components/PolicyWorkspaceShell';
+import { PolicyInfoStrip, PolicyPageShell } from '../_components/PolicyWorkspaceShell';
 import { PolicyOverviewCard } from './_components/PolicyOverviewCard';
+import { PolicyNextPages } from './_components/PolicyNextPages';
 
 type WorkPolicyPageProps = {
   searchParams?: { policyId?: string; created?: string; cloned?: string; mode?: string } | Promise<{ policyId?: string; created?: string; cloned?: string; mode?: string }>;
@@ -35,14 +36,15 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
   const overtimeLabel = sectionValues.overtimeRule === 'manager_approval' ? 'فقط با تأیید مدیر' : sectionValues.overtimeRule === 'automatic' || sectionValues.overtimeFromAttendance === true ? 'فعال، بدون تأیید مدیر' : sectionValues.overtimeRule === 'disabled' ? 'غیرفعال' : 'ثبت نشده';
   const requestLabel = sectionValues.requestRule === 'leave_and_correction' ? 'مرخصی و اصلاح تردد' : sectionValues.requestRule === 'leave_only' ? 'فقط مرخصی' : sectionValues.requestRule === 'correction_only' ? 'فقط اصلاح تردد' : sectionValues.requestRule === 'none' ? 'غیرفعال' : sectionValues.requestEnabled === true ? 'فعال' : 'ثبت نشده';
 
+  const hasConfiguredValue = (...keys: string[]) => keys.some((key) => Object.prototype.hasOwnProperty.call(sectionValues, key));
   const sectionLinks = [
-    { title: 'سیاست‌های شیفت', href: policyId ? `/policies/shift?policyId=${policyId}` : '/policies/shift' },
-    { title: 'سیاست‌های شب‌کاری', href: policyId ? `/policies/night?policyId=${policyId}` : '/policies/night' },
-    { title: 'سیاست‌های مرخصی', href: policyId ? `/policies/leave?policyId=${policyId}` : '/policies/leave' },
-    { title: 'سیاست‌های اضافه‌کاری', href: policyId ? `/policies/work/base?policyId=${policyId}&section=overtime` : '/policies/work/base?section=overtime' },
-    { title: 'سیاست‌های تردد دستی', href: policyId ? `/policies/manual?policyId=${policyId}` : '/policies/manual' },
-    { title: 'سیاست‌های دورکاری', href: policyId ? `/policies/remote?policyId=${policyId}` : '/policies/remote' },
-    { title: 'سایر سیاست‌ها', href: policyId ? `/policies/work/base?policyId=${policyId}&section=other` : '/policies/work/base?section=other' },
+    { title: 'سیاست‌های شیفت', href: policyId ? `/policies/shift?policyId=${policyId}` : '/policies/shift', configured: hasConfiguredValue('shiftPolicies', 'startTime', 'endTime', 'requiredMinutes', 'workStartWindow') },
+    { title: 'سیاست‌های شب‌کاری', href: policyId ? `/policies/night?policyId=${policyId}` : '/policies/night', configured: hasConfiguredValue('nightEnabled', 'nightStart', 'nightEnd') },
+    { title: 'سیاست‌های مرخصی', href: policyId ? `/policies/leave?policyId=${policyId}` : '/policies/leave', configured: hasConfiguredValue('requestRule', 'requestEnabled', 'monthlyLimit', 'approvalMode') },
+    { title: 'سیاست‌های اضافه‌کاری', href: policyId ? `/policies/work/base?policyId=${policyId}&section=overtime` : '/policies/work/base?section=overtime', configured: hasConfiguredValue('overtimeRule', 'overtimeFromAttendance', 'dailyLimitHours') },
+    { title: 'سیاست‌های تردد دستی', href: policyId ? `/policies/manual?policyId=${policyId}` : '/policies/manual', configured: hasConfiguredValue('manualEntryEnabled', 'manualPastDaysEnabled', 'manualMaxPastDays') },
+    { title: 'سیاست‌های دورکاری', href: policyId ? `/policies/remote?policyId=${policyId}` : '/policies/remote', configured: hasConfiguredValue('allowRemote', 'remoteEnabled', 'remoteWorkEnabled') },
+    { title: 'سایر سیاست‌ها', href: policyId ? `/policies/work/base?policyId=${policyId}&section=other` : '/policies/work/base?section=other', configured: hasConfiguredValue('locationRule', 'requireGeofence', 'faceRecognitionInFlow', 'consecutiveAbsenceWarning') },
   ];
 
   return (
@@ -52,25 +54,14 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
       subtitle="تنظیم قوانین حضور و غیاب کارمندان"
     >
       <div className="policy-work-layout">
+        <aside className="policy-work-report" aria-label="گزارش سیاست کاری">
         {resolvedSearchParams.created === '1' ? <PolicyInfoStrip text="سیاست کاری با موفقیت ایجاد شد." /> : null}
         {resolvedSearchParams.cloned === '1' ? <PolicyInfoStrip text="کپی سیاست کاری با موفقیت ایجاد شد." /> : null}
-        {selectedPolicy ? (
-          <PolicyOverviewCard
-            policyId={policyId}
-            title={title}
-            description={description}
-            calendarYearLabel={calendarYearLabel}
-            calendarTitle={calendarTitle}
-            calendarId={selectedPolicy?.calendarId ?? ''}
-            calendars={calendars.filter((item) => item.status === 'active' || item.id === selectedPolicy.calendarId).map((item) => ({ id: item.id, title: item.title, yearLabel: item.yearLabel }))}
-            groupCount={selectedPolicy.groupCount}
-            readOnly={readOnly}
-          />
-        ) : (
+        {!selectedPolicy ? (
           <PolicyInfoStrip text="هنوز سیاست کاری پایه‌ای ثبت نشده است. از فهرست سیاست‌ها یک سیاست جدید ایجاد کنید." />
-        )}
+        ) : null}
 
-        {selectedPolicy ? <>
+        {selectedPolicy ? <div className="policy-work-report-details">
           <section className="policy-section-card"><header className="policy-section-card-header"><h2>جزئیات خواندنی سیاست</h2><p>این اطلاعات از داده ذخیره‌شده سیاست خوانده می‌شود.</p></header><div className="policy-detail-grid">
             <div><span>Blueprint</span><strong>{blueprint?.title ?? text(sectionValues.blueprintTitle)}</strong></div><div><span>وضعیت</span><strong>{selectedPolicy.isActive ? 'فعال' : 'غیرفعال'}</strong></div><div><span>نوع</span><strong>{selectedPolicy.isDefault ? 'پیش‌فرض' : 'عادی'}</strong></div><div><span>تقویم</span><strong>{calendarTitle || 'ثبت نشده'}</strong></div>
             <div><span>تاریخ ایجاد</span><strong>{selectedPolicy.createdAt.toLocaleDateString('fa-IR')}</strong></div><div><span>آخرین ویرایش</span><strong>{selectedPolicy.updatedAt.toLocaleDateString('fa-IR')}</strong></div><div><span>توضیحات</span><strong>{selectedPolicy.description?.trim() || 'ثبت نشده'}</strong></div><div><span>وضعیت استفاده</span><strong>{selectedPolicy.groupCount > 0 ? 'استفاده‌شده' : 'بدون استفاده'}</strong></div>
@@ -78,20 +69,39 @@ export default async function WorkPolicyOverviewPage({ searchParams }: WorkPolic
             <div><span>فرجه خروج</span><strong>{typeof sectionValues.exitGraceMinutes === 'number' ? `${sectionValues.exitGraceMinutes.toLocaleString('fa-IR')} دقیقه` : 'ثبت نشده'}</strong></div><div><span>قاعده تأخیر</span><strong>{sectionValues.delayCalculationMode === 'strict' ? 'سخت‌گیرانه' : sectionValues.delayCalculationMode === 'lenient' ? 'با فرجه' : typeof sectionValues.maxDelayMinutes === 'number' ? `حداکثر ${sectionValues.maxDelayMinutes.toLocaleString('fa-IR')} دقیقه` : 'ثبت نشده'}</strong></div><div><span>خروج زودهنگام</span><strong>{sectionValues.earlyLeaveCalculationMode === 'strict' ? 'سخت‌گیرانه' : sectionValues.earlyLeaveCalculationMode === 'lenient' ? 'با فرجه' : typeof sectionValues.maxEarlyLeaveMinutes === 'number' ? `حداکثر ${sectionValues.maxEarlyLeaveMinutes.toLocaleString('fa-IR')} دقیقه` : 'ثبت نشده'}</strong></div><div><span>قاعده غیبت</span><strong>{sectionValues.consecutiveAbsenceWarning === true ? `هشدار پس از ${typeof sectionValues.maxConsecutiveAbsenceDays === 'number' ? sectionValues.maxConsecutiveAbsenceDays.toLocaleString('fa-IR') : 'چند'} روز` : 'قاعده اختصاصی ثبت نشده'}</strong></div>
             <div><span>تردد ناقص</span><strong>{sectionValues.incompleteAttendanceRule === 'correction_required' ? 'نیازمند اصلاح' : sectionValues.incompleteAttendanceRule === 'warning_only' ? 'فقط هشدار' : 'ثبت نشده'}</strong></div><div><span>اضافه‌کاری عملیاتی</span><strong>{overtimeLabel}</strong></div><div><span>درخواست‌های پایه Policy</span><strong>{requestLabel}</strong></div><div><span>درخواست‌های واقعی سامانه</span><strong>مرخصی، مأموریت، اصلاح تردد، اضافه‌کاری و دورکاری</strong></div>
           </div></section>
-          <section className="policy-section-card"><header className="policy-section-card-header"><h2>استفاده و اثر</h2><p>{selectedPolicy.groupCount.toLocaleString('fa-IR')} گروه و {selectedPolicy.employeeCount.toLocaleString('fa-IR')} کارمند یکتا تحت پوشش‌اند.</p></header><div className="policy-linked-groups">{selectedPolicy.workGroups.length ? selectedPolicy.workGroups.map((group) => <Link key={group.id} href={`/work-groups/${group.id}/edit`} className="policy-linked-group"><strong>{group.title}</strong><span>{group.members.length.toLocaleString('fa-IR')} عضو جاری</span></Link>) : <p>این سیاست کاری هنوز به هیچ گروه کاری متصل نشده است.</p>}</div></section>
-        </> : null}
+        </div> : null}
 
-        {!readOnly ? <nav className="policy-work-sections" aria-label="بخش‌های سیاست کاری">
-          {sectionLinks.map((item) => (
-            <PolicyNavLink key={item.title} href={item.href} title={item.title} />
-          ))}
-        </nav> : null}
+        </aside>
+
+        <main className="policy-work-main">
+        {selectedPolicy ? <PolicyOverviewCard
+          policyId={policyId}
+          title={title}
+          description={description}
+          calendarYearLabel={calendarYearLabel}
+          calendarTitle={calendarTitle}
+          calendarId={selectedPolicy.calendarId ?? ''}
+          calendars={calendars.filter((item) => item.status === 'active' || item.id === selectedPolicy.calendarId).map((item) => ({ id: item.id, title: item.title, yearLabel: item.yearLabel }))}
+          groupCount={selectedPolicy.groupCount}
+          readOnly={readOnly}
+          showDescription={false}
+        /> : null}
+        {selectedPolicy ? <div className="policy-work-main-reports">
+          <section className="policy-section-card"><header className="policy-section-card-header"><h2>جزئیات خواندنی سیاست</h2><p>این اطلاعات از داده ذخیره‌شده سیاست خوانده می‌شود.</p></header><div className="policy-detail-grid">
+            <div><span>Blueprint</span><strong>{blueprint?.title ?? text(sectionValues.blueprintTitle)}</strong></div><div><span>وضعیت</span><strong>{selectedPolicy.isActive ? 'فعال' : 'غیرفعال'}</strong></div><div><span>نوع</span><strong>{selectedPolicy.isDefault ? 'پیش‌فرض' : 'عادی'}</strong></div><div><span>تقویم</span><strong>{calendarTitle || 'ثبت نشده'}</strong></div>
+            <div><span>تاریخ ایجاد</span><strong>{selectedPolicy.createdAt.toLocaleDateString('fa-IR')}</strong></div><div><span>آخرین ویرایش</span><strong>{selectedPolicy.updatedAt.toLocaleDateString('fa-IR')}</strong></div><div><span>ثبت ورود</span><strong>{yesNo(sectionValues.entryRequired)}</strong></div><div><span>ثبت خروج</span><strong>{yesNo(sectionValues.exitRequired)}</strong></div>
+            <div><span>محدوده تردد</span><strong>{locationLabel}</strong></div><div><span>فرجه ورود</span><strong>{typeof sectionValues.entryGraceMinutes === 'number' ? `${sectionValues.entryGraceMinutes.toLocaleString('fa-IR')} دقیقه` : 'ثبت نشده'}</strong></div><div><span>فرجه خروج</span><strong>{typeof sectionValues.exitGraceMinutes === 'number' ? `${sectionValues.exitGraceMinutes.toLocaleString('fa-IR')} دقیقه` : 'ثبت نشده'}</strong></div><div><span>اضافه‌کاری عملیاتی</span><strong>{overtimeLabel}</strong></div>
+          </div></section>
+          <section className="policy-section-card"><header className="policy-section-card-header"><h2>استفاده و اثر</h2><p>{selectedPolicy.groupCount.toLocaleString('fa-IR')} گروه و {selectedPolicy.employeeCount.toLocaleString('fa-IR')} کارمند یکتا تحت پوشش‌اند.</p></header><div className="policy-linked-groups">{selectedPolicy.workGroups.length ? selectedPolicy.workGroups.map((group) => <Link key={group.id} href={`/work-groups/${group.id}/edit`} className="policy-linked-group"><strong>{group.title}</strong><span>{group.members.length.toLocaleString('fa-IR')} عضو جاری</span></Link>) : <p>این سیاست کاری هنوز به هیچ گروه کاری متصل نشده است.</p>}</div></section>
+        </div> : null}
+        {!readOnly ? <PolicyNextPages items={sectionLinks} showHeader={!selectedPolicy} /> : null}
 
         <div className="policy-work-footer">
           <Link href="/policies" className="policy-btn policy-btn-secondary">
             بازگشت به فهرست
           </Link>
         </div>
+        </main>
       </div>
     </PolicyPageShell>
   );

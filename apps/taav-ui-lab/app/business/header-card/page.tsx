@@ -1,6 +1,5 @@
 'use client';
 
-import { TaavBusinessHeaderCard } from '@repo/ui/taav/business';
 import {
   DocCodeBlock,
   DocDoDont,
@@ -18,6 +17,7 @@ import {
   BusinessHeaderCardToggleDemo,
   BusinessHeaderCardToggleWithLinkDemo,
 } from '@/components/lab/BusinessHeaderCardShowcase';
+import { BusinessHeaderCardTokenControls } from '@/components/lab/BusinessHeaderCardTokenControls';
 
 const HEADER_CARD_PROPS = [
   { name: 'title', type: 'ReactNode', description: 'عنوان اصلی سربرگ بیزینسی', required: true },
@@ -44,6 +44,7 @@ export default function BusinessHeaderCardDocPage() {
         { label: 'Business', href: '/business' },
         { label: 'سربرگ' },
       ]}
+      inspector={<BusinessHeaderCardTokenControls />}
     >
       <DocPageHeader
         eyebrow="Business Components"
@@ -97,12 +98,12 @@ export default function BusinessHeaderCardDocPage() {
       <DocSection title="Design specs">
         <DocSpecGrid
           items={[
-            { label: 'Card', value: 'width 690px · height 145px · radius 14px · border rgba(145,170,190,.5)' },
+            { label: 'Card radius', value: 'var(--taav-business-header-card-radius) / compact' },
             { label: 'Layout', value: 'RTL افقی — فلش راست، آیکن راست، متن میانی، کنترل چپ' },
-            { label: 'Icon box', value: '56×56 · radius 16px · bg rgba(0,143,143,.10)' },
-            { label: 'Title', value: '18px / 600 / line-height 28px / #30343b' },
-            { label: 'Description', value: '12.5px / 400 / line-height 22px / #5f6f80' },
-            { label: 'Action button', value: '36px height · min-width 148px · radius 14px · teal' },
+            { label: 'Icon box', value: '56×56 · var(--taav-business-header-card-icon-radius)' },
+            { label: 'Title', value: 'var(--taav-business-header-card-title-size) / 600 / #30343b' },
+            { label: 'Description', value: 'var(--taav-business-header-card-desc-size) / #5f6f80' },
+            { label: 'Action button', value: '36px · var(--taav-business-header-card-action-radius/size)' },
           ]}
         />
       </DocSection>

@@ -1774,6 +1774,7 @@ model WorkGroupContextHistory {
   previousId    String?
   nextId        String?
   effectiveDate DateTime
+  effectiveEndDate DateTime?
   reason        String
   createdBy     String
   createdAt     DateTime             @default(now())

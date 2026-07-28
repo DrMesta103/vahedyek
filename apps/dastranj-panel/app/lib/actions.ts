@@ -1996,7 +1996,7 @@ export async function updateCalendarFromQuickSetupAction(data: {
 
 export async function createPolicyAction(formData: FormData) {
   const tenantId = await requirePolicyManagement();
-  const calendarId = value(formData, 'calendarId') || null;
+  const calendarId = value(formData, 'calendarId') || value(formData, 'customCalendarId') || null;
   let calendarShiftTypes: string[] = [];
   if (calendarId) {
     const calendar = await prisma.calendar.findFirst({ where: { id: calendarId, tenantId, status: 'active' }, select: { id: true, shiftConfig: true } });
@@ -2142,9 +2142,10 @@ export async function savePolicyWorkspaceAction(formData: FormData) {
     familyKey === 'remote' && existingPolicy && previousSectionValues.familyKey === 'work';
   const preserveLeaveWorkMeta =
     familyKey === 'leave' && existingPolicy && previousSectionValues.familyKey === 'work';
-  const title = preserveWorkMeta || preserveLeaveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
-    ? existingPolicy.title
-    : value(formData, 'title') || family.title;
+  const preservedPolicyTitle = preserveWorkMeta || preserveLeaveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta;
+  const submittedTitle = value(formData, 'title').trim();
+  if (!preservedPolicyTitle && !submittedTitle) throw new Error('عنوان سیاست کاری الزامی است و نمی‌تواند خالی باشد.');
+  const title = preservedPolicyTitle ? existingPolicy.title : submittedTitle;
   const description =
     preserveWorkMeta || preserveLeaveWorkMeta || preserveManualWorkMeta || preserveNightWorkMeta || preserveRemoteWorkMeta
       ? existingPolicy.description
@@ -4231,6 +4232,9 @@ async function changeWorkGroupContext(formData: FormData, type: 'POLICY' | 'LOCA
   const nextId = value(formData, type === 'POLICY' ? 'policyId' : 'locationId');
   const reason = value(formData, 'reason');
   const effectiveDate = parseJoinDate(value(formData, 'effectiveDate'));
+  const rawEffectiveEndDate = value(formData, 'effectiveEndDate');
+  const effectiveEndDate = rawEffectiveEndDate ? parseJoinDate(rawEffectiveEndDate) : null;
+  if (effectiveEndDate && effectiveEndDate <= effectiveDate) throw new Error('تاریخ اتمام اثر باید بعد از تاریخ اثرگذاری باشد.');
   if (!reason) throw new Error('دلیل تغییر الزامی است.');
   const group = await prisma.workGroup.findFirst({ where: { id: workGroupId, tenantId: access.tenantId }, include: { members: { where: { isCurrent: true }, select: { id: true } } } });
   if (!group) throw new Error('گروه کاری پیدا نشد.');
@@ -4242,9 +4246,8 @@ async function changeWorkGroupContext(formData: FormData, type: 'POLICY' | 'LOCA
     if (!location) throw new Error('محل کار فعال پیدا نشد.');
   }
   const previousId = type === 'POLICY' ? group.policyId : group.locationId;
-  if (previousId === nextId) throw new Error('مقدار جدید با مقدار فعلی یکسان است.');
   await prisma.$transaction(async (tx) => {
-    await tx.workGroupContextHistory.create({ data: { tenantId: access.tenantId, workGroupId, type, previousId, nextId, effectiveDate, reason, createdBy: access.userId } });
+    await tx.workGroupContextHistory.create({ data: { tenantId: access.tenantId, workGroupId, type, previousId, nextId, effectiveDate, effectiveEndDate, reason, createdBy: access.userId } });
     if (shouldApplyContextChangeNow(effectiveDate)) await tx.workGroup.update({ where: { id: workGroupId }, data: type === 'POLICY' ? { policyId: nextId } : { locationId: nextId } });
     await writeWorkGroupAudit(tx, { tenantId: access.tenantId, workGroupId, action: type === 'POLICY' ? 'CHANGE_POLICY' : 'CHANGE_LOCATION', actorUserId: access.userId, actorRole: access.actorRole, before: { id: previousId }, after: { id: nextId, affectedMembers: group.members.length }, reason, effectiveDate });
   });

@@ -69,6 +69,8 @@ export type TaaviaBrandListItem = TaaviaBrand & {
   sourceCount: number;
   knowledgeBaseVersionCount: number;
   activeKnowledgeBaseId: string | null;
+  hasActiveBuild: boolean;
+  activeBuildId: string | null;
 };
 
 export type TaaviaBrandModelServiceKey =

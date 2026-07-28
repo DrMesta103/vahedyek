@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: Promise<{ businessId: s
 
   return (
     <AiLabShell
-      pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/knowledge-base/${data.knowledgeBaseId}/categories`}
+      pathname={`/businesses/${business.id}/products/taavia/brands/${brand.id}/knowledge-base/${knowledgeBaseId}/categories`}
       fullName={session.fullName}
       email={session.email}
       mobile={session.mobile}

@@ -228,7 +228,7 @@ export function TaavBusinessHeaderCard({
   const iconNode = loading ? (
     <TaavSkeleton variant="custom" width={56} height={56} radius="lg" />
   ) : (
-    <span className={businessHeaderCardIconBox()} aria-hidden={icon ? undefined : true}>
+    <span data-part="icon" className={businessHeaderCardIconBox()} aria-hidden={icon ? undefined : true}>
       {icon ?? <HeaderBuildingIcon />}
     </span>
   );
@@ -236,10 +236,18 @@ export function TaavBusinessHeaderCard({
   const titleNode = loading ? (
     <TaavSkeleton variant="title" width="56%" contentClassName="h-6" />
   ) : (
-    <h3 className={businessHeaderCardTitle({ variant: resolvedVariant })}>{title}</h3>
+    <h3 data-part="title" className={businessHeaderCardTitle({ variant: resolvedVariant })}>
+      {title}
+    </h3>
   );
 
-  const descriptionNode = loading ? <TaavSkeleton lines={2} size="sm" /> : description ? <p className={businessHeaderCardDescription({ variant: resolvedVariant })}>{description}</p> : null;
+  const descriptionNode = loading ? (
+    <TaavSkeleton lines={2} size="sm" />
+  ) : description ? (
+    <p data-part="description" className={businessHeaderCardDescription({ variant: resolvedVariant })}>
+      {description}
+    </p>
+  ) : null;
 
   const detailLinkNode =
     showDetailLink && !loading && detailLink ? (
@@ -265,6 +273,7 @@ export function TaavBusinessHeaderCard({
     showAction && action ? (
       <button
         type="button"
+        data-part="action"
         disabled={actionDisabled || !action.onClick}
         onClick={action.onClick}
         className={cn(
@@ -309,6 +318,7 @@ export function TaavBusinessHeaderCard({
               <HeaderSearchIcon />
             </span>
             <input
+              data-part="search"
               value={search.value}
               placeholder={search.placeholder}
               disabled={searchDisabled}

@@ -3,6 +3,7 @@
 import { Scale } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { BaseDifference } from '../../lib/payroll-business-settings';
+import { MinutesEquivalentHint } from '../MinutesEquivalentHint';
 import { ContractFinancialDifferenceBadge } from './ContractFinancialDifferenceBadge';
 import type { ContractFinancialDerivedItem } from '../../lib/contract-financial-calculations';
 
@@ -80,6 +81,7 @@ export function ContractFinancialBasisCard({
             />
             <b>{unit}</b>
           </span>
+          {unit === 'دقیقه' ? <MinutesEquivalentHint minutes={Number.isFinite(value) ? value : null} /> : null}
         </label>
         <span className="contract-financial-difference-badges">
           <ContractFinancialDifferenceBadge difference={templateDifference} softenLowerTone={tone === 'minutes'} />

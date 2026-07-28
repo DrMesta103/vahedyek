@@ -114,10 +114,10 @@ export function AddEmployeeFlow() {
     }
     if (result.existingUser) {
       setLookupNotice(result.existingMembership
-        ? 'کاربر و عضویت این سازمان پیدا شد. Employee جدید به همان عضویت متصل می‌شود.'
-        : 'کاربر پیدا شد. برای این سازمان عضویت لازم ایجاد و Employee به آن متصل می‌شود.');
+        ? 'کاربر و عضویت این سازمان پیدا شد. پروندهٔ کارمند جدید به همان عضویت متصل می‌شود.'
+        : 'کاربر پیدا شد. برای این سازمان عضویت لازم ایجاد و پروندهٔ کارمند به آن متصل می‌شود.');
     } else {
-      setLookupNotice('Employee ایجاد می‌شود و وضعیت تکمیل اطلاعات برای آن ثبت خواهد شد.');
+      setLookupNotice('پروندهٔ کارمند ایجاد می‌شود و وضعیت تکمیل اطلاعات برای آن ثبت خواهد شد.');
     }
     if (parsedContact.type === 'email') {
       setEmail(parsedContact.normalizedValue);

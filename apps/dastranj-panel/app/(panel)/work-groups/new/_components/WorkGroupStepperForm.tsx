@@ -4,7 +4,7 @@ import { PersianDatePicker } from '@repo/ui';
 import { AlertTriangle, Check, Grid3X3, MapPin, Plus, Search, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveWorkGroupDraftAction } from '../../../../lib/actions';
+import { changeWorkGroupLocationAction, changeWorkGroupPolicyAction, saveWorkGroupDraftAction } from '../../../../lib/actions';
 import { formatPersianYmd, getPersianPartsFromDate, parsePersianYmd, persianToDate } from '../../../../lib/calendar-dates';
 import { normalizePersianDateInput } from '../../../../lib/calendar-events';
 
@@ -113,19 +113,22 @@ function Stepper({
   step,
   completedSteps,
   onStepClick,
+  showHistory = false,
 }: {
   step: number;
   completedSteps: number[];
   onStepClick: (target: number) => void;
+  showHistory?: boolean;
 }) {
   const steps = [
     { index: 1, label: 'اطلاعات پایه' },
     { index: 2, label: 'محل های کار' },
     { index: 3, label: 'کارمندان' },
     { index: 4, label: 'سیاست های کاری' },
-    { index: 5, label: 'بازبینی' },
+    { index: 5, label: 'تغییرات تاریخی' },
+    ...(showHistory ? [{ index: 6, label: 'بازبینی' }] : []),
   ];
-  const accessibleUntil = Math.min(5, completedSteps.length + 1);
+  const accessibleUntil = Math.min(6, completedSteps.length + 1);
 
   return (
     <div className="work-group-stepper">
@@ -284,6 +287,7 @@ export function WorkGroupStepperForm({
   policies: PolicyOption[];
   mode?: WorkGroupStepperFormMode;
   initialValues?: WorkGroupStepperFormInitialValues;
+  contextChange?: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -317,6 +321,7 @@ export function WorkGroupStepperForm({
   const [pendingEmployee, setPendingEmployee] = useState<EmployeeOption | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const panelStep = step === 5 ? 6 : step === 6 ? 5 : step;
 
   const availableEmployees = useMemo(() => {
     const selectedIds = new Set(selectedEmployees.map((item) => item.id));
@@ -337,7 +342,7 @@ export function WorkGroupStepperForm({
   }, [policies, policySearch]);
 
   const selectedPolicy = policies.find((item) => item.id === selectedPolicyId) ?? null;
-  const accessibleUntil = mode === 'edit' ? 5 : Math.min(5, completedSteps.length + 1);
+  const accessibleUntil = mode === 'edit' ? 6 : Math.min(6, completedSteps.length + 1);
   const submitLabel = mode === 'edit' ? 'ذخیره تغییرات' : 'ثبت نهایی';
 
   const buildFormData = () => {
@@ -453,7 +458,7 @@ export function WorkGroupStepperForm({
         </div>
       ))}
 
-      <Stepper step={step} completedSteps={completedSteps} onStepClick={goToStep} />
+      <Stepper step={step} completedSteps={completedSteps} onStepClick={goToStep} showHistory />
 
       <div className="work-group-step-divider" />
       {saveError ? <p className="calendar-create-error" role="alert">{saveError}</p> : null}
@@ -703,13 +708,13 @@ export function WorkGroupStepperForm({
             disabled={!canSubmit || saving}
             onClick={async () => { await goToNextStep(5); }}
           >
-            بازبینی
+            تغییرات تاریخی
             <Grid3X3 />
           </button>
         </section>
       ) : null}
 
-      {step === 5 ? (
+      {panelStep === 5 ? (
         <section className="work-group-step-panel">
           <h2>بازبینی و تأیید نهایی</h2>
           <dl className="shift-template-detail-grid">
@@ -719,9 +724,44 @@ export function WorkGroupStepperForm({
             <div><dt>تعداد اعضا</dt><dd>{selectedEmployees.length.toLocaleString('fa-IR')}</dd></div>
           </dl>
           <p>با تأیید نهایی، اطلاعات بالا به‌عنوان وضعیت عملیاتی گروه کاری ثبت می‌شود.</p>
-          <button type="button" className="work-group-step-next" disabled={!canSubmit || saving} onClick={async () => { markStepCompleted(5); await saveAndExit(); }}>
+          <button type="button" className="work-group-step-next" disabled={!canSubmit || saving} onClick={async () => { markStepCompleted(6); await saveAndExit(); }}>
             {saving ? 'در حال ذخیره...' : submitLabel}<Check />
           </button>
+        </section>
+      ) : null}
+
+      {panelStep === 6 ? (
+        <section className="work-group-step-panel">
+          <h2>تغییرات زمان‌بندی‌شده</h2>
+          {mode === 'create' ? <>
+            <p>پس از ثبت گروه کاری، می‌توانید تغییرات زمان‌بندی‌شده سیاست و محل کار را در این مرحله ثبت کنید.</p>
+            <button type="button" className="work-group-step-next" disabled={!canSubmit || saving} onClick={async () => { markStepCompleted(6); await saveAndExit(); }}>
+              {saving ? 'در حال ذخیره...' : submitLabel}<Check />
+            </button>
+          </> : <div className="work-group-step-context-selector grid gap-4 lg:grid-cols-2">
+            <form id="work-group-policy-schedule" action={changeWorkGroupPolicyAction} className="work-group-schedule-form rounded-2xl border border-white/10 p-5">
+              <h3>تغییر تاریخی سیاست کاری</h3>
+              <input type="hidden" name="id" value={workGroupId || initialValues?.id || ''} />
+              <input type="hidden" name="policyId" value={selectedPolicyId} />
+              <div className="work-group-schedule-dates"><label>تاریخ اثرگذاری<input name="effectiveDate" type="date" required /></label><label>تاریخ اتمام اثر<input name="effectiveEndDate" type="date" /></label></div>
+              <input type="hidden" name="reason" value="تغییر زمان‌بندی‌شده" />
+            </form>
+            <form id="work-group-location-schedule" action={changeWorkGroupLocationAction} className="work-group-schedule-form rounded-2xl border border-white/10 p-5">
+              <h3>تغییر تاریخی محل کار</h3>
+              <input type="hidden" name="id" value={workGroupId || initialValues?.id || ''} />
+              <input type="hidden" name="locationId" value={locationId} />
+              <div className="work-group-schedule-dates"><label>تاریخ اثرگذاری<input name="effectiveDate" type="date" required /></label><label>تاریخ اتمام اثر<input name="effectiveEndDate" type="date" /></label></div>
+              <input type="hidden" name="reason" value="تغییر زمان‌بندی‌شده" />
+            </form>
+          </div>}
+          {mode === 'edit' ? <button type="button" className="work-group-step-next" onClick={() => {
+            const policyScheduleForm = document.getElementById('work-group-policy-schedule');
+            const locationScheduleForm = document.getElementById('work-group-location-schedule');
+            if (policyScheduleForm instanceof HTMLFormElement) policyScheduleForm.requestSubmit();
+            if (locationScheduleForm instanceof HTMLFormElement) locationScheduleForm.requestSubmit();
+            markStepCompleted(5);
+            setStep(6);
+          }}>ثبت همه تغییرات</button> : null}
         </section>
       ) : null}
 

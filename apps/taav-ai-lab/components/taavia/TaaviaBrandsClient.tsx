@@ -3,16 +3,55 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { Archive, Check, Cpu, Database, FolderOpen, MessageSquareText, MoreHorizontal, Plus, Power, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { Archive, Check, Database, FolderOpen, Loader2, MoreHorizontal, Plus, Power, RotateCcw, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { TaavButton, TaavCard, TaavDialog, TaavDialogContent, TaavDialogDescription, TaavDialogFooter, TaavDialogHeader, TaavDialogTitle } from '@repo/ui/taav';
 import { TaavEmptyState } from '@repo/ui/taav/data-display';
 import type { TaaviaBrandListItem } from '@/app/lib/types/domain';
+import { BuildKnowledgeBaseMethodDialog } from '@/components/taavia/BuildKnowledgeBaseMethodDialog';
 import { CreateBrandDialog } from '@/components/taavia/CreateBrandDialog';
 
 const statusLabels = { ACTIVE: 'فعال', INACTIVE: 'غیرفعال', ARCHIVED: 'آرشیوشده' } as const;
 
 const actionClass =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/55 bg-transparent px-2 text-xs font-bold text-cyan-300 transition hover:bg-cyan-400/10';
+  'inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/55 bg-transparent px-2 text-xs font-bold text-cyan-300 transition hover:bg-cyan-400/10';
+
+const buildKbActionClass =
+  'inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 px-2 text-xs font-bold text-slate-950 transition hover:bg-cyan-300';
+
+type BrandReadiness = {
+  label: string;
+  tone: string;
+  icon: 'building' | 'kb' | 'sources' | 'empty';
+};
+
+function getBrandReadiness(brand: TaaviaBrandListItem): BrandReadiness {
+  if (brand.hasActiveBuild) {
+    return {
+      label: 'در حال ساخت نالج‌بیس است',
+      tone: 'border-amber-400/45 bg-amber-500/10 text-amber-200',
+      icon: 'building',
+    };
+  }
+  if (brand.knowledgeBaseVersionCount > 0) {
+    return {
+      label: 'نالج‌بیس دارد',
+      tone: 'border-emerald-400/45 bg-emerald-500/10 text-emerald-200',
+      icon: 'kb',
+    };
+  }
+  if (brand.sourceCount > 0) {
+    return {
+      label: 'منابع دارد',
+      tone: 'border-cyan-400/45 bg-cyan-500/10 text-cyan-200',
+      icon: 'sources',
+    };
+  }
+  return {
+    label: 'منابع ندارد',
+    tone: 'border-slate-500/40 bg-slate-500/10 text-slate-300',
+    icon: 'empty',
+  };
+}
 
 export function TaaviaBrandsClient({
   tenantId,
@@ -26,6 +65,7 @@ export function TaaviaBrandsClient({
   const [brands, setBrands] = useState(initialBrands);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TaaviaBrandListItem | null>(null);
+  const [buildTarget, setBuildTarget] = useState<TaaviaBrandListItem | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const router = useRouter();
@@ -112,13 +152,14 @@ export function TaaviaBrandsClient({
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((brand) => {
             const base = `/businesses/${tenantId}/products/taavia/brands/${brand.id}`;
-            const sourcesHref = `${base}/sources`;
-            const kbHref = brand.activeKnowledgeBaseId
-              ? `${base}/knowledge-base/${brand.activeKnowledgeBaseId}`
-              : `${base}/knowledge-base`;
-            const hasKb = brand.knowledgeBaseVersionCount > 0;
-            const hasSources = brand.sourceCount > 0;
-            const canOpenDashboard = hasSources && hasKb;
+            const categoriesHref = brand.activeKnowledgeBaseId
+              ? `${base}/knowledge-base/${brand.activeKnowledgeBaseId}/categories`
+              : brand.hasActiveBuild
+                ? `${base}/knowledge-base/categories`
+                : null;
+            const canOpenCategories = Boolean(categoriesHref);
+            const canBuildKb = !brand.knowledgeBaseVersionCount && !brand.hasActiveBuild;
+            const readiness = getBrandReadiness(brand);
             const statusTone =
               brand.status === 'ACTIVE'
                 ? 'border-emerald-400/45 bg-emerald-500/10 text-emerald-300'
@@ -131,8 +172,8 @@ export function TaaviaBrandsClient({
                 key={brand.id}
                 className="relative flex h-full flex-col gap-4 rounded-2xl border border-[var(--taav-border-subtle)] bg-[var(--taav-surface)] p-4 text-right shadow-[var(--taav-shadow-sm)] transition hover:border-cyan-400/40 hover:bg-[var(--taav-surface-soft)]"
               >
-                {canOpenDashboard ? (
-                  <Link href={base} className="absolute inset-0 z-0 rounded-2xl" aria-label={`باز کردن داشبورد برند ${brand.name}`} />
+                {categoriesHref ? (
+                  <Link href={categoriesHref} className="absolute inset-0 z-0 rounded-2xl" aria-label={`دسته‌بندی‌های نالج‌بیس ${brand.name}`} />
                 ) : null}
 
                 <div className="relative z-[1] flex items-start justify-between gap-3 pointer-events-none">
@@ -165,12 +206,13 @@ export function TaaviaBrandsClient({
 
                 <div className="relative z-[1] grid gap-2.5 border-t border-[var(--taav-border-subtle)] pt-3 text-sm pointer-events-none">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-1.5 text-[var(--taav-text-muted)]">
-                      {hasKb ? <Check className="h-4 w-4 text-emerald-400" aria-hidden /> : null}
-                      وضعیت
-                    </span>
-                    <span className="font-semibold text-[var(--taav-text-strong)]" dir="ltr">
-                      {hasKb ? 'Knowledge Base' : '—'}
+                    <span className="text-[var(--taav-text-muted)]">وضعیت آماده‌سازی</span>
+                    <span className={`inline-flex max-w-[min(100%,14rem)] items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold ${readiness.tone}`}>
+                      {readiness.icon === 'building' ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden /> : null}
+                      {readiness.icon === 'kb' ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+                      {readiness.icon === 'sources' ? <FolderOpen className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+                      {readiness.icon === 'empty' ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden /> : null}
+                      <span className="truncate">{readiness.label}</span>
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
@@ -187,30 +229,22 @@ export function TaaviaBrandsClient({
                   </div>
                 </div>
 
-                <div
-                  className={`relative z-10 mt-auto grid gap-2 ${
-                    !hasSources ? 'grid-cols-2' : canOpenDashboard ? 'grid-cols-2' : 'grid-cols-3'
-                  }`}
-                >
-                  <Link href={sourcesHref} className={actionClass}>
-                    <FolderOpen className="h-4 w-4" />
-                    منابع
-                  </Link>
-                  <Link href={`${base}/model-settings`} className={actionClass}>
-                    <Cpu className="h-4 w-4" />
-                    مدیریت مدل‌ها
-                  </Link>
-                  {brand.activeKnowledgeBaseId ? (
-                    <Link href={kbHref} className={actionClass}>
+                <div className="relative z-10 mt-auto grid grid-cols-1 gap-2">
+                  {canOpenCategories && categoriesHref ? (
+                    <Link href={categoriesHref} className={actionClass}>
                       <Database className="h-4 w-4" />
-                      مدیریت KB فعال
+                      رفتن به نالج‌بیس
                     </Link>
                   ) : null}
-                  {canOpenDashboard ? (
-                    <Link href={`${base}/test`} className={actionClass}>
-                      <MessageSquareText className="h-4 w-4" />
-                      تست چتبات
-                    </Link>
+                  {canBuildKb ? (
+                    <button
+                      type="button"
+                      onClick={() => setBuildTarget(brand)}
+                      className={buildKbActionClass}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      ساخت نالج‌بیس
+                    </button>
                   ) : null}
                 </div>
               </article>
@@ -227,6 +261,19 @@ export function TaaviaBrandsClient({
         initialBrand={null}
         onSaved={(brandId) => {
           setDialogOpen(false);
+          router.push(`/businesses/${tenantId}/products/taavia/brands/${brandId}/sources`);
+        }}
+      />
+      <BuildKnowledgeBaseMethodDialog
+        open={buildTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setBuildTarget(null);
+        }}
+        brandName={buildTarget?.name ?? ''}
+        onSelectManual={() => {
+          if (!buildTarget) return;
+          const brandId = buildTarget.id;
+          setBuildTarget(null);
           router.push(`/businesses/${tenantId}/products/taavia/brands/${brandId}/sources`);
         }}
       />

@@ -70,13 +70,14 @@ export default async function EditWorkGroupPage({ params }: EditWorkGroupPagePro
         }))}
       />
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="work-group-context-change-legacy grid gap-4 lg:grid-cols-2">
         {access.canPolicyChange ? <form action={changeWorkGroupPolicyAction} className="rounded-2xl border border-white/10 p-5">
           <h2>تغییر تاریخی سیاست کاری</h2>
           <p>سیاست فعلی: {workGroup.policy?.title ?? 'ثبت نشده'} · اعضای متأثر: {currentMembers.length.toLocaleString('fa-IR')}</p>
           <input type="hidden" name="id" value={workGroup.id} />
           <label>سیاست جدید<select name="policyId" required defaultValue=""> <option value="" disabled>انتخاب کنید</option>{policies.filter((item) => item.isActive && item.id !== workGroup.policyId).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
           <label>تاریخ اثرگذاری<input name="effectiveDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
+          <label>تاریخ اتمام اثر<input name="effectiveEndDate" type="date" /></label>
           <label>دلیل<textarea name="reason" required /></label>
           <button type="submit" className="primary-button">تأیید تغییر سیاست</button>
         </form> : null}
@@ -86,6 +87,7 @@ export default async function EditWorkGroupPage({ params }: EditWorkGroupPagePro
           <input type="hidden" name="id" value={workGroup.id} />
           <label>محل جدید<select name="locationId" required defaultValue=""> <option value="" disabled>انتخاب کنید</option>{locations.filter((item) => item.isActive && item.id !== workGroup.locationId).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
           <label>تاریخ اثرگذاری<input name="effectiveDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
+          <label>تاریخ اتمام اثر<input name="effectiveEndDate" type="date" /></label>
           <label>دلیل<textarea name="reason" required /></label>
           <button type="submit" className="primary-button">تأیید تغییر محل</button>
         </form> : null}
