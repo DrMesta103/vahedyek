@@ -16,10 +16,7 @@ export default defineConfig({
     'src/taav-business.ts',
   ],
   outDir: 'dist',
-  // ESM and CJS are built in separate processes (see `build` script).
-  // Declarations are optional via `build:types`, because they can exhaust
-  // virtual memory on constrained Windows development machines.
-  format: ['esm'],
+  format: ['cjs'],
   dts: false,
   sourcemap: true,
   clean: false,

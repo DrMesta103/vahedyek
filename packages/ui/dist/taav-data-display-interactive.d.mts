@@ -1,8 +1,8 @@
 export { T as TAAV_BUTTON_HEIGHT, a as TAAV_DURATION, b as TAAV_RADIUS, c as TAAV_SHADOW, d as TAAV_SPACING, e as TAAV_TOKEN_CATALOG, f as TAAV_TOKEN_SECTIONS, g as TAAV_TONE_LABELS, h as TaavTone, i as TokenCategory, j as TokenEntry, k as cn } from './index-DNbuF2UL.mjs';
 import { TaavChipGap, TaavChipTone, TaavChipSize, TaavChipVariant } from './taav-data-display.mjs';
 export { TaavChip, TaavChipBehavior, TaavChipProps, TaavChipShape, TaavChipWidth, TaavEmptyState, TaavEmptyStateProps, TaavEmptyStateSize, TaavEmptyStateTone, TaavEmptyStateVariant, TaavKeyValue, TaavKeyValueDensity, TaavKeyValueItem, TaavKeyValueItemTone, TaavKeyValueLayout, TaavKeyValueProps, TaavKeyValueSize, TaavSkeleton, TaavSkeletonProps, TaavSkeletonRadius, TaavSkeletonSize, TaavSkeletonVariant, TaavTableActions, TaavTableBody, TaavTableCell, TaavTableDensity, TaavTableHead, TaavTableHeader, TaavTableRow, TaavTableShell, TaavTableShellProps, TaavTableVariant } from './taav-data-display.mjs';
-export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-D7oJ_XVZ.mjs';
-import * as react from 'react';
+export { T as TaavStatus, a as TaavStatusBadge, b as TaavStatusBadgeProps, c as TaavStatusBadgeSize, d as TaavStatusBadgeVariant } from './TaavStatusBadge-Bkr6L0VQ.mjs';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import { ReactNode } from 'react';
 import 'clsx';
 import './taav-badge.variants-DM1buIc6.mjs';
@@ -32,7 +32,7 @@ type TaavChipGroupProps = {
     wrapperClassName?: string;
     contentClassName?: string;
 };
-declare function TaavChipGroup({ orientation, wrap, gap, selectionMode, value, defaultValue, onValueChange, options, size, tone, variant, disabled, children, wrapperClassName, contentClassName, }: TaavChipGroupProps): react.JSX.Element;
+declare function TaavChipGroup({ orientation, wrap, gap, selectionMode, value, defaultValue, onValueChange, options, size, tone, variant, disabled, children, wrapperClassName, contentClassName, }: TaavChipGroupProps): react_jsx_runtime.JSX.Element;
 
 type TaavPaginationSize = 'sm' | 'md' | 'lg';
 type TaavPaginationVariant = 'default' | 'compact' | 'minimal';
@@ -51,7 +51,7 @@ type TaavPaginationProps = {
     disabled?: boolean;
     wrapperClassName?: string;
 };
-declare function TaavPagination({ page, totalPages, totalItems, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, size, variant, showPageSize, showTotal, disabled, wrapperClassName, }: TaavPaginationProps): react.JSX.Element;
+declare function TaavPagination({ page, totalPages, totalItems, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, size, variant, showPageSize, showTotal, disabled, wrapperClassName, }: TaavPaginationProps): react_jsx_runtime.JSX.Element;
 
 type TaavFilterBarLayout = 'inline' | 'stacked' | 'responsive';
 type TaavFilterBarDensity = 'compact' | 'comfortable';
@@ -71,6 +71,6 @@ type TaavFilterBarProps = {
     wrapperClassName?: string;
     contentClassName?: string;
 };
-declare function TaavFilterBar({ searchValue, onSearchChange, searchPlaceholder, filters, activeFilters, actions, children, layout, density, sticky, resultCount, loading, wrapperClassName, contentClassName, }: TaavFilterBarProps): react.JSX.Element;
+declare function TaavFilterBar({ searchValue, onSearchChange, searchPlaceholder, filters, activeFilters, actions, children, layout, density, sticky, resultCount, loading, wrapperClassName, contentClassName, }: TaavFilterBarProps): react_jsx_runtime.JSX.Element;
 
 export { TaavChipGap, TaavChipGroup, type TaavChipGroupProps, type TaavChipGroupSelectionMode, type TaavChipOption, TaavChipSize, TaavChipTone, TaavChipVariant, TaavFilterBar, type TaavFilterBarDensity, type TaavFilterBarLayout, type TaavFilterBarProps, TaavPagination, type TaavPaginationProps, type TaavPaginationSize, type TaavPaginationVariant };

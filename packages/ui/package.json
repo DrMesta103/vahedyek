@@ -79,7 +79,8 @@
   },
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "build": "tsup",
+    "build": "tsup && tsup --config tsup.cjs.config.ts",
+    "build:types": "tsup --dts-only",
     "dev": "tsup --watch",
     "prepack": "npm run build"
   },
